@@ -1,0 +1,41 @@
+
+    {% load i18n %}
+    {% load static %}
+    
+    <style>
+        .btn-dark {
+            color: #000 ;
+            background-color: #fff;
+            border-color: #000 ;
+        }
+        .btn-outline-info:hover {
+            color: #fff;
+            background-color: #000 ;
+            border-color: #ced4da;
+        }
+    </style>    
+    
+    <div id="show-notes" class="popup mfp-with-anim mfp-hide" style='background-color: white; width:100%;max-width: 550px; margin-left: auto; margin-right: auto; vertical-align:center; '>
+        <div class="popup-body "  style="margin-left: 3em; margin-right: 3em; padding-bottom: 0.3rem; padding-top: 0.3rem;">
+            <div class="modal-header mb-2">
+                <div class="justify-content-center">
+                    <h5 class="modal-title ">Notes Content</h5>
+                </div>
+                <button type="button" style="font-size: 25px;" class="close" data-dismiss="modal" aria-label="Close" id="closemodal">
+                    <span aria-hidden="true">&times;</span>
+                  </button>   
+            </div>
+    
+                <div class="login-form">
+                    <p id="show_payload_data" style="font-size: inherit;"></p>
+                </div>
+            </div>
+        </div>
+    
+        <script>
+            $('#closemodal').on( "click", function() {
+                $.magnificPopup.close();
+            });
+    
+        </script>
+        

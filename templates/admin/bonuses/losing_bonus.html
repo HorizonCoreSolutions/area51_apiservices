@@ -1,0 +1,660 @@
+{% extends "index.html" %}
+{% load static %}
+{% load i18n %}
+{% load math %}
+{% load date_utils %}
+{% load i18n %}
+
+{% block content %}
+<style>
+    .admin-card{
+        background-color: #ffffff;
+        box-shadow: 0px 0px 6px 6px rgb(204 204 204 / 0.25);
+        padding: 30px 10px;
+    }
+
+    .pcode.left-spacer {
+    margin-left: 0px;
+    }
+    .pcode{
+    margin-left: 250px;
+    }
+
+    @media(max-width:991px){
+        .setting-page .card-title h3{
+        font-size: 18px;
+        }
+        .pcode{
+        margin-left: 0px;
+        }
+    }
+    .setting-page .card-title h3{
+    font-size: 18px;
+    }
+ 
+</style>
+<script type="text/javascript">
+    $(document).ready(function () {
+     $('#sortable').DataTable({
+         searching : true,
+         pageLength: 5,
+         lengthMenu: [[5, 10, 20, -1], [5, 10, 20, "All"]],
+     });
+     $('.dataTables_filter input[type="search"]').
+     attr('placeholder','Search Promotion Page').
+     css({'width':'193px','display':'inline-block'});
+   });
+   </script>
+<div class="pcode" id='nw1' >
+<div>
+    <div class="container-fluid ">
+        <div class="pt-3 mx-auto" style="max-width: 540px;">
+            {% include "includes/messages.html" %}
+        </div>
+        <div class="row">
+            <div class="col-xs-12 col-lg-12 ">
+                <div class="page-content pt-4 setting-page">
+                    <div class='container-fluid pt-2'>
+                        <!-- Bonus Section -->
+                        {% if request.user.is_welcome_bonus_enabled or request.user.is_referral_bonus_enabled or request.user.is_losing_bonus_enabled %}
+                            <!-- Losing bonus start -->
+                            {% if request.user.is_losing_bonus_enabled %}
+                                <div class="row mb-4">
+                                    <div class="page-content col-xs-12 col-md-12 mb-3 mb-md-0">
+                                        <div class="admin-card">
+                                            <div class="main-heading-wrap">
+                                                <h5>{% trans "Losing Bonus" %}</h5>
+                                            </div>
+                                            <div class="container-fluid" style="padding-top: 10px">
+                                                <form autocomplete="off">
+                                                    <div class="setting-select">
+                                                        <div class="row">
+                                                            <div class="col-xs-12 col-md-4 form-group" style="min-width: 210px;">
+                                                                <div style="font-weight: bold; color:black;">
+                                                                    <span style="font-weight: bold;">{% trans "Promo Code" %}</span>
+                                                                    <input type="text" id="input-losing-promo-code" name="losing-promo-code"
+                                                                        placeholder="{% trans 'Enter promo code.' %}" class="form-control"
+                                                                        required="required" autocomplete='off' value=""
+                                                                        onkeypress='return event.charCode >= 65 && event.charCode <= 90 ||
+                                                                        event.charCode >= 97 && event.charCode <= 122 ||
+                                                                        event.charCode >= 48 && event.charCode <= 57 ||
+                                                                        event.charCode == 45'>
+                                                                </div>
+                                                                <span style='padding:0.5em;'></span>
+                                                            </div>
+                                                            <div class="col-xs-12 col-md-4 form-group" style="min-width: 210px;">
+                                                                <div style="font-weight: bold; color:black;">
+                                                                    <span style="font-weight: bold;">{% trans "Percentage" %}</span>
+                                                                    <input type="text" id="input-losing-bonus-percentage" name=""
+                                                                        placeholder="{% trans 'Enter losing Bonus Percentage.' %}" class="form-control disablepaste"
+                                                                        value="" required="required" autocomplete='off'
+                                                                        onkeypress='return event.charCode >= 48 && event.charCode <= 57 ||
+                                                                            event.charCode == 46'>
+                                                                </div>
+                                                                <span style='padding:0.5em;'></span>
+                                                            </div>
+                                                            <div class="col-xs-12 col-md-2 form-group" style="min-width: 210px;">
+                                                                <div style="font-weight: bold; color:black;">
+                                                                    <span style="font-weight: bold;">{% trans "Maximum Bonus Limit" %}</span>
+                                                                    <input type="text" id="losing-bonus-limit" name="losing-bonus-limit"
+                                                                        autocomplete="off"
+                                                                        placeholder="{% trans 'Enter Max Bonus Limit' %}" class="form-control disablepaste"
+                                                                        value="" required="required"
+                                                                        onkeypress='return event.charCode >= 48 && event.charCode <= 57 ||
+                                                                            event.charCode == 46'>
+                                                                </div>
+                                                                <span style='padding:0.5em;'></span>
+                                                            </div>
+                                                            <div class="col-xs-12 col-md-4 form-group" style="min-width: 210px;">
+                                                                <div class="date-input">
+                                                                    <span>{% trans "Promo-Code Usage Limit (per player)" %}</span>
+                                                                    <input  value="" type="text" class="form-control"
+                                                                        id="input-promo-code-usage-limit" name="promo-code-usage-limit"
+                                                                        onkeypress='return event.charCode >= 48 && event.charCode <= 57'
+                                                                        placeholder="{% trans 'Enter promo code usage limit.' %}">
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="row">
+                                                            <div class="col-xs-12 col-md-5 form-group">
+                                                                <div class="date-input">
+                                                                    <span>{% trans "From date" %}</span>
+                                                                    <input  value="{{losing_start_date}}" type="text" onChange="validateDateRange(this)" class="form-control" id="input-start-time-losing" name="losing-start-time" readonly="true" style="background-color:transparent" placeholder="Select from date">
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-xs-12 col-md-5 form-group">
+                                                                <div class="date-input">
+                                                                    <span>{% trans "To date" %}</span>
+                                                                    <input value="{{losing_end_date}}" type="text" class="form-control" onChange="validateDateRange(this)" id="input-end-time-losing" name="losing-end-time" readonly="true" style="background-color:transparent" placeholder="Select to date">
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-xs-12 col-md-2 form-group mt-md-4">
+                                                                <button class="btn btn-primary w-100" id="losing-button-add">
+                                                                    {% trans "Create Promocode" %}
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                            <!-- Losing Bonus Ends -->
+                        {% endif %}
+                        <!-- Bonus Section Ends -->
+
+                        <div class="row justify-content-center ">
+                            <div class="page-content col-12">
+                                <div class="admin-card">
+                                    <div class="main-heading-wrap">
+                                        <h5>{% trans "Promo Codes History" %}</h5>
+                                    </div>
+                                    <div class="table-responsive pt-4 result-table w-100">
+                                        <table class="table table-data2 table-hover" id="sortable">
+                                            <thead class="thead-dark">
+                                                <tr>
+                                                    <th>{% trans "S. No." %}</th>
+                                                    <th>{% trans "Promo Code" %}</th>
+                                                    <th>{% trans "Percentage" %}</th>
+                                                    <th>{% trans "Maximum Bouns Limit" %}</th>
+                                                    <th>{% trans "Start Date" %}</th>
+                                                    <th>{% trans "End Date" %}</th>
+                                                    <th>{% trans "Usage Limit" %}</th>
+                                                    <th>{% trans "Bonus Type" %}</th>
+                                                    <th>{% trans "Status" %}</th>
+                                                    <th></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="result-body">
+                                                {% if not bonuses %}
+                                                    <tr>
+                                                        <td colspan="8" class="text-center">
+                                                            <span>{% trans "No data found" %}</span>
+                                                        </td>
+                                                    </tr>
+                                                {% endif %}
+                                                {%  for bonus in bonuses %}
+                                                <tr class="table-row">
+                                                    <td class="align-middle">
+                                                        <div class="user-name-wrap text-left" style="border-color: #ccc;">
+                                                            <span>{{ forloop.counter }}.</span>
+                                                        </div>
+                                                    </td>
+                                                    <td class="align-middle">
+                                                        <div >
+                                                            <span>{{ bonus.promo_code }}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td class="align-middle">
+                                                        <div >
+                                                            <span>{{ bonus.bonus_percentage }}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <div >
+                                                            <span>{{ bonus.bonus.losing_bonus_limit }}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td class="align-middle">
+                                                        <span>
+                                                            {{ bonus.start_date | local_date:request.session.user_timezone |date:"M. d, Y" }}
+                                                        </span>
+                                                    </td>
+                                                    <td class="align-middle">
+                                                        <span>
+                                                            {% if bonus.end_date %}
+                                                                {{ bonus.end_date | local_date:request.session.user_timezone |date:"M. d, Y" }}
+                                                            {% else %}
+                                                                ------------
+                                                            {% endif %}
+                                                        </span>
+                                                    </td>
+                                                    <td class="align-middle">
+                                                        <span>
+                                                            {{ bonus.usage_limit }}
+                                                        </span>
+                                                    </td>
+                                                    <td class="align-middle">
+                                                        <span>
+                                                            {{ bonus.bonus.get_bonus_type_display }}
+                                                        </span>
+                                                    </td>
+                                                    {% if bonus.is_expired %}
+                                                        {% if bonus.is_deleted %}
+                                                            <td class="align-middle">
+                                                                <span class="text-danger">
+                                                                    Disabled
+                                                                </span>
+                                                            </td>
+                                                            <td class="align-middle">
+                                                                <button class="enablepromobutton btn btn-primary bonus-button w-100" bonus_id="{{ bonus.id }}">Activate</button>
+                                                            </td>
+                                                        {% else %}
+                                                            <td class="align-middle">
+                                                                <span class="text-danger">
+                                                                    Expired
+                                                                </span>
+                                                            </td>
+                                                        {% endif %}
+                                                        <td class="align-middle"></td>
+                                                    {% else %}
+                                                        <td class="align-middle">
+                                                            <span class="text-success">
+                                                                Active
+                                                            </span>
+                                                        </td>
+                                                        <td class="align-middle">
+                                                            <button class="disablepromobutton btn btn-primary bonus-button" style="width:49%;" bonus_id="{{ bonus.id }}" >Disable</button>
+                                                            <button class="edit-losing-popup btn btn-primary bonus-button" style="width:49%;" href="#edit-losing-page" 
+                                                            data-bonus_id="{{ bonus.id }}" data-bonus_name="{{ bonus.promo_code }}" data-percentage="{{ bonus.bonus_percentage }}"
+                                                            data-use_limit="{{ bonus.usage_limit }}" data-start_date="{{ bonus.start_date | date:'d/m/Y' }}"
+                                                            data-end_date="{{ bonus.end_date | date:'d/m/Y' }}">Edit</button>
+                                                        </td>
+                                                    {% endif %}
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+</div>
+</div>
+{% include './edit_losing_bonus.html' %}
+<script>
+    $('#mobile-collapse').click(function () {
+        $("#nw1").toggleClass('left-spacer');
+    });
+
+    $("#input-start-time-losing").datetimepicker({
+        defaultDate: new Date(),
+        format: 'd/m/Y',
+        value: '{{ from }}',
+        timepicker: false,
+    });
+
+    $("#input-end-time-losing").datetimepicker({
+        defaultDate: new Date(),
+        format: 'd/m/Y',
+        value: '{{ to }}',
+        timepicker: false,
+    });
+
+    $('.disablepaste').bind('copy paste cut',function(e) {
+      e.preventDefault();
+      Swal.fire('cut,copy & paste options are disabled !!');
+});
+
+    function validateDateRange(input){
+        
+        var from_date = $("#input-start-time-losing").val();
+        var to_date = $("#input-end-time-losing").val();
+        error_msg = "";
+        if(input.id == "input-start-time-losing"){
+            error_msg = "From date must be less than To date!!"
+        }
+        else{
+            error_msg = "To date must be greater than From date!!"
+        }
+
+        from_day = parseInt(from_date.split("/")[0]);
+        from_month = parseInt(from_date.split("/")[1]);
+        from_year = from_date.split("/")[2];
+        to_day = parseInt(to_date.split("/")[0]);
+        to_month = parseInt(to_date.split("/")[1]);
+        to_year = to_date.split("/")[2];
+
+        // from date should be less than to date
+        if(from_year > to_year){
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: error_msg
+            });
+            $("#input-start-time-losing").val("{{losing_start_date}}");
+            $("#input-end-time-losing").val("{{losing_end_date}}");
+            return false;
+        }else if(from_year == to_year){
+            if(from_month > to_month){
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: error_msg
+                });
+                
+                $("#input-start-time-losing").val("{{losing_start_date}}");
+                $("#input-end-time-losing").val("{{losing_end_date}}");
+                return false;
+            }else if(from_month == to_month){
+                if(from_day > to_day){
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: error_msg
+                    });
+                
+                    $("#input-start-time-losing").val("{{losing_start_date}}");
+                    $("#input-end-time-losing").val("{{losing_end_date}}");
+                    return false;
+                }
+            }
+        }        
+    }
+
+    $("#losing-button-add").click(function (e) {
+        e.preventDefault();
+        var losing_start_time = $("#input-start-time-losing").val();
+        var losing_end_time = $("#input-end-time-losing").val();
+        var losing_bonus_percentage = $("#input-losing-bonus-percentage").val();
+        var losing_promo_code = $("#input-losing-promo-code").val();
+        var promoUsageLimit = $("#input-promo-code-usage-limit").val();
+        var losing_bonus_limit = $("#losing-bonus-limit").val();
+
+        start_temp= losing_start_time.split("/");
+        end_temp= losing_end_time.split("/");
+
+        if(losing_promo_code.length == 0) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Promo-Code must not be empty',
+            })
+            return false
+        }
+        else if(losing_bonus_percentage < 0 || losing_bonus_percentage.length == 0) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Invalid Percentage',
+            })
+            return false
+        }
+        else if(promoUsageLimit < 1 || promoUsageLimit.length == 0) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Promo-Code usage limit must not be less than 1',
+            })
+            return false
+        }
+
+        else {
+            Swal.fire({
+                html:
+                    '<div class="swal-custom-content">' +
+                    '<p class="swal-custom-icon"><i class="cp-icon">&#xe815;</i></p>' +
+                    '<p class="swal-custom-title">{% trans "Are you sure" %} ?</p>' +
+                    '</div>',
+                customClass: {
+                    actions: 'swal-custom-actions',
+                    confirmButton: 'swal-custom-btn swal-custom-confirm-btn',
+                    cancelButton: 'swal-custom-btn swal-custom-cancel-btn',
+                },
+                showCancelButton: true,
+                confirmButtonText: '{% trans "Yes" %}',
+                cancelButtonText: '{% trans "No" %}'
+            }).then((result) => {
+                if (result.value) {
+                    $.ajax({
+                        url: "{% url 'admin-panel:bonus-percentage' %}",
+                        type: "POST",
+                        dataType: "json",
+                        data: {
+                            losing_start_time: losing_start_time,
+                            losing_end_time: losing_end_time,
+                            percentage: losing_bonus_percentage,
+                            promo_code_usage_limit: promoUsageLimit,
+                            usage_limit : losing_bonus_limit,
+                            losing_promo_code: losing_promo_code,
+                            bonusType: "losing_bonus",
+                            csrfmiddlewaretoken: '{{ csrf_token }}'
+                        },
+                        success: function (data) {
+                            Swal.fire({
+                                icon: data["status"],
+                                title: data["status"][0].toUpperCase() + data["status"].substring(1),
+                                text: data['message'],
+                            }).then(() => {
+                                window.location.reload();
+                            });
+                        },
+                        error : function(data) {
+                            Swal.fire({
+                                icon: data.responseText['status'],
+                                title: "Error",
+                                text: data.responseText['message']
+                            })
+                        }
+                    });
+                } else if (result.dismiss === "cancel") {
+                    // show message ?
+                }
+            })
+        }
+    })
+
+    $("#disablepromobutton").click(function(e){
+        e.preventDefault();
+        Swal.fire({
+            html:
+                '<div class="swal-custom-content">' +
+                '<p class="swal-custom-icon"><i class="cp-icon">&#xe815;</i></p>' +
+                '<p class="swal-custom-title">{% trans "Are you sure" %} ?</p>' +
+                '</div>',
+            customClass: {
+                actions: 'swal-custom-actions',
+                confirmButton: 'swal-custom-btn swal-custom-confirm-btn',
+                cancelButton: 'swal-custom-btn swal-custom-cancel-btn',
+            },
+            showCancelButton: true,
+            confirmButtonText: '{% trans "Yes" %}',
+            cancelButtonText: '{% trans "No" %}'
+        }).then((resp) => {
+            if(resp.value){
+                console.log(resp.value);
+
+                if(String(resp.value == "true")){
+                    var bonus_id = $(this).attr("bonus_id");
+                    console.log(bonus_id);
+                    var url_mask = "{% url 'admin-panel:disable-bonus' %}";
+                    $.ajax({
+                        url: url_mask,
+                        type: "POST",
+                        dataType: "json",
+                        data: {
+                            bonus_id: bonus_id
+                        },
+                        success: function (data) {
+                            console.log(data);
+                            Swal.fire({
+                                    icon: data["status"],
+                                    title: data["message"],
+                                    text: data['message'],
+                                }).then(() => {
+                                    window.location.reload();
+                                });
+                        },
+                    });
+                }
+            }
+        });
+    });
+
+    $('.edit-losing-popup').magnificPopup({
+        type:'inline',
+        midClick: true,
+        fixedContentPos: true,
+        callbacks: {
+            beforeOpen: function() {
+                this.st.mainClass = this.st.el.attr('data-effect');
+
+                var bonus_id = this.st.el.attr('data-bonus_id');
+                var dealer_username = this.st.el.attr('data-bonus_name');
+                var percentage = this.st.el.attr('data-percentage');
+                var bet_limit = this.st.el.attr('data-bet_limit');
+                var use_limit = this.st.el.attr('data-use_limit');
+                var start_date = this.st.el.attr('data-start_date');
+                var end_date = this.st.el.attr('data-end_date');
+
+                $("#edit-losing-page input[name='losing-promo-code']").val(dealer_username).prop('readonly', true);
+                $("#edit-losing-page input[name='bonus-id']").val(bonus_id).prop('readonly', true);
+                $("#edit-losing-page input[name='losing-bonus-percentage']").val(percentage).prop('readonly', false);
+                $("#edit-losing-page input[name='losing-max-bet-limit']").val(bet_limit).prop('readonly', false);
+                $("#edit-losing-page input[name='losing-promo-code-usage-limit']").val(use_limit).prop('readonly', false);
+                $("#edit-losing-page input[name='losing-start-time']").val(start_date).prop('readonly', false);
+                $("#edit-losing-page input[name='losing-end-time']").val(end_date).prop('readonly', false);
+            
+            }
+        },
+    });
+
+    $('#edit-losing-form').submit(function (event) {
+        event.preventDefault();
+
+        var losing_start_time = $("#input-start-time-losing").val();
+        var losing_end_time = $("#input-end-time-losing").val();
+        var losing_bonus_percentage = $("#input-losing-bonus-percentage").val();
+        var losing_promo_code = $("#input-losing-promo-code").val();
+        var promoUsageLimit = $("#input-losing-promo-code-usage-limit").val();
+        var bonus_id = $("#input-bonus-id").val();
+
+        $.ajax({
+            url: "{% url 'admin-panel:edit-bonuses' %}",
+            type: "POST",
+            dataType: "json",
+            data: {
+                bonus_type: "losing_bonus",
+                losing_promo_code: losing_promo_code,
+                promoUsageLimit: promoUsageLimit,
+                losing_bonus_percentage: losing_bonus_percentage,
+                losing_end_time: losing_end_time,
+                losing_start_time: losing_start_time,
+                bonus_id: bonus_id,
+                csrfmiddlewaretoken: '{{ csrf_token }}'
+            },
+            success: function (data) {
+                if(data.status === 'Failed'){
+                    if(data.message.toLowerCase().includes("password")){
+                        $("#edit-password-input .error-msg").text(data.message);
+                    }
+                    else {
+                        $("#edit-password-input .error-msg").text('');
+                    }
+                }else {
+                    Swal.fire({
+                        title: 'Promocode: ' + losing_promo_code + ' edited successfully!',
+                        icon: 'success',
+                    }).then((result) => {
+                            $.magnificPopup.close();
+                            location.reload();
+                    });
+                }
+            },
+        });
+    });
+
+    $(".disablepromobutton").click(function(e){
+        e.preventDefault();
+        Swal.fire({
+            html:
+                '<div class="swal-custom-content">' +
+                '<p class="swal-custom-icon"><i class="cp-icon">&#xe815;</i></p>' +
+                '<p class="swal-custom-title">{% trans "Are you sure" %} ?</p>' +
+                '</div>',
+            customClass: {
+                actions: 'swal-custom-actions',
+                confirmButton: 'swal-custom-btn swal-custom-confirm-btn',
+                cancelButton: 'swal-custom-btn swal-custom-cancel-btn',
+            },
+            showCancelButton: true,
+            confirmButtonText: '{% trans "Yes" %}',
+            cancelButtonText: '{% trans "No" %}'
+        }).then((resp) => {
+            if(resp.value){
+                console.log(resp.value);
+
+                if(String(resp.value == "true")){
+                    var bonus_id = $(this).attr("bonus_id");
+                    console.log(bonus_id);
+                    var url_mask = "{% url 'admin-panel:disable-bonus' %}";
+                    $.ajax({
+                        url: url_mask,
+                        type: "POST",
+                        dataType: "json",
+                        data: {
+                            bonus_id: bonus_id
+                        },
+                        success: function (data) {
+                            console.log(data);
+                            Swal.fire({
+                                    icon: data["status"],
+                                    title: data["message"],
+                                    text: data['message'],
+                                }).then(() => {
+                                    window.location.reload();
+                                });
+                        },
+                    });
+                }
+            }
+        });
+    });
+
+    $(".enablepromobutton").click(function(e){
+        e.preventDefault();
+        Swal.fire({
+            html:
+                '<div class="swal-custom-content">' +
+                '<p class="swal-custom-icon"><i class="cp-icon">&#xe815;</i></p>' +
+                '<p class="swal-custom-title">{% trans "Are you sure" %} ?</p>' +
+                '</div>',
+            customClass: {
+                actions: 'swal-custom-actions',
+                confirmButton: 'swal-custom-btn swal-custom-confirm-btn',
+                cancelButton: 'swal-custom-btn swal-custom-cancel-btn',
+            },
+            showCancelButton: true,
+            confirmButtonText: '{% trans "Yes" %}',
+            cancelButtonText: '{% trans "No" %}'
+        }).then((resp) => {
+            if(resp.value){
+                console.log(resp.value);
+
+                if(String(resp.value == "true")){
+                    var bonus_id = $(this).attr("bonus_id");
+                    console.log(bonus_id);
+                    var url_mask = "{% url 'admin-panel:enable-bonus' %}";
+                    $.ajax({
+                        url: url_mask,
+                        type: "POST",
+                        dataType: "json",
+                        data: {
+                            bonus_id: bonus_id
+                        },
+                        success: function (data) {
+                            console.log(data);
+                            Swal.fire({
+                                    icon: data["status"],
+                                    title: data["message"],
+                                    text: data['message'],
+                                }).then(() => {
+                                    window.location.reload();
+                                });
+                        },
+                    });
+                }
+            }
+        });
+    });
+</script>
+
+{% endblock content %}

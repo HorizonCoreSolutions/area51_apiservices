@@ -1,0 +1,333 @@
+{% extends "index.html" %}
+
+{% load static %}
+{% load i18n %}
+{% load math %}
+{% load date_utils %}
+
+
+
+{% block content %}
+<style>
+    .admin-card{
+        background-color: #ffffff;
+        box-shadow: 0px 0px 6px 6px rgb(204 204 204 / 0.25);
+        padding: 30px 10px;
+    }
+    .user-name-wrap p{
+        margin-bottom: 0;
+
+    }
+    @media(max-width:767px){
+        .transactions-table{
+            width: 400px;
+        }
+    }
+        
+    .pcode.left-spacer {
+	margin-left: 0px;
+    }
+    .pcode{
+	margin-left: 250px;
+    }
+    @media(max-width:991px){
+        .pcode{
+	    margin-left: 0px;
+    }
+    }
+</style>
+    <div class="pcode" id='nw1' >
+    <div >
+        <div class="container-fluid pt-4" >
+            <div class="admin-card">
+            <div class="row">
+                <div class="col-xs-12 col-lg-12">
+                    <div class="page-content" >
+                        <div class="container-fluid" >
+                            
+                            {% include "includes/messages.html" %}
+                
+                            <div class="table-data__tool">
+                                <div  style="padding: 0;">
+                                    <form method="get">
+                                        <!-- Search -->
+                                        <div class="row">
+                                            <div class="col-md-3">
+                                                <div class="rs-select2--light rs-select2--md">
+                                                    <div class="input-group">
+                                                        <input type="search" maxlength='250' id="player_search" name="player_search" placeholder="{% trans "Search By Player" %}"
+                                                            class="form-control" value="{{player_search}}">
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="col-md-3">
+                                                <select id="button_status" name="status" class="form-control select-success ">
+                                                    <option selected value="all" disabled hidden>
+                                                        Status
+                                                    </option>
+                                                    <option {% if status == "all" %}selected{% endif %} value="all">All</option>
+                                                    <option {% if status == "pending" %}selected{% endif %} value="pending">Pending</option>
+                                                    <option {% if status == "approved" %}selected{% endif %} value="approved">Approved</option>
+                                                    <option {% if status == "rejected" %}selected{% endif %} value="rejected">Rejected</option>
+                                                </select>
+                                            </div>
+
+                                            <div class="col-md-3">
+                                                <div class="date-input">
+                                                   <input value="{{ from }}" type="text" placeholder="From Date" class="form-control" id="search-date-created-from" onChange="validateDateRange(this)" name="from" readonly="true" style="background-color:transparent" autocomplete="off">
+                                                </div>
+                                            </div>
+                
+                                            <div class="col-md-3">
+                                                <div class="date-input">
+                                                    <input value="{{ to }}" type="text" placeholder="To Date" class="form-control" id="search-date-created-to" name="to" onChange="validateDateRange(this)" readonly="true" style="background-color:transparent" autocomplete="off">
+                                                </div>
+                                            </div>
+                                        </div>
+                
+                                        <!-- Date filters -->
+                                        <div class="row justify-content-end">
+                                            <div class="col-md-2">
+                                                <button class="btn btn-primary btn-block" id="button-search">
+                                                    {% trans "Search" %}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                
+                            <div class="table-responsive table-responsive-data2 mt-4 pt-4">
+                                <table class="table table-data2 text-center transactions-table table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>{% trans "ID" %}  </th>
+                                            <th>{% trans "User" %}</th>
+                                            <th>{% trans "New Cashapp" %} </th>
+                                            <th>{% trans "Created" %} </th>
+                                            <th>{% trans "Action By" %} </th>
+                                            <th class="w-25">{% trans "Action" %}</th>
+                                        </tr>
+                                    </thead>
+                
+                                    <tbody class='bg-light'>
+                                        {%  for cashapp in cashapps %}
+                                        <tr class="tr-collapse table-row tr-player">
+                                            <td>
+                                                <div>
+                                                    <p>{{ cashapp.id }}</p>
+                                                </div>
+                                            </td>
+                
+                                            <td>
+                                                <span>
+                                                    {{ cashapp.user.username }}
+                                                </span>
+                                            </td>
+                                            
+                                            <td>
+                                                <span>
+                                                    {{ cashapp.name }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span>
+                                                    {{ cashapp.created | local_date:request.session.user_timezone }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span id="action_by-{{cashapp.id}}">
+                                                    {% if cashapp.approved_by %}
+                                                        {{ cashapp.approved_by.username }}
+                                                    {% else %}
+                                                        N/A
+                                                    {% endif %}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div class="row">
+                                                    {% if cashapp.status == "pending" %}
+                                                        <div class="col" id="approve-{{cashapp.id}}" >
+                                                            <button class="btn btn-success btn-block" onclick="approveOrRejectCashapp({{cashapp.id}}, 'approved')">Approve</button>
+                                                        </div>
+                                                        <div class="col" id="reject-{{cashapp.id}}">
+                                                            <button class="btn btn-danger btn-block" onclick="approveOrRejectCashapp({{cashapp.id}}, 'rejected')">Reject</button>
+                                                        </div>
+                                                    {% else %}
+                                                        <div class="col">
+                                                            <button class="btn {{cashapp.status}} {% if cashapp.status == "approved" %}btn-success{% else %}btn-danger{% endif %} btn-block" disabled>{{ cashapp.status }}</button>
+                                                        </div>
+                                                    {% endif %}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                                {% include 'includes/pagination.html' %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+
+</div>
+</div>
+
+    <!-- END DATA TABLE -->
+{% endblock content %}
+
+{% block javascript %}
+<script type="text/javascript">
+    var username = "{{ request.user.username }}"
+        
+    function validateDateRange(input){
+        
+        var from_date = $("#search-date-created-from").val();
+        var to_date = $("#search-date-created-to").val();
+        error_msg = "";
+        if(input.id == "search-date-created-from"){
+            error_msg = "From date must be less than To date!!"
+        }
+        else{
+            error_msg = "To date must be greater than From date!!"
+        }
+        from_day = parseInt(from_date.split("/")[0]);
+        from_month = parseInt(from_date.split("/")[1]);
+        from_year = from_date.split("/")[2];
+        from_year = from_year.split(" ")[0];
+        from_hour = parseInt(from_date.split(" ")[1].split(":")[0]);
+        from_minute = parseInt(from_date.split(" ")[1].split(":")[1]);
+
+        to_day = parseInt(to_date.split("/")[0]);
+        to_month = parseInt(to_date.split("/")[1]);
+        to_year = to_date.split("/")[2];
+        to_year = to_year.split(" ")[0];
+        to_hour = parseInt(to_date.split(" ")[1].split(":")[0]);
+        to_minute = parseInt(to_date.split(" ")[1].split(":")[1]);
+        // from date should be less than to date
+        if(from_year > to_year){
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: error_msg,
+            });
+            $("#search-date-created-from").val("{{from}}");
+            $("#search-date-created-to").val("{{to}}");
+            return false;
+        }else if(from_year == to_year){
+            if(from_month > to_month){
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: error_msg,
+                });
+                $("#search-date-created-from").val("{{from}}");
+                $("#search-date-created-to").val("{{to}}");
+                return false;
+            }else if(from_month == to_month){
+                if(from_day > to_day){
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: error_msg,
+                    });
+                    $("#search-date-created-from").val("{{from}}");
+                    $("#search-date-created-to").val("{{to}}");
+                    return false;
+                }else if(from_day == to_day){
+                    if(from_hour > to_hour){
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Oops...',
+                            text: error_msg,
+                        });
+                        $("#search-date-created-from").val("{{from}}");
+                        $("#search-date-created-to").val("{{to}}");
+                        return false;
+                    }else if(from_hour == to_hour){
+                        if(from_minute > to_minute){
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Oops...',
+                                text: error_msg,
+                            });
+                            $("#search-date-created-from").val("{{from}}");
+                            $("#search-date-created-to").val("{{to}}");
+                            return false;
+                        }
+                    }
+                }
+            }
+        }        
+    }
+        
+       
+    $(document).ready(function () {
+        $("#search-date-created-from").datetimepicker({
+            format: 'd/m/Y',
+            timepicker: false,
+        });
+
+        $('#mobile-collapse').click(function () { 
+            
+            $("#nw1").toggleClass('left-spacer');
+
+            console.log("hey");
+            
+        });
+
+        $("#search-date-created-to").datetimepicker({
+            format: 'd/m/Y',
+            timepicker: false,
+        });
+    });
+
+
+    function approveOrRejectCashapp(cashapp_id, status){
+        $.ajax("{% url 'admin-panel:cashapp' %}",{
+            type: 'POST',
+            data: {
+                "cashapp_id": cashapp_id,
+                "status": status,
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+            dataType: 'json',
+            success: function (data) {
+                if(data.success){
+                    approved_by = username;
+                }else{
+                    status = data.cashapp_status;
+                    approved_by = data.approved_by;
+                    Swal.fire({
+                        icon: "info",
+                        title: "Action already done",
+                        text: data.message
+                    });
+                }
+                if(status == "approved"){
+                    $(`#approve-${cashapp_id} > button`).text("Approved");
+                    $(`#approve-${cashapp_id} > button`).attr("disabled", true);
+                    $(`#action_by-${cashapp_id}`).text(approved_by);
+                    $(`#reject-${cashapp_id}`).remove();
+                }else if(status == "rejected"){
+                    $(`#reject-${cashapp_id} > button`).text("Rejected");
+                    $(`#reject-${cashapp_id} > button`).attr("disabled", true);
+                    $(`#action_by-${cashapp_id}`).text(approved_by);
+                    $(`#approve-${cashapp_id}`).remove();
+                }
+            },
+            error: function(response){
+                Swal.fire({
+                    icon: "error",
+                    title: "Error",
+                    text: response['responseJSON']['message']
+                });
+            }
+        });
+    }
+</script>
+{% endblock %}

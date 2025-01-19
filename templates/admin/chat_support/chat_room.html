@@ -1,0 +1,2049 @@
+{% extends 'index.html' %}
+{% load static %}
+{% load i18n %}
+{% load math %}
+{% load date_utils %}
+
+
+{% block title %}
+    {% trans "Inbox" %}
+{% endblock title %}
+{% block content %}
+
+<style>
+
+    .video-container {
+        height:10px;
+        width:10px;
+    }
+  
+    .body {
+        background-color: #f1f0f0;
+        font-family: 'Roboto', sans-serif;
+        overflow: hidden;
+    }
+
+    .message {
+        display: flex;
+        margin: 10px;
+    }
+
+    .sent .message-bubble {
+        background-color:  #f0f0f6;
+        color: #000;
+        border-radius: 20px 20px 20px 0;
+        margin-left: auto; /* update margin-left instead of margin-right */
+        max-width: 70%;
+        padding: 15px 20px;
+        word-break: break-all;
+    }
+
+    .received .message-bubble {
+        background-color: #545456;
+        color: #fff;
+        border-radius: 20px 20px 0 20px;
+        max-width: 70%;
+        padding: 15px 20px;
+        word-break: break-all;
+    }
+
+    .received .message-bubble::after {
+        content: "";
+        position: absolute;
+        bottom: -10px;
+        border-style: solid;
+        border-width: 10px 10px 0 0; /* update border-width for the arrow */
+        transform: rotate(45deg); /* update rotation angle */
+        left: -10px; /* update left instead of right */
+        border-color: #f1f0f0 transparent transparent transparent;
+    }
+
+    .message-text {
+        font-size: 14px;
+        line-height: 1.4;
+        margin-bottom: 5px;
+    }
+    .tipmsg {
+        background-color: #f8d8ae;
+    }
+    .tipmsg-amount {
+        font-size: 20px;
+    }
+    .tipmsg-username img {
+        width: 20px;
+      }
+      
+      
+
+    .message-time {
+        font-size: 10px;
+        color: #f7f1f1;
+    }
+
+    .message-time-send {
+        font-size: 10px;
+        color: #605c5c;
+    }
+    #chat-container {
+        overflow-y: auto;
+        height: calc(100vh - 360px);
+        padding: 0 40px;
+    
+    }
+
+    #chat-form {
+        padding: 10px 10px 0;
+    }
+
+    #chat-form input {
+        border-radius: 30px;
+        padding:20px 20px 20px 20px;
+        height:50px;
+
+    }
+    #chat-form .btn {
+        border-radius: 100%;
+        height: 40px;
+        width: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 5px;
+    }
+
+    .file-link {
+        /* display: inline-block;
+        padding: 8px 12px;
+        background-color: #3e74d8;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px; */
+        height: 300px;
+        width: 300px;
+        border-radius: 5px;
+        overflow: hidden;
+
+    }
+    .file-link img {
+
+        height: 100%;
+        width: 100%;
+        object-fit: cover;
+
+    }
+
+    .file-link a {
+
+        height: 100%;
+        width: 100%;
+        object-fit: cover;
+
+    }
+    .file-link video {
+
+        height: 100%;
+        width: 100%;
+        object-fit: cover;
+
+    }
+
+    .chat-header {
+        padding:10px 20px;
+        background-color: #000000;
+        border-radius: 5px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+    }
+
+    .chat-header h4 {
+        font-size: 16px;
+        font-weight: bold;
+        margin: 0px;
+        line-height: 16px;
+        color: #fff;
+    }
+
+    .chat-header span {
+        font-size: 12px;
+        color: #fff;
+    }
+    .chat-wrapper {
+        /* max-width: 1000px;
+        margin: 0 auto; */
+        background-color: #007bff14;
+        padding-bottom: 10px;
+        border-bottom-left-radius: 15px;
+        border-bottom-right-radius: 15px;
+    }
+
+    .input-wrap {
+        position: relative;
+        width: 100%;
+    }
+    
+    .input-button {
+        display: flex;
+        align-items: center;
+        position: absolute;
+        top:5px;
+        right:0;
+    }
+
+    .content-header{
+        display:none;
+    }
+
+    .admin-card{
+        background-color: #ffffff;
+        box-shadow: 0px 0px 6px 6px rgb(204 204 204 / 0.25);
+        padding: 30px 10px;
+    }
+    .chat-header-right a {
+
+        height: 30px;
+        width: 30px;
+        border-radius: 100%;
+        border:1px solid #fff;
+        display:flex;
+        align-items: center;
+        justify-content: center;
+        padding:5px;
+    
+    }
+    .chat-header-right a:hover{
+        background-color: #fff;
+        color:#000;
+    }
+
+    .pcode.left-spacer {
+        margin-left: 0px;
+    }
+
+    .pcode{
+        margin-left: 250px;
+    }
+    @media(max-width:767px){
+        .pcode{
+            margin-left: 0px;
+        }
+    }
+
+    .verify_switch{
+        height: 0;
+        width: 0;
+        visibility: hidden;
+    }
+
+    #verify-toogle {
+        cursor: pointer;
+        text-indent: -9999px;
+        width: 80px;
+        height: 30px;
+        background: grey;
+        display: block;
+        border-radius: 100px;
+        position: relative;
+    }
+
+    #verify-toogle:after {
+        content: '';
+        position: absolute;
+        top: 5px;
+        left: 5px;
+        width: 20px;
+        height: 20px;
+        background: #fff;
+        border-radius: 90px;
+        transition: 0.3s;
+    }
+
+    .verify_switch:checked + #verify-toogle {
+        background: green;
+    }
+
+    .verify_switch:checked + #verify-toogle:after {
+        left: calc(100% - 5px);
+        transform: translateX(-100%);
+    }
+
+    #verify-toogle:active:after {
+        width: 80px;
+    }
+
+    .lb-closeContainer{
+        display: none;
+    }
+    .switch {
+        display: inline-block;
+        height: 34px;
+        position: relative;
+        width: 60px;
+    }
+
+    .switch input {
+        display: none;
+    }
+
+    .slider {
+        background-color: #ccc;
+        bottom: 0;
+        cursor: pointer;
+        left: 0;
+        position: absolute;
+        right: 0;
+        top: 0;
+        transition: 0.4s;
+    }
+
+    .slider:before {
+        background-color: #fff;
+        bottom: 4px;
+        content: "";
+        height: 26px;
+        left: 4px;
+        position: absolute;
+        transition: 0.4s;
+        width: 26px;
+    }
+
+    input:checked + .slider {
+        background-color: #66bb6a;
+    }
+
+    input:checked + .slider:before {
+        transform: translateX(26px);
+    }
+
+    .slider.round {
+        border-radius: 34px;
+    }
+
+    .slider.round:before {
+        border-radius: 50%;
+    }
+    
+    .icon-toggle-container {
+        display: flex;
+        align-items: center;
+    }
+
+    .icon-toggle-container .btn {
+        margin-right: 10px;
+    }
+    
+    .message.join-message {
+        background-color: #4287f5;
+        color: #fff;
+        padding: 10px;
+        border-radius: 5px;
+        margin-bottom: 10px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        border-radius: 20px;
+    }
+
+    .message.end-message {
+        background-color: #FF0000;
+        color: #fff;
+        padding: 10px;
+        border-radius: 5px;
+        margin-bottom: 10px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        border-radius: 20px;
+    }
+    
+    .player-count-container {
+        display: flex;
+        align-items: center;
+    }
+
+    .player-count-text {
+        margin-left: 5px;
+        font-weight: bold;
+    }
+    
+    /* CSS for typing indicator */
+    .form-row {
+        display: flex;
+        align-items: flex-start;
+        position: relative;
+    }
+
+    #typing-indicator {
+        position: absolute;
+        top: -40px; /* Adjust this value to position the indicator above the input field */
+        left: 10px;
+        padding: 5px 10px;
+        background-color: #f1f1f1;
+        border-radius: 10px;
+        font-size: 12px;
+        color: #333;
+    }
+
+    /* Add padding between table rows */
+    .table tr td {
+        padding: 22px; /* Adjust the value as needed */
+    }
+
+    /* Style for the loader */
+    .loader {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100px; /* Set the desired height to center vertically */
+    }
+
+    /* Style for the loader image */
+    .loader img {
+        width: 50px;
+        height: 50px;
+    }
+
+
+    /* Style for the table rows */
+    .table tr {
+        border-bottom: 1px solid #ddd; /* Adjust the color and size as needed */
+    }
+
+    /* Style for odd rows */
+    .table tr:nth-child(odd) {
+        {% comment %} background-color: #f9f9f9; /* Adjust the background color as needed */ {% endcomment %}
+    }
+
+    /* Style for even rows */
+    .table tr:nth-child(even) {
+        {% comment %} background-color: #f1f1f1; /* Adjust the background color as needed */ {% endcomment %}
+    }
+        
+    /* Hide the default checkbox */
+    .switch-input {
+        display: none;
+    }
+
+    /* Style for the switch label */
+    .switch-label {
+        display: inline-block;
+        width: 100px;
+        height: 40px;
+        background-color: #FF0000;
+        border: 2px solid #FF0000;
+        border-radius: 20px;
+        position: relative;
+        cursor: pointer;
+        overflow: hidden;
+    }
+
+    /* Style for the slider (the part that moves) */
+    .slider {
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 46%;
+        height: 36px;
+        background-color: #008000; /* Green color for the active state */
+        border-radius: 20px;
+        transition: 0.4s;
+    }
+
+    /* Style for the login and logout labels */
+    .login-label,
+    .logout-label {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-weight: bold;
+        font-size: 14px;
+        pointer-events: none;
+        z-index: 1;
+    }
+
+    /* Set the color for login and logout labels */
+    .login-label {
+        color: #333; /* White color for the active state */
+    }
+
+    .logout-label {
+        color: #333; /* Adjust the color for the inactive state */
+    }
+
+    .switch-input:checked + .switch-label .slider {
+        left: 52%;
+    }
+        
+    .btn.disabled {
+        opacity: 0.7; 
+        cursor: not-allowed;
+        background-color: #b0b0b0;
+    }
+
+    .active-tab {
+        {% comment %} background-color: white;
+        color: green; {% endcomment %}
+        background-color: #00800040;
+        color: #000;
+    }
+    
+    .input-container {
+        display: flex;
+        align-items: center;
+        border: 1px solid #ccc;
+        border-radius: 20px;
+        padding: 5px;
+        background-color: #fff;
+    }
+
+    #chat-input {
+        flex: 1;
+        border: none;
+        outline: none;
+    }
+
+    #back-btn {
+        margin-left: 10px; /* Adjust as needed for spacing */
+    }
+
+
+    /* Add the 'cursor: not-allowed' style for disabled .switch-input elements */
+    .switch-input:disabled {
+        cursor: not-allowed;
+    }
+
+    /* Add the 'cursor: not-allowed' style for disabled labels */
+    .switch-input:disabled + .switch-label {
+        cursor: not-allowed;
+    }
+</style>
+
+{% include "./cashapp.html" %}
+
+<div id="add_player_form" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">{% trans "Enter Details" %}</h4>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="update-form" autocomplete="off">
+                    <div class="form-group">
+                        <label for="username">{% trans "Username" %}</label>
+                        <input type="text" class="form-control" id="username" value="" placeholder="{% trans 'Enter Username' %}" maxlength="15" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="code">{% trans "Game Code" %}</label>
+                        <select id="code" class="form-control" readonly>
+                            <option selected="selected" disabled>{% trans "Select Game" %}</option>
+                            {% for id, code, name in game_data %}
+                                <option value="{{ code|default:"str" }}">{{ code }} ({{ name }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="add-player">{% trans "Create Account" %}</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">{% trans "Close" %}</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="pcode" id='nw1' >
+    <div>
+        <div class="container-fluid pt-4" >
+            <div class="admin-card">
+                <div class="row">
+                
+                    <div class="col-xs-12 col-lg-12">
+                        <div class="page-content" >
+                            <!-- <div class="main-heading-wrap">
+                                <h5>{% trans 'Chat' %}</h5>
+                            </div> -->
+                            
+                            <div class="container-fluid">
+                                <div class="chat-header">
+                                    <div class="user-detail">
+                                        <div class="status-indicator-container" style="display: flex;">
+                                            <div class="status-indicator" style="display: flex; align-items: center; margin-right: 10px;">
+                                                <h4>{{request.user.username | capfirst }}</h4>
+                                            </div>
+                                            <div class="status-indicator" style="display: flex; align-items: center; margin-right: 10px;">
+                                                <span class="status-dot" id="status_dot" style="width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; background-color: {% if request.user.is_staff_active %}green{% else %}red{% endif %};"></span>
+                                                <h4 class="status-text" id="status_text" style="color: #888;">{% if request.user.is_staff_active %}Online{% else %}Offline{% endif %}</h4>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="chat-header-right">
+                                        <div class="icon-toggle-container">
+                                            <div class="player-count-container" id='player-queue-count-block'>
+                                                &nbsp;&nbsp;
+                                                <button type="button" class="btn btn-primary" style="background-color: #008000; color: white; margin-top:-10px;">
+                                                    <i class="fas fa-users fa-1x" id="player-queue-count"> : {{players_count_in_queue}}</i>
+                                                    <input type="number" id="player-queue-count-data" hidden="true">
+                                                </button>
+                                            </div>
+                                            <div class="button-switch">
+                                                <input id="staff-status" type="checkbox" class="switch-input player_switch" onchange="toggleStaffStatus(this)" {% if request.user.is_staff_active %} checked {% endif %}>
+                                                <label for="staff-status" class="switch-label">
+                                                    <span id="staff-status-label" data-is-staff-active="{{ request.user.is_staff_active }}" class="{% if request.user.is_staff_active %}login-label{% else %}logout-label {% endif %}">{% if request.user.is_staff_active %}Login{% else %}Logout{% endif %}</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-3" style="padding-right: 0px;">
+                                        <div class="card table-card">
+                                            <div class="card-header">
+                                                <center><button id="player-queue-btn" class="btn btn-light">Chats</button></center>
+                                            </div>
+
+                                            <div class="card-block">
+                                                <div class="table-responsive" id="chat-list-div" style="overflow-y: auto; height: calc(100vh - 360px);">
+                                                    <table class="table m-b-0 without-header">
+                                                        <tbody id='chat_list' >
+                                                            {% if players_in_queue %}
+                                                                {% for chat in players_in_queue %}
+                                                                    <tr onclick="connectWebSocket(this, {{chat.id}}); Queue_update({{chat.id}});" id="playerRow{{chat.id}}" style="cursor: pointer;">
+                                                                        <td data-player = {{chat.player.id}}>
+                                                                            <img src="{% static '/images/user_profile.png' %}" height="35" widths="35" alt="Player Profile Picture" class="profile-pic">
+                                                                            <font class="ml-2">{% if chat.player.username %}{{ chat.player.username }}{% else %}{{ chat.player.first_name }} {{ chat.player.last_name }}{% endif %}</font>
+                                                                            <span class="chat-queue-bubble" id="queueBubble{{chat.id}}" style="{% if chat.unread_messages_count == 0 %}display: none;{% endif %}" > {{ chat.unread_messages_count }} </span>
+                                                                        </td>
+                                                                    </tr>
+                                                                {% endfor %}
+                                                            {% endif %}
+                                                            <tr id="empty-queue-row" style="{% if players_in_queue.count > 0 %}display: none;{% endif %}">
+                                                                <td colspan="1" style="font-style: italic; color: #999; text-align:center;">No player in queue</td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+
+                                                <div id="queue-loader" class="loader" style="display: none;">
+                                                    <img class = 'hide' src="{% static '/images/queue_loading.gif' %}"  alt="Loading..." style="display: none;" >
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-9">
+                                        <div class="chat-wrapper">
+                                            <div id="chat-container">
+                                                <div id="placeholderMessage" class="text-center" style="margin-top:20%">
+                                                    <img src="{% static "/images/chat-icon.png" %}" alt="Chat Placeholder Image" class="img-fluid" style="max-width: 200px;">
+                                                    <h3>Start chat</h3>
+                                                    <p>Start a chat by clicking on a user from the chat list.</p>
+                                                </div>
+                                            </div>
+                                            
+                                            <form id="chat-form">
+                                                {% csrf_token %}
+                                                <div class="form-row">
+                                                    <div id="loader" style="display:none;">
+                                                        <i class="fa fa-spinner fa-spin"></i> Uploading...
+                                                    </div>
+
+                                                    <div id="typing-indicator" style="padding-left:15px; display:none;">
+                                                    </div>
+                                                    
+                                                    <div class="input-wrap">
+                                                        <div class="input-container">
+                                                            <input type="text" name="message" id="chat-input" class="form-control" placeholder="{% trans 'Type your message here' %}"  autocomplete="off" >
+                                                        </div>	
+                                                    </div>
+
+                                                    <div class="row ml-auto" style="padding-right:10px; padding-top: 5px;">
+                                                        {% comment %} <button type="button"  onclick="resolve_Button()" class="btn btn-success" style="border-radius: 20px;width: 115px;background-color: #FFA500;border: #FFA500;" id="back-btn">Resolve Chat</button> {% endcomment %}
+                                                        {% comment %} <a href="#add_cash_app_form" data-effect="mfp-zoom-in" class="add-edit-cash-app-popup waves-effect waves-light text-center m-b-20">
+                                                            <button id="add-cashapp-btn" type="button" style='border-radius: 20px;width: 115px;background-color: #0083639e; border: #ff537a6b;' class="btn btn-success" title="Add CashApp"><i class="fas "></i>Add CashApp</button>
+                                                        </a> {% endcomment %}
+                                                        <button id="add_player" type="button" style='border-radius: 20px;width: 115px;background-color: #FF8353;border: #FF8353;' class="btn btn-success" title="Add Player" alt="Open Modal" data-toggle="modal" data-target="#add_player_form"><i claass="fas fa-comment"></i>Add Player</button>
+                                                        <div class="">
+                                                            <label for="file-input" class="btn btn-primary btn-block" id="file-input-label">
+                                                                <i class="fas fa-file"></i>
+                                                            </label>
+                                                            <input type="file" id="file-input" style="display: none">
+                                                        </div>
+                                                        <div class="">	
+                                                            <button type="submit" class="btn btn-primary btn-block" id="submit-btn" >
+                                                                <i class="fa fa-paper-plane" aria-hidden="true"></i>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+
+                                                    <button id="start-chat-btn" type="button" hidden="true"   style='border-radius: 20px; width: 40px;' class="btn btn-success" title="Start Chat" onclick="startChat()"><i class="fas fa-comment"></i></button>
+                                                    <button id="stop-chat-btn" type="button" hidden="true" class="btn btn-danger" style='border-radius: 20px; width: 40px;' title="End Chat" disabled><i class="fas fa-sign-out-alt"></i></button> 
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.js"></script>
+<script type="text/javascript">
+    var isFunctionExecuted = false;
+    var active_user_id = null
+    var Websocket_list = {};
+    var available_chats = [];
+    var current_page = 1;
+    var oldest_message_id = null;
+    var manage_chat_list_socekt = null
+    var is_intial_fetch_complete = false
+    var added_offmarket_request_to_storage = false
+    var initial_player_count = parseInt("{{ players_count_in_queue }}");
+    
+
+    function formatTime(timestamp) {
+        const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        const utcDate = new Date(timestamp);
+        const localDate = new Date(utcDate.toLocaleString("en-US", {
+            timeZone: userTimezone
+        }));
+        const hours = localDate.getHours().toString().padStart(2, '0'); // Get hours (24-hour format) and pad with leading zero if needed
+        const minutes = localDate.getMinutes().toString().padStart(2, '0'); // Get minutes and pad with leading zero if needed
+        const timeString = `${hours}:${minutes}`;
+        return timeString;
+    }
+
+
+    $(document).ready(function() {
+        $('#username').on('input', function() {
+            var inputLength = $(this).val().length;
+            $('#character-count').text(inputLength + ' / 15 characters');
+        });
+
+        $('#add_player').prop('disabled', true);
+        $('#back-btn').prop('disabled', true);
+        $('#chat-input').prop('disabled', true);
+        $('#submit-btn').prop('disabled', true);
+        $('#file-input').prop('disabled', true);
+
+        
+        var isStaffActive = $("#staff-status-label").data("is-staff-active");
+        if (isStaffActive === 'True') {
+            $('#staff-status-label').text('Logout');
+            $('#player-queue-btn').prop('class', 'btn btn-success').css('background-color', '#008000');
+        } else {
+            $('#chat-container').hide()
+            $('#chat-list-div').hide()
+            $('#chat_list').hide()
+            $('#queue-loader').hide()
+            $('#player-queue-btn').prop('class', 'btn btn-danger', ).css('background-color', '#FF0000');
+            $('#player-queue-count-block').hide()
+            $('#chat-form').hide()
+            $('#staff-status-label').text('Login')
+        }
+        
+        var chatContainer = document.getElementById("chat-container");
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+
+        $('#chat_list').on('click', 'tr', function() {
+            $('#chat_list tr').removeClass('active-tab');
+            $(this).addClass('active-tab');
+        });
+
+
+        $('#add_player').on('click', function() {
+            const activeTabRowActivate = $('#chat_list tr.active-tab');
+            console.log(activeTabRowActivate)
+            const player_id = activeTabRowActivate.find('td[data-player]').data('player');
+            const username_val = 'username-' + player_id;
+            const game_code_val = 'game_code-' + player_id;
+
+            // Check if the items exist in localStorage
+            if (localStorage.getItem(username_val) && localStorage.getItem(game_code_val)) {
+                $('#username').val(localStorage.getItem(username_val));
+                $('#code').val(localStorage.getItem(game_code_val));
+            } else {
+                $('#username').val('');
+                $('#code').val('');
+            }
+        });
+
+
+        $('#chat_list tr').each(function() {
+            if($(this).attr('id')){
+                var chatId = Number($(this).attr('id').replace('playerRow', ''));
+                if(!isNaN(chatId)){
+                    available_chats.push((chatId));
+                }
+            }
+        });
+
+
+        $('#chat-container').scroll(function() {
+            if ($('#chat-container').scrollTop() === 0 && is_intial_fetch_complete) {
+                currentTabChatId = $('#chat_list tr.active-tab').attr('id').replace('playerRow', '');
+                fetchMessages(currentTabChatId);
+            }
+        });
+
+        var isStaffAvailable = document.querySelector('#staff-status').checked;
+        if(isStaffAvailable){
+            manage_chat_list_socekt = manageChatList()
+            last_active_chat = localStorage.getItem('ActiveChat-{{request.user.id}}');
+            if(last_active_chat && available_chats.includes(Number(last_active_chat))){
+                setTimeout(() => {
+                    $(`#playerRow${last_active_chat}`).click()
+                }, 2000);
+            }
+        }
+    });
+
+    
+    function removeElementFromArray(array, elementToRemove) {
+        var index = array.indexOf(Number(elementToRemove));
+        if (index !== -1) {
+            array.splice(index, 1);
+            decrementPlayerCount()
+        }
+    }
+
+
+    function connectWebSocket(element, chat_id = null) {
+        if (chat_id) {
+            current_tab_id = $('#chat_list tr.active-tab').attr("id")
+            if(element.id != current_tab_id){
+                current_page = 0
+                active_user_id = Number(element.firstElementChild.dataset.player);
+                oldest_message_id = null;
+                is_intial_fetch_complete = false
+                added_offmarket_request_to_storage = false
+                $('#staff-status-label').text('Logout');
+                $('#chat-container').empty();
+                $('#chat-input').prop('disabled', true);
+                $('#submit-btn').prop('disabled', true);
+                localStorage.setItem('ActiveChat-{{request.user.id}}', chat_id);
+                startChat(chat_id);
+                fetchMessages(chat_id);
+                console.log("current_tab_id", current_tab_id)
+                if (current_tab_id) {
+                    disconnectAndRemoveWebSocket(closs_all_sockets=false, [current_tab_id.replace('playerRow', ''),])                        
+                }
+            }
+        }
+    }
+
+
+    function getFilePreview(fileUrl) {
+        const fileExtension = getFileExtension(fileUrl);
+        if (isImageFile(fileExtension)) {
+            return `<a href="${fileUrl}"data-lightbox="image-preview" data-title="Image Preview"><div class="file-link"><img src="${fileUrl}" alt="Image Preview" class="image-preview"></a></div>`;
+        } else if (isVideoFile(fileExtension)) {
+            return `<div class="file-link"><video controls controlsList="download" class="file-preview"><source src="${fileUrl}"></video></div>`;
+        } else {
+            return `<a href="${fileUrl}" target="_blank" rel="noopener noreferrer">${getFileTypeIcon(fileExtension)} Download ${fileExtension.toUpperCase()} File</a>`;
+        }
+    }
+
+
+    function getFileExtension(filename) {
+        return filename.split('.').pop().toLowerCase();
+    }
+
+
+    function isImageFile(fileExtension) {
+        return ['png', 'svg', 'jpg', 'jpeg'].includes(fileExtension);
+    }
+    
+
+    function isVideoFile(fileExtension) {
+        return ['mp4', 'webm', 'ogg', 'mkv'].includes(fileExtension);
+    }
+
+
+    function getFileTypeIcon(fileExtension) {
+        // Provide appropriate icons or styling based on file type
+        switch (fileExtension) {
+            case 'pdf':
+                return `<i class="fa fa-file-pdf-o"></i>`;
+            case 'doc':
+            case 'docx':
+                return `<i class="fa fa-file-word-o"></i>`;
+            case 'xls':
+            case 'xlsx':
+                return `<i class="fa fa-file-excel-o"></i>`;
+            case 'txt':
+                return `<i class="fa fa-file-text-o"></i>`;
+            default:
+                return `<i class="fa fa-file-o"></i>`;
+        }
+    }
+
+
+    function fetchMessages(chat_id) {
+        $.ajax("{% url 'admin-panel:inbox' %}", {
+            type: 'GET',
+            data: {
+                'chatroom_id': chat_id,
+                'request_type': 'recent_messages',
+                'message_before': oldest_message_id,
+                'page': current_page + 1,
+            },
+            dataType: 'json',
+            success: function(data) {
+                current_user="{{request.user.id}}"
+                current_page = current_page + 1
+                for (let message of data.messages) {
+                    console.log(message.sent_time,"message.sent_time")
+                    let messageTime = getMessageTime(message.sent_time);
+                    if(message.type == "offmarket_signup"){
+                        if(!added_offmarket_request_to_storage){
+                            const game_code = message.message.split("-")[0]
+                            const game_username = message.message.split("-")[1]
+                            const username_val = `username-${message.sender_id}`;
+                            const game_code_val = `game_code-${message.sender_id}`;
+                            // NOTE : FIX required change message.sednder to username (currently this username is of user but should be off game)
+                            localStorage.setItem(username_val, game_username);
+                            localStorage.setItem(game_code_val, game_code);
+                            added_offmarket_request_to_storage = true
+                        }
+                    }else if(message.type == "join" && message.sender_id != current_user){
+                        var html = `
+                            <div class="message join-message">${message.message}</div>
+                        `;
+                        $('#chat-container').prepend(html);
+                        $("#chat-container").scrollTop($("#chat-container").scrollTop() + $('#chat-container .message:first').height())
+                    }else if(message.type == "message" || message.type == null){
+                        console.log(message.is_tip,"tip")
+                        console.log(message.is_comment,"commenne")
+                        
+                        if (message.is_tip && !message.is_comment){
+                            var html = `<div class="message ${message.sender !== "player" ? 'sent justify-content-start' : 'received'}">
+                                <div class="message-bubble" style="background-color: #f8d8ae;color: #000;"> 
+                                ${message.message}
+                                </div>
+                            </div>`
+                            
+                            
+                        }else if (message.is_comment){
+                            var html = `<div class="message ${message.sender !== "player" ? 'sent justify-content-start' : 'received'}">
+                                <div class="message-bubble" style="background-color: #1abb87;color: #000;"> 
+                                    ${message.message}
+                                </div>
+                            </div>`
+                        }else{
+                            var html = `
+                            <div class="message ${message.sender !== "player" ? 'sent justify-content-start' : 'received'}">
+                            <div class="message-bubble">
+                                ${message.is_file === 'True' ? getFilePreview(message.message) : `<div class="message-text">${message.message}</div>`}
+                                <div class="message-time${message.sender !== "player" ? '-send' : ''}">
+                                ${messageTime}
+                                </div>
+                            </div>
+                            </div>
+                        `
+                            }
+                       
+                        
+                        $('#chat-container').prepend(html);
+                        $("#chat-container").scrollTop($("#chat-container").scrollTop() + $('#chat-container .message:first').height())
+                    }
+                    oldest_message_id = message.id
+                }
+                is_intial_fetch_complete = true
+            }
+        });
+    }
+    function getMessageTime(sentTime) {
+        const messageDate = new Date(sentTime);
+        const currentDate = new Date();
+    
+        // Check if the message was sent today
+        if (messageDate.toDateString() === currentDate.toDateString()) {
+            return formatTimeInternal(messageDate);
+        }
+    
+        // Check if the message was sent yesterday
+        const yesterday = new Date(currentDate);
+        yesterday.setDate(currentDate.getDate() - 1);
+        if (messageDate.toDateString() === yesterday.toDateString()) {
+            return 'Yesterday ' + formatTimeInternal(messageDate);
+        }
+    
+        // Otherwise, show the full date and time
+        return messageDate.toLocaleString();
+    }
+    
+    function formatTimeInternal(date) {
+        return date.getHours() + ':' + (date.getMinutes() < 10 ? '0' : '') + date.getMinutes();
+    }
+
+
+    function disconnectAndRemoveWebSocket(closs_all_sockets=false,removedChatIds=[]) {
+        if(closs_all_sockets){
+            $.each(Websocket_list, function (key, websocket) {
+                if (websocket != null && websocket.readyState === WebSocket.OPEN) {
+                    websocket.close();
+                }
+                delete Websocket_list[key];
+            });
+        }else{
+            removedChatIds.forEach(chatId => {
+                key = `${chatId}Chat`;
+                console.log("diconnecting", key)
+                if (Websocket_list.hasOwnProperty(key)) {
+                    websocket = Websocket_list[key]
+                    if (websocket != null && websocket.readyState === WebSocket.OPEN) {
+                        websocket.close();
+                    }
+                    delete Websocket_list[key];
+                }
+            });
+        }
+    }
+
+
+    async function changeStaffStatusAPI(){
+        await $.ajax("{% url 'admin-panel:inbox' %}", {
+            type: 'POST',
+            data: {
+                'staff_id': "{{request.user.id}}",
+                'type': 'toggle_status',
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+            dataType: 'json',
+            success: function(data) {
+                if (data.is_staff_active) {
+                    $('#status_dot').css('background-color', 'green');
+                    $('#status_text').text('Online');
+                    manage_chat_list_socekt = manageChatList()
+                } else {
+                    $('#status_dot').css('background-color', 'red');
+                    $('#status_text').text('Offline');
+                    if (manage_chat_list_socekt != null && manage_chat_list_socekt.readyState === WebSocket.OPEN){
+                        manage_chat_list_socekt.close()
+                    }
+                    localStorage.removeItem('ActiveChat-{{request.user.id}}');
+                    location.reload()
+                }
+            },
+            error: function(data) {
+                Swal.fire({
+                    title: 'Error',
+                    text: data['statusText'],
+                    icon: 'error',
+                });
+                location.reload()
+            },
+        });
+    }
+
+    async function RemoveChatFromChatListAPI(chat_id,pick_by){
+        await $.ajax("{% url 'admin-panel:inbox' %}", {
+            type: 'POST',
+            data: {
+                'staff_id': "{{request.user.id}}",
+                'chat_id':chat_id,
+                'pick_by':pick_by,
+                'type': 'remove_chat_from_list',
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+            dataType: 'json',
+            success: function(data) {
+                console.log("removed from others history")
+            },
+            error: function(data) {
+                Swal.fire({
+                    title: 'Error',
+                    text: data['statusText'],
+                    icon: 'error',
+                });
+                location.reload()
+            },
+        });
+    }
+
+
+    async function toggleStaffStatus(event) {
+        $("#staff-status").attr("disabled",true)
+        const isStaffActive = document.getElementById("staff-status-label").innerText
+        const fileInput = document.querySelector('#file-input');
+        const submitButton = document.querySelector('#submit-btn');
+        const loader = document.querySelector('#loader');
+        const fileInputLabel = document.getElementById('file-input-label');
+        const messageInput = document.getElementById('chat-input');
+        const startChatButton = document.querySelector('#start-chat-btn');
+        const stopChatButton = document.querySelector('#stop-chat-btn'); // Add stop chat button element
+        var staffstatus = document.querySelector('#staff-status').checked;
+        let shouldContinue = true;
+
+        if (isStaffActive === "Logout") {
+            const result = await Swal.fire({
+                title: 'Confirmation',
+                text: 'Are you sure you want to logout?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes'
+            })
+            if (result.isConfirmed) {                
+                disconnectAndRemoveWebSocket(closs_all_sockets=true)
+                submitButton.disabled = true;
+                fileInputLabel.classList.add('disabled');
+                messageInput.disabled = true;
+                startChatButton.disabled = true;
+                stopChatButton.disabled = true
+                $('#chat-container').hide()
+                $('#chat-list-div').hide()
+                $('#chat_list').hide()
+                $('#queue-loader').hide()
+                $('#player-queue-btn').prop('class', 'btn btn-danger', ).css('background-color', '#FF0000');
+                $('#player-queue-count-block').hide()
+                $('#chat-form').hide()
+                $('#staff-status-label').text('Login')
+                changeStaffStatusAPI()
+                return true
+            }
+            $("#staff-status").attr("disabled",false)
+        } else {
+            if (staffstatus == false) {
+                disconnectAndRemoveWebSocket(closs_all_sockets=true)
+                submitButton.disabled = true;
+                fileInputLabel.classList.add('disabled');
+                messageInput.disabled = true;
+                startChatButton.disabled = true;
+                stopChatButton.disabled = true
+                $('#chat-container').hide()
+                $('#chat-list-div').hide()
+                $('#chat_list').hide()
+                $('#queue-loader').hide()
+                $('#player-queue-btn').prop('class', 'btn btn-danger', ).css('background-color', '#FF0000');
+                $('#player-queue-count-block').hide()
+                $('#chat-form').hide()
+                $('#staff-status-label').text('Login')
+            } else {
+                // Show the loader and disable the button
+                startChatButton.disabled = false;
+                stopChatButton.disabled = false;
+                $('#chat-container').show()
+                $('#chat-list-div').show()
+                $('#chat_list').show()
+                $('#player-queue-btn').prop('class', 'btn btn-success').css('background-color', '#008000');
+                $('#player-queue-count-block').show()
+                $('#chat-form').show()
+                $('#staff-status-label').text('Logout')
+                $('#chat_list tr').removeClass('active-tab');
+            }
+            changeStaffStatusAPI()
+            $("#staff-status").attr("disabled",false)
+            setTimeout(function () {
+                location.reload();
+            }, 500);
+            return true
+        }
+    }
+
+
+
+
+    function img_inlarge(img_url) {
+        var src = img_url;
+        var modal;
+
+        function removeModal() {
+            modal.remove();
+            $('body').off('keyup.modal-close');
+        }
+        modal = $('<div>').css({
+            background: 'RGBA(255 255 255 / 0%) url(' + src + ') no-repeat center',
+            width: "50%",
+            height: "100%",
+            margin: "0 auto",
+            position: "fixed",
+            zIndex: "10000",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            top: "0px",
+            left: "0px",
+            right: "0px",
+            cursor: "zoom-out"
+
+
+        }).click(function() {
+            removeModal();
+        }).appendTo('body');
+        //handling ESC
+        $('body').on('keyup.modal-close', function(e) {
+            if (e.key === 'Escape') {
+                removeModal();
+            }
+        });
+    }
+
+    function createAndAddChatToChatlist(data){
+        total_message_count = data.unread_messages_count
+        message_count = total_message_count == undefined || total_message_count == null ? 1 : total_message_count
+        message_count_style = message_count>0 ? '' : 'display: none;';
+        var newRow = `
+        <tr onclick="connectWebSocket(this, ${data.chat_id}); Queue_update(${data.chat_id});" id="playerRow${data.chat_id}" style="cursor: pointer;">
+            <td data-player=${data.user_id}>
+                <img src="{% static '/images/user_profile.png' %}" height="35" widths="35" alt="Player Profile Picture" class="profile-pic">
+                <font class="ml-2">${data.username}</font>
+                <span class="chat-queue-bubble" id="queueBubble${data.chat_id}" style="${message_count_style}"">${message_count}</span>
+            </td>
+        </tr>`;
+
+        $('#chat_list').prepend(newRow);
+        $("#empty-queue-row").hide()
+        incrementPlayerCount()
+    }
+
+    async function markMessageAsRead(chat_id){
+        console.log("markMessageAsRead chat_ID",chat_id)
+        Websocket_list[`${chat_id}Chat`].send(JSON.stringify({
+            "type": 'mark_message_as_read',
+            'sender_id': '{{request.user.id}}',
+            'is_player_sender': false,
+        }));
+    }
+
+    async function startChat(chat_id) {
+        room_name = `${chat_id}Chat`
+        console.log(room_name, "staring room")
+        if (Websocket_list.hasOwnProperty(room_name)) {
+            if(Websocket_list[room_name].readyState === WebSocket.OPEN){
+                $('#add_player').prop('disabled', false);
+                $('#chat-input').prop('disabled', false);
+                $('#submit-btn').prop('disabled', false);
+                $('#back-btn').prop('disabled', false);
+                $('#file-input-label').prop('disabled', false);
+                $('#file-input').prop('disabled', false);
+                updateQueueBubble(chat_id, true);
+                return;
+            }
+        }
+
+        await $.ajax("{% url 'admin-panel:inbox' %}", {
+            type: 'POST',
+            data: {
+                'staff_id': "{{request.user.id}}",
+                'type': "",
+                'chat_id': chat_id,
+                'csrfmiddlewaretoken': '{{ csrf_token }}',
+            },
+            dataType: 'json',
+            success: function(data) {
+                console.log("socket is connected on ", room_name)
+                const chatContainer = document.querySelector('#chat-container');
+                const chatForm = document.querySelector('#chat-form');
+                const chatInput = document.querySelector('#chat-input');
+                const startChatButton = document.querySelector('#start-chat-btn');
+                const stopChatButton = document.querySelector('#stop-chat-btn'); // Add stop chat button element
+                ws_protocol = window.location.protocol == 'https:' ? 'wss' : 'ws';
+                roomName = data['room_name']
+                Websocket_list[room_name] = new WebSocket(`${ws_protocol}://${window.location.host}/ws/cschat/${roomName}/?player_id=${roomName.replace(/P|Chat/g, '')}`);
+                
+                
+                Websocket_list[room_name].onopen = function(event) {
+                    console.log(room_name, "socket is opned")
+                    console.log(Websocket_list, "------------------------------")
+
+
+                    var playerId = roomName.replace(/P|Chat/g, '');
+
+                    $('#status_socket_dot').css('background-color', 'green');
+                    $('#status_socket_text').text('Connected');
+                    $('#add_player').prop('disabled', false);
+                    $('#chat-input').prop('disabled', false);
+                    $('#submit-btn').prop('disabled', false);
+                    $('#back-btn').prop('disabled', false);
+                    $('#file-input-label').prop('disabled', false);
+                    $('#file-input').prop('disabled', false);
+
+                    let typingTimeout = null;
+
+                    chatInput.addEventListener('focus', function(event) {
+                        if (event.key !== 'Enter') {
+                            // Clear the previous timeout
+                            clearTimeout(typingTimeout);
+
+                            // Start a new timeout to send the typing message after a delay
+                            typingTimeout = setTimeout(function() {
+                                if (Websocket_list[room_name] && Websocket_list[room_name].readyState === WebSocket.OPEN) {
+                                    console.log(Websocket_list, "Websocket_list")
+                                    Websocket_list[room_name].send(JSON.stringify({
+                                        "type": "typing",
+                                        'sender_id': '{{request.user.id}}',
+                                        'message': '{{request.user.username}}' + ' is typing',
+                                        'is_player_sender': false,
+                                    }));
+                                }
+                            }, 0); // Adjust the delay time as needed (e.g., 1000 milliseconds)
+                        }
+                    });
+
+                    updateQueueBubble(chat_id, true);
+                };
+
+
+                Websocket_list[room_name].onclose = function(event) {
+                    if (localStorage.getItem('username')) {
+                        localStorage.removeItem('username');
+                        localStorage.removeItem('game_code');
+                    }
+
+                    $('#status_socket_dot').css('background-color', 'red');
+                    $('#status_socket_text').text('Disconnected');
+                };
+
+
+                Websocket_list[room_name].onmessage = function(event) {
+                    const data = JSON.parse(event.data);
+                    const messageEl = document.createElement('div');
+                    messageEl.classList.add('message');
+                    console.log(data, "data")
+                    var currentTabPlayerId = null;
+                    const activeTabRow = $('#chat_list tr.active-tab');
+                    if (activeTabRow.length > 0) {
+                        currentTabPlayerId = activeTabRow.find('td[data-player]').data('player');
+                    }
+
+
+                    type = data['type']
+                    if (type == 'offmarket_signup') {
+                        is_player_sender = data['is_player_sender']
+                        if (is_player_sender) {
+                            const game_code = data['game_code'];
+                            const username = data['username'];
+                            const username_val = `username-${data['player_id']}`;
+                            const game_code_val = `game_code-${data['player_id']}`;
+                            localStorage.setItem(username_val, username);
+                            localStorage.setItem(game_code_val, game_code);
+                        }
+                    }
+                    else if (type == 'message') {
+                        document.getElementById('typing-indicator').style.display = 'none';
+
+                        message_text = data['message']
+                        message_sender = data['sender_id']
+                        message_sent_time = data['sent_time']
+                        is_file = data['is_file']
+                        request_user_username = "{{request.user.id}}"
+                        is_staff_sent = message_sender == request_user_username
+                        let file_name = message_text.split('/').pop();
+
+                        ///////////////////////////   Message Append   ///////////////////////
+                        if (is_file) {
+                            const submitButton = document.querySelector('#submit-btn');
+                            const loader = document.querySelector('#loader');
+                            const fileInputLabel = document.getElementById('file-input-label');
+                            const messageInput = document.getElementById('chat-input');
+
+                            loader.style.display = 'none';
+                            submitButton.disabled = false;
+                            fileInputLabel.classList.remove('disabled');
+                            messageInput.disabled = false;
+                        }
+                        console.log(data,"hiiiiiiiiiiiiiiiiiiii")
+                        if (data['is_tip'] &&  !data['is_comment']){
+                            var messageHTML = `
+                            <div class="message ${is_staff_sent ? 'sent justify-content-start' : 'received'}">
+                                <div class="message-bubble ${is_staff_sent ? 'sent justify-content-start' : 'received'}" style="background-color: #f8d8ae;color: #000;>
+                                    <div class="message-text"}>
+                                        ${message_text}
+                                    </div>
+                                </div>
+                                <div class=" ${is_staff_sent ? 'message-time-send' : 'message-time'}">${formatTime(message_sent_time)}</div>
+                                </div>
+                            </div>`
+                            if("{{request.user.role}}" != 'admin'){
+                                $("#user-balance").text(data['user_balance']);
+                            }
+                        }else if (data['is_comment']){
+                            var messageHTML = `
+                            <div class="message ${is_staff_sent ? 'sent justify-content-start' : 'received'}">
+                                <div class="message-bubble ${is_staff_sent ? 'sent justify-content-start' : 'received'}" style="background-color:#1abb87;color: #000;>
+                                    <div class="message-text"}>
+                                        ${message_text}
+                                    </div>
+                                </div>
+                                <div class=" ${is_staff_sent ? 'message-time-send' : 'message-time'}">${formatTime(message_sent_time)}</div>
+                                </div>
+                            </div>`
+                        }else{
+                
+                            var messageHTML = `
+                            <div class="message ${is_staff_sent ? 'sent justify-content-start' : 'received'}">
+                                <div class="message-bubble ${is_staff_sent ? 'sent justify-content-start' : 'received'}">
+                                <div class="${is_file ? 'message-file' : 'message-text'}">
+                                    ${is_file ? getFilePreview(message_text) : message_text}
+                                </div>
+                                <div class=" ${is_staff_sent ? 'message-time-send' : 'message-time'}">${formatTime(message_sent_time)}</div>
+                                </div>
+                            </div>
+                            `;
+                         }
+
+                        function getFilePreview(fileUrl) {
+                            const fileExtension = getFileExtension(fileUrl);
+                            if (isImageFile(fileExtension)) {
+                                return `<a href="${fileUrl}"data-lightbox="image-preview" data-title="Image Preview"><div class="file-link"><img src="${fileUrl}" alt="Image Preview" class="image-preview"></a></div>`;
+                            } else if (isVideoFile(fileExtension)) {
+                                return `<div class="file-link"><video controls controlsList="download" class="file-preview"><source src="${fileUrl}"></video></div>`;
+                            } else {
+                                return `<a href="${fileUrl}" target="_blank" rel="noopener noreferrer">${getFileTypeIcon(fileExtension)} Download ${fileExtension.toUpperCase()} File</a>`;
+                            }
+                        }
+
+                        function getFileExtension(filename) {
+                            return filename.split('.').pop().toLowerCase();
+                        }
+
+                        function isImageFile(fileExtension) {
+                            return ['png', 'svg', 'jpg', 'jpeg'].includes(fileExtension);
+                        }
+
+                        function isVideoFile(fileExtension) {
+                            return ['mp4', 'webm', 'ogg', 'mkv'].includes(fileExtension);
+                        }
+
+                        function getFileTypeIcon(fileExtension) {
+                            // Provide appropriate icons or styling based on file type
+                            switch (fileExtension) {
+                                case 'pdf':
+                                    return `<i class="fa fa-file-pdf-o"></i>`;
+                                case 'doc':
+                                case 'docx':
+                                    return `<i class="fa fa-file-word-o"></i>`;
+                                case 'xls':
+                                case 'xlsx':
+                                    return `<i class="fa fa-file-excel-o"></i>`;
+                                case 'txt':
+                                    return `<i class="fa fa-file-text-o"></i>`;
+                                default:
+                                    return `<i class="fa fa-file-o"></i>`;
+                            }
+                        }
+
+
+                        chatContainer.insertAdjacentHTML('beforeend', messageHTML);
+                        chatContainer.scrollTop = chatContainer.scrollHeight;
+                        ///////////////////////////   Message Append   ///////////////////////
+                    } else if (type == 'typing') {
+                        message_text = data['message']
+                        is_player_sender = data['is_player_sender']
+                        if (is_player_sender === true) {
+                            // Display the typing indicator with the message text
+                            const typingIndicator = document.getElementById('typing-indicator');
+                            // typingIndicator.textContent = message_text;
+                            typingIndicator.innerHTML = `${message_text} <img src="{% static '/images/typing.gif' %}"  style='margin-top:-5px' />`;
+                            typingIndicator.style.display = 'block';
+                            // Schedule hiding the typing indicator after 2 seconds (adjust as needed)
+                            setTimeout(function() {
+                                typingIndicator.style.display = 'none';
+                            }, 2000);
+                        } else {
+                            // Hide the typing indicator
+                            document.getElementById('typing-indicator').style.display = 'none';
+                        }
+                    }
+                };
+
+                /////////////////////////  Message Sending //////////////////////////
+                chatForm.addEventListener('submit', function(event) {
+                    event.preventDefault();
+                    const message = chatInput.value.trim();
+                    if (message) {
+                        try {
+                            Websocket_list[room_name].send(JSON.stringify({
+                                'type': 'message',
+                                'message': message,
+                                'is_player_sender': false,
+                                'sender_id': '{{request.user.id}}'
+                            }));
+                            chatInput.value = '';
+                        } catch (error) {
+                            console.error("An error occurred while sending the message:", error);
+                            location.reload()
+                        }
+
+                    }
+                });
+                /////////////////////////  Message Sending ////////////////////////////
+
+
+
+
+                ////////////////////////// File Sending ///////////////////////////////
+                const fileInput = document.querySelector('#file-input');
+                const submitButton = document.querySelector('#submit-btn');
+                const loader = document.querySelector('#loader');
+                const fileInputLabel = document.getElementById('file-input-label');
+                const messageInput = document.getElementById('chat-input');
+
+                fileInput.addEventListener('change', (event) => {
+                    const file = event.target.files[0];
+                    const reader = new FileReader();
+                    reader.readAsDataURL(file);
+
+                    // Show the loader and disable the button
+                    loader.style.display = 'block';
+                    submitButton.disabled = true;
+                    fileInputLabel.classList.add('disabled');
+                    messageInput.disabled = true;
+
+                    // Define a flag to keep track of whether the function has already been executed
+
+
+                    reader.onload = () => {
+                        // Check if the function has already been executed, and return if it has
+                        if (isFunctionExecuted) {
+                            return;
+                        }
+
+                        isFunctionExecuted = true;
+
+                        const fileData = reader.result.split(',')[1];
+                        //console.log("FILE", file)
+                        Websocket_list[room_name].send(JSON.stringify({
+                            'file': {
+                                'name': file.name,
+                                'type': file.type,
+                                'content': fileData,
+                                'is_player_sender': false,
+                                'sender_id': '{{request.user.id}}'
+                            },
+                            'type': 'message'
+                        }));
+                    };
+
+                    ////////////////////////// File Sending ///////////////////////////////
+                    isFunctionExecuted = false;
+
+                });
+            },
+            error: function(data) {
+                //console.log("DATA",data)
+                const DATA = JSON.parse(data['responseText']);
+
+                // Swal.fire({
+                //     title: 'Error',
+                //     text: DATA.message,
+                //     icon: 'error',
+                // });
+            },
+        });
+    }
+
+    function incrementPlayerCount() {
+        initial_player_count++;
+        $("#player-queue-count").text(` : ${initial_player_count}`);
+    }
+
+    function decrementPlayerCount(){
+        initial_player_count--;
+        $("#player-queue-count").text(` : ${initial_player_count}`);
+    }
+
+
+    function manageChatList() {
+        user_id="{{request.user.id}}"
+        ws_protocol = window.location.protocol == 'https:' ? 'wss' : 'ws';
+        socket = new WebSocket(`${ws_protocol}://${window.location.host}/ws/chatlist/?user_id=${user_id}`);
+                    
+        socket.onopen = function(event) {
+            console.log('WebSocket connection opened:', event);
+        };
+    
+        socket.onmessage = function(event) {
+            if ($('#staff-status').is(":checked")) {
+                const data = JSON.parse(event.data).message;
+
+                if (data.type == "re_arrange"){
+                    if(!available_chats.includes(data.chat_id)){
+                        available_chats.push(data.chat_id)
+                        createAndAddChatToChatlist(data)
+                    }else{
+                        reArrangeChatList(data.chat_id)
+
+                        currentTabChatId = $('#chat_list tr.active-tab').attr('id');
+                        if (currentTabChatId==undefined || currentTabChatId.replace('playerRow', '')!=data.chat_id) {
+                            updateQueueBubble(data.chat_id)
+                        }else{
+                            updateQueueBubble(data.chat_id, true)
+                        }
+                    }
+                }else if (data.type == "add_new_chats") {
+                    if(data.chats.length > 0){
+                        data.chats.forEach(function(player) {
+                            if(!available_chats.includes(player.chat_id)){
+                                available_chats.push(player.chat_id)
+                                createAndAddChatToChatlist(player)
+                            }
+                        })
+                    }
+                }else if (data.type == "remove_chat_from_list") {
+                    removeElementFromArray(available_chats, data.chat_id)
+                    $(`#playerRow${data.chat_id}`).remove();
+                    if(initial_player_count == 0){
+                        $("#empty-queue-row").show()
+                    }
+                }
+            }
+        };
+    
+        socket.onclose = function(event) {
+            console.log('WebSocket connection closed:', event);
+        };
+    
+        socket.onerror = function(event) {
+            console.error('WebSocket error:', event);
+        };
+    
+        return socket;
+    }
+
+
+
+    $('#add-player').click(function() {
+        $(this).prop('disabled', true);
+        var username = $('#username').val();
+        var password = $('#password').val();
+        var code = $('#code').val();
+
+
+        $.ajax({
+            url: "{% url 'admin-panel:inbox' %}",
+            type: "POST",
+            dataType: "json",
+            data: {
+                type: 'add_player',
+                username: username,
+                password: password,
+                code: code,
+                user_id: active_user_id,
+                csrfmiddlewaretoken: '{{ csrf_token }}'
+            },
+            success: function(data) {
+                //console.log(data);
+                if (data.status === 'Failed') {
+                    Swal.fire({
+                        title: data['message'],
+                        icon: 'error',
+                    }).then((result) => {
+                        $.magnificPopup.close();
+
+                    });
+                } else {
+                    //console.log(data);
+                    Websocket_list[`${localStorage.getItem("ActiveChat-{{request.user.id}}")}Chat`].send(JSON.stringify({
+                        'type': 'message',
+                        'message': `Account created for the game ${data['game_name']}`,
+                        'is_player_sender': false,
+                        'sender_id': '{{request.user.id}}'
+                    }));
+                    $('#add_player_form').modal('hide');
+                    Swal.fire({
+                        title: data['message'],
+                        icon: 'success',
+                    }).then((result) => {
+                        $.magnificPopup.close();
+                    });
+                }
+                $('#add-player').prop('disabled', false);
+            },
+        });
+
+
+        // Close the modal
+
+    });
+    
+    
+    // JavaScript to toggle password visibility
+    $('#toggle-password').on('click', function() {
+        const passwordInput = $('#password');
+        const passwordFieldType = passwordInput.attr('type');
+
+        if (passwordFieldType === 'password') {
+            passwordInput.attr('type', 'text');
+        } else {
+            passwordInput.attr('type', 'password');
+        }
+    });
+
+    
+    $('.add-edit-cash-app-popup').magnificPopup({
+        type:'inline',
+        midClick: true,
+        fixedContentPos: true,
+        callbacks: {
+            beforeOpen: function() {
+                getCashApps();
+                addCashText();
+            },
+            close: function(){
+                isEditing=false;
+                $("#edit-cash-app").hide()
+                $("#add-cash-app").show()
+                $("#cash-app-table-body").empty()
+                $("#cash-app-table-body").append("<tr><td colspan='2'>No Data</td></tr>")
+            }
+        },
+    }); 
+
+
+    $('#add-cash-app').click(function() {
+        addCashApp();
+        const activeTabRowActivate = $('#chat_list tr.active-tab');
+        const player_id = activeTabRowActivate.find('td[data-player]').data('player');
+        const username_val = 'cashapp-' + player_id;
+
+        if (localStorage.getItem(username_val)) {
+            localStorage.removeItem(username_val);
+        } 
+    });
+
+    $('#edit-cash-app').click(function() {
+        editCashApp()
+        const activeTabRowActivate = $('#betsliptablebody tr.active-tab');
+        const player_id = activeTabRowActivate.find('td[data-player]').data('player');
+        const username_val = 'cashapp-' + player_id;
+    
+        if (localStorage.getItem(username_val)) {
+            localStorage.removeItem(username_val);  // Use the variable here
+        }
+    });
+
+    
+    $('.popup-closebutton').click(function() {
+        $.magnificPopup.close();
+    })
+
+    function cashappedit(element, cashAppId) {
+        if(element.innerText == "Edit"){
+            var cashAppName = $('td[cashapp_id="' + cashAppId + '"]').text();
+            isEditing = true;
+            $("#edit-cash-app").show()
+            $("#add-cash-app").hide()
+            $('#cashapp_name').val(cashAppName);
+            // $('#add-cash-app').text('Update');
+            $('#cashapp_id').val(cashAppId)
+            element.innerText = "Cancel"
+        }else{
+            isEditing = false;
+            $("#edit-cash-app").hide()
+            $("#add-cash-app").show()
+            $('#cashapp_name').val("");
+            $('#cashapp_id').val("")
+            element.innerText = "Edit"
+        }
+    }
+
+
+    function addCashApp() {
+        var cashAppName = $("#cashapp_name").val();
+        const activeTabRowActivate = $('#chat_list tr.active-tab');
+        const player_id = getPlayerId(activeTabRowActivate);
+
+        $.ajax("{% url 'admin-panel:cash-deatils'  %}", {
+        type: 'POST',
+        data: {
+            'player_id': player_id,
+            'cash_name': cashAppName,
+            'csrfmiddlewaretoken': '{{ csrf_token }}'
+        },
+        dataType: 'json',
+        success: function (response) {
+            $('#cashapp_name').val('');
+            Swal.fire({
+                icon: response["status"],
+                title: response["status"][0].toUpperCase() + response["status"].substring(1),
+                text: response['message']
+            }).then(() => {
+                getCashApps();
+                Websocket_list[`${current_chat_id}Chat`].send(JSON.stringify({
+                    'type': 'message',
+                    'message': "CashApp Added Successfully!",
+                    'is_player_sender': false,
+                    'sender_id': '{{request.user.id}}'
+                }));
+            });
+        },
+        error: function (error) {
+            response = error.responseJSON
+            console.error("Error adding cashapp:", error);
+            Swal.fire({
+                icon: response["status"],
+                title: response["status"][0].toUpperCase() + response["status"].substring(1),
+                text: response['message']
+            }).then(() => {
+                getCashApps();
+            });
+        }
+        });
+    }
+
+
+    function editCashApp(){
+        var cashAppName = $("#cashapp_name").val();
+        var cashAppId = $('#cashapp_id').val();
+        
+        $.ajax("{% url 'admin-panel:cash-deatils'  %}", {
+            type: 'PUT',
+            data: JSON.stringify({
+              'cash_name': cashAppName,
+              'cashapp_id': cashAppId,
+              'csrfmiddlewaretoken': '{{ csrf_token }}'
+          }),
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            dataType: 'json',
+            success: function(response) {
+              console.log('Edit success:', response);
+              isEditing = false;
+              $('#cashapp_name').val('');
+            //   $('#add-cash-app').text('Add CashApp Id');
+              $("#edit-cash-app").hide()
+              $("#add-cash-app").show()
+              $('#cashapp_id').val('')
+              
+              Swal.fire({
+                    icon: response["status"],
+                    title: response["status"][0].toUpperCase() + response["status"].substring(1),
+                    text: response['message']
+                }).then(() => {
+                    getCashApps();
+                    const activeTabRowActivate = $('#chat_list tr.active-tab');
+                    const player_id = getPlayerId(activeTabRowActivate);
+                    Websocket_list[`${current_chat_id}Chat`].send(JSON.stringify({
+                        'type': 'message',
+                        'message': "CashApp Edited Successfully!",
+                        'is_player_sender': false,
+                        'sender_id': '{{request.user.id}}'
+                    }));
+                });
+            },
+            error: function(error) {
+                // Handle error
+                console.error('Edit error:', error);
+                response = error.responseJSON
+                Swal.fire({
+                    icon: response["status"],
+                    title: response["status"][0].toUpperCase() + response["status"].substring(1),
+                    text: response['message']
+                }).then(() => {
+                    getCashApps();
+                });
+            }
+        });
+    }
+
+
+    function deleteCashapp(cashapp_id){
+      $.ajax("{% url 'admin-panel:cash-deatils'  %}", {
+          type: 'DELETE',
+          data: JSON.stringify({
+              'cashapp_id': cashapp_id,
+              'csrfmiddlewaretoken': '{{ csrf_token }}'
+          }),
+          headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+          dataType: 'json',
+          success: function(response) {
+            Swal.fire({
+                    icon: response["status"],
+                    title: response["status"][0].toUpperCase() + response["status"].substring(1),
+                    text: response['message']
+                }).then(() => {
+                    getCashApps();
+                });
+          },
+          error: function(error) {
+          console.error('Delete error:', error);
+          }
+      });
+    }
+
+
+    function getCashApps() {
+        const activeTabRowActivate = $('#chat_list tr.active-tab');
+        const player_id = getPlayerId(activeTabRowActivate);
+
+        $.ajax("{% url 'admin-panel:cash-deatils' %}", {
+        type: 'GET',
+        data: {
+            'player_id': player_id,
+            'csrfmiddlewaretoken': '{{ csrf_token }}'
+        },
+        dataType: 'json',
+        success: function (data) {
+            console.log(data)
+            populateTableWithData(data);
+        },
+        error: function (error) {
+            console.error("Error getting cashapp:", error);
+        }
+        });
+    }
+
+
+    function addCashText(){
+        const activeTabRowActivate = $('#chat_list tr.active-tab');
+        const player_id = activeTabRowActivate.find('td[data-player]').data('player');
+        const username_val = 'cashapp-' + player_id;
+        console.log(username_val)
+        console.log(localStorage.getItem(username_val))
+        if (localStorage.getItem(username_val)) {
+            $('#cashapp_name').val(localStorage.getItem(username_val));
+        } else {
+            $('#cashapp_name').val('');
+        }
+    }
+
+
+    function populateTableWithData(data) {
+        if (data.length>0) {
+            var tableRows = "";
+            var count = 1;
+            data.forEach(function (cashApp) {
+                tableRows += `
+                    <tr>
+                        <td>${count}</td>
+                        <td cashapp_id="${cashApp.id}">${cashApp.name}</td>
+                        <td><button class='btn btn-info btn-sm edit-btn'  onclick = "cashappedit(this, ${cashApp.id})" >Edit</button> <button class='btn btn-danger btn-sm delete-btn' onclick = "deleteCashapp(${cashApp.id})">Delete</button></td></tr>
+                    </tr>
+                `
+                count++;
+            });
+        }else{
+            var tableRows = "<tr><td colspan='2'>No Data</td></tr>";
+        }
+        $("#cash-app-table tbody").html(tableRows);
+    }
+
+
+    function getPlayerId(activeTabRowActivate) {
+        return activeTabRowActivate.find('td[data-player]').data('player');
+    }
+
+
+    function Queue_update(chat_id) {
+        $.ajax("{% url 'admin-panel:inbox' %}", {
+            type: 'POST',
+            data: {
+                'chat_id': chat_id,
+                'staff_id': "{{request.user.id}}",
+                'staff_status': false,
+                'type': 'update_chat_status',
+                'assign': true,
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+            dataType: 'json',
+            success: function(data) {
+                if (manage_chat_list_socekt != null && manage_chat_list_socekt.readyState === WebSocket.OPEN){
+                    {% comment %} manage_chat_list_socekt.send(JSON.stringify({
+                        "type": "remove_chat_from_list",
+                        "chat_id": chat_id,
+                        "pick_by": "{{request.user.id}}",
+                    })); {% endcomment %}
+                    RemoveChatFromChatListAPI(chat_id,"{{request.user.id}}")
+                }
+                {% comment %} if(data.sent_join){
+                    room_name = `${chat_id}Chat`
+                    setTimeout(() => {
+                        if (Websocket_list[room_name] != null && Websocket_list[room_name].readyState === WebSocket.OPEN) {
+                            Websocket_list[room_name].send(JSON.stringify({
+                                "type": 'join_message',
+                                'sender_id': '{{request.user.id}}',
+                                'message': '{{request.user.username}}' + ' has joined the chat.',
+                                'is_player_sender': false,
+                            }));
+                        }
+                    }, 2000);
+                } {% endcomment %}
+            },
+
+            error: function(data) {
+                data = data.responseJSON
+                if(data == undefined){
+                    return;
+                }
+                if (data.status == "Error") {
+                    Swal.fire({
+                        title: 'Error',
+                        text: data['statusText'],
+                        icon: 'error',
+                    });
+                } else {
+                    $(`#playerRow${data.chat_id}`).remove();
+                    if(initial_player_count == 0){
+                        $("#empty-queue-row").show()
+                    }
+                    $('#chat-container').empty();
+                    $('#chat-input').prop('disabled', true);
+                    $('#submit-btn').prop('disabled', true);
+                    setTimeout(() => {
+                        removeElementFromArray(available_chats, data.chat_id)
+                        disconnectAndRemoveWebSocket(closs_all_sockets=false, [data.chat_id,])
+                    }, 1000);
+                    Swal.fire({
+                        title: 'Already Picked',
+                        text: data.message,
+                        icon: 'info',
+                    });
+                }
+            },
+        });
+    }
+
+
+    function updateQueueBubble(chatId, hide_column = null) {
+        const queueBubble = document.getElementById(`queueBubble${chatId}`);
+        if (queueBubble) {
+            const existingCount = parseInt(queueBubble.innerText);
+            if (hide_column) {
+                queueBubble.style.display = 'none'; // Hide the element
+                queueBubble.innerText = 0
+                setTimeout(function() {
+                    markMessageAsRead(chatId);
+                    if(active_chat_count_socket){
+                        active_chat_count_socket.send(JSON.stringify({"user": {{request.user.id}} }));
+                    }
+                },2000);
+            } else {
+                queueBubble.innerText = existingCount + 1;
+                queueBubble.style.display = 'inline'; // Show the element
+                console.log(existingCount, 'existingCountexistingCountexistingCountexistingCountexistingCountexistingCountexistingCount')
+            }
+        }
+    }
+
+    function reArrangeChatList(chatId){
+        row = $(`#playerRow${chatId}`);
+        $('#chat_list').prepend(row);
+    }
+
+</script>
+{% endblock content %}

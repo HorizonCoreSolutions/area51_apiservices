@@ -1,0 +1,35 @@
+{% load i18n %}
+{% load static %}
+<style>
+    h3{
+        font-size: 20px;
+    }
+</style>
+<div id="edit-note" class="popup mfp-with-anim mfp-hide">
+    
+    <div class="popup-body" style="position:relative; height: 0px; margin-bottom: 400px;">
+        <div class="login-form" style=" width: 100%; max-width:550px;margin-left: auto;margin-right: auto; vertical-align:center; background-color: white;">
+            {# TODO: fix this #}
+            <div class="popup-header text-center mt-5 " style="padding-top: 2em;padding-bottom: 1em;">
+               <h3>{% trans "Edit Note Content" %}</h3> 
+            </div>
+            <form id="edit-note-form" style="padding-left: 3rem; padding-right: 3rem;  padding-bottom: 2rem;">
+                {% csrf_token %}
+                <input type="hidden" id="note_id" name="note_id">
+                <div class="form-group create-form-margin ">
+            
+                    <div class="input-group input-group-rounded" id="edit-username-input">
+                        <textarea placeholder="Edit Notes" id="note-content" rows="10" cols="140"></textarea>
+                        <p class="error-msg"></p>
+                    </div>
+                </div>
+
+                <div class="pt-2 ">
+                    <button type="submit" class="btn btn-primary au-btn au-btn--block au-btn--darkGreen au-btn--lg" style="margin-left:194px">
+                        {% trans "Edit" %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

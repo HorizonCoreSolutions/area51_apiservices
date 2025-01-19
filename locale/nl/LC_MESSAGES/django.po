@@ -1,0 +1,1195 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-02-09 20:02+0530\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: apps/admin_panel/forms.py:14 apps/admin_panel/forms.py:59
+#: apps/admin_panel/forms.py:98 templates/admin/admins.html:49
+#: templates/admin/create-admin.html:17 templates/login.html:19
+msgid "Username"
+msgstr "Gebruikersnaam"
+
+#: apps/admin_panel/forms.py:24 apps/admin_panel/forms.py:70
+#: apps/admin_panel/forms.py:109 templates/admin/create-admin.html:25
+#: templates/login.html:26
+msgid "Password"
+msgstr "Wachtwoord"
+
+#: apps/admin_panel/forms.py:154 apps/admin_panel/views.py:208
+#: apps/admin_panel/views.py:267 apps/admin_panel/views.py:398
+#: apps/admin_panel/views.py:436 apps/admin_panel/views.py:517
+#: apps/admin_panel/views.py:556
+msgid "The username has to be at least 4 characters"
+msgstr ""
+
+#: apps/admin_panel/forms.py:157 apps/admin_panel/views.py:212
+#: apps/admin_panel/views.py:271 apps/admin_panel/views.py:402
+#: apps/admin_panel/views.py:440 apps/admin_panel/views.py:521
+#: apps/admin_panel/views.py:560
+msgid "The password has to be at least 5 characters"
+msgstr ""
+
+#: apps/admin_panel/validators.py:12
+msgid ""
+"Enter a valid username. This value may contain only English letters, numbers."
+msgstr ""
+
+#: apps/admin_panel/views.py:200 apps/admin_panel/views.py:390
+msgid "Username already exists"
+msgstr ""
+
+#: apps/admin_panel/views.py:281
+msgid "Player has been edited."
+msgstr ""
+
+#: apps/admin_panel/views.py:394
+msgid "Username must be Alphanumeric"
+msgstr ""
+
+#: apps/admin_panel/views.py:450
+msgid "Agent has been edited."
+msgstr ""
+
+#: apps/admin_panel/views.py:525
+msgid "Username must be unique."
+msgstr ""
+
+#: apps/admin_panel/views.py:540
+msgid "Dealer has been created."
+msgstr ""
+
+#: apps/admin_panel/views.py:572
+msgid "Dealer has been edited."
+msgstr ""
+
+#: apps/admin_panel/views.py:1781 apps/admin_panel/views.py:1791
+msgid "Casino has been enabled successfully."
+msgstr ""
+
+#: apps/admin_panel/views.py:1784 apps/admin_panel/views.py:1794
+msgid "Casino has been disabled successfully."
+msgstr ""
+
+#: apps/admin_panel/views.py:1817 apps/admin_panel/views.py:1827
+msgid "Live Casino has been enabled successfully."
+msgstr ""
+
+#: apps/admin_panel/views.py:1820 apps/admin_panel/views.py:1831
+msgid "Live Casino has been disabled successfully."
+msgstr ""
+
+#: apps/admin_panel/views.py:1853
+msgid "Player has been activated successfully."
+msgstr ""
+
+#: apps/admin_panel/views.py:1856
+msgid "Player has been deactivated successfully."
+msgstr ""
+
+#: apps/bets/filters.py:10 templates/includes/transactions.html:43
+#: templates/includes/transactions.html:138
+msgid "Withdraw"
+msgstr ""
+
+#: apps/bets/filters.py:11 apps/bets/filters.py:14
+#: templates/includes/transactions.html:42
+#: templates/includes/transactions.html:137
+msgid "Deposit"
+msgstr ""
+
+#: apps/bets/filters.py:12
+msgid "Credit"
+msgstr ""
+
+#: apps/bets/filters.py:13
+msgid "Debit"
+msgstr ""
+
+#: apps/bets/models.py:36
+msgid "Pending Charge"
+msgstr ""
+
+#: apps/bets/models.py:37
+msgid "Failed Charge"
+msgstr ""
+
+#: apps/bets/models.py:38
+msgid "Charged"
+msgstr ""
+
+#: apps/bets/models.py:39
+msgid "Pending Pay"
+msgstr ""
+
+#: apps/bets/models.py:40
+msgid "Failed Reject"
+msgstr ""
+
+#: apps/bets/models.py:47 templates/bets/betslips.html:45
+msgid "Single"
+msgstr "Single"
+
+#: apps/bets/models.py:48 templates/bets/betslips.html:50
+msgid "Multiple"
+msgstr "Combi"
+
+#: apps/bets/models.py:65
+msgid "multi stake"
+msgstr ""
+
+#: apps/bets/models.py:68
+msgid "multi price"
+msgstr ""
+
+#: apps/bets/models.py:71
+msgid "possible win amount"
+msgstr ""
+
+#: apps/bets/models.py:74
+msgid "bet slip unique id"
+msgstr ""
+
+#: apps/bets/models.py:447
+msgid "bet id"
+msgstr ""
+
+#: apps/bets/models.py:450 apps/pulls/models.py:132
+msgid "fixture id"
+msgstr ""
+
+#: apps/bets/models.py:451 apps/pulls/models.py:37
+msgid "market id"
+msgstr ""
+
+#: apps/bets/models.py:452
+msgid "provider id"
+msgstr "Aanbieder id"
+
+#: apps/bets/models.py:454
+msgid "champ"
+msgstr ""
+
+#: apps/bets/models.py:457
+msgid "match"
+msgstr ""
+
+#: apps/bets/models.py:460
+msgid "market"
+msgstr ""
+
+#: apps/bets/models.py:463 apps/pulls/models.py:38 apps/pulls/models.py:39
+#: apps/pulls/models.py:40 apps/pulls/models.py:41 apps/pulls/models.py:42
+#: apps/pulls/models.py:43 apps/pulls/models.py:48 apps/pulls/models.py:49
+#: apps/pulls/models.py:50 apps/pulls/models.py:51 apps/pulls/models.py:52
+#: apps/pulls/models.py:53 apps/pulls/models.py:58 apps/pulls/models.py:59
+#: apps/pulls/models.py:60 apps/pulls/models.py:61 apps/pulls/models.py:62
+#: apps/pulls/models.py:63 apps/pulls/models.py:68 apps/pulls/models.py:69
+#: apps/pulls/models.py:70 apps/pulls/models.py:71 apps/pulls/models.py:72
+#: apps/pulls/models.py:73 apps/pulls/models.py:83 apps/pulls/models.py:84
+#: apps/pulls/models.py:85 apps/pulls/models.py:86 apps/pulls/models.py:87
+#: apps/pulls/models.py:88 apps/pulls/models.py:134 apps/pulls/models.py:135
+#: apps/pulls/models.py:136 apps/pulls/models.py:137 apps/pulls/models.py:138
+#: apps/pulls/models.py:139 apps/pulls/models.py:141 apps/pulls/models.py:142
+#: apps/pulls/models.py:143 apps/pulls/models.py:144 apps/pulls/models.py:145
+#: apps/pulls/models.py:146 apps/pulls/models.py:148 apps/pulls/models.py:149
+#: apps/pulls/models.py:150 apps/pulls/models.py:151 apps/pulls/models.py:152
+#: apps/pulls/models.py:153
+msgid "name"
+msgstr "Naam"
+
+#: apps/bets/models.py:467
+msgid "price"
+msgstr ""
+
+#: apps/bets/models.py:469
+msgid "start_date"
+msgstr ""
+
+#: apps/bets/models.py:483
+msgid "amount"
+msgstr ""
+
+#: apps/bets/models.py:485
+msgid "journal_entry"
+msgstr ""
+
+#: apps/bets/models.py:488
+msgid "status"
+msgstr "Status"
+
+#: apps/bets/models.py:491
+msgid "previous_balance"
+msgstr ""
+
+#: apps/bets/models.py:494
+msgid "new_balance"
+msgstr ""
+
+#: apps/bets/models.py:497
+msgid "reference"
+msgstr ""
+
+#: apps/bets/models.py:500
+msgid "description"
+msgstr ""
+
+#: apps/bets/serializers.py:184 apps/bets/serializers.py:191
+#: apps/bets/serializers.py:219
+msgid "Fixture id "
+msgstr ""
+
+#: apps/bets/serializers.py:225
+msgid "Insufficient balance!"
+msgstr "Onvoldoende balans"
+
+#: apps/bets/serializers.py:229
+msgid "Stake can't be empty."
+msgstr ""
+
+#: apps/bets/serializers.py:262 apps/bets/serializers.py:270
+msgid "Bet stake must be less or equal to "
+msgstr "De inzet moet  lager zijn"
+
+#: apps/bets/serializers.py:266 apps/bets/serializers.py:274
+msgid "Bet stake must be great then "
+msgstr ""
+
+#: apps/bets/serializers.py:278
+msgid "Max odd must be "
+msgstr ""
+
+#: apps/bets/serializers.py:282
+msgid "Max win amount can be "
+msgstr ""
+
+#: apps/bets/serializers.py:300
+msgid "Same bet count must be "
+msgstr "Hetzelfde aantal weddenschappen moet zijn"
+
+#: apps/bets/serializers.py:313
+msgid "For one bet max amount is "
+msgstr ""
+
+#: apps/bets/serializers.py:321
+msgid "For multiple bet with count 2 and price lower than 2.2 max bet is "
+msgstr ""
+
+#: apps/bets/serializers.py:327
+msgid "For multiple bet with count 3 and price lower than 3.2 max bet is "
+msgstr ""
+
+#: apps/bets/serializers.py:333
+msgid "For multiple bet with count 4 and price lower than 4.2 max bet is "
+msgstr ""
+
+#: apps/bets/views.py:174 apps/bets/views.py:712 apps/bets/views.py:786
+msgid "error"
+msgstr ""
+
+#: apps/bets/views.py:209
+msgid "Bet created"
+msgstr ""
+
+#: apps/bets/views.py:700 apps/bets/views.py:743 apps/bets/views.py:779
+msgid "Cashout Not Available"
+msgstr ""
+
+#: apps/bets/views.py:794
+msgid "Cashout Processed successfully"
+msgstr ""
+
+#: apps/casino/views.py:43
+msgid "Not valid category for games."
+msgstr ""
+
+#: apps/core/custom_refresh_token.py:32
+#: apps/core/jwt_token_authentication.py:74
+#: apps/core/jwt_token_authentication.py:78
+msgid "Invalid payload."
+msgstr ""
+
+#: apps/core/custom_refresh_token.py:39
+msgid "User doesn't exist."
+msgstr ""
+
+#: apps/core/custom_refresh_token.py:43
+#: apps/core/jwt_token_authentication.py:88
+msgid "User account is disabled."
+msgstr ""
+
+#: apps/core/custom_refresh_token.py:68
+msgid "Refresh has expired."
+msgstr ""
+
+#: apps/core/custom_refresh_token.py:71
+msgid "orig_iat field is required."
+msgstr ""
+
+#: apps/core/custom_refresh_token.py:76
+#: apps/core/jwt_token_authentication.py:60
+msgid "repeated_login"
+msgstr ""
+
+#: apps/core/jwt_token_authentication.py:40
+msgid "Invalid Authorization header. No credentials provided."
+msgstr ""
+
+#: apps/core/jwt_token_authentication.py:43
+msgid ""
+"Invalid Authorization header. Credentials string should not contain spaces."
+msgstr ""
+
+#: apps/core/jwt_token_authentication.py:84
+msgid "Invalid signature."
+msgstr ""
+
+#: apps/pulls/models.py:24
+msgid "NOT_STARTED"
+msgstr ""
+
+#: apps/pulls/models.py:25
+msgid "IN_PROGRESS"
+msgstr ""
+
+#: apps/pulls/models.py:26
+msgid "FINISHED"
+msgstr ""
+
+#: apps/pulls/models.py:27
+msgid "CANCELLED"
+msgstr ""
+
+#: apps/pulls/models.py:28
+msgid "POSTPONED"
+msgstr ""
+
+#: apps/pulls/models.py:29
+msgid "INTERRUPTED"
+msgstr ""
+
+#: apps/pulls/models.py:30
+msgid "ABANDONED"
+msgstr ""
+
+#: apps/pulls/models.py:31
+msgid "COVERAGE_LOST"
+msgstr ""
+
+#: apps/pulls/models.py:32
+msgid "ABOUT_TO_START"
+msgstr ""
+
+#: apps/pulls/models.py:47
+msgid "sport id"
+msgstr ""
+
+#: apps/pulls/models.py:57
+msgid "location id"
+msgstr ""
+
+#: apps/pulls/models.py:67
+msgid "league id"
+msgstr ""
+
+#: apps/pulls/models.py:77
+msgid "season"
+msgstr ""
+
+#: apps/pulls/models.py:82
+msgid "participant id"
+msgstr ""
+
+#: apps/pulls/models.py:156
+msgid "Start date"
+msgstr ""
+
+#: apps/pulls/models.py:159
+msgid "Last update"
+msgstr ""
+
+#: apps/pulls/models.py:164
+msgid "is event blacklisted"
+msgstr ""
+
+#: apps/pulls/models.py:273
+msgid "Participant position"
+msgstr ""
+
+#: apps/pulls/models.py:275
+msgid "Participant rotation id"
+msgstr ""
+
+#: apps/pulls/models.py:276
+msgid "Participant active status"
+msgstr ""
+
+#: apps/pulls/serializers.py:1505
+msgid "Event is already in favorites."
+msgstr ""
+
+#: apps/pulls/views.py:1368
+msgid "Favorite added"
+msgstr ""
+
+#: apps/pulls/views.py:1445
+msgid "You don't have permission to delete this favorite event."
+msgstr ""
+
+#: apps/pulls/views.py:1600
+msgid "Event not booked"
+msgstr ""
+
+#: apps/users/filters.py:7 templates/admin/agent/agents.html:50
+#: templates/admin/dealer/dealers.html:26
+#: templates/admin/player/players.html:58
+msgid "Recent Login"
+msgstr "Recent Login"
+
+#: apps/users/filters.py:8 templates/admin/agent/agents.html:51
+#: templates/admin/dealer/dealers.html:27
+#: templates/admin/player/players.html:59
+msgid "Credit Ascending"
+msgstr "Krediet oplopend"
+
+#: apps/users/filters.py:9 templates/admin/agent/agents.html:52
+#: templates/admin/dealer/dealers.html:28
+#: templates/admin/player/players.html:60
+msgid "Credit Descending"
+msgstr "Krediet aflopend"
+
+#: apps/users/filters.py:10 templates/admin/agent/agents.html:53
+#: templates/admin/dealer/dealers.html:29
+#: templates/admin/player/players.html:61
+msgid "Profit Ascending"
+msgstr "Winst stijgend"
+
+#: apps/users/filters.py:11 templates/admin/agent/agents.html:54
+#: templates/admin/dealer/dealers.html:30
+#: templates/admin/player/players.html:62
+msgid "Profit Descending"
+msgstr "Winst dalend"
+
+#: apps/users/models.py:17 templates/admin/player/players.html:610
+#: templates/bets/betslips.html:132
+msgid "Player"
+msgstr "Speler"
+
+#: apps/users/models.py:18 templates/admin/agent/agents.html:105
+#: templates/admin/agent/agents.html:535 templates/header.html:72
+#: templates/home.html:35
+msgid "Agent"
+msgstr "Agent"
+
+#: apps/users/models.py:19 templates/admin/agent/agents.html:36
+#: templates/admin/dealer/dealers.html:84
+#: templates/admin/dealer/dealers.html:493
+msgid "Dealer"
+msgstr "Dealer"
+
+#: apps/users/models.py:20 templates/header.html:100 templates/home.html:71
+msgid "Manager"
+msgstr "Manager"
+
+#: apps/users/models.py:21 templates/header.html:83 templates/home.html:50
+msgid "Admin"
+msgstr ""
+
+#: apps/users/models.py:22
+msgid "Super Admin"
+msgstr ""
+
+#: apps/users/models.py:26 templates/admin/dealer/create_dealer.html:18
+#: templates/admin/dealer/update_dealer.html:18
+msgid "Europe/Berlin"
+msgstr ""
+
+#: apps/users/models.py:27 templates/admin/dealer/create_dealer.html:17
+#: templates/admin/dealer/update_dealer.html:17
+msgid "Europe/Amsterdam"
+msgstr ""
+
+#: apps/users/models.py:28 templates/admin/dealer/create_dealer.html:19
+#: templates/admin/dealer/update_dealer.html:19
+msgid "Europe/Istanbul"
+msgstr ""
+
+#: apps/users/models.py:29 templates/admin/dealer/create_dealer.html:20
+#: templates/admin/dealer/update_dealer.html:20
+msgid "UTC"
+msgstr ""
+
+#: apps/users/models.py:33
+msgid "transaction delay"
+msgstr "Transactie Vertraging"
+
+#: apps/users/models.py:37
+msgid "EUR"
+msgstr ""
+
+#: apps/users/models.py:38
+msgid "TRY"
+msgstr ""
+
+#: apps/users/models.py:39
+msgid "RUB"
+msgstr ""
+
+#: apps/users/models.py:71
+msgid "password"
+msgstr "Wachtwoord"
+
+#: apps/users/models.py:76
+msgid "user type"
+msgstr ""
+
+#: apps/users/models.py:79
+msgid "active"
+msgstr ""
+
+#: apps/users/models.py:82
+msgid ""
+"Designates whether this user should be treated as active. Unselect this "
+"instead of deleting accounts."
+msgstr ""
+
+#: apps/users/models.py:87
+msgid "username"
+msgstr ""
+
+#: apps/users/models.py:91
+msgid "balance"
+msgstr ""
+
+#: apps/users/models.py:92
+msgid "pending"
+msgstr ""
+
+#: apps/users/models.py:93
+msgid "locked"
+msgstr ""
+
+#: apps/users/models.py:95
+msgid "timezone"
+msgstr ""
+
+#: apps/users/models.py:102
+msgid "callback key"
+msgstr ""
+
+#: apps/users/models.py:103 apps/users/models.py:104
+msgid "is_casino_enabled"
+msgstr ""
+
+#: apps/users/models.py:105
+msgid "currency"
+msgstr ""
+
+#: apps/users/models.py:106
+msgid "system id"
+msgstr ""
+
+#: apps/users/models.py:107
+msgid "access token"
+msgstr ""
+
+#: apps/users/models.py:211 apps/users/models.py:218
+msgid "max single bet"
+msgstr ""
+
+#: apps/users/models.py:212 apps/users/models.py:219
+msgid "min bet"
+msgstr ""
+
+#: apps/users/models.py:213 apps/users/models.py:220
+msgid "max multiple bet"
+msgstr ""
+
+#: apps/users/models.py:221
+msgid "max win amount"
+msgstr ""
+
+#: apps/users/models.py:222
+msgid "max odd"
+msgstr "Max Quotering"
+
+#: apps/users/models.py:223
+msgid "max bet amount per match"
+msgstr ""
+
+#: apps/users/models.py:224
+msgid "max same bet count"
+msgstr ""
+
+#: apps/users/models.py:226
+msgid "max multi two events amount"
+msgstr ""
+
+#: apps/users/models.py:229
+msgid "max multi three events amount"
+msgstr ""
+
+#: apps/users/models.py:232
+msgid "max multi four events amount"
+msgstr ""
+
+#: apps/users/models.py:235
+msgid "cashout percentage"
+msgstr ""
+
+#: apps/users/models.py:317
+msgid "config name"
+msgstr ""
+
+#: apps/users/models.py:318
+msgid "config value"
+msgstr ""
+
+#: apps/users/serializers.py:134
+msgid "You can not change your role."
+msgstr ""
+
+#: apps/users/serializers.py:140 apps/users/serializers.py:145
+msgid "Username already exists."
+msgstr ""
+
+#: apps/users/serializers.py:196
+msgid "User with these credentials doesn't exist"
+msgstr ""
+
+#: apps/users/serializers.py:199
+msgid "Your account has been deactivated. Please contact you agent."
+msgstr ""
+
+#: apps/users/serializers.py:202
+msgid "Your account is deactivated"
+msgstr ""
+
+#: apps/users/serializers.py:205
+#, python-brace-format
+msgid "Must include \"{username_field}\" and \"password\"."
+msgstr ""
+
+#: apps/users/views.py:130
+msgid "Invalid current password"
+msgstr ""
+
+#: apps/users/views.py:158
+msgid "Invalid Token"
+msgstr ""
+
+#: templates/admin/admins.html:11
+msgid "Admin Data"
+msgstr ""
+
+#: templates/admin/admins.html:24 templates/transactions/transactions.html:32
+msgid "Search User"
+msgstr "Zoek gebruiker"
+
+#: templates/admin/admins.html:28 templates/admin/agent/agents.html:66
+#: templates/admin/dealer/dealers.html:42
+#: templates/admin/player/players.html:75 templates/bets/betslips.html:95
+#: templates/bets/betslips.html:100 templates/includes/transactions.html:71
+#: templates/profit/profit.html:68 templates/transactions/transactions.html:36
+msgid "Search"
+msgstr "Zoeken"
+
+#: templates/admin/admins.html:39
+msgid "Add Admin"
+msgstr ""
+
+#: templates/admin/admins.html:50
+msgid "Balance"
+msgstr ""
+
+#: templates/admin/agent/agents.html:11
+msgid "Agents"
+msgstr ""
+
+#: templates/admin/agent/agents.html:55 templates/admin/dealer/dealers.html:31
+#: templates/admin/player/players.html:63
+msgid "Created Ascending"
+msgstr ""
+
+#: templates/admin/agent/agents.html:56 templates/admin/dealer/dealers.html:32
+#: templates/admin/player/players.html:64
+msgid "Created Descending"
+msgstr ""
+
+#: templates/admin/agent/agents.html:62
+#, fuzzy
+#| msgid "Search User"
+msgid "Search Agent"
+msgstr "Zoek gebruiker"
+
+#: templates/admin/agent/agents.html:76 templates/admin/dealer/dealers.html:52
+#: templates/admin/player/players.html:86
+#: templates/admin/player/players.html:102 templates/bets/betslips.html:112
+#: templates/includes/transactions.html:18 templates/profit/profit.html:79
+#: templates/transactions/transactions.html:48
+msgid "From date"
+msgstr "Van datum"
+
+#: templates/admin/agent/agents.html:83 templates/admin/dealer/dealers.html:60
+#: templates/admin/player/players.html:93
+#: templates/admin/player/players.html:109 templates/bets/betslips.html:119
+#: templates/includes/transactions.html:30 templates/profit/profit.html:86
+#: templates/transactions/transactions.html:55
+msgid "To date"
+msgstr "Tot datum"
+
+#: templates/admin/agent/agents.html:93
+#: templates/admin/agent/create_agent.html:6
+msgid "Add Agent"
+msgstr ""
+
+#: templates/admin/agent/agents.html:106 templates/admin/dealer/dealers.html:85
+#: templates/header.html:19 templates/includes/transactions.html:44
+#: templates/includes/transactions.html:139
+#: templates/includes/transactions.html:149
+msgid "Credit"
+msgstr ""
+
+#: templates/admin/agent/agents.html:232
+#: templates/admin/dealer/dealers.html:193
+#: templates/admin/player/players.html:347 templates/profit/profit.html:105
+#: templates/profit/profit.html:187 templates/profit/profit.html:269
+msgid "Provider"
+msgstr "Aanbieder"
+
+#: templates/admin/agent/agents.html:233
+#: templates/admin/dealer/dealers.html:194
+#: templates/admin/player/players.html:348 templates/profit/profit.html:106
+#: templates/profit/profit.html:188 templates/profit/profit.html:270
+msgid "In"
+msgstr ""
+
+#: templates/admin/agent/agents.html:234
+#: templates/admin/dealer/dealers.html:195
+#: templates/admin/player/players.html:349 templates/profit/profit.html:107
+#: templates/profit/profit.html:189 templates/profit/profit.html:271
+msgid "Out"
+msgstr ""
+
+#: templates/admin/agent/agents.html:235
+#: templates/admin/dealer/dealers.html:196
+#: templates/admin/player/players.html:350 templates/header.html:117
+#: templates/home.html:93 templates/profit/profit.html:15
+#: templates/profit/profit.html:98 templates/profit/profit.html:108
+#: templates/profit/profit.html:180 templates/profit/profit.html:190
+#: templates/profit/profit.html:262 templates/profit/profit.html:272
+msgid "Profit"
+msgstr "Winst"
+
+#: templates/admin/agent/agents.html:240
+#: templates/admin/dealer/dealers.html:201
+#: templates/admin/player/players.html:355 templates/profit/profit.html:113
+#: templates/profit/profit.html:195 templates/profit/profit.html:277
+msgid "SportsBook"
+msgstr "Sportsbook"
+
+#: templates/admin/agent/agents.html:246 templates/admin/agent/agents.html:539
+#: templates/admin/dealer/dealers.html:207
+#: templates/admin/dealer/dealers.html:497
+#: templates/admin/player/players.html:361
+#: templates/includes/transactions.html:56 templates/profit/profit.html:123
+#: templates/profit/profit.html:205 templates/profit/profit.html:287
+msgid "Casino"
+msgstr "Casino"
+
+#: templates/admin/agent/agents.html:252 templates/admin/agent/agents.html:551
+#: templates/admin/dealer/dealers.html:213
+#: templates/admin/player/players.html:367
+#: templates/includes/transactions.html:57 templates/profit/profit.html:133
+#: templates/profit/profit.html:215 templates/profit/profit.html:297
+msgid "Live Casino"
+msgstr "Live casino"
+
+#: templates/admin/agent/agents.html:261
+#: templates/admin/dealer/dealers.html:222
+#: templates/admin/player/players.html:376 templates/profit/profit.html:146
+#: templates/profit/profit.html:228 templates/profit/profit.html:310
+msgid "Total"
+msgstr "Totalen"
+
+#: templates/admin/agent/agents.html:267
+#: templates/admin/dealer/dealers.html:228
+#: templates/admin/player/players.html:382 templates/profit/profit.html:156
+#: templates/profit/profit.html:238 templates/profit/profit.html:320
+msgid "BONUS"
+msgstr "Bonus"
+
+#: templates/admin/agent/agents.html:276
+#: templates/admin/dealer/dealers.html:237
+#: templates/admin/player/players.html:391 templates/profit/profit.html:165
+#: templates/profit/profit.html:247 templates/profit/profit.html:329
+msgid "Net Profit"
+msgstr "Netto winst"
+
+#: templates/admin/agent/agents.html:335
+#: templates/admin/dealer/dealers.html:296
+msgid "Betting limits"
+msgstr ""
+
+#: templates/admin/agent/agents.html:347
+#: templates/admin/dealer/dealers.html:308
+#: templates/admin/player/players.html:427
+#: templates/includes/betting_limits_popup.html:19
+#: templates/includes/transactions.html:16
+msgid "Max Single Bet"
+msgstr "Max enkele weddenschap"
+
+#: templates/admin/agent/agents.html:364
+#: templates/admin/dealer/dealers.html:324
+#: templates/admin/player/players.html:445
+#: templates/includes/betting_limits_popup.html:34
+#: templates/includes/transactions.html:27
+msgid "Max Multiple Bet"
+msgstr ""
+
+#: templates/admin/agent/agents.html:381
+#: templates/admin/dealer/dealers.html:340
+#: templates/admin/player/players.html:463
+#: templates/includes/betting_limits_popup.html:49
+#: templates/includes/transactions.html:39
+#: templates/includes/transactions.html:53
+msgid "Min Bet"
+msgstr ""
+
+#: templates/admin/agent/agents.html:397
+#: templates/admin/dealer/dealers.html:355
+#: templates/admin/player/players.html:478
+#: templates/includes/betting_limits_popup.html:62
+msgid "Max Win Amount"
+msgstr "Max te winnen bedrag"
+
+#: templates/admin/agent/agents.html:412
+#: templates/admin/dealer/dealers.html:370
+#: templates/admin/player/players.html:493
+#: templates/includes/betting_limits_popup.html:73
+msgid "Max Odd"
+msgstr "Max Quotering"
+
+#: templates/admin/agent/agents.html:427
+#: templates/admin/player/players.html:508
+msgid "Max Single Bet Amount Per Match"
+msgstr ""
+
+#: templates/admin/agent/agents.html:442
+#: templates/admin/player/players.html:523
+#: templates/includes/betting_limits_popup.html:95
+msgid "Max Multiple Bet Amount Per Match"
+msgstr ""
+
+#: templates/admin/agent/agents.html:457
+#: templates/admin/dealer/dealers.html:400
+#: templates/admin/player/players.html:538
+#: templates/includes/betting_limits_popup.html:106
+msgid "Max Same Bet Count Amount"
+msgstr ""
+
+#: templates/admin/agent/agents.html:472
+#: templates/admin/dealer/dealers.html:415
+#: templates/admin/player/players.html:553
+#: templates/includes/betting_limits_popup.html:119
+msgid "Max Multi Two Events Amount Combine"
+msgstr ""
+
+#: templates/admin/agent/agents.html:487
+#: templates/admin/dealer/dealers.html:430
+#: templates/admin/player/players.html:568
+#: templates/includes/betting_limits_popup.html:130
+msgid "Max Multi Three Events Amount Combine"
+msgstr ""
+
+#: templates/admin/agent/agents.html:502
+#: templates/admin/dealer/dealers.html:445
+#: templates/admin/player/players.html:583
+#: templates/includes/betting_limits_popup.html:143
+msgid "Max Multi Three Events"
+msgstr ""
+
+#: templates/admin/agent/agents.html:515
+#: templates/admin/agent/update_agent.html:30
+#: templates/admin/create-admin.html:33 templates/admin/dealer/dealers.html:474
+#: templates/admin/dealer/update_dealer.html:54
+#: templates/admin/player/update_player.html:30
+#: templates/includes/betting_limits_popup.html:238
+msgid "Save"
+msgstr ""
+
+#: templates/admin/agent/agents.html:534
+#: templates/admin/dealer/dealers.html:506
+#: templates/admin/player/players.html:593 templates/admin/settings.html:16
+msgid "Permissions"
+msgstr "Rechten"
+
+#: templates/admin/agent/agents.html:634
+#: templates/admin/dealer/dealers.html:581
+#: templates/admin/player/players.html:698 templates/admin/settings.html:164
+msgid "Are you sure"
+msgstr ""
+
+#: templates/admin/agent/agents.html:643
+#: templates/admin/dealer/dealers.html:590
+#: templates/admin/player/players.html:707 templates/admin/settings.html:172
+msgid "Yes"
+msgstr ""
+
+#: templates/admin/agent/agents.html:644
+#: templates/admin/dealer/dealers.html:591
+#: templates/admin/player/players.html:708 templates/admin/settings.html:173
+msgid "No"
+msgstr ""
+
+#: templates/admin/agent/create_agent.html:30
+msgid "Create Agent"
+msgstr ""
+
+#: templates/admin/agent/update_agent.html:6
+msgid "Edit Agent"
+msgstr ""
+
+#: templates/admin/dealer/create_dealer.html:6
+#: templates/admin/dealer/dealers.html:71
+msgid "Add Dealer"
+msgstr ""
+
+#: templates/admin/dealer/create_dealer.html:15
+#: templates/admin/dealer/update_dealer.html:16
+msgid "Timezone"
+msgstr ""
+
+#: templates/admin/dealer/create_dealer.html:54
+msgid "Create Dealer"
+msgstr ""
+
+#: templates/admin/dealer/dealers.html:12 templates/header.html:92
+#: templates/home.html:61
+msgid "Dealers"
+msgstr "Dealers"
+
+#: templates/admin/dealer/dealers.html:38
+#, fuzzy
+#| msgid "Search Player"
+msgid "Search Dealer"
+msgstr "Zoek speler"
+
+#: templates/admin/dealer/dealers.html:385
+#: templates/includes/betting_limits_popup.html:86
+msgid "Max Bet Amount Per Match"
+msgstr ""
+
+#: templates/admin/dealer/dealers.html:460
+#: templates/includes/betting_limits_popup.html:158
+msgid "Cashout Commission Percentage"
+msgstr ""
+
+#: templates/admin/dealer/update_dealer.html:6
+msgid "Edit Dealer"
+msgstr ""
+
+#: templates/admin/player/create_player.html:6
+#: templates/admin/player/players.html:120
+msgid "Add Player"
+msgstr ""
+
+#: templates/admin/player/create_player.html:30
+msgid "Create player"
+msgstr ""
+
+#: templates/admin/player/players.html:10 templates/header.html:63
+#: templates/home.html:23
+msgid "Players"
+msgstr "Spelers"
+
+#: templates/admin/player/players.html:71 templates/profit/profit.html:64
+msgid "Search Player"
+msgstr "Zoek speler"
+
+#: templates/admin/player/players.html:414 templates/header.html:144
+#: templates/home.html:145 templates/includes/betting_limits_popup.html:6
+msgid "Betting Limits"
+msgstr ""
+
+#: templates/admin/player/players.html:614
+msgid "Ability to play"
+msgstr "Blockeren"
+
+#: templates/admin/settings.html:10 templates/home.html:157
+msgid "Settings"
+msgstr ""
+
+#: templates/admin/settings.html:21
+#, fuzzy
+#| msgid "Permissions"
+msgid "Betting Permission"
+msgstr "Rechten"
+
+#: templates/admin/settings.html:42
+msgid "Blacklist Events"
+msgstr ""
+
+#: templates/admin/settings.html:47
+msgid "Enter Fixture ID"
+msgstr ""
+
+#: templates/admin/settings.html:52
+msgid "Add"
+msgstr ""
+
+#: templates/bets/betslips.html:15 templates/header.html:134
+#: templates/home.html:131
+msgid "Coupons"
+msgstr "Tickets"
+
+#: templates/bets/betslips.html:30
+msgid "Won"
+msgstr "gewonnen"
+
+#: templates/bets/betslips.html:35
+msgid "Lost"
+msgstr "Verloren"
+
+#: templates/bets/betslips.html:40
+msgid "Current"
+msgstr "Actueel"
+
+#: templates/bets/betslips.html:133
+msgid "Bet Amount"
+msgstr "Inzet"
+
+#: templates/bets/betslips.html:134
+msgid "Possible Win"
+msgstr "Mogelijke win"
+
+#: templates/bets/betslips.html:135
+msgid "Win Amount"
+msgstr "Win bedrag"
+
+#: templates/bets/betslips.html:136 templates/includes/transactions.html:79
+#: templates/transactions/transactions.html:71
+msgid "Date"
+msgstr "Datum"
+
+#: templates/bets/betslips.html:245
+msgid "ID"
+msgstr ""
+
+#: templates/bets/betslips.html:241 templates/includes/transactions.html:81
+msgid "Type"
+msgstr "Type"
+
+#: templates/bets/betslips.html:276 templates/bets/betslips.html:277
+msgid "Pick"
+msgstr "Keuze"
+
+#: templates/bets/betslips.html:277
+msgid "Tip"
+msgstr ""
+
+#: templates/header.html:108 templates/home.html:81
+msgid "Terminals"
+msgstr "Terminals"
+
+#: templates/header.html:126 templates/home.html:106
+msgid "Transaction"
+msgstr ""
+
+#: templates/header.html:154
+msgid "Log Out"
+msgstr "Uitloggen"
+
+#: templates/home.html:117
+msgid "E-Vouchers"
+msgstr ""
+
+#: templates/includes/betting_limits_popup.html:178
+msgid "Permissions Dealer"
+msgstr ""
+
+#: templates/includes/betting_limits_popup.html:182
+msgid "Creating Agent"
+msgstr ""
+
+#: templates/includes/betting_limits_popup.html:197
+msgid "Block dealer"
+msgstr ""
+
+#: templates/includes/betting_limits_popup.html:211
+msgid "Max Agent"
+msgstr ""
+
+#: templates/includes/betting_limits_popup.html:223
+msgid "Max Player per Agent"
+msgstr ""
+
+#: templates/includes/transactions.html:6
+msgid "Player Transactions"
+msgstr ""
+
+#: templates/includes/transactions.html:41
+#: templates/includes/transactions.html:136
+#: templates/includes/transactions.html:144
+#: templates/includes/transactions.html:148
+msgid "All"
+msgstr "Alle"
+
+#: templates/includes/transactions.html:45
+#: templates/includes/transactions.html:140
+#: templates/includes/transactions.html:150
+msgid "Debit"
+msgstr ""
+
+#: templates/includes/transactions.html:55
+msgid "Sportsbook"
+msgstr "Sportsbook"
+
+#: templates/includes/transactions.html:79
+#, fuzzy
+#| msgid "Date"
+msgid "Time"
+msgstr "tijd"
+
+#: templates/includes/transactions.html:80
+msgid "Trans Type"
+msgstr ""
+
+#: templates/includes/transactions.html:82
+#: templates/transactions/transactions.html:70
+msgid "Amount"
+msgstr "Bedrag"
+
+#: templates/limits/limits.html:13
+msgid "Betting Limit2"
+msgstr ""
+
+#: templates/login.html:33
+msgid "Login"
+msgstr "Log in"
+
+#: templates/transactions/transactions.html:17
+msgid "Transactions"
+msgstr "Transacties"
+
+#: templates/transactions/transactions.html:68
+msgid "Paid"
+msgstr ""
+
+#: templates/transactions/transactions.html:69
+msgid "Received"
+msgstr ""

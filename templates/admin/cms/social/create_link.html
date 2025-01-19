@@ -1,0 +1,193 @@
+{% extends "index.html" %}
+{% load static %}
+{% load i18n %}
+{% block title %}
+Create Social Links
+{% endblock title %}
+{% block content %}
+<style>
+    #pop-loader {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100%;
+        background: rgba(0,0,0,0.75) url(../../../static/Desktop_static/images/loading2.gif) no-repeat center center;
+        z-index: 10000;
+    }
+    .admin-card{
+        background-color: #ffffff;
+        box-shadow: 0px 0px 6px 6px rgb(204 204 204 / 0.25);
+        padding: 30px 10px;
+    }
+    .pcode.left-spacer {
+	    margin-left: 0px;
+    }
+    .pcode{
+	    margin-left: 250px;
+    }
+    @media(max-width:767px){
+        .pcode{
+	        margin-left: 0px;
+        }
+    }
+    .django-ckeditor-widget{
+        display: block !important;
+    }
+    #cke_1_contents{
+        height: 150px !important;
+    }
+    #logo_img{
+        width: 50px;
+        height: 50px;
+    }
+    input[type=file]{
+    width:90px;
+}
+</style>
+<div id="pop-loader"></div>
+<div class="pcode" id='nw1' >
+    <div>
+        <div class="container-fluid pt-4" >
+            <div class="admin-card">
+                <div class="row">
+                    <div class="col-xs-12 col-lg-12 ">
+                        <div class="page-content"  >
+                            <div class="main-heading-wrap">
+                                <h5>{% trans 'Create Social Link' %}</h5>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <form action="" class="pl-3 pr-3" method="post" id="upload-file"  enctype="multipart/form-data">
+                    {% csrf_token %}
+                    {{ form.media }}
+                    <div class="row mb-3" style="margin-top:10px;">
+
+                        <div class="col-md-6 mb-3 mb-md-0" >
+                            <div style="margin-bottom: 7px;">
+                                <span style="font-weight: bold;">{% trans "Title" %}
+                                </span>
+                            </div>
+                            {{ form.title }}
+                        </div>
+
+
+                        <div class="col-md-6 mb-3 mb-md-0" >
+                            <div style="margin-bottom: 7px;">
+                                <span style="font-weight: bold;">{% trans "Url" %}
+                                </span>
+                            </div>
+                            {{ form.url }}
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div style="margin-bottom: 7px;">
+                                <span style="font-weight: bold;">{% trans "Logo" %}
+                                </span>
+                            </div>
+                            {{ form.logo }}
+                            <div class="form-text">
+                                {% comment %} <p><strong>Note:</strong> Image size suggested to be less then 5MB and
+                                    also in ratio of 30 * 30.</p> {% endcomment %}
+                                <p><strong>Note:</strong> only SVG files are allowed for upload.</p>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 logo-preview" style="display:none;">
+                            <div style="margin-bottom: 7px;">
+                                <span style="font-weight: bold;">{% trans "Logo Preview" %}</span>
+                            </div>
+                            <div class="ml-4">
+                                <img id="logo_img" hidden='true' src="" onload="get_image_info()"  alt="logo" />
+                                {% comment %} </br><p id="img_info" hidden='true'><strong>Image Info:</strong> </p> {% endcomment %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3 text-right">
+                        <div class="col-md-12">
+                            <input type="submit" class="btn btn-primary" value="Create">
+                            <a href="{% url "admin-panel:social-link" %}" class="btn btn-primary">Cancel</a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+
+function read_social_link_logo(input) {
+    if (input.files && input.files[0]) {
+        $('input[type=file]').css('width', '200px');
+        var reader = new FileReader();
+        reader.onload = function (e) {
+            $('#logo_img').attr('src', e.target.result);
+            $("#logo_img").attr('width', '50px');
+            $("#logo_img").attr('height', '50px');
+            $("#logo_img").attr('hidden', false);
+            $(".logo-preview").show();
+        };
+        reader.readAsDataURL(input.files[0]);
+    } else {
+        var reader = new FileReader();
+        reader.onload = function (e) {
+            $('#logo_img').attr('src', '');
+        };
+    }
+}
+function get_image_info(){
+    var img = new Image();
+    img.src = $('#logo_img').attr('src');
+    {% comment %} $('#img_info strong').text('Image size: ' + img.width + ' x ' + img.height + ' px'); {% endcomment %}
+    {% comment %} $('#img_info').attr('hidden', false); {% endcomment %}
+}
+
+function validateTitle(){
+    title = $('#id_title').val();
+    console.log('title: ' + title);
+    if (title.replace(/\s/g, '').length == 0 ) {
+        $('#id_title').val('');
+        Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: "Title is required"
+        });
+        return false;
+}
+}
+
+function validateUrl(){
+  var pattern = new RegExp('^(https?:\\/\\/)?'+ // protocol
+    '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|'+ // domain name
+    '((\\d{1,3}\\.){3}\\d{1,3}))'+ // OR ip (v4) address
+    '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*'+ // port and path
+    '(\\?[;&a-z\\d%_.~+=-]*)?'+ // query string
+    '(\\#[-a-z\\d_]*)?$','i'); // ragment locator
+  url = $('#redirect_url').val();
+  console.log('url',pattern.test(url));
+  if(!!pattern.test(url)){
+    return true;
+  }
+  else{
+    Swal.fire({
+                  icon: 'error',
+                  title: 'Oops...',
+                  allowOutsideClick: false,
+                  text: 'Please enter valid URL',
+                }).then((result) => {
+                  $('#redirect_url').val('');
+                })
+    return false;
+  }
+    
+}
+
+
+</script>
+{% endblock content %}

@@ -1,0 +1,123 @@
+{% extends "index.html" %}
+{% load static %}
+{% load i18n %}
+{% block title %}
+Login
+{% endblock title %}
+{% block content %}
+
+  <section class="login-block">
+      <!-- Container-fluid starts -->
+      <div class="container" style="margin-top:7rem; margin-left:auto; margin-right:auto">
+          <div class="pt-3 mx-auto" style="max-width: 540px;">
+              {% include "includes/messages.html" %}
+          </div>
+
+          <div class="row">
+              <div class="col-sm-12">
+                  <!-- Authentication card start -->
+
+                      <form class="md-float-material form-material" id="login-form" action="#">
+                        <input type="hidden" name="redirect_url" value="{{ request.build_absolute_uri }}">
+                        {% csrf_token %}
+                          <div class="auth-box card">
+                              <div class="card-block">
+                                  <div class="row m-b-20">
+                                      <div class="col-md-12">
+                                          <h3 class="text-center">{% trans "Sign In" %}</h3>
+                                      </div>
+                                  </div>
+                                  <div class="form-group form-primary ">
+                                    <label class="float-label">{% trans "Username" %}</label> 
+                                    <input  name="username" class="form-control" id="username"   required autofocus>
+                                    <span class="form-bar"></span>
+                                     
+                                  </div>
+                                  <div class="form-group form-primary">
+                                    <label class="float-label">{% trans "Password" %}</label> 
+                                    <input type="password" name="password" class="form-control" id='password' required >
+                                    <span class="form-bar"></span>
+                                     
+                                  </div>
+                                  <div class="row m-t-25 text-left">
+                                     
+                                  </div>
+                                  <div class="row">
+                                      <div class="col-md-12">
+                                          <button type="submit" class="btn btn-primary btn-md btn-block waves-effect waves-light text-center m-b-20">{% trans "Sign in" %}</button>
+                                      </div>
+                                  </div>
+                                  <hr/>
+                                  <div class="row">
+                                     
+                                      
+                                  </div>
+                              </div>
+                          </div>
+                      </form>
+                      <!-- end of form -->
+              </div>
+              <!-- end of col-sm-12 -->
+          </div>
+          <!-- end of row -->
+      </div>
+      <!-- end of container-fluid -->
+  </section>
+  <script type="text/javascript">
+    $(document).ready(function () {
+
+
+
+        $('#login-form').on('submit', function (e) {
+            e.preventDefault();
+
+            var username = $("#username").val();
+            var password = $("#password").val();
+
+            $.ajax({
+                url: "{% url 'admin-panel:check-login' %}",
+                type: "POST",
+                dataType: "json",
+                data: {
+                    username: username,
+                    password: password,
+                    csrfmiddlewaretoken: '{{ csrf_token }}'
+                },
+                success: function (data) {
+                    if(data.status === 'Failed'){
+                        showMessage(data.message, 'error')
+                    }else{
+                        var searchParams = new URLSearchParams(window.location.search);
+                        var nextUrl = searchParams.get('next');
+                        if(nextUrl){
+                            window.location = nextUrl;
+                        }else{
+                            window.location = "{% url 'admin-panel:home' %}";
+                        }
+                    }
+                },
+                error: function (request) {
+                    if(request.status === 403){
+                        showMessage('These credentials do not match our records.', 'error')
+                    }
+                }
+            });
+        })
+    })
+
+    function showMessage(message, status) {
+        let http_class_name = ""
+        if (status == "error") {
+            http_class_name = "alert-danger";
+        } else {
+            http_class_name = "alert-success";
+        }
+            let html =
+                '<div class="alert ' + http_class_name + ' alert-block">' +
+                '<button type="button" class="close" data-dismiss="alert">×</button>' +
+                '<strong>' + message + '</strong>' +
+                '</div>';
+            $('#notification_messages').html(html);
+    }
+</script>
+  {% endblock content %}

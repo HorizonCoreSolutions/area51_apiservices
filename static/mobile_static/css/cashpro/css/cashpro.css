@@ -1,0 +1,91 @@
+@font-face {
+  font-family: 'cashpro';
+  src: url('../font/cashpro.eot?17192414');
+  src: url('../font/cashpro.eot?17192414#iefix') format('embedded-opentype'),
+       url('../font/cashpro.woff2?17192414') format('woff2'),
+       url('../font/cashpro.woff?17192414') format('woff'),
+       url('../font/cashpro.ttf?17192414') format('truetype'),
+       url('../font/cashpro.svg?17192414#cashpro') format('svg');
+  font-weight: normal;
+  font-style: normal;
+}
+/* Chrome hack: SVG is rendered more smooth in Windozze. 100% magic, uncomment if you need it. */
+/* Note, that will break hinting! In other OS-es font will be not as sharp as it could be */
+/*
+@media screen and (-webkit-min-device-pixel-ratio:0) {
+  @font-face {
+    font-family: 'cashpro';
+    src: url('../font/cashpro.svg?17192414#cashpro') format('svg');
+  }
+}
+*/
+ 
+ [class^="icon-"]:before, [class*=" icon-"]:before {
+  font-family: "cashpro";
+  font-style: normal;
+  font-weight: normal;
+  speak: never;
+ 
+  display: inline-block;
+  text-decoration: inherit;
+  width: 1em;
+  margin-right: .2em;
+  text-align: center;
+  /* opacity: .8; */
+ 
+  /* For safety - reset parent styles, that can break glyph codes*/
+  font-variant: normal;
+  text-transform: none;
+ 
+  /* fix buttons height, for twitter bootstrap */
+  line-height: 1em;
+ 
+  /* Animation center compensation - margins should be symmetric */
+  /* remove if not needed */
+  margin-left: .2em;
+ 
+  /* you can be more comfortable with increased icons size */
+  /* font-size: 120%; */
+ 
+  /* Font smoothing. That was taken from TWBS */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+ 
+  /* Uncomment for 3D effect */
+  /* text-shadow: 1px 1px 1px rgba(127, 127, 127, 0.3); */
+}
+ 
+.icon-manager:before { content: '\e800'; } /* '' */
+.icon-limit:before { content: '\e801'; } /* '' */
+.icon-coupons:before { content: '\e802'; } /* '' */
+.icon-dealer:before { content: '\e803'; } /* '' */
+.icon-language:before { content: '\e804'; } /* '' */
+.icon-log:before { content: '\e805'; } /* '' */
+.icon-travis-logo:before { content: '\e806'; } /* '' */
+.icon-odd-select:before { content: '\e807'; } /* '' */
+.icon-players:before { content: '\e808'; } /* '' */
+.icon-profit:before { content: '\e809'; } /* '' */
+.icon-terminal:before { content: '\e80a'; } /* '' */
+.icon-user_action:before { content: '\e80b'; } /* '' */
+.icon-vouchers:before { content: '\e80c'; } /* '' */
+.icon-basketball:before { content: '\e80d'; } /* '' */
+.icon-soccer:before { content: '\e80e'; } /* '' */
+.icon-sports:before { content: '\e80f'; } /* '' */
+.icon-tennis:before { content: '\e810'; } /* '' */
+.icon-movement:before { content: '\e811'; } /* '' */
+.icon-agent:before { content: '\e812'; } /* '' */
+.icon-icon-betting-limits:before { content: '\e813'; } /* '' */
+.icon-support:before { content: '\e814'; } /* '' */
+.icon-alert:before { content: '\e815'; } /* '' */
+.icon-icon-admin:before { content: '\e816'; } /* '' */
+.icon-icon-alert:before { content: '\e817'; } /* '' */
+.icon-admin:before { content: '\e819'; } /* '' */
+.icon-icon-coupons:before { content: '\e81a'; } /* '' */
+.icon-icon-credit:before { content: '\e81b'; } /* '' */
+.icon-icon-dealer:before { content: '\e81c'; } /* '' */
+.icon-icon-e-vouchers:before { content: '\e81d'; } /* '' */
+.icon-icon-manager:before { content: '\e81f'; } /* '' */
+.icon-icon-players:before { content: '\e820'; } /* '' */
+.icon-icon-profit:before { content: '\e821'; } /* '' */
+.icon-icon-shop:before { content: '\e822'; } /* '' */
+.icon-icon-log-file:before { content: '\e823'; } /* '' */

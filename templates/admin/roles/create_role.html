@@ -1,0 +1,344 @@
+{% extends "index.html" %}
+{% load static %}
+{% load i18n %}
+{% load permissions %}
+{% block title %}
+Create Role
+{% endblock title %}
+{% block content %}
+<style>
+    #pop-loader {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100%;
+        background: rgba(0,0,0,0.75) url(../../../static/Desktop_static/images/loading2.gif) no-repeat center center;
+        z-index: 10000;
+    }
+    .admin-card{
+        background-color: #ffffff;
+        box-shadow: 0px 0px 6px 6px rgb(204 204 204 / 0.25);
+        padding: 30px 10px;
+    }
+    .pcode.left-spacer {
+	    margin-left: 0px;
+    }
+    .pcode{
+	    margin-left: 250px;
+    }
+    @media(max-width:767px){
+        .pcode{
+	        margin-left: 0px;
+        }
+    }
+    .django-ckeditor-widget{
+        display: block !important;
+    }
+    #cke_1_contents{
+        height: 150px !important;
+    }
+    #banner_img{
+        width: 500px;
+        height: 200px;
+    }
+    input[type=file]{
+        width:90px;
+    }
+
+
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 47px;
+        height: 21px;
+        vertical-align: middle;
+    }
+    
+    .switch input {
+        display: none;
+    }
+
+    .header-switch {
+        position: relative;
+        display: inline-block;
+        width: 47px;
+        height: 26px;
+        vertical-align: middle;
+    }
+    
+    .header-switch input {
+        display: none;
+    }
+
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        -webkit-transition: .4s;
+        transition: .4s;
+        border-radius: 34px;
+    }
+    
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 15px;
+        width: 15px;
+        left: 3px;
+        bottom: 3px;
+        background-color: white;
+        -webkit-transition: .4s;
+        transition: .4s;
+        border-radius: 50%;
+    }
+    
+    input:checked + .slider {
+        background-color: #54ca30;
+    }
+    
+    input:focus + .slider {
+        box-shadow: 0 0 1px #333333;
+    }
+    
+    input:checked + .slider:before {
+        -webkit-transform: translateX(26px);
+        -ms-transform: translateX(26px);
+        transform: translateX(26px);
+    }
+
+    .game-checkbox{
+        zoom: 1.5;
+    }
+
+    .required-field{
+        color:red;
+    }
+
+    .card .card-header {
+        background-color: transparent;
+        border-bottom: none;
+        padding: .75rem 1.25rem;
+        position: relative;
+        -webkit-box-shadow: 0px 1px 20px 0px rgba(69, 90, 100, 0.08);
+        box-shadow: 0px 1px 20px 0px rgba(69, 90, 100, 0.08);
+    }
+
+    .card .card-header span {
+        display: block;
+        font-size: 13px;
+        margin-top: unset;
+    }
+
+    .custom-h5 {
+        font-size: 1rem;
+    }
+
+    .card-shadow {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    .card .card-header span {
+        display: block;
+        font-size: 13px;
+        margin-top: unset;
+    }
+
+    .custom-h5 {
+        font-size: 1rem;
+    }
+    
+    
+</style>
+<div id="pop-loader"></div>
+<div class="pcode" id='nw1' >
+    <div>
+        <div class="container-fluid pt-4" >
+            <div class="admin-card">
+                <div class="ml-4 mr-4 mb-4">
+                    <form id="create-role-form"  enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="role-detail">
+                                    <div class="admin-card">
+
+                                        <div class="row">
+                                            <div class="col-xs-12 col-lg-6 col-md-6">
+                                                <div class="page-content"  >
+                                                    <div class="main-heading-wrap">
+                                                        <h5>{% trans 'Role Information' %}</h5>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col mt-3">
+                                                <label for="role">Role Name <span class="required-field">*</span></label>
+                                                <input type="text" class="form-control" name="role" id="role" maxlength="30" placeholder="Enter Role Name" required>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-12 mt-4">
+                                <div class="permissions-details">
+                                    <div class="row">
+                                        <div class="col-md-12 permissions-details-div">
+                                            <div class="admin-card">
+                                                <div class="row">
+                                                    <div class="col-xs-12 col-lg-6 col-md-6">
+                                                        <div class="page-content"  >
+                                                            <div class="main-heading-wrap">
+                                                                <h5>{% trans 'Permissions' %}</h5>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div id="permissions-div">
+                                                    <div class="card-columns">
+                                                    {% for group, permissions in grouped_permissions.items %}
+                                                        <div class="{{ group }}-permissions mb-2">
+                                                            <div class="card card-shadow">
+                                                                <div class="card-header bg-dark text-white text-left">
+                                                                    <div class="row">
+                                                                        <div class="col-8 text-left mt-1">
+                                                                            <font class="ml-2 custom-h5">{{ group|title }} Permissions</font>
+                                                                        </div>
+                                                                        <div class="col-4 text-center mt-1">
+                                                                            <label class="switch">
+                                                                                <input class="group-permission form-check-input" id="{{group|replace:" ,_"}}" onclick="enableDisableAllPermission(this, this.id)" type="checkbox">
+                                                                                <span class="slider"></span>
+                                                                            </label>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="card-body">
+                                                                    {% for permission in permissions %}
+                                                                        <div class="row">
+                                                                            <div class="col-8 text-left">
+                                                                                <label class="form-check-label h6 ml-3" for="{{permission.code}}">{{permission.name}}</label>
+                                                                            </div>
+                                                                            <div class="col-4 text-center">
+                                                                                <label class="switch">
+                                                                                    <input class="form-check-input {{group|replace:' ,_'}}" id="{{permission.code}}" onclick="enableDisableGroupPermission(this, '{{group|replace:' ,_'}}')" type="checkbox">
+                                                                                    <span class="slider"></span>
+                                                                                </label>
+                                                                            </div>
+                                                                        </div>
+                                                                    {% endfor %}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    {% endfor %}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="next-previous-btn">
+                                <div class="row mt-5 text-right">
+                                    <div class="col text-left">
+                                        <a href="{% url "admin-panel:roles" %}" class="btn btn-primary">Cancel</a>
+                                    </div>
+
+                                    <div class="col">
+                                        <button type="button" class="btn btn-primary" onclick="createRole()">Submit</button>
+                                    </div>
+                                </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    $(document).ready(function() {
+        $('#role').on('input', function() {
+            var value = $(this).val();
+            var filteredValue = value.replace(/[^A-Za-z]/g, '');
+            $(this).val(filteredValue);
+        });
+    });
+
+    function createRole(){
+        if(!$("#role").val()){
+            Swal.fire({
+                icon: "info",
+                title: "Empty Role",
+                text: "Please fill all required fields."
+            })
+            return
+        }
+        
+        allowed_permissions = [];
+        $('#create-role-form').find('input[type=checkbox]:checked').not('.group-permission').each(function() {
+            allowed_permissions.push(this.id);
+        });
+
+        var formData = new FormData($('#create-role-form')[0]);
+        formData.append("allowed_permissions", allowed_permissions);
+    
+        $.ajax({
+            type: 'POST',
+            url: "{% url 'admin-panel:create-role' %}",
+            data: formData,
+            processData: false,
+            contentType: false, 
+            success: function(response) {
+                let message = response.message;
+                let title = response.success ? "Success" : "Error";
+                let icon = response.success ? "success" : "info";
+
+                Swal.fire({
+                    icon: icon,
+                    title: title,
+                    text: message
+                }).then(() => {
+                    window.location.href = "{% url 'admin-panel:roles' %}";
+                });
+            },
+            error: function(xhr, status, error) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Error",
+                    text: xhr.responseJSON.message
+                });
+            }
+        });
+
+    }
+
+    function enableDisableAllPermission(element, group){
+        if(element.checked){
+            $(`.${group}`).prop("checked", true);
+        }else{
+            $(`.${group}`).prop("checked", false);
+        }
+    }
+
+    function enableDisableGroupPermission(element, group){
+        var checkboxes = $(`.${group}`);
+        var allChecked = checkboxes.length === checkboxes.filter(':checked').length && element.checked;
+        $(`#${group}`).prop("checked", allChecked);
+    }
+    
+</script>
+{% endblock content %}

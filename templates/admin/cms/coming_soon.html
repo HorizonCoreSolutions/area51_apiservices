@@ -1,0 +1,506 @@
+{% extends "../../index.html" %}
+{% load static %}
+{% load i18n %}
+{% load math %}
+{% load date_utils %}
+{% load i18n %}
+
+{% block title %}
+Operational Status
+{% endblock title %}
+{% block content %}
+<style>
+    .admin-card{
+        background-color: #ffffff;
+        box-shadow: 0px 0px 6px 6px rgb(204 204 204 / 0.25);
+        padding: 30px 10px;
+    }
+
+    .pcode.left-spacer {
+    margin-left: 0px;
+    }
+    .pcode{
+    margin-left: 250px;
+    }
+
+    @media(max-width:991px){
+        .setting-page .card-title h3{
+        font-size: 18px;
+        }
+        .pcode{
+        margin-left: 0px;
+        }
+    }
+    .setting-page .card-title h3{
+    font-size: 18px;
+    }
+
+    
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 34px;
+  vertical-align: middle;
+}
+
+.switch input {
+  display: none;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  -webkit-transition: .4s;
+  transition: .4s;
+  border-radius: 34px;
+}
+.pcode{
+    padding-right: 20px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 26px;
+  width: 26px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  -webkit-transition: .4s;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: #54ca30;
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px #333333;
+}
+
+input:checked + .slider:before {
+  -webkit-transform: translateX(26px);
+  -ms-transform: translateX(26px);
+  transform: translateX(26px);
+}
+
+/* Search bar styles */
+.search-container {
+  padding-left: 0px;
+  display: flex;
+  justify-content: left;
+  margin-bottom: 20px;
+}
+
+.search-container input[type=text] {
+  padding: 10px;
+  margin-right: 5px;
+  border: none;
+  border-radius: 3px;
+  font-size: 17px;
+  background-color: #f1f1f1;
+}
+
+.search-container input[type=text]:focus {
+  background-color: #ddd;
+  outline: none;
+}
+
+.search-container button {
+  background-color: #363636;
+  color: white;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.search-container button:hover {
+  background-color: #505050;
+}
+
+.ui-sortable-helper {
+    display: table;
+}
+
+.gameTable tr:nth-child(even) {
+  background: #e9e4e4;
+}
+ 
+</style>
+<script type="text/javascript">
+ $(document).ready(function () {
+  $('#sortable').DataTable({
+      searching : true,
+      pageLength: 5,
+      lengthMenu: [[5, 10, 20, -1], [5, 10, 20, "All"]],
+  });
+  $('.dataTables_filter input[type="search"]').
+  attr('placeholder','Search Promotion Page').
+  css({'width':'193px','display':'inline-block'});
+});
+</script>
+<div class="pcode" id='nw1' >
+<div>
+    <div class="container-fluid ">
+        <div class="pt-3 mx-auto" style="max-width: 540px;">
+            {% include "../../includes/messages.html" %}
+        </div>
+        <div class="row">
+            <div class="col-xs-12 col-lg-12 ">
+                <div class="page-content pt-4 setting-page">
+                    <div class='container-fluid pt-2'>
+                        <!-- Bonus Section -->
+                        {% if request.user.role == 'admin' %}
+                            <!-- coming soon start -->
+                            <div class="row mb-4">
+                                <div class="page-content col-xs-12 col-12 mb-3 mb-md-0">
+                                    <div class="admin-card">
+                                        <div class="main-heading-wrap">
+                                            <h5>{% trans "Coming Page Details" %}</h5>
+                                        </div>
+                                        <div class="container-fluid">
+                                            <form autocomplete="off">
+                                                <div class="setting-select">
+                                                    <div class="row" style="margin-bottom: -20px;">
+                                                        <div class="col-xs-12 col-md-3 form-group" style="min-width: 210px;">
+                                                            <div style="font-weight: bold; color:black;">
+                                                                <span style="font-weight: bold;">{% trans "Ending Date Time : " %}{% if scheduled_at %}{{scheduled_at }} {% else %} Not Available {% endif %}</span>
+                                                                <input placeholder="Select Date" type="text" class="form-control" id="scheduled_at" onchange="validateDate()" name="to" style="background-color:transparent" value="{% if scheduled_at != None %}{{ scheduled_at | date:"d/m/Y H:i"  }}{% endif %}">
+                                                            </div>
+                                                            <span style='padding:0.5em;'></span>
+                                                        </div>
+                                                        <div class="col-xs-12 col-md-8 form-group" style="min-width: 210px;">
+                                                            <div style="font-weight: bold; color:black;">
+                                                                <span style="font-weight: bold;">{% trans "Bonus Text To Be Displayed" %}</span>
+                                                                <input type="text" id="bonus" name="bonus" placeholder="{% trans 'Bonus' %}" class="form-control" value="{% if bonus != None %}{{ bonus }}{% endif %}" required="required">
+                                                            </div>
+                                                            <span style='padding:0.5em;'></span>
+                                                        </div>
+                                                        <div class="col-xs-12 col-md-1 form-group text-center" style="margin-top: 25px;">
+                                                            <label class="switch">
+                                                                <input type="checkbox" class="form-control" id="coming-soon-status" name="coming_soon_status" {% if request.user.is_coming_soon_enabled %}checked{% endif %}>
+                                                                <span title="{% if request.user.is_coming_soon_enabled %}Disable Coming Soon Page{% else %}Enable Coming Soon Page{% endif %}" class="slider"></span>
+                                                            </label>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="row" style="margin-bottom: -20px;">
+                                                        <div class="col-xs-12 col-md-1 form-group mt-md-4 ml-auto">
+                                                            <button class="btn btn-primary" id="coming-page-update">
+                                                                {% trans "Submit" %}
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                            
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- coming soon end -->
+
+                            <!-- Maintenance mode start -->
+                            <div class="row mb-4">
+                                <div class="page-content col-xs-12 col-12 mb-3 mb-md-0">
+                                    <div class="admin-card">
+                                        <div class="main-heading-wrap">
+                                            <h5>{% trans "Maintenance Page Details" %}</h5>
+                                        </div>
+                                        <div class="container-fluid">
+                                            <form autocomplete="off">
+                                                <div class="setting-select">
+                                                    <div class="row" style="margin-bottom: -20px;">
+                                                        <div class="col-11 form-group" style="min-width: 210px;">
+                                                            <div style="font-weight: bold; color:black;">
+                                                                <span style="font-weight: bold;">{% trans "Message To Be Displayed" %}</span>
+                                                                <input type="text" id="maintenance_message" name="maintenance_message" placeholder="{% trans 'Message' %}" class="form-control" value="{% if request.user.maintenance_mode_message != None %}{{ request.user.maintenance_mode_message }}{% endif %}" required="required">
+                                                            </div>
+                                                            <span style='padding:0.5em;'></span>
+                                                        </div>
+                                                        <div class="col-xs-12 col-md-1 form-group text-center" style="margin-top: 25px;">
+                                                            <label class="switch">
+                                                                <input type="checkbox" class="form-control" id="maintenance-mode-status" name="coming_soon_status" {% if request.user.is_maintenance_mode_enabled %}checked{% endif %}>
+                                                                <span title="{% if request.user.is_maintenance_mode_enabled %}Disable Maintenance Mode{% else %}Enable Maintenance Mode{% endif %}" class="slider"></span>
+                                                            </label>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="row" style="margin-bottom: -20px;">
+                                                        <div class="col-xs-12 col-md-1 form-group mt-md-4 ml-auto">
+                                                            <button class="btn btn-primary" id="maintenance-mode-update">
+                                                                {% trans "Submit" %}
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                            
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Maintenance mode End -->
+                        {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+</div>
+</div>
+<script>
+    $('#mobile-collapse').click(function () {
+        $("#nw1").toggleClass('left-spacer');
+    });
+
+    function validateDate(){
+        var date = $("#scheduled_at").val()            
+        hour = date.split(" ")[1].split(":")[0];
+        minute = date.split(" ")[1].split(":")[1];
+        console.log(date)
+        if (date != "Select Date") {
+        selected_day = parseInt(date.split("/")[0]);
+        selected_month = parseInt(date.split("/")[1]);
+        selected_year = date.split("/")[2];
+        selected_year = selected_year.split(" ")[0];
+        current_day = new Date().getDate();
+        
+        current_month = new Date().getMonth() + 1;
+        current_year = new Date().getFullYear();
+        current_minute = new Date().getMinutes();
+        
+
+        if(selected_year == current_year && selected_month == current_month && selected_day == current_day){
+
+            if(hour > new Date().getHours()){
+                return true;
+            }else if(hour == new Date().getHours()){
+                if(minute > new Date().getMinutes()){
+                    return true;
+                }else{
+                    Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: 'You cannot select a time in the past!',
+                });
+                $("#scheduled_at").val("Select Date");
+                return false;
+
+                }
+            }else{
+                Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: 'You cannot select a time in the past!',
+                });
+                $("#scheduled_at").val("Select Date");
+                return false;
+            }
+        }
+        else if (selected_year < current_year) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: 'You cannot select a time in the past!',
+            });
+            $("#scheduled_at").val("Select Date");
+            return false;
+        }
+        else if (selected_year == current_year && selected_month < current_month) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: 'You cannot select a time in the past!',
+            });
+            $("#scheduled_at").val("Select Date");
+            return false;
+        }
+        else if (selected_year == current_year && selected_month == current_month && selected_day < current_day) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: 'You cannot select a time in the past!',
+            });
+            $("#scheduled_at").val("Select Date");
+            return false;
+        }
+        else{
+            return true;
+            }
+        }
+    }
+    $('#scheduled_at').datetimepicker({
+            format: 'd/m/Y H:i',
+            timepicker: true,
+            minDate : 0,
+            step :15
+        }
+    );
+
+    $("#input-start-time-losing").datetimepicker({
+        defaultDate: new Date(),
+        format: 'd/m/Y',
+        value: '{{ from }}',
+        timepicker: false,
+    });
+
+    $("#input-end-time-losing").datetimepicker({
+        defaultDate: new Date(),
+        format: 'd/m/Y',
+        value: '{{ to }}',
+        timepicker: false,
+    });
+
+    $('.disablepaste').bind('copy paste cut',function(e) {
+      e.preventDefault();
+      Swal.fire('cut,copy & paste options are disabled !!');
+});
+
+    // Removed referrl bonous from here
+
+    $("#coming-page-update").click(function (e) {
+        e.preventDefault();
+        var promocode = $("#promocode").val();
+        var scheduled_at = $("#scheduled_at").val();
+        var bonus = $("#bonus").val();
+        var enabled = $("#coming-soon-status").is(":checked");
+       
+        if (bonus == "" )  {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Please Enter bonus percentage.',
+            })
+            return false
+        }
+
+        else {
+            Swal.fire({
+                html:
+                    '<div class="swal-custom-content">' +
+                    '<p class="swal-custom-icon"><i class="cp-icon">&#xe815;</i></p>' +
+                    '<p class="swal-custom-title">{% trans "Are you sure" %} ?</p>' +
+                    '</div>',
+                customClass: {
+                    actions: 'swal-custom-actions',
+                    confirmButton: 'swal-custom-btn swal-custom-confirm-btn',
+                    cancelButton: 'swal-custom-btn swal-custom-cancel-btn',
+                },
+                showCancelButton: true,
+                confirmButtonText: '{% trans "Yes" %}',
+                cancelButtonText: '{% trans "No" %}'
+            }).then((result) => {
+                if (result.value) {
+                    $.ajax({
+                        url: "{% url 'admin-panel:coming_soon_ajax' %}",
+                        type: "POST",
+                        dataType: "json",
+                        data: {
+                            bonus : bonus,
+                            scheduled_at : scheduled_at,
+                            promocode : promocode,
+                            enabled : enabled,
+                            csrfmiddlewaretoken: '{{ csrf_token }}'
+                        },
+                        success: function (data) {
+                            Swal.fire({
+                                icon: data["status"],
+                                title: data["status"][0].toUpperCase() + data["status"].substring(1),
+                                text: data['message'],
+                            }).then(() => {
+                                window.location.reload();
+                            });
+                        },
+                        error : function(data) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: data['message'],
+                            })
+                        }
+                    });
+                } else if (result.dismiss === "cancel") {
+                    // show message ?
+                }
+            })
+        }
+    });
+
+    $("#maintenance-mode-update").click(function (e) {
+        e.preventDefault();
+        var maintenance_message = $("#maintenance_message").val();
+        var enabled = $("#maintenance-mode-status").is(":checked");
+       
+        if (bonus == "" )  {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Please Enter Message.',
+            })
+            return false
+        }
+
+        else {
+            Swal.fire({
+                icon: "info",
+                title: "Are you sure?",
+                text: "Update maintenance details",
+                showCancelButton: true,
+                confirmButtonText: '{% trans "Yes" %}',
+                cancelButtonText: '{% trans "No" %}'
+            }).then((result) => {
+                if (result.value) {
+                    $.ajax({
+                        url: "{% url 'admin-panel:maintenance_mode_ajax' %}",
+                        type: "POST",
+                        dataType: "json",
+                        data: {
+                            maintenance_message : maintenance_message,
+                            enabled : enabled,
+                            csrfmiddlewaretoken: '{{ csrf_token }}'
+                        },
+                        success: function (data) {
+                            Swal.fire({
+                                icon: data["status"],
+                                title: data["status"][0].toUpperCase() + data["status"].substring(1),
+                                text: data['message'],
+                            }).then(() => {
+                                window.location.reload();
+                            });
+                        },
+                        error : function(data) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: data['message'],
+                            })
+                        }
+                    });
+                } else if (result.dismiss === "cancel") {
+                    // show message ?
+                }
+            })
+        }
+    });
+
+    var checkbox = document.getElementById("coming-soon");
+    checkbox.addEventListener('change', function() {
+        if (this.checked) {
+            checkbox.value = "True";
+        } else {
+            checkbox.value = "False";
+        }
+    });
+</script>
+{% endblock content %}

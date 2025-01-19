@@ -1,0 +1,351 @@
+{% extends "../index.html" %}
+{% load i18n %}
+{% load static %}
+{% load math %}
+{% block content %}
+	<!-- <link rel="stylesheet" href="style.css"> -->
+	<!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script> -->
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js" integrity="sha512-Eezs+g9Lq4TCCq0wae01s9PuNWzHYoCMkE97e2qdkYthpI0pzC3UGB03lgEHn2XM85hDOUF6qgqqszs+iXU4UA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+	<style>
+		body {
+  background-color: #f9f9f9;
+  font-family: 'Arial', sans-serif;
+}
+
+.card {
+  background-color: white;
+  color: #333;
+  border-radius: 10px;
+  box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.3);
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+thead{
+    border-radius: 20px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+}
+
+th,
+td {
+  padding-inline: 20px;
+  padding-top: 12px;
+  padding-bottom: 12px;
+  text-align: left;
+  /* border-bottom: 1px solid #ddd; */
+}
+
+th {
+  background-color: #333333;
+  color: white;
+  padding: 20px;
+}
+
+tr:hover {
+  background-color: #f5f5f5;
+}
+
+.tag {
+  display: inline-block;
+  margin: 4px;
+  padding: 4px 8px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.tag.red {
+  background-color: #b3423c;
+  color: white;
+}
+
+.tag.green {
+  background-color: #3b8a3b;
+  color: white;
+}
+
+.tag.blue {
+  background-color: #4268a7;
+  color: white;
+}
+
+.tag.orange {
+  background-color: #af7201;
+  color: white;
+}
+
+.tag.purple {
+  background-color: #8e7caf;
+  color: white;
+}
+
+.tag.yellow {
+  background-color: #b89c00;
+  color: white;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 34px;
+  vertical-align: middle;
+}
+
+.switch input {
+  display: none;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  -webkit-transition: .4s;
+  transition: .4s;
+  border-radius: 34px;
+}
+.pcode{
+    padding-right: 20px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 26px;
+  width: 26px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  -webkit-transition: .4s;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: #54ca30;
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px #333333;
+}
+
+input:checked + .slider:before {
+  -webkit-transform: translateX(26px);
+  -ms-transform: translateX(26px);
+  transform: translateX(26px);
+}
+
+/* Search bar styles */
+.search-container {
+  padding-left: 0px;
+  display: flex;
+  justify-content: left;
+  margin-bottom: 20px;
+}
+
+.search-container input[type=text] {
+  padding: 10px;
+  margin-right: 5px;
+  border: none;
+  border-radius: 3px;
+  font-size: 17px;
+  background-color: #f1f1f1;
+}
+
+.search-container input[type=text]:focus {
+  background-color: #ddd;
+  outline: none;
+}
+
+.search-container button {
+  background-color: #363636;
+  color: white;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.search-container button:hover {
+  background-color: #505050;
+}
+
+.ui-sortable-helper {
+    display: table;
+}
+
+.gameTable tr:nth-child(even) {
+  background: #e9e4e4;
+}
+	</style>
+<div class="pcode" id='nw1' style="margin-left:250px; margin-top:10px;">
+
+<!-- Search and filters -->
+<div class="card">
+  <div class="ml-3 mt-3 main-heading-wrap">
+    <h5>{% trans "Casino Providers" %}</h5>
+  </div>
+  <div class="row ml-2 mb-2">
+    <!-- Search by provider -->
+    <div class="mt-2 mb-2 rs-select2--light rs-select2--md col-3" style="min-width: 200px;" multiple="multiple">
+      <select id="select-provider" name="casinoprovider" class="js-example-basic-multiple tokenize-open form-control text-truncate" style="min-width: 210px;"
+      multiple="multiple">
+        {% if selected_brands %}
+          {% for brand in brands %}
+              <option selected="selected" value="{brand.brand_name}">{{ brand.brand_name }}</option>
+          {% endfor %}
+        {% endif %}
+      </select>
+    </div>
+    <!-- Search by page -->
+  {% comment %} <div class="col-md-3">
+      <div class="form-group">
+          <!-- <span style="font-weight: bold; color: black;">{% trans "Role" %}</span> -->
+          <select id="select-per-page" style="margin-top: 8px;" class="form-control" id="role-id" name="role" >
+            <option selected="selected"  value="20">20</option>
+            <option value="30">30</option>
+            <option value="40">40</option>
+            <option value="50">50</option>
+            <option value="60">60</option>
+            <option value="70">70</option>
+            <option value="80">80</option>
+            <option value="90">90</option>
+            <option value="100">100</option>
+          </select>
+      </div>
+  </div> {% endcomment %}
+
+    <div class="col-md-3">
+      <button id="button-search" style="margin-top: 8px;" class="btn btn-primary" type="submit">Search</button>
+    </div> 
+  </div>
+
+  </div>
+
+<div class="card">
+    <table class="gameTable">
+      <thead>
+        <tr>
+          <th style="text-align: center;">ID</th>
+          <th style="text-align: center;">Provider Name</th>
+          <th style="text-align: center;">Status</th>
+        </tr>
+      </thead>
+      
+      <tbody id="gameList">
+       
+        {% for game in casinogames %}
+          <tr class="casino_game" brand_id="{{ game.game.game_id }}">
+            <td style="text-align: center;">{{ game.game.game_id }}</td>
+            <td style="text-align: center;" >{{ game.game.vendor_name}}</td>
+            <td style="text-align: center;">
+                <label class="switch">
+                    <input type="checkbox" brand-id='{{ game.game.vendor_name }}' {% if game.enabled %}checked{% endif %}>
+                    <span title="{% if game.enabled %}Disable Provider {% else %} Enable Provider {% endif %}" onclick="switchToggle(this)" class="slider"></span>
+                </label>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% include '../includes/pagination.html' %}
+        
+</div>
+<script>
+    $('#mobile-collapse').click(function () { 
+                
+        $("#nw1").toggleClass('left-spacer');
+
+        
+        
+    });
+  // select-per-page
+    $('#button-search').click(function (){
+      var conceptName = $('#input-search').find(":selected").text();
+      conceptName = conceptName.split("(")[0];
+      game = $('#select-game').val();
+      brand = $('#select-provider').val();
+      per_page = $('#select-per-page').val();
+      window.location = window.location.pathname + "?brand_id=" + brand;
+      return false;
+    });
+
+    $('#select-provider').tokenize2({
+        dropdownMaxItems:"10",
+        multiple: true,
+        placeholder: '{% trans "Search by Casino Provider" %}',
+        searchMinLength:2,
+        dataSource: function(term, object){
+            $.ajax("{% url 'admin-panel:casino-provider-ajax' %}", {
+                type: "POST",
+                data: { search: term, start: 0 },
+                global: false, 
+                dataType: 'json',
+                success: function(data){
+                    var $items = [];
+                    $.each(data, function(k, v){
+                        $items.push(v);
+                    });
+                    object.trigger('tokenize:dropdown:fill', [$items]);
+                }
+            });
+        }
+    });
+
+
+    $(document).ready(function() {
+
+      
+    });
+
+    $('#mobile-collapse').click(function(){ 
+        $("#nw1").toggleClass('left-spacer');  
+    });
+   
+    function switchToggle(element) {
+      element = element.previousElementSibling
+      const providerId = element.getAttribute('brand-id');
+      console.log("providerId");
+      console.log(providerId);
+      $.ajax({
+          url: "{% url 'admin-panel:manage-spin-to-win-provider-status' %}",
+          type: "POST",
+          dataType: "json",
+          data: {
+              provider: providerId,
+              csrfmiddlewaretoken: '{{ csrf_token }}'
+          },
+          success: function(data){
+              element.parentNode.classList.toggle('active');
+              if (data['message']=="Provider disabled") {
+                element.checked = false
+              } else if (data['message']=="Provider enabled") {
+                element.checked = true
+              }
+              Swal.fire({
+                  icon: 'success',
+                  title: 'Success',
+                  text: data['message'],
+              });
+          },
+      });
+    } 
+    
+</script>
+{% endblock content %}

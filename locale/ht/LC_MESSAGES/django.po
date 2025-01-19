@@ -1,0 +1,192 @@
+msgid "Esportes"
+msgstr "Espò"
+
+msgid "LIVE"
+msgstr "an direk"
+
+msgid "Upcoming"
+msgstr "À"
+
+msgid "Tomorrow"
+msgstr "Demen"
+
+msgid "Highlights"
+msgstr "moman impotan"
+
+msgid "Results"
+msgstr "Rezilta"
+
+msgid "Last Minute"
+msgstr "Dènye minit"
+
+msgid "Live Casino"
+msgstr "kazino an dire"
+
+msgid "Casino"
+msgstr "Kazino"
+
+msgid "My Bets"
+msgstr "paryaj pam"
+
+msgid "Home"
+msgstr "kay"
+
+msgid "Login"
+msgstr "Ouvri sesyon an"
+
+msgid "Sign up"
+msgstr "Enskri w"
+
+msgid "Betslip"
+msgstr "fich paryaj"
+
+msgid "Search"
+msgstr "Rechèch"
+
+msgid "Search here"
+msgstr "Rechèch isit la"
+
+msgid "Transaction"
+msgstr "Tranzaksyon"
+
+msgid "Change password"
+msgstr "Chanje modpas"
+
+msgid "Logout"
+msgstr "Dekonekte"
+
+msgid "Single"
+msgstr "Single"
+
+msgid "Multiple"
+msgstr "Miltip"
+
+msgid "Possible win"
+msgstr "Gen posib"
+
+msgid "Amount"
+msgstr "Kantite lajan"
+
+msgid "Ok"
+msgstr "OK"
+
+msgid "Total odds"
+msgstr "Chans total"
+
+msgid "Odd"
+msgstr "Chif Enpè"
+
+msgid "Total possible win"
+msgstr "Total gen posib"
+
+msgid "Place bet"
+msgstr "parye"
+
+msgid "Fast"
+msgstr "Vit"
+
+msgid "bet"
+msgstr "parye"
+
+msgid "Username"
+msgstr "Nom itilizatè"
+
+msgid "Password"
+msgstr "Modpas"
+
+msgid "Stay logged in"
+msgstr "Rete konekte"
+
+msgid "All"
+msgstr "Tout"
+
+msgid "In Game"
+msgstr "Nan jwèt"
+
+msgid "Won"
+msgstr "genyen"
+
+msgid "Lost"
+msgstr "Pedi"
+
+msgid "Refund"
+msgstr "Ranbousman"
+
+msgid "Date"
+msgstr "Dat"
+
+msgid "Win amount"
+msgstr "Genyen kantite lajan"
+
+msgid "Stake"
+msgstr "Pye"
+
+msgid "Pick"
+msgstr "Chwazi"
+
+msgid "My Account"
+msgstr "Kont mwen"
+
+msgid "This pick can not be combined"
+msgstr "Chwa sa a pa ka konbine"
+
+msgid "Cashout"
+msgstr "peman"
+
+msgid "Deposit"
+msgstr "Depo"
+
+msgid "Withdraw"
+msgstr "Retire"
+
+msgid "Total Odd"
+msgstr "liy total"
+
+msgid "Insufficient balance"
+msgstr "Balans ensifizan"
+
+msgid "Old Password"
+msgstr "ansyen Modpas"
+
+msgid "New Password"
+msgstr "Nouvo modpas"
+
+msgid "Confirm New Password"
+msgstr "Konfime nouvo modpas"
+
+
+msgid "Change"
+msgstr "Chanjman"
+
+msgid "From Date"
+msgstr "Soti nan dat"
+
+msgid "To Date"
+msgstr "Pou dat"
+
+msgid "Activity Type"
+msgstr "Kalite aktivite"
+
+msgid "Status"
+msgstr "Estati"
+
+msgid "Coupon"
+msgstr "Koupon"
+
+msgid "Max win amount"
+msgstr "Kantite lajan maximum ou gen yo"
+
+msgid "Date/Time"
+msgstr "Dat / Lè"
+
+msgid "Type"
+msgstr "Kalite"
+
+msgid "Vendor"
+msgstr "Machann"
+
+msgid "The stake must be less then"
+msgstr "paryaj la dwe mwens ke"
+
+msgid "The stake must be greater then"
+msgstr "paryaj la dwe plis ke"

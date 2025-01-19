@@ -1,0 +1,470 @@
+{% extends "index.html" %}
+{% load date_utils %}
+{% load static %}
+{% load i18n %}
+{% load tz %}
+
+{% block title %}
+Sendgrid Email Template
+{% endblock title %}
+{% block content %}
+<style>
+    .signup {
+        font-display: bold;
+        color: black;
+        margin-bottom: 2px;
+        display: block;
+    }
+    #pop-loader {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100%;
+        background: rgba(0,0,0,0.75) url(../../../static/Desktop_static/images/loading2.gif) no-repeat center center;
+        z-index: 10000;
+    }
+    th,td{
+        padding: 5px 10px;
+    }
+    .admin-card{
+        background-color: #ffffff;
+        box-shadow: 0px 0px 6px 6px rgb(204 204 204 / 0.25);
+        padding: 30px 10px;
+    }
+    .pcode.left-spacer {
+    	margin-left: 0px;
+    }
+    .pcode{
+    	margin-left: 250px;
+    }
+    .action_btn{
+        padding: 3%;
+    }
+    @media(max-width:991px){
+        .pcode{
+	        margin-left: 0px;
+        }
+    }
+    input[type=search]::-webkit-search-cancel-button {
+    -webkit-appearance: searchfield-cancel-button;
+}
+</style>
+
+<div id="pop-loader"></div>
+<div class="pcode" id='nw1'>
+    <div>
+        <div class="container-fluid pt-4 " >
+            <div class="admin-card">
+            <div class="row">
+                <div class="col-xs-12 col-lg-12 ">
+                    <div class="page-content" >
+                        <div class="main-heading-wrap">
+                            <h5>Email Templates</h5>
+                        </div>
+                        <div class="container-fluid" >
+                            <div class="row mb-4">
+                                <div class="page-content col-xs-12 col-md-12 mb-3 mb-md-0">
+                                    <div class="admin-card">
+                                        <div class="main-heading-wrap">
+                                            <h5>{% trans "Add Email Template" %}</h5>
+                                        </div>
+                                        <div class="container-fluid" style="padding-top: 10px;">
+                                            <form>
+                                                <div class="row" style="margin-bottom: -20px;">
+                                                    <div class="search-row col-md-4 mb-4 mb-md-0">
+                                                        <div class="rs-select2--light rs-select2--md">
+                                                            <select class="form-control" name="category" id="category" required="required">
+                                                                <option selected="selected" disabled>{% trans "Select Category" %}</option>
+                                                                <option value="signup_otp_mail">{% trans "Signup OTP Mail" %}</option>
+                                                                <option value="welcome_mail">{% trans "Welcome Mail" %}</option>
+                                                                <option value="customer_query_mail">{% trans "Customer Query Mail" %}</option>
+                                                                <option value="withdrawal_approved_mail">{% trans "Withdrawal Approved Mail" %}</option>
+                                                                <option value="withdrawal_pending_mail">{% trans "Withdrawal Pending Mail" %}</option>
+                                                                <option value="withdrawal_cancelled_mail">{% trans "Withdrawal Cancelled Mail" %}</option>
+                                                                <option value="withdrawal_failed_mail">{% trans "Withdrawal Failed Mail" %}</option>
+-                                                                <option value="nowpayment_finished_mail">{% trans "Payment Finished Mail" %}</option>
+                                                                <option value="nowpayment_partially_paid_mail">{% trans "Payment Partially Paid Mail" %}</option>
+                                                                <option value="nowpayment_in_progress_mail">{% trans "Payment In-Progress Mail" %}</option>
+                                                                <option value="nowpayment_failed_mail">{% trans "Payment Failed Mail" %}</option>
+                                                                <option value="nowpayment_expired_mail">{% trans "Payment Expired Mail" %}</option>
+                                                                <option value="withdrawal_rejected_mail">{% trans "Withdrawal Rejected Mail (NowPayments)" %}</option>
+                                                                <option value="offmarket_withdraw_rejection_mail">{% trans "Offmarket Withdrawal Request Rejection Mail" %}</option>
+                                                            </select>
+                                                        </div>
+                                                        <span style='padding:0.5em;'></span>
+                                                    </div>
+                                                    <div class="col-xs-12 col-md-4 form-group" style="min-width: 210px;">
+                                                        <div style="font-weight: bold; color:black;">
+                                                            <input type="text" id="template-id" name="template-id"
+                                                                autocomplete="off" placeholder="{% trans 'Enter Template ID' %}" class="form-control"
+                                                                required="required">
+                                                        </div>
+                                                        <span style='padding:0.5em;'></span>
+                                                    </div>
+                                                    <div class="col-xs-12 col-md-4" style="min-width: 210px;">
+                                                        <button class="btn btn-primary w-100" id="add-email-temp">
+                                                            {% trans "Add Email Template ID" %}
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% if request.user.role == 'dealer' or request.user.role == 'agent' or request.user.role == 'admin' or request.user.role == 'superadmin' %}
+                                <div class="table-responsive">
+                                    <table id="crm_table" class="table table-striped text-center table-sm" cellspacing="0" >
+                                        <thead >
+                                            <tr>
+                                                <th>{% trans "Category" %}</th>
+                                                <th>{% trans "Template ID" %}</th>
+                                                <th>{% trans "Action" %}</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for template in templates.all %}
+                                                <tr template_id="{{ template.pk }}">
+                                                    <td class="align-middle"> {{template.get_category_name}} </td>
+                                                    <td class="align-middle"> {{template.template_id}}</td>
+                                                    <td>
+                                                        {% comment %} <a class="btn btn-warning" href="/admin/edit-email-template?template_id={{ template.pk }}" title="edit">
+                                                            <i class="fa fa-edit fa-lg" style="color: #1f2d3d;"></i>
+                                                        </a> {% endcomment %}
+                                                        <a type="button" class="btn btn-warning fnt-4 action_btn" href="/admin/edit-email-template?template_id={{ template.pk }}" title="Edit">
+                                                            <i class="fa fa-edit fa-lg" style="color: #1f2d3d;"></i>
+                                                        </a>
+                                                        <button template_id="{{ template.pk }}" type="button" onclick="manageEmailTemplete(this, true, false)" class="btn btn-danger fnt-4 action_btn" title="Delete">
+                                                            <i class="fa fa-trash fa-lg"></i>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            <!-- {% include 'includes/pagination.html' %} -->
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+   
+    $(document).ready(function () {
+        $('#crm_table').DataTable({
+        searching : false,
+        pageLength: 5,
+        lengthMenu: [[5, 10, 20, -1], [5, 10, 20, "All"]],
+        columnDefs: [
+            {
+                targets: [2,3],
+                orderable: false
+            }
+        ]
+        });
+    
+        $('#mobile-collapse').click(function () {
+            $("#nw1").toggleClass('left-spacer');
+        });
+        
+        $("#search-date-created-from").datetimepicker({
+            format: 'd/m/Y',
+            timepicker: true,
+        });
+                
+        $("#search-date-created-to").datetimepicker({
+            format: 'd/m/Y',
+            timepicker: true,
+        });
+    });
+
+    $("#add-email-temp").click(function (e) {
+        e.preventDefault();
+        var template_id = $("#template-id").val();
+        var category = $("#category").val();
+        Swal.fire({
+            icon: "info",
+            title: "Are you sure?",
+            text: "Add email template",
+            showCancelButton: true,
+            confirmButtonText: '{% trans "Yes" %}',
+            cancelButtonText: '{% trans "No" %}'
+        }).then((result) => {
+            if (result.value) {
+                $.ajax({
+                    url: "{% url 'admin-panel:add-email-template' %}",
+                    type: "POST",
+                    dataType: "json",
+                    data: {
+                        category: category,
+                        template_id: template_id,
+                        csrfmiddlewaretoken: '{{ csrf_token }}'
+                    },
+                    success: function (data) {
+                        Swal.fire({
+                            icon: data["status"],
+                            title: data["status"][0].toUpperCase() + data["status"].substring(1),
+                            text: data['message'],
+                        }).then(() => {
+                            window.location.reload();
+                        });
+                    },
+                    error : function(data) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: data['message'],
+                        })
+                    }
+                });
+            } else if (result.dismiss === "cancel") {
+                // show message ?
+            }
+        })
+    });
+
+    function sendCrmTemplete(element,template_status){
+        if(template_status != "Active"){
+            Swal.fire(
+                {
+                    icon: "error",
+                    title: "Error",
+                    text: "Cannot send Inactive template"
+                }
+            )
+        }else if(validateDate(element) == false){
+            Swal.fire(
+                {
+                    icon: "error",
+                    title: "Error",
+                    text: "Scheduled date and time should be greater than current date and time"
+                }
+            )
+        }else{
+            swal.fire({
+                title: 'Are you sure?',
+                text: "You want to send this template",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Send'
+            }).then((result) => {
+                if (result.value) {
+                    var spinner = $('#pop-loader');
+                    spinner.show();
+                    $.ajax({
+                        url: "{% url 'admin-panel:send-crm-template' %}",
+                        type: "POST",
+                        dataType: "json",
+                        data: {
+                            template_id: $(element).attr("template_id"),
+                            csrfmiddlewaretoken: '{{ csrf_token }}'
+                        },
+                        success: function (data) {
+                            spinner.hide();
+                            if(data.status === 'error'){
+                                Swal.fire({
+                                    icon: "error",
+                                    title: data["status"],
+                                    text: data["message"]
+                                });
+                            }
+                            else if(data.status === 'Success'){
+                                Swal.fire({
+                                    icon: "success",
+                                    title: data["status"],
+                                    text: data["message"]
+                                });
+                            }
+                        },
+                        complete: function(){
+                            spinner.hide();
+                        }
+                    });
+                }
+            });
+        }
+    }
+
+    function validateDate(element){
+        template_id = $(element).attr("template_id")
+        id = `#${template_id}-scheduled_at`
+        var date = $(id).text()
+        date = new Date(date);
+        hour = date.getHours();
+        minute = date.getMinutes();
+        if (date != "Select Date") {
+            selected_year = date.getFullYear();
+            selected_month = date.getMonth() + 1;
+            selected_day = date.getDate();
+            
+            current_day = new Date().getDate();
+            current_month = new Date().getMonth() + 1;
+            current_year = new Date().getFullYear();
+            current_minute = new Date().getMinutes();
+
+            if(selected_year == current_year && selected_month == current_month && selected_day == current_day){
+                if(hour > new Date().getHours()){
+                    return true;
+                }else if(hour == new Date().getHours()){
+                    if(minute > new Date().getMinutes()){
+                        return true;
+                    }else{
+                        return false;
+                    }
+                }else{
+                    return false;
+                }
+            }else if (selected_year < current_year) {
+                return false;
+            }else if (selected_year == current_year && selected_month < current_month) {
+                return false;
+            }else if (selected_year == current_year && selected_month == current_month && selected_day < current_day) {
+                return false;
+            }else{
+                return true;
+            }
+        }
+    }
+
+    function manageEmailTemplete(element, is_delete, is_change_status){
+        if (is_change_status){
+            confirm_msg = "You can revert this later!";
+            confirmButtonText = "Toggle";
+        }
+        else{
+            confirm_msg = "You won't be able to revert this!"
+            confirmButtonText = "Delete";
+        }
+        Swal.fire({
+            title: 'Are you sure?',
+            text: confirm_msg,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: confirmButtonText
+        }).then((result) => {
+            if (result.value) {
+                $.ajax({
+                    url: "{% url 'admin-panel:manage-email-template' %}",
+                    type: "POST",
+                    dataType: "json",
+                    data: {
+                        template_id: $(element).attr("template_id"),
+                        is_delete: is_delete,
+                        csrfmiddlewaretoken: '{{ csrf_token }}'
+                    },
+                    success: function (data) {
+                        if(data.status === 'error'){
+                            Swal.fire({
+                                icon: "error",
+                                title: data["status"],
+                                text: data["message"]
+                            });
+                        }
+                        else if(data.status === 'Success'){
+                            Swal.fire({
+                                icon: "success",
+                                title: data["status"],
+                                text: data["message"]
+                            }).then(() => {
+                                window.location.reload();
+                            });
+                        }
+                    }
+                });
+            }
+        });
+    }
+
+    function validateDateRange(input){
+        
+        var from_date = $("#search-date-created-from").val();
+        var to_date = $("#search-date-created-to").val();
+        error_msg = "";
+        if(input.id == "search-date-created-from"){
+            error_msg = "From date must be less than To date!!"
+        }
+        else{
+            error_msg = "To date must be greater than From date!!"
+        }
+        from_day = parseInt(from_date.split("/")[0]);
+        from_month = parseInt(from_date.split("/")[1]);
+        from_year = from_date.split("/")[2];
+        from_year = from_year.split(" ")[0];
+        from_hour = parseInt(from_date.split(" ")[1].split(":")[0]);
+        from_minute = parseInt(from_date.split(" ")[1].split(":")[1]);
+
+        to_day = parseInt(to_date.split("/")[0]);
+        to_month = parseInt(to_date.split("/")[1]);
+        to_year = to_date.split("/")[2];
+        to_year = to_year.split(" ")[0];
+        to_hour = parseInt(to_date.split(" ")[1].split(":")[0]);
+        to_minute = parseInt(to_date.split(" ")[1].split(":")[1]);
+        // from date should be less than to date
+        if(from_year > to_year){
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: error_msg,
+            });
+            $("#search-date-created-from").val("{{from}}");
+            $("#search-date-created-to").val("{{to}}");
+            return false;
+        }else if(from_year == to_year){
+            if(from_month > to_month){
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: error_msg,
+                });
+                $("#search-date-created-from").val("{{from}}");
+                $("#search-date-created-to").val("{{to}}");
+                return false;
+            }else if(from_month == to_month){
+                if(from_day > to_day){
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: error_msg,
+                    });
+                    $("#search-date-created-from").val("{{from}}");
+                    $("#search-date-created-to").val("{{to}}");
+                    return false;
+                }else if(from_day == to_day){
+                    if(from_hour > to_hour){
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Oops...',
+                            text: error_msg,
+                        });
+                        $("#search-date-created-from").val("{{from}}");
+                        $("#search-date-created-to").val("{{to}}");
+                        return false;
+                    }else if(from_hour == to_hour){
+                        if(from_minute > to_minute){
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Oops...',
+                                text: error_msg,
+                            });
+                            $("#search-date-created-from").val("{{from}}");
+                            $("#search-date-created-to").val("{{to}}");
+                            return false;
+                        }
+                    }
+                }
+            }
+        }        
+    }
+
+
+</script>
+{% endblock content %}

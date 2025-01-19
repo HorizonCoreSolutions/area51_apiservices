@@ -1,0 +1,305 @@
+{% extends "index.html" %}
+
+{% load static %}
+{% load i18n %}
+{% load math %}
+{% load date_utils %}
+
+
+
+{% block content %}
+<style>
+    .admin-card{
+        background-color: #ffffff;
+        box-shadow: 0px 0px 6px 6px rgb(204 204 204 / 0.25);
+        padding: 30px 10px;
+    }
+    .user-name-wrap p{
+        margin-bottom: 0;
+
+    }
+    @media(max-width:767px){
+        .transactions-table{
+            width: 400px;
+        }
+    }
+        
+    .pcode.left-spacer {
+	margin-left: 0px;
+    }
+    .pcode{
+	margin-left: 250px;
+    }
+    @media(max-width:991px){
+        .pcode{
+	    margin-left: 0px;
+    }
+    }
+</style>
+    <div class="pcode" id='nw1' >
+    <div >
+        <div class="container-fluid pt-4" >
+            <div class="admin-card">
+            <div class="row">
+                <div class="col-xs-12 col-lg-12">
+                    <div class="page-content" >
+                        <div class="container-fluid" >
+                            
+                            {% include "includes/messages.html" %}
+                
+                            <div class="table-data__tool">
+                                <div  style="padding: 0;">
+                                    <form method="get">
+                                        <!-- Search -->
+                                        <div class="row flex-sm-nowrap flex-wrap">
+                                            <div class="col" style="min-width: 210px;">
+                                                <div class="input-group ">
+                                                    <input type="text" id="input-search" name="username" placeholder="{% trans "Search User" %}"
+                                                          minlength="4" maxlength="100" class="form-control" value="{{ username }}">
+                                                    <div class="input-group-btn position-relative" style="margin-left: -5px;">
+                                                        <button class="btn btn-primary" id="button-search">
+                                                            {% trans "Search" %}
+                                                        </button>
+                                                    </div>
+                
+                                                </div>
+                                            </div>
+                                            <div class="col" style="min-width: 210px;">
+                                                <select id="button_status" name="dropdown"
+                                                  class="form-control select-success "
+                                                  style="max-width: 180px;" >
+                                                  <option selected value="{{ dropdown }}"  disabled hidden>
+                                                      {% if dropdown %}
+                                                       {{ dropdown }}
+                                                      {% else %}
+                                                       Transaction Type
+                                                      {% endif %}
+                                                    </option>
+                                                  <option value="credit">Credit</option>
+                                                  <option value="debit">Debit</option>
+                                                  <option value="deposit">Deposit</option>
+                                                  <option value="refund">Refund</optio>
+                                                  <option value="cashback">Cashback</option>
+                                                  <option value="withdraw">Withdraw</option>
+                                                </select>
+                                            </div>
+                                            
+                                        
+                                        <div class="col" style="min-width: 210px;">
+                                         
+                                            
+                                                <button class="btn btn-primary" id="button-search">
+                                                    {% trans "Search" %}
+                                                </button>
+                                            
+                                         
+
+                                        </div>
+                                    </div>
+                
+                                        <!-- Date filters -->
+                                        <div class="row flex-sm-nowrap flex-wrap">
+                                            <div class="col form-group" style="min-width: 210px;">
+                                                <div class="date-input">
+                                                    <span>{% trans "From date" %}</span>
+                                                   <input value="{{ from }}" type="text" class="form-control" id="search-date-created-from" onChange="validateDateRange(this)" name="from" readonly="true" style="background-color:transparent" autocomplete="off">
+                                                </div>
+                                            </div>
+                
+                                            <div class="col form-group" style="min-width: 210px;">
+                                                <div class="date-input">
+                                                    <span>{% trans "To date" %}</span>
+                                                    <input value="{{ to }}" type="text" class="form-control" id="search-date-created-to" name="to" onChange="validateDateRange(this)" readonly="true" style="background-color:transparent" autocomplete="off">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                
+                            <div class="table-responsive table-responsive-data2 mt-2">
+                                <table class="table table-data2 transactions-table table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th class="text-left pl-3">{% trans "Trans Id" %}  </th>
+                                            <th>{% trans "Paid" %}</th>
+                                            <th>{% trans "Received" %} </th>
+                                            <th>{% trans "Trans Type" %}</th>
+                                            <th>{% trans "Description" %}</th>
+                                            <th>{% trans "Amount" %} </th>
+                                            <th>{% trans "Date" %} </th>
+                                        </tr>
+                                    </thead>
+                
+                                    <tbody class='bg-light'>
+                                        {%  for transaction in transactions %}
+                                        <tr class="tr-collapse table-row tr-player"
+                                            {% if transaction.journal_entry == 'deposit' %}
+                                            style="background-color: #c3e6cb;" 
+                                            {% elif transaction.journal_entry == 'withdraw' %}
+                                            style="background-color: #f5c6cb;"
+                                            {% endif %}
+                                        >
+                                            <td>
+                                                <div class="user-name-wrap text-left" style="border-color: #ccc;">
+                                                    <p>{{ transaction.id }}</p>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div >
+                                                    <p>{{ transaction.merchant.username }}</p>
+                                                </div>
+                                            </td>
+                
+                                            <td>
+                                                <span>
+                                                    {{ transaction.user.username }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span>
+                                                    {{ transaction.journal_entry }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span>
+                                                    {{ transaction.description }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="text-nowrap">
+                                                    {{ transaction.amount|floatformat:"2" }}
+                                                </span>
+                                            </td>
+                
+                                            <td>
+                                                <span>
+                                                    {{ transaction.created  | local_date:request.session.user_timezone | date:"d-m-y H:i" }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                                {% include 'includes/pagination.html' %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+
+</div>
+</div>
+
+    <!-- END DATA TABLE -->
+{% endblock content %}
+
+{% block javascript %}
+    <script type="text/javascript">
+        function validateDateRange(input){
+        
+        var from_date = $("#search-date-created-from").val();
+        var to_date = $("#search-date-created-to").val();
+        error_msg = "";
+        if(input.id == "search-date-created-from"){
+            error_msg = "From date must be less than To date!!"
+        }
+        else{
+            error_msg = "To date must be greater than From date!!"
+        }
+        from_day = parseInt(from_date.split("/")[0]);
+        from_month = parseInt(from_date.split("/")[1]);
+        from_year = from_date.split("/")[2];
+        from_year = from_year.split(" ")[0];
+        from_hour = parseInt(from_date.split(" ")[1].split(":")[0]);
+        from_minute = parseInt(from_date.split(" ")[1].split(":")[1]);
+
+        to_day = parseInt(to_date.split("/")[0]);
+        to_month = parseInt(to_date.split("/")[1]);
+        to_year = to_date.split("/")[2];
+        to_year = to_year.split(" ")[0];
+        to_hour = parseInt(to_date.split(" ")[1].split(":")[0]);
+        to_minute = parseInt(to_date.split(" ")[1].split(":")[1]);
+        // from date should be less than to date
+        if(from_year > to_year){
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: error_msg,
+            });
+            $("#search-date-created-from").val("{{from}}");
+            $("#search-date-created-to").val("{{to}}");
+            return false;
+        }else if(from_year == to_year){
+            if(from_month > to_month){
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: error_msg,
+                });
+                $("#search-date-created-from").val("{{from}}");
+                $("#search-date-created-to").val("{{to}}");
+                return false;
+            }else if(from_month == to_month){
+                if(from_day > to_day){
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: error_msg,
+                    });
+                    $("#search-date-created-from").val("{{from}}");
+                    $("#search-date-created-to").val("{{to}}");
+                    return false;
+                }else if(from_day == to_day){
+                    if(from_hour > to_hour){
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Oops...',
+                            text: error_msg,
+                        });
+                        $("#search-date-created-from").val("{{from}}");
+                        $("#search-date-created-to").val("{{to}}");
+                        return false;
+                    }else if(from_hour == to_hour){
+                        if(from_minute > to_minute){
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Oops...',
+                                text: error_msg,
+                            });
+                            $("#search-date-created-from").val("{{from}}");
+                            $("#search-date-created-to").val("{{to}}");
+                            return false;
+                        }
+                    }
+                }
+            }
+        }        
+    }
+        
+       
+        $(document).ready(function () {
+            $("#search-date-created-from").datetimepicker({
+                format: 'd/m/Y',
+                timepicker: false,
+            });
+
+            
+            
+
+            $('#mobile-collapse').click(function () { 
+                
+                $("#nw1").toggleClass('left-spacer');
+    
+                console.log("hey");
+                
+            });
+            $("#search-date-created-to").datetimepicker({
+                format: 'd/m/Y',
+                timepicker: false,
+            });
+        });
+    </script>
+{% endblock %}

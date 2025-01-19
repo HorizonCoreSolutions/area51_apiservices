@@ -1,0 +1,113 @@
+{% extends "index.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block content %}
+<script src="../../../static/js/ckeditor/ckeditor.js"></script>
+<style>
+    .cke_button__about_icon{
+        visibility: hidden;
+    }
+    .admin-card{
+        background-color: #ffffff;
+        box-shadow: 0px 0px 6px 6px rgb(204 204 204 / 0.25);
+        padding: 30px 10px;
+    }
+    .pcode.left-spacer {
+	    margin-left: 0px;
+    }
+    .pcode{
+	    margin-left: 250px;
+    }
+    @media(max-width:767px){
+        .pcode{
+	        margin-left: 0px;
+        }
+    }
+</style>
+<div class="pcode" id='nw1' >
+    <div>
+        <div class="container-fluid pt-4" >
+            <div class="admin-card">
+                <div class="row">
+                    <div class="col-xs-12 col-lg-12 ">
+                        <div class="page-content"  >
+                            <div class="main-heading-wrap">
+                                <h5>{% trans 'Update Template' %}</h5>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div>
+                            <span style="font-weight: bold;">{% trans "Template ID" %} 
+                                <span class="text-danger">*</span> 
+                            </span>
+                        </div>
+                        <input type="text" id="template_id" maxlength="250" value="{{ template_id }}" placeholder="Enter Template ID" name="template_id" class="form-control">
+                    </div>
+                    <div class="col-md-6">
+                        <div >
+                            <span style="font-weight: bold;">{% trans "Category" %} {{category}}
+                                <span class="text-danger">*</span> 
+                            </span>
+                        </div>
+                        <div class="">
+                            <input type="hidden" value="{{category}}" id="category">
+                            <select id="category" selected="{{category}}" class="form-control select-input" name="property">
+                                <option selected="selected" disabled>{{category}}</option>
+                            </select>
+                            <div class="dropDownSelect2" ></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="ml-auto mr-3">
+                        <div class="ml-auto">
+                            <button class="btn btn-primary" t_id="{{t_id}}" id="button-search" onclick="updateTemplate(this)" > Submit </button>
+                            <a href="/admin/email-templates" class="btn btn-primary" id="button-search" > Cancel </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    function updateTemplate(element) {
+        var template_id = $("#template_id").val();
+        $.ajax({
+            url: "{% url 'admin-panel:edit-email-template' %}",
+            type: "POST",
+            dataType: "json",
+            data: {
+                template_id: template_id,
+                t_id: $(element).attr("t_id"),
+                csrfmiddlewaretoken: '{{ csrf_token }}'
+            },
+            success: function (data) {
+                if(data.status === 'error'){
+                    Swal.fire({
+                        icon: "error",
+                        title: data["status"],
+                        text: data["message"]
+                    });
+                }
+                else if(data.status === 'Success'){
+                    Swal.fire({
+                        icon: "success",
+                        title: data["status"],
+                        text: data["message"]
+                    }).then(() => {
+                        window.location = "{% url 'admin-panel:email-templates' %}";
+                    });
+                }
+            }
+        });
+    }
+</script>
+{% endblock content %}

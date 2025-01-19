@@ -1,0 +1,496 @@
+{% extends "index.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}
+Off Market Games
+{% endblock title %}
+
+{% block content %}
+
+<style>
+    .admin-card{
+        background-color: #ffffff;
+        box-shadow: 0px 0px 6px 6px rgb(204 204 204 / 0.25);
+        padding: 30px 10px;
+    }
+
+    .pcode.left-spacer {
+    margin-left: 0px;
+    }
+    .pcode{
+    margin-left: 250px;
+    }
+
+    @media(max-width:991px){
+        .setting-page .card-title h3{
+        font-size: 18px;
+        }
+        .pcode{
+        margin-left: 0px;
+        }
+    }
+    .setting-page .card-title h3{
+    font-size: 18px;
+    }
+ .preview_banner{
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-top: 0px;
+    padding-bottom: 20px;
+    border: rgb(0, 0, 0);
+    }
+
+    #banner_img {
+  border-radius: 5px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+#banner_img:hover {opacity: 0.7;}
+
+/* The Modal (background) */
+.modal {
+  display: none; /* Hidden by default */
+  position: fixed; /* Stay in place */
+  z-index: 1; /* Sit on top */
+  padding-top: 100px; /* Location of the box */
+  left: 0;
+  top: 0;
+  width: 100%; /* Full width */
+  height: 100%; /* Full height */
+  overflow: auto; /* Enable scroll if needed */
+  background-color: rgb(0,0,0); /* Fallback color */
+  background-color: rgba(0,0,0,0.9); /* Black w/ opacity */
+}
+
+/* Modal Content (Image) */
+.modal-content {
+  margin: auto;
+  display: block;
+  width: 80%;
+  max-width: 700px;
+}
+ 
+/* Caption of Modal Image (Image Text) - Same Width as the Image */
+#caption {
+  margin: auto;
+  display: block;
+  width: 80%;
+  max-width: 700px;
+  text-align: center;
+  color: #ccc;
+  padding: 10px 0;
+  height: 150px;
+}
+
+/* Add Animation - Zoom in the Modal */
+.modal-content, #caption {
+  animation-name: zoom;
+  animation-duration: 0.6s;
+}
+
+@keyframes zoom {
+  from {transform:scale(0)}
+  to {transform:scale(1)}
+}
+
+
+.close {
+  position: relative;
+  top: -13px;
+  left: -275px;
+  right: 35px;
+  color: #f1f1f1;
+  font-size: 40px;
+  font-weight: bold;
+  transition: 0.3s;
+}
+
+.close:hover,
+.close:focus {
+  color: #bbb;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.jumbotron {
+  
+  height: 100px;
+  margin-top: 0px;
+  margin-bottom: 10px;
+  padding-bottom: 60px;
+  padding-top:30px;
+}
+input[type=file]{
+    border: transparent;
+}
+
+
+
+/* 100% Image Width on Smaller Screens */
+@media only screen and (max-width: 700px){
+  .modal-content {
+    width: 100%;
+  }
+}
+    /* Styling for the custom toggle sliders */
+    .form-check .form-check-input {
+        display: none; /* Hide the original checkboxes */
+    }
+
+    .form-check .form-check-label {
+        position: relative;
+        padding-left: 60px; /* Add padding to the left of the label for spacing */
+        cursor: pointer;
+        padding-top:3px;
+        margin-left:-20px;
+    }
+
+    /* Create the slider track */
+    .form-check .form-check-label::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 54px; /* Width of the slider track */
+        height: 26px; /* Height of the slider track */
+        background-color: #f1f1f1; /* Toggle slider background color when unchecked */
+        border-radius: 50px; /* Rounded corners for the slider track */
+        -webkit-transition: 0.2s;
+        transition: 0.2s;
+    }
+
+    /* Customize the appearance of the slider button */
+    .form-check .form-check-label::after {
+        content: '';
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 22px; /* Width of the slider button */
+        height: 22px; /* Height of the slider button */
+        background-color: #fff; /* Color of the slider button */
+        border-radius: 50%; /* Rounded shape for the slider button */
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Box shadow for the slider button */
+        -webkit-transition: 0.2s;
+        transition: 0.2s;
+    }
+
+    /* Position the slider button on the slider track */
+    .form-check .form-check-input:checked + .form-check-label::before {
+        background-color: #38c172; /* Toggle slider background color when checked */
+    }
+
+    .form-check .form-check-input:checked + .form-check-label::after {
+        left: 30px; /* Position of the slider button when checked */
+    }
+
+
+</style>
+
+<script type="text/javascript">
+    $(document).ready(function() {
+  $('#game_pass').attr('type', "password");
+
+
+  });
+  
+  // $(document).ready(function() {
+  //   setTimeout(function(){
+  //     $('#notification_messages').remove();
+  //   }, 3000);
+  // });
+
+   function validate_title() {
+      var maxLength = 100; // Maximum length allowed for the title
+      var titleValue = $('#game_title').val();
+
+      // Check if the title exceeds the maximum length
+      if (titleValue.length > maxLength) {
+        // Truncate the value if it exceeds the max length
+        $(this).val(titleValue.substring(0, maxLength));
+
+        // Display a SweetAlert alert
+        Swal.fire({
+          icon: 'error',
+          title: 'Max Length Exceeded',
+          text: 'The title cannot exceed ' + maxLength + ' characters.',
+        });
+      }
+    }
+ function read_game_url(input) {
+  console.log("IM  HERE")
+                  if (input.files && input.files[0]) {
+                    var reader = new FileReader();
+
+                    reader.onload = function (e) {
+                      $('#game_img').attr('src', e.target.result);
+                      $("#game_img").attr('width', '80px');
+                      $("#game_img").attr('height', '80px');
+                    };
+
+                    reader.readAsDataURL(input.files[0]);
+                  }
+            }
+
+
+function banner_click(){
+    
+  var src = $('#game_img').attr('src');
+  console.log("SOURCE ",src)
+                    var modal;
+                    function removeModal(){ modal.remove(); $('body').off('keyup.modal-close'); }
+                    modal = $('<div>').css({
+                        background: 'RGBA(255 255 255 / 0%) url('+src+') no-repeat center',
+                        width: "50%",
+                        height: "100%",
+                        margin: "0 auto",
+                        position: "fixed",
+                        zIndex: "10000",
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        top: "0px",
+                        left: "0px",
+                        right: "0px",
+                        cursor: "zoom-out"
+    
+    
+                    }).click(function(){
+                        removeModal();
+                    }).appendTo('body');
+                    //handling ESC
+                    $('body').on('keyup.modal-close', function(e){
+                    if(e.key==='Escape'){ removeModal(); } 
+                    });
+
+}
+
+
+                                  
+    $('#id_game').on('change', function() {
+        imagesPreview(this, 'div.gallery');
+    });
+
+
+
+    function validate_download_url() {
+  var urlValue = $('#download_url').val();
+
+  // Regular expression to validate the URL format
+  var urlPattern = /^(ftp|http|https):\/\/[^ "]+$/;
+
+  // Check if the URL matches the pattern
+  if (!urlPattern.test(urlValue)) {
+    // Display a SweetAlert alert for invalid URL format
+    Swal.fire({
+      icon: 'error',
+      title: 'Invalid URL',
+      text: 'Please enter a valid URL starting with  "http", or "https".',
+    });
+
+    // Reset the download_url field to empty since the URL is invalid
+    $('#download_url').val('');
+
+    return; // Stop the validation if the URL format is invalid
+  }
+
+  
+
+  // If the URL is valid, proceed with your logic here
+  // For example, trigger the download or save the URL
+  // ...
+
+
+
+}
+function validate_bonus_percentage(event) {
+  var bonusValue = $('#bonus_percentage').val();
+
+// Regular expression to validate the input as whole numbers only
+var wholeNumberPattern = /^\d*$/;
+
+// Check if the input is not a whole number
+if (!wholeNumberPattern.test(bonusValue)) {
+  // Display a SweetAlert alert for invalid input
+  Swal.fire({
+    icon: 'error',
+    title: 'Invalid Bonus Percentage',
+    text: 'Please enter a valid whole number for the bonus percentage.',
+  });
+
+  // Reset the input field to empty
+  $('#bonus_percentage').val('');
+
+  return; // Stop the validation if the input is invalid
+}
+}
+function view_password(){
+  const toggleButton = document.getElementById('password-toggle-update');
+
+    const passwordInput = document.querySelector('#game_pass');
+
+    if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleButton.querySelector('i').classList.remove('fa-eye');
+                toggleButton.querySelector('i').classList.add('fa-eye-slash');
+    } else {
+                passwordInput.type = 'password';
+                toggleButton.querySelector('i').classList.remove('fa-eye-slash');
+                toggleButton.querySelector('i').classList.add('fa-eye');
+               
+    }
+  
+   }
+
+</script>
+<!-- The Modal -->
+<div id="myModal" class="modal">
+    <div class="wrapper">
+        <span  id='close' class="close" onclick="closeImage()">&times;</span>
+        <img class="modal-content" id="game">
+    </div>
+</div>
+
+<div class="pcode" id='nw1' >
+    <div class="page-content" >
+        <div>
+        <div class="container-fluid" style="padding-top: 25px;">
+          
+            <div class="create-game-content" style="margin:0 auto; max-width: 90%; padding:5px 50px ; background-color: #fff;">
+                <div class="game-form">
+                    <div id="notification_messages">
+                    {% if error %}
+                    <div class="alert alert-success alert-block">
+                        <button type="button" class="close" data-dismiss="alert">×</button>
+                        <strong>{{ error }}</strong>
+                    </div>
+                    {% endif %}
+                    </div>
+                    
+    
+                    <div class="container">
+                    </br>
+    
+                        <div class="jumbotron">
+                            <h1><i class="fas fa-chess-board" aria-hidden="true"></i>Off Market Games</h1>
+                        </div>
+
+                        {% include "../includes/messages.html" %}
+                        <form action="" method="post" enctype="multipart/form-data">
+                          {% csrf_token %}
+                          <div class="row mb-3 pb-2">
+                            
+        <div class="col-md-6">
+            <div class="form-check form-switch">
+                <input type="checkbox" class="form-check-input" id="{{ form.game_status.id_for_label }}" name="{{ form.game_status.name }}" {% if form.game_status.value %}checked{% endif %}>
+                <label class="form-check-label" for="{{ form.game_status.id_for_label }}">Game Status</label>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form-check form-switch">
+                <input type="checkbox" class="form-check-input" id="{{ form.coming_soon.id_for_label }}" name="{{ form.coming_soon.name }}" {% if form.coming_soon.value %}checked{% endif %}>
+                <label class="form-check-label" for="{{ form.coming_soon.id_for_label }}">Coming Soon</label>
+            </div>
+        </div>
+    </div>
+                      
+                          <div class="row mb-3"> <!-- Added mb-3 for spacing -->
+                              <div class="col-md-6">
+                                  <div class="form-group">
+                                      <label for="{{ form.title.id_for_label }}">Game Name</label>
+                                      {{ form.title }}
+                                  </div>
+                              </div>
+                             
+                              <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.download_url.id_for_label }}">Download URL/Game URL</label>
+                                    {{ form.download_url }}
+                                </div>
+                            </div>
+                          </div>
+
+                          <div class="row mb-3"> <!-- Added mb-3 for spacing -->
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.game_user.id_for_label }}">Game Login ID</label>
+                                    {{ form.game_user }}
+                                </div>
+                            </div>
+                           
+                            <div class="col-md-6">
+                              <div class="form-group">
+                                  <label for="{{ form.game_pass.id_for_label }}">Game Password</label>
+                                  <div class="input-group">
+                                      {{ form.game_pass }}
+                                      <div class="input-group-append">
+                                          <span class="input-group-text" id="password-toggle-update" onclick="view_password()">
+                                              <i class="fa fa-eye toggle-icon" title="View/Hide Password" style="cursor:pointer;"></i>
+                                          </span>
+                                      </div>
+                                  </div>
+                              </div>
+                          </div>
+                        </div>
+                    
+                      
+                          <div class="row mb-3"> <!-- Added mb-3 for spacing -->
+                             <div class="col-md-6">
+                                  <div class="form-group">
+                                      <label for="{{ form.code.id_for_label }}">Game Initial</label>
+                                      {{ form.code }}
+                                  </div>
+                              </div>
+                              <div class="col-md-5">
+                                <div class="form-group">
+                                    <label for="{{ form.url.id_for_label }}">Game Image</label>
+                                    {{ form.url }}
+                                    <small><bold> ( Image should be equal to 100px x 100px. )</bold></small>
+                                </div>
+                            </div>
+                            <div class="col-md-1">
+                              <div class="form-group">
+                                <div class="preview_banner">
+                                  <img id="game_img"  width="80px" style='margin-left:-60px' onclick="banner_click()"/>
+                                  
+                                </div>
+
+                              </div>
+                              
+                          </div>
+                              
+                          </div>
+                      
+                          <div class="row mb-3"> <!-- Added mb-3 for spacing -->
+                             
+                            <div class="col-md-6">
+                              <div class="form-group">
+                                  <label for="{{ form.bonus_percentage.id_for_label }}">Bonus Percentage</label>
+                                  {{ form.bonus_percentage }}
+                              </div>
+                          </div>
+                          </div>
+                      
+                          <button type="submit" class="btn btn-primary" style="margin-top: 0px; margin-bottom: 20px;">Create</button>&nbsp;
+                          <a type='button' href="/admin/offmarket-games" class="btn btn-primary" style="margin-top: 0px; margin-bottom: 20px;" id="button-search">Cancel</a>
+                          <a type='button' href="#" class="btn btn-primary" onclick="history.back()" style="margin-top: 0px; margin-bottom: 20px;" >Go Back</a>
+                        </form>
+                      
+                      
+                       
+                        <div>
+
+                        </div>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div>
+    </div>
+</div>
+                     
+
+{% endblock content %}
+

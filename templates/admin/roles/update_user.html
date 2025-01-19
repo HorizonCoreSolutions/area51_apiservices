@@ -1,0 +1,98 @@
+{% load i18n %}
+{% load static %}
+
+<div id="edit-user" class="popup mfp-with-anim mfp-hide" style='background-color: white; width:100%;max-width: 550px; margin-left: auto; margin-right: auto; vertical-align:center; '>
+    <div class="popup-body "  style="margin-left: 3em; margin-right: 3em; padding-bottom: 0.3rem; padding-top: 0.3rem;">
+        <div class="modal-header mb-2">
+            <div class="justify-content-center">
+                <h5 class="modal-title ">Edit {{ user_role|title }}</h5>
+            </div>
+            <button type="button" style="font-size: 25px;" class="close" data-dismiss="popup-body" aria-label="Close" id="closebutton" onclick="closefunc()">
+                <span aria-hidden="true">&times;</span>
+              </button>   
+        </div>
+        <div class="">
+            <form id="edit-user-form" >
+
+                {% csrf_token %}
+
+                <div class="form-group create-form-margin ">
+                    <span class="font-weight-bold ml-1">{% trans "Username" %}</span>
+                    <div class="input-group input-group-rounded" id="username-input">
+                        <input type="text" class="form-control" name="username" id="username" autocomplete="new-username" placeholder="Enter Username" required>
+                        <p class="error-msg"></p>
+                    </div>
+                </div>
+               
+                <div class="form-group">
+                    <span class="font-weight-bold ml-1">{% trans "Password" %}</span>
+                    <div class="input-group input-group-rounded" id="edit-password-input">
+                        <input type="password" class="form-control" name="password" id="id_password" autocomplete="new-password" placeholder="Enter Password" required>
+                        <span class="input-group-text" id="password-toggle" onclick="view_password('edit-user-form', 'id_password', this.id)">
+                            <i class="fa fa-eye toggle-icon" title="View/Hide Password" style="cursor:pointer;"></i>
+                        </span>
+                        <p class="error-msg"></p>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <span class="font-weight-bold ml-1">{% trans "Confirm Password" %}</span>
+                    <div class="input-group input-group-rounded" id="edit-confirm-password-input">
+                        <input type="password" class="form-control" name="confirm-password" id="confirm-password" placeholder="Enter Confirm Password" required>
+                        <span class="input-group-text" id="password-toggle-cnf" onclick="view_password('edit-user-form', 'confirm-password', this.id)">
+                            <i class="fa fa-eye toggle-icon" title="View/Hide Password" style="cursor:pointer;"></i>
+                        </span>
+                        <p class="error-msg"></p>
+                    </div>
+                </div> 
+
+                <div class="pt-2">
+                    <button type="submit" class="btn btn-primary btn-md btn-block waves-effect waves-light text-center m-b-20">
+                        {% trans "Save" %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+    function closefunc(){
+        $.magnificPopup.close();
+    } 
+</script>
+
+
+{% comment %} {% load i18n %}
+{% load static %}
+<style>
+    h3{
+        font-size: 20px;
+    }
+</style>
+<div id="edit-user" class="popup mfp-with-anim mfp-hide">
+    
+    <div class="popup-body" style="position:relative; height: 0px; margin-bottom: 400px;">
+        <div class="login-form" style=" width: 100%; max-width:550px;margin-left: auto;margin-right: auto; vertical-align:center; background-color: white;">
+            {# TODO: fix this #}
+            <div class="popup-header text-center mt-5 " style="padding-top: 2em;padding-bottom: 1em;">
+               <h3>{% trans "Edit" %}  {{ user_role|title }}</h3> 
+            </div>
+            <form id="edit-user-form" style="padding-left: 3rem; padding-right: 3rem;  padding-bottom: 2rem;">
+                {% csrf_token %}
+                <div class="form-group create-form-margin ">
+                    <span class="font-weight-bold ml-1">{% trans "Role Name" %}</span>
+                    <div class="input-group input-group-rounded" id="edit-role-input">
+                        <input type="text" class="form-control" name="role" id="role" placeholder="Enter Role" required>
+                        <p class="error-msg"></p>
+                    </div>
+                </div>
+
+                <div class="pt-2 ">
+                    <button type="submit" class="btn btn-primary au-btn au-btn--block au-btn--darkGreen au-btn--lg" style="margin-left:194px">
+                        {% trans "Update" %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div> {% endcomment %}

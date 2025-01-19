@@ -1,0 +1,228 @@
+{% extends "index.html" %}
+{% load static %}
+{% load i18n %}
+{% block content %}
+<style>
+    #pop-loader {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100%;
+        background: rgba(0,0,0,0.75) url(../../../static/Desktop_static/images/loading2.gif) no-repeat center center;
+        z-index: 10000;
+    }
+    .admin-card{
+        background-color: #ffffff;
+        box-shadow: 0px 0px 6px 6px rgb(204 204 204 / 0.25);
+        padding: 30px 10px;
+    }
+    .pcode.left-spacer {
+	    margin-left: 0px;
+    }
+    .pcode{
+	    margin-left: 250px;
+    }
+    @media(max-width:767px){
+        .pcode{
+	        margin-left: 0px;
+        }
+    }
+    .django-ckeditor-widget{
+        display: block !important;
+    }
+    #cke_1_contents{
+        height: 150px !important;
+    }
+    #banner_img{
+        width: 500px;
+        height: 200px;
+    }
+    input[type=file]{
+    width:90px;
+}
+.multiselect {
+  width: 200px;
+}
+
+.selectBox {
+  position: relative;
+}
+
+.selectBox select {
+  width: 100%;
+  font-weight: bold;
+}
+
+.overSelect {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+}
+
+#checkboxes {
+  display: none;
+  border: 1px #dadada solid;
+}
+
+#checkboxes label {
+  display: block;
+}
+
+#checkboxes label:hover {
+  background-color: #1e90ff;
+}
+</style>
+<div id="pop-loader"></div>
+<div class="pcode" id='nw1' >
+    <div>
+        <div class="container-fluid pt-4" >
+            <div class="admin-card">
+                <div class="row">
+                    <div class="col-xs-12 col-lg-12 ">
+                        <div class="page-content"  >
+                            <div class="main-heading-wrap">
+                                <h5>{% trans 'Create Category' %}</h5>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                    <div class="row mb-3" style="margin-top:10px;">
+
+                        <div class="search-row col-md-5 mb-3 mb-md-0" >
+                            <div class="col" style="min-width: 210px;">
+                                <div>
+                                    <div style="margin-bottom: 7px;">
+                                        <span style="font-weight: bold;">{% trans "Category" %}
+                                        </span>
+                                        <div class="rs-select2--light rs-select2--md">
+                                            <select id="select-category" class="form-control">
+                                                {% if selected_category %}
+                                                    <option value="{{selected_category.id}}">{% trans selected_category.name %}</option>
+                                                {% else %}
+                                                    <option value="0">{% trans "Select Category" %}</option>
+                                                    {% for category in categories %}
+                                                        <option value="{{category.id}}">{% trans category.name %}</option>
+                                                    {% endfor %}
+                                                {% endif %}
+                                            </select>
+                                            <div class="dropDownSelect2"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <div class="search-row col-md-5 mb-3 mb-md-0" >
+                            <div class="col" style="min-width: 210px;">
+                                <div>
+                                    <div style="margin-bottom: 7px;">
+                                        <span style="font-weight: bold;">{% trans "Pages" %}
+                                        </span>
+                                        <div class="rs-select2--light rs-select2--md" multiple="multiple">
+                                            <select id="select-dealer" name="dealers" class="js-example-basic-multiple tokenize-open" multiple="multiple">
+                                                <option selected="selected"></option>
+                                                {% if selected_pages %}
+                                                    {% for page in selected_pages %}
+                                                        <option selected="selected"
+                                                                value="{{ page.id }}">{{ page.title }}</option>
+                                                    {% endfor %}
+                                                {% endif %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <div class='input-group-btn position-relative col-md-2 col-xs-12' style="float: right; margin-top: 20px;">
+                            <button class="btn btn-primary w-100" onclick="createCategory()">
+                                {% trans "Submit" %}
+                            </button>
+                        </div>
+                        
+                    </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+
+$('#select-dealer').tokenize2({
+    multiple: true,
+    placeholder: "{% trans 'Select Pages' %}",
+    searchMinLength:0,
+    dataSource: function(term, object){
+        $.ajax("{% url 'admin-panel:footer-pages-ajax' %}", {
+            type: "POST",
+            data: { search: term, start: 0 },
+            global: false, 
+            dataType: 'json',
+            success: function(data){
+                var $items = [];
+                $.each(data, function(k, v){
+                    $items.push(v);
+                });
+                object.trigger('tokenize:dropdown:fill', [$items]);
+            }
+        });
+    }
+});
+
+
+function createCategory() {
+    selected_category = $('#select-category option').filter(':selected').val()
+    selected_pages = $('#select-dealer').val()
+    if(selected_category == "0"){
+        Swal.fire({
+            icon: "error",
+            title: "Fields Required",
+            text: 'Please Select Category'
+        });
+    }
+    else if(selected_pages.length == 1){
+        Swal.fire({
+            icon: "error",
+            title: "Fields Required",
+            text: 'Please Select Pages'
+        });
+    }
+    else{
+        $.ajax({
+                url: "{% url 'admin-panel:create-footer' %}",
+                type: "POST",
+                dataType: "json",
+                data: {
+                    category_id: selected_category,
+                    pages: selected_pages,
+                    csrfmiddlewaretoken: '{{ csrf_token }}'
+                },
+                success: function(response){
+                    Swal.fire({
+                        icon: 'success',
+                        title: response["status"][0].toUpperCase() + response["status"].substring(1),
+                        text: response['message']
+                    }).then(() => {
+                        window.location.replace("/admin/footer-page/");
+                    });
+                },
+                error: function(response){
+                    Swal.fire({
+                        icon: "error",
+                        title: "Error",
+                        text: response['responseJSON']['message']
+                    });
+                }
+            });
+        }
+    }
+
+</script>
+{% endblock content %}

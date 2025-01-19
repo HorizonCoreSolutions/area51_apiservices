@@ -1,0 +1,212 @@
+{% extends "index.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}
+Edit Bonus Content
+{% endblock title %}
+
+{% block javascript %}
+<script type="text/javascript" src="/static/tinymce/tinymce.min.js"></script>
+<script type="text/javascript" src="/static/django_tinymce/init_tinymce.js"></script>
+{% endblock javascript %}
+
+{% block content %}
+
+<style>
+    .admin-card{
+        background-color: #ffffff;
+        box-shadow: 0px 0px 6px 6px rgb(204 204 204 / 0.25);
+        padding: 30px 10px;
+    }
+
+    .pcode.left-spacer {
+    	margin-left: 0px;
+    }
+    .pcode{
+    	margin-left: 250px;
+    }
+
+    @media(max-width:991px){
+        .setting-page .card-title h3{
+        font-size: 18px;
+        }
+        .pcode{
+        margin-left: 0px;
+        }
+    }
+    .setting-page .card-title h3{
+    	font-size: 18px;
+    }
+
+	.jumbotron {
+	
+		height: 100px;
+		margin-top: 0px;
+		margin-bottom: 10px;
+		padding-bottom: 100px;
+	
+	}
+	input[type=file]{
+		border: transparent;
+	}
+
+</style>
+<script type="text/javascript">
+  
+	$(document).ready(function() {
+		$('#id_banner').attr('required', false);
+	});
+
+
+	tinymce.init({
+		selector: '#bonus_content',
+		cleanup_on_startup: true,
+		custom_undo_redo_levels: 20,
+		theme: 'silver',
+		plugins: [
+			'textcolor preview contextmenu',
+			'fullscreen',
+			'contextmenu searchreplace',
+			'fullscreen print',
+		],
+		toolbar1: `
+			fullscreen preview bold italic underline | fontsizeselect |
+			forecolor backcolor | alignleft alignright aligncenter alignjustify |
+			indent outdent
+		`,
+		contextmenu: 'formats | link image',
+		menubar: true,
+		statusbar: true,
+		file_picker_callback: tinymce_custom_file_picker,
+		content_style: `
+			@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
+			body { font-family: 'Orbitron'; line-height:1 }
+		`,
+		skin: "oxide-dark",
+    	content_css: "dark",
+		font_formats: 'Orbitron=Orbitron, sans-serif',
+		fontsize_formats: '8pt 9pt 10pt 11pt 12pt 13pt 14pt 15pt 16pt 17pt 18pt 19pt 20pt 21pt 22pt 23pt 24pt 25pt 26pt 27pt 28pt 29pt 30pt 31pt 32pt 33pt 34pt 35pt 36pt',
+		lineheight_formats: '0.50 0.75 1 1.25 1.50 1.75 2',
+	});
+
+	$(document).ready(function() {
+		$('#editBonusDetail').submit(function(event) {
+			event.preventDefault();
+	
+			var formData = $(this).serialize();
+	
+			$.ajax({
+				type: 'POST',
+				url: "{% url 'admin-panel:edit-bonus-content' %}",
+				data: formData,
+				success: function(data) {
+					Swal.fire({
+						title: data['status'].toLowerCase(),
+						text: data["message"],
+						icon: "success",
+					}).then((result) => {
+						window.location.href = "{% url 'admin-panel:bonus-details' %}"
+					});
+				},
+				error: function(error) {
+					console.error('Error:', error);
+					Swal.fire({
+						title: data['status'].toLowerCase(),
+						text: data["message"],
+						icon: "error",
+					})
+				}
+			});
+		});
+	});
+
+</script>
+
+<div class="pcode" id='nw1' >
+    <div class="page-content" >
+        <div class="container-fluid" style="padding-top: 25px;">
+            <div class="create-banner-content" style="margin:0 auto; padding:5px 50px ; background-color: #fff;">
+                <div class="banner-form">                    
+                    <div class="">
+                    </br>
+                  
+                        <div id="banner_text_display" class="jumbotron text-center">
+                            <h1><i class="fa fa-camera-retro" aria-hidden="true"></i> Bonus Detail</h1>
+                        </div>
+
+                        {% include "../../includes/messages.html" %}
+                        <form id="editBonusDetail" action="" method="post" enctype="multipart/form-data">
+                            {% csrf_token %}
+
+							<div class="row">
+								<div class="col-md-6">
+									<div class="form-group">
+										<input type="hidden" name="bonus_id" value="{{ bonus_detail.id }}" id="bonus_id">
+										<label for="bonus_type">Bonus Type</label>
+										<select class="form-control" name="bonus_type" id="bonus_type">
+											<option value="{{bonus_detail.bonus_type}}">{{bonus_detail.get_bonus_type_display}}</option>
+										</select>
+									</div>
+								</div>
+
+								<div class="col-md-6">
+									<div class="form-group">
+										<label for="promo_code">Promo Code</label>
+										<select class="form-control" name="promo_code" id="promo_code">
+											{% for promo_code in promo_codes  %}
+												<option value="{{promo_code}}" {% if bonus_detail.promo_code == promo_code %}selected{% endif %}>{{promo_code}}</option>
+											{% empty %}
+												<option value="promocode_unavailable" selected disabled>No Promocode Available</option>
+											{% endfor %}
+										</select>
+									</div>
+								</div>
+							</div>
+
+							<div class="row">
+								<div class="col-md-12">
+									<div class="form-group">
+									<label for="meta_description">Meta Description</label>
+									<br>
+									<textarea class="w-100" name="meta_description" id="meta_description" rows="11">{% if bonus_detail.meta_description %}{{bonus_detail.meta_description}}{% endif %}</textarea>
+									</div>
+								</div>
+							</div>
+
+							<div class="row">
+								<div class="col-md-12">
+									<div class="form-group">
+									<label for="json_metadata">Json Metadata</label>
+									<br>
+									<textarea class="w-100" name="json_metadata" id="json_metadata" rows="11">{% if bonus_detail.json_metadata %}{{bonus_detail.json_metadata}}{% endif %}</textarea>
+									</div>
+								</div>
+							</div>
+
+
+                            <div class="row">
+								<div class="col-md-12">
+									<div class="form-group">
+										<label for="bonus_content">Description</label><br>
+										<textarea name="bonus_content" id="bonus_content" rows="20" cols="80">{% if bonus_detail.content %}{{bonus_detail.content}}{% endif %}</textarea>
+									</div>
+								</div>
+                            </div>
+
+                            <div class="row mt-2">
+								<button type="submit" class="btn btn-primary ml-auto" style="margin-top:0px; margin-bottom: 20px;">Update</button>&nbsp;
+								<a type='button' href="/admin/bonus-details" class="btn btn-primary"  style="margin-top:0px; margin-bottom: 20px;"id="button-search"> Cancel </a>
+                            </div>
+                        </form>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+                     
+
+{% endblock content %}
+

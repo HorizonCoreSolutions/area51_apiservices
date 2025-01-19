@@ -1,0 +1,104 @@
+{% extends "index.html" %}
+{% load static %}
+{% load i18n %}
+{% block content %}
+<style>
+    #pop-loader {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100%;
+        background: rgba(0,0,0,0.75) url(../../../static/Desktop_static/images/loading2.gif) no-repeat center center;
+        z-index: 10000;
+    }
+    .admin-card{
+        background-color: #ffffff;
+        box-shadow: 0px 0px 6px 6px rgb(204 204 204 / 0.25);
+        padding: 30px 10px;
+    }
+    .pcode.left-spacer {
+	    margin-left: 0px;
+    }
+    .pcode{
+	    margin-left: 250px;
+    }
+    @media(max-width:767px){
+        .pcode{
+	        margin-left: 0px;
+        }
+    }
+    .django-ckeditor-widget{
+        display: block !important;
+    }
+    #cke_1_contents{
+        height: 150px !important;
+    }
+    #banner_img{
+        width: 500px;
+        height: 200px;
+    }
+    input[type=file]{
+    width:90px;
+}
+.multiselect {
+  width: 200px;
+}
+
+.selectBox {
+  position: relative;
+}
+
+.selectBox select {
+  width: 100%;
+  font-weight: bold;
+}
+
+.overSelect {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+}
+
+#checkboxes {
+  display: none;
+  border: 1px #dadada solid;
+}
+
+#checkboxes label {
+  display: block;
+}
+
+#checkboxes label:hover {
+  background-color: #1e90ff;
+}
+</style>
+<h1>Hello {{pages}}</h1>
+{% for page in pages %}
+<span> {{ page }}</span>
+{% endfor %}
+<div id="pop-loader"></div>
+<div class="pcode" id='nw1' >
+    <div>
+        <div class="container-fluid pt-4" >
+            <div class="admin-card">
+                <div class="row">
+                    <div class="col-xs-12 col-lg-12 ">
+                        <div class="page-content"  >
+                            <div class="main-heading-wrap">
+                                <h5>{% trans 'Update Footer Pages' %}</h5>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

@@ -1,0 +1,54 @@
+{% load i18n %}
+{% load static %}
+
+<style>
+    .create-form-margin{
+        margin-bottom: -5px;
+    }
+</style>
+
+<div id="add_casino_category_form" class="popup mfp-with-anim mfp-hide" style='background-color: white; width:100%;max-width: 650px; margin-left: auto; margin-right: auto; vertical-align:center; '>
+	<div class="popup-body "  style="margin-left: 3em; margin-right: 3em; padding-bottom: 0.3rem; padding-top: 0.3rem;">
+		<div class="modal-header mb-2">
+			<div class="justify-content-center">
+				<h5 class="modal-title">Add/Set Casino Game Category</h5>
+			</div>
+			<button type="button" style="font-size: 25px;" class="close popup-closebutton" data-dismiss="modal" aria-label="Close" id="closebutton">
+				<span aria-hidden="true">&times;</span>
+			</button>   
+		</div>
+
+		<div class="modal-body">
+            <form id="game-category-form" autocomplete="off">
+                <div class="form-group">
+                    <label for="casino_category_name">{% trans "Game Category" %}</label>
+                    <input type="text" class="form-control" id="casino_category_name" value="" placeholder="{% trans 'Enter Category Name' %}" maxlength= "500" required>
+					<span class="help-text">Please note: Casino categories are case-sensitive and any modifications made to a category will have a universal impact across all associated games.</span>
+                    <input type="text" class="form-control" id="casino_game_id" value="" maxlength="500" hidden>
+                    <input type="text" class="form-control" id="existing_casino_category_name" value="" maxlength="500" hidden>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-primary" id="add-game-category-btn">{% trans "Add Category" %}</button>
+            <button type="button" class="btn btn-primary" id="edit-game-category-btn" style="display: none;">{% trans "Update Category" %}</button>
+            <button type="button" class="btn btn-secondary popup-closebutton" data-dismiss="modal">{% trans "Close" %}</button>
+        </div>
+
+        <div style="max-height:400px; overflow-y:auto;">
+            <table id="casino-categories-table" class="table table-striped text-center">
+                <thead class="thead-dark" style="position: sticky; top: 0;">
+                    <tr>
+                        <th class="text-center">{% trans "Category Name" %}</th>
+                        <th class="text-center">{% trans "Actions" %}</th>
+                    </tr>
+                </thead>
+                <tbody id="casino-categories-table-body" class="" style="overflow-y:auto">
+                    <tr><td colspan="2" class="text-center">No Data</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        
+	</div>
+</div>

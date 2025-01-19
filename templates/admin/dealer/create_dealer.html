@@ -1,0 +1,119 @@
+{% load i18n %}
+{% load static %}
+<style>
+.error-msg{
+    color:red
+}
+</style>
+<div id="add-dealer" class="popup mfp-with-anim mfp-hide "  style='background-color: white; width:100%; max-width: 550px; margin-left: auto; margin-right: auto; vertical-align:center; '>
+    <div style="margin-left: 3em; padding-right: 3em; padding-top: 3em; padding-bottom: 2em;">   
+        <div class="popup-body" >
+            <div class="login-form" >
+                <form id="create-dealer-form" >
+                    {% csrf_token %}
+                    <div class="row mb-4 justify-content-center" >
+                        <div class=" col-lg-5 col-6">
+                            <div class="rs-select2--light rs-select2--md"  >
+                                <select required name="timezone"  style="background-color: #448aff; width: 100%;" data-placeholder="{% trans 'Timezone' %}" class="js-select2" id="timezone-select" >
+                                    <option></option>
+                                    {% for t_zone in TIMEZONES %}
+                                        <option value="{{t_zone}}">{% trans t_zone %}</option>
+                                    {% endfor %}
+                                </select>
+                                <div class="dropDownSelect2"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-lg-4 col-6">
+                            <div class="rs-select2--light rs-select2--md">
+                                <select required name="currency" style="background-color: #448aff;  width:  100%;" data-placeholder="Currency" class="js-select2" id="currency-select" style="background-color: #448aff;">
+                                    <option></option>
+                                    {% for c_choice in CURRENCY_CHOICES %}
+                                        <option value="{{c_choice}}">{% trans c_choice %}</option>
+                                    {% endfor %}
+                                </select>
+                                <div class="dropDownSelect2"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group create-form-margin">
+                        <span class="font-weight-bold ml-1">{% trans "Username" %}</span>
+                        <div id="username-input">
+                            <div class="input-group input-group-rounded">
+                                {{ form.username }}
+                            </div>
+                            <div class="error-msg" ></div>
+                        </div>
+                    </div>
+
+                    <div class="form-group create-form-margin">
+                        <span class="font-weight-bold ml-1">{% trans "Password" %}</span>
+                        <div id="password-input">
+                            <div class="input-group input-group-rounded">
+                                {{ form.password }}
+                                <span class="input-group-text" id="password-toggle">
+                                    <i class="fa fa-eye toggle-icon" title="View/Hide Password" style="cursor:pointer;"></i>
+                                </span>
+                            </div>
+                            <p class="error-msg"></p>
+                        </div>
+                    </div>
+                    <div class="form-group create-form-margin">
+                        <span class="font-weight-bold ml-1">{% trans "Confirm Password" %}</span>
+                        <div id="confirm-password-input">
+                            <div class="input-group input-group-rounded">
+                                {{ form.confirm_password }}
+                                <span class="input-group-text" id="password-toggle-cnf">
+                                    <i class="fa fa-eye toggle-icon" title="View/Hide Password" style="cursor:pointer;"></i>
+                                </span>
+                            </div>
+                            <p class="error-msg"></p>
+                        </div>
+                    </div>
+                    <div class="pt-2">
+                        <button type="submit" class="btn btn-primary btn-md btn-block waves-effect waves-light text-center m-b-20" >
+                            {% trans "Create Master Agent" %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const passwordInput = document.getElementById('id_password');
+        const toggleButton = document.getElementById('password-toggle');
+        const passwordInputcnf = document.getElementById('id_cnf_password');
+        const toggleButtoncnf= document.getElementById('password-toggle-cnf');
+
+        toggleButton.addEventListener('click', function() {
+
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleButton.querySelector('i').classList.remove('fa-eye');
+                toggleButton.querySelector('i').classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                toggleButton.querySelector('i').classList.remove('fa-eye-slash');
+                toggleButton.querySelector('i').classList.add('fa-eye');
+               
+            }
+        });
+        toggleButtoncnf.addEventListener('click', function() {
+
+      if (passwordInputcnf.type === 'password') {
+        passwordInputcnf.type = 'text';
+        toggleButtoncnf.querySelector('i').classList.remove('fa-eye');
+        toggleButtoncnf.querySelector('i').classList.add('fa-eye-slash');
+      } else {
+        passwordInputcnf.type = 'password';
+        toggleButtoncnf.querySelector('i').classList.remove('fa-eye-slash');
+        toggleButtoncnf.querySelector('i').classList.add('fa-eye');
+        
+      }
+      });
+    });
+</script>

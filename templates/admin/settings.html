@@ -1,0 +1,692 @@
+{% extends "index.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block content %}
+<style>
+    .admin-card{
+        background-color: #ffffff;
+        box-shadow: 0px 0px 6px 6px rgb(204 204 204 / 0.25);
+        padding: 30px 10px;
+    }
+
+    .pcode.left-spacer {
+	margin-left: 0px;
+    }
+    .pcode{
+	margin-left: 250px;
+    }
+
+    @media(max-width:991px){
+        .setting-page .card-title h3{
+        font-size: 18px;
+        }
+        .pcode{
+	    margin-left: 0px;
+        }
+    }
+
+    @media(max-width:767px){
+    .reset-filter{
+        width: 100%;
+        text-align: center;
+    }
+   
+    .reset-filter button{
+        width: 100%;
+    }
+    .setting-page .card-title h3{
+    font-size: 18px;
+    }
+    }
+    
+
+   
+</style>
+<div class="pcode" id='nw1' >
+<div>
+    <div class="container-fluid ">
+        <div class="row">
+            <div class="col-xs-12 col-lg-12 ">
+                <div class="page-content pt-4 setting-page">
+                    <div class='container-fluid pt-2'>
+                        <div class='row'>
+                            {% comment %}
+                            <!-- Permissions tab content start -->
+                            <div class="col-xs-12 col-md-6 mb-4">
+                                <div class="admin-card">
+                                    <div class="main-heading-wrap">
+                                        <h5>{% trans "Permissions" %}</h5>
+                                    </div>
+                                    <div class="card-body">
+                                       
+                                    </div>
+                                    </div>
+                                </div>    
+                            </div>
+
+                            <!-- Permissions tab content end-->
+                            <div class="col-xs-12 col-md-6 mb-4">
+                                <div class="admin-card">
+                                    <div class="main-heading-wrap">
+                                        <h5>{% trans "Change Bet Status" %}</h5>
+                                    </div>
+                                    <div class="container" style="padding-top: 10px">
+                                        <form>
+                                            <div class="input-group">
+                                                <input type="text" id="bet_id_input" name="bet_id_input"
+                                                    placeholder="{% trans 'Enter Bet ID' %}" class="form-control col-11"
+                                                    required="required" autocomplete='off'>&nbsp;&nbsp;&nbsp;
+                                                    <div class="row-2 col-3">{% trans "Enter Coupon id" %}</div>
+
+
+
+                                                <div id="bet_toogle" ><label
+                                                        class="switch switch-text switch-success switch-custom">
+                                                        <input id="bet_switch" type="checkbox"
+                                                            class="switch-input switch-status-input bet_switch">
+
+                                                        <span class="switch-label"></span>
+                                                        <span class="switch-handle"></span>
+                                                    </label></div>
+
+
+
+                                            </div>
+                                            <input type="text" id="input-event2" name="input1-group3"
+                                                placeholder="{% trans 'Enter Coupon ID' %}" class="form-control col-11"
+                                                required="required" autocomplete='off'>
+
+
+                                            
+                                                <div class="d-flex mt-3">
+                                                    <button class="btn btn-primary mr-2 mr-md-4 mb-3 mb-md-0"
+                                                        id="button-add1" onclick="return false">
+                                                        {% trans "Change Status" %}
+                                                    </button>
+
+                                                    <select id="button_status"
+                                                        class="form-control select-success "
+                                                        style="max-width: 144px; "
+                                                        aria-label="Default select example">
+                                                        <option value="0" selected disabled hidden>{% trans "Choose Status" %}</option>
+                                                        <option value="-1">{% trans "Cancel" %}</option>
+                                                        <option value="1">{% trans "Lost" %}</option>
+                                                        <option value="2">{% trans "Won" %}</option>
+                                                        <option value="3">{% trans "Refund" %}</option>
+                                                    </select>
+                                                 </div>
+
+                                            
+
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+
+                        <div class="row">
+                            <!-- Reset Match Dynamo -->
+                            <div class="page-content col-xs-12 col-md-6">
+                                <div class="admin-card" >
+                                    <div class="main-heading-wrap">
+                                        <h5>{% trans "Reset Events" %}</h5>
+                                    </div>
+                                    <div class="container" style="padding-top: 10px">
+                
+                                        <form>
+                                            <div class="d-flex setting-select mb-3">
+                                                <input type="text" id="input-mul-events"
+                                                    placeholder="{% trans 'Enter Fixture ID , seperated' %}"
+                                                    class="form-control" required="required" autocomplete='off'>
+                                                <span style='padding:0.5em;'></span>
+                                                <div class="rs-select2--light rs-select2--md">
+                                                    <select id="select-type" style='width:7em ;' class="js-select2"
+                                                        name="property">
+                                                        <option value="1">{% trans "Prematch" %}</option>
+                                                        <option value="2">{% trans "Live" %}</option>
+                                                    </select>
+                                                    <div class="dropDownSelect2"></div>
+                                                </div>
+                                            </div>
+                                            <div class="input-group">
+                                        
+                                                <div class="input-group-btn position-relative reset-filter d-flex">
+                                                    <button class="btn btn-primary mr-2 " id="button-reset">
+                                                        {% trans "Reset" %}
+                                                    </button>
+
+                                                    <button class="btn btn-danger" id="button-remove">
+                                                        {% trans "Remove" %}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                            <hr>
+                            <!-- Add Event to black list for placing bets -->
+                            <div class="page-content col-xs-12 col-md-6">
+                                <div class="admin-card">
+                                    <div class="main-heading-wrap">
+                                        <h5>{% trans "Blacklist Events" %}</h5>
+                                    </div>
+                                    
+                                    <div class="container" style="padding-top: 10px">
+                                        <form>
+                                            <div class="input-group">
+                                                <input type="text" id="input-event" name="input1-group2"
+                                                    placeholder="{% trans 'Enter Fixture ID' %}" class="form-control"
+                                                    required="required"
+                                                    onkeypress='return event.charCode >= 48 && event.charCode <= 57'
+                                                    maxlength="7" autocomplete='off'>
+                                                <div class="input-group-btn position-relative">
+                                                    <button class="btn btn-primary" id="button-add">
+                                                        {% trans "Add" %}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row justify-content-center ">
+                            <div class="table-responsive pt-4 result-table w-100">
+                                <table class="table table-data2 users-table">
+                                    <thead>
+                                        <tr>
+                                            <th>{% trans "Event/Fixture ID" %}</th>
+                                            <th>{% trans "Action" %}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="result-body">
+                                        <!-- <tr>
+                                 <td>Tien Giang U19 vs Dong Thap U19</td>
+                                 <td>6459156</td>
+                                 <td>
+                                     <button id="back-button" type="button" class="btn btn-icon btn-danger"><i class="fa fa-remove"></i></button>
+                                 </td>
+                             </tr> -->
+                                    </tbody>
+                                </table>
+
+                            </div>
+                        </div>
+                        {% endcomment %}
+
+                        <div class="container">
+                            <div class="modal fade" id="myModal" role="dialog" data-backdrop="false">
+                                <div class="modal-dialog">
+                                    <style>
+                                        .modal-header,
+                                        h4,
+                                        .close {
+                                            background-color: #448aff;
+                                            ;
+                                            color: white !important;
+                                            text-align: center;
+                                            font-size: 30px;
+                                        }
+
+                                        .modal-footer {
+                                            background-color: #f9f9f9;
+                                        }
+                                    </style>
+                                    <!-- Modal content-->
+                                    <div class="modal-content">
+                                        <div class="modal-header" style="padding:35px 50px;">
+                                            <!-- <button type="button" class="close" data-dismiss="modal">hello</button> -->
+                                            <h4>{% trans "Please confirm" %}</h4>
+                                        </div>
+                                        <div class="modal-body" style="padding:40px 50px;">
+                                            <form role="form">
+                                                <div class="form-group">
+                                                    <label>{% trans "Please confirm by entering the Password" %}</label>
+                                                    <input id="input_password" type="text" class="form-control"
+                                                        placeholder='{% trans "Enter password" %}'>
+                                                </div>
+                                                <button id="final_submit" onclick="return false"
+                                                    class="btn btn-success btn-block">{% trans "Change Status" %}</button>
+                                            </form>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="submit" class="btn btn-danger btn-default pull-left"
+                                                data-dismiss="modal">{% trans "Cancel" %}</button>
+                                        
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+</div>
+</div>
+<script>
+    $('#mobile-collapse').click(function () { 
+                
+                $("#nw1").toggleClass('left-spacer');
+    
+                
+                
+            });
+    $.ajaxSetup({
+        beforeSend: function (xhr, settings) {
+            if (settings.type == 'POST' || settings.type == 'PUT' || settings.type == 'DELETE') {
+                function getCookie(name) {
+                    var cookieValue = null;
+                    if (document.cookie && document.cookie != '') {
+                        var cookies = document.cookie.split(';');
+                        for (var i = 0; i < cookies.length; i++) {
+                            var cookie = jQuery.trim(cookies[i]);
+                            // Does this cookie string begin with the name we want?
+                            if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                break;
+                            }
+                        }
+                    }
+                    return cookieValue;
+                }
+                if (!(/^http:.*/.test(settings.url) || /^https:.*/.test(settings.url))) {
+                    // Only send the token to relative URLs i.e. locally.
+                    xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+                }
+            }
+        }
+    });
+
+    (function ($) {
+        // USE STRICT
+        "use strict";
+
+        // Select 2
+        try {
+
+            $(".js-select2").each(function () {
+                $(this).select2({
+                    minimumResultsForSearch: 20,
+                    dropdownParent: $(this).next('.dropDownSelect2')
+                });
+            });
+
+        } catch (error) {
+            console.log(error);
+        }
+
+
+    })(jQuery);
+
+    $("#input-event2").hide();
+
+    $("#bet_switch").change(function () {
+
+        $("#input-event2").toggle();
+
+    });
+    function get_blacklisted_data() {
+        $.ajax({
+            url: "{% url 'bets-api:get_blacklist_event' %}",
+            type: "GET",
+            dataType: "json",
+            success: function (data) {
+                $("#result-body").html('')
+                console.log(data['data'])
+                if (data['data'].length == 0) {
+                    $('#result-body').html('<tr><td colspan="2" align="center">{% trans "Nothing Found" %}</td></tr>')
+                }
+                for (i = 0; i < data['data'].length; i++) {
+                    var tr = `
+                    <tr>
+                        <td>${data['data'][i]}</td>
+                        <td>
+                            <button id="remove-button" type="button" class="btn btn-icon btn-danger" fixture_id="${data['data'][i]}"><i class="fa fa-remove"></i></button>
+                        </td>
+                    </tr>
+                    `
+                    $("#result-body").append(tr)
+                }
+            },
+        });
+    }
+    $("#button-add1").click(function () {
+
+        $("#myModal").modal();
+    });
+
+    $("#final_submit").click(function () {
+        var coupan_id = $("#input-event2").val();
+        var bet_id = $("#bet_id_input").val();
+        var password = $("#input_password").val();
+        var status_val = $('#button_status').find(":selected").val();
+        var all_bets;
+
+        if (coupan_id == "") {
+            console.log("hello");
+            all_bets = true;
+        }
+        else {
+            console.log(coupan_id);
+            all_bets = false;
+        }
+
+        console.log(status_val);
+        console.log(bet_id);
+        //console.log(status);
+        console.log(password);
+        if (status_val == "New betting status") {
+            Swal.fire({
+                icon: 'warning',
+                title: 'warning',
+                text: 'Please enter the new status',
+            })
+            $("#myModal").modal('toggle');
+        }
+
+        else
+
+
+            $.ajax("{% url 'pulls-api:bet_status_change_auto' %}", {
+                type: "POST",
+
+                data: { bet_id: bet_id, status: status_val, coupon: coupan_id, all_bets: all_bets, password: password },
+
+                dataType: 'json',
+                success: function (data) {
+                    $("#myModal").modal('toggle');
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'success',
+                        text: data.responseText,
+                    })
+
+                },
+                error: function (data) {
+                    $("#myModal").modal('toggle');
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'error',
+                        text: data.responseText,
+                    })
+                }
+            });
+
+    });
+
+    $("#button-add").click(function (e) {
+        var fixture_id = $("#input-event").val()
+        if (fixture_id.length < 7) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Event Not Found',
+            })
+            return false
+        } else {
+            e.preventDefault()
+            Swal.fire({
+                html:
+                    '<div class="swal-custom-content">' +
+                    '<p class="swal-custom-icon"><i class="cp-icon">&#xe815;</i></p>' +
+                    '<p class="swal-custom-title">{% trans "Are you sure" %} ?</p>' +
+                    '</div>',
+                customClass: {
+                    actions: 'swal-custom-actions',
+                    confirmButton: 'swal-custom-btn swal-custom-confirm-btn',
+                    cancelButton: 'swal-custom-btn swal-custom-cancel-btn',
+                },
+                showCancelButton: true,
+                confirmButtonText: '{% trans "Yes" %}',
+                cancelButtonText: '{% trans "No" %}'
+            }).then((result) => {
+                if (result.value) {
+                    $.ajax({
+                        url: "{% url 'bets-api:blacklist_event' %}",
+                        type: "POST",
+                        dataType: "json",
+                        data: {
+                            fixture_id: fixture_id,
+                        },
+                        success: function (data) {
+                            console.log(data)
+                            if (data['status']) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Success',
+                                    text: data['data']['msg'],
+                                })
+                                $("#input-event").val('')
+                                get_blacklisted_data()
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: data['data']['msg'],
+                                })
+                            }
+                        },
+                    });
+                } else if (result.dismiss === "cancel") {
+                    // show message ?
+                }
+            })
+
+        }
+    })
+
+
+    $(document).ready(function () {
+        get_blacklisted_data()
+    })
+
+    $(document).on('click', '#remove-button', function () {
+        var fixture_id = $(this).attr('fixture_id')
+        $.ajax({
+            url: "{% url 'bets-api:remove_blacklist_event' %}",
+            type: "POST",
+            dataType: "json",
+            data: {
+                fixture_id: fixture_id,
+            },
+            success: function (data) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success',
+                    text: data['msg'],
+                })
+                get_blacklisted_data()
+            },
+        });
+    })
+
+
+    $("#button-reset").click(function (e) {
+        var fixture_id = $("#input-mul-events").val()
+        fixture_id = fixture_id.replaceAll(" ", "")
+        if (fixture_id.length == 0){
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'This field is required',
+            })
+            return false
+        }
+        var regex = /^[0-9,]+$/;
+        if (!regex.test(fixture_id)) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Please enter a valid fixture ids',
+            })
+            return false
+        }
+        fixtures_ids = fixture_id.split(",")
+        for (i = 0; i < fixtures_ids.length; i++) {
+            f_id = fixtures_ids[i].replace(/^\s+|\s+$/g, '');
+            if (f_id.length > 7) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Invalid length of fixture id',
+                })
+                return false
+            }
+        }
+        e.preventDefault()
+        Swal.fire({
+            html:
+                '<div class="swal-custom-content">' +
+                '<p class="swal-custom-icon"><i class="cp-icon">&#xe815;</i></p>' +
+                '<p class="swal-custom-title">{% trans "Are you sure" %} ?</p>' +
+                '</div>',
+            customClass: {
+                actions: 'swal-custom-actions',
+                confirmButton: 'swal-custom-btn swal-custom-confirm-btn',
+                cancelButton: 'swal-custom-btn swal-custom-cancel-btn',
+            },
+            showCancelButton: true,
+            confirmButtonText: '{% trans "Yes" %}',
+            cancelButtonText: '{% trans "No" %}'
+        }).then((result) => {
+            if (result.value) {
+                $.ajax({
+                    url: "{% url 'pulls-api:reset_events' %}",
+                    type: "POST",
+                    dataType: "json",
+                    data: {
+                        fixture_ids: fixture_id,
+                        type: $("#select-type").val()
+                    },
+                    success: function (data) {
+                        console.log(data)
+                        if (data['status']) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success',
+                                text: data['message'],
+                            })
+                            $("#input-event").val('')
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: data['message'],
+                            })
+                        }
+                    },
+                    error: function (data) {
+                        console.log(data)
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: data['responseJSON'],
+                        })
+                    }
+                });
+            } else if (result.dismiss === "cancel") {
+                // show message ?
+            }
+        })
+
+    })
+
+    $("#button-remove").click(function (e) {
+        var fixture_id = $("#input-mul-events").val()
+        fixture_id = fixture_id.replaceAll(" ", "")
+        if (fixture_id.length == 0){
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'This field is required',
+            })
+            return false
+        }
+        var regex = /^[0-9,]+$/;
+        if (!regex.test(fixture_id)) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Please enter a valid fixture ids',
+            })
+            return false
+        }
+        fixtures_ids = fixture_id.split(",")
+        for (i = 0; i < fixtures_ids.length; i++) {
+            f_id = fixtures_ids[i].replace(/^\s+|\s+$/g, '');
+            if (f_id.length > 7) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Invalid length of fixture id',
+                })
+                return false
+            }
+        }
+        e.preventDefault()
+        Swal.fire({
+            html:
+                '<div class="swal-custom-content">' +
+                '<p class="swal-custom-icon"><i class="cp-icon">&#xe815;</i></p>' +
+                '<p class="swal-custom-title">{% trans "Are you sure" %} ?</p>' +
+                '</div>',
+            customClass: {
+                actions: 'swal-custom-actions',
+                confirmButton: 'swal-custom-btn swal-custom-confirm-btn',
+                cancelButton: 'swal-custom-btn swal-custom-cancel-btn',
+            },
+            showCancelButton: true,
+            confirmButtonText: '{% trans "Yes" %}',
+            cancelButtonText: '{% trans "No" %}'
+        }).then((result) => {
+            if (result.value) {
+                $.ajax({
+                    url: "{% url 'pulls-api:remove_events' %}",
+                    type: "POST",
+                    dataType: "json",
+                    data: {
+                        fixture_ids: fixture_id,
+                        type: $("#select-type").val(),
+                        is_remove: true
+                    },
+                    success: function (data) {
+                        console.log(data)
+                        if (data['status']) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success',
+                                text: data['message'],
+                            })
+                            $("#input-event").val('')
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: data['message'],
+                            })
+                        }
+                    },
+                    error: function (data) {
+                        console.log(data)
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: data['responseJSON'],
+                        })
+                    }
+                });
+            } else if (result.dismiss === "cancel") {
+                // show message ?
+            }
+        })
+    })
+</script>
+
+{% endblock content %}

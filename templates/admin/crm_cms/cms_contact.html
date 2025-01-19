@@ -1,0 +1,175 @@
+{% extends "index.html" %}
+
+{% load static %}
+{% load i18n %}
+
+{% block content %}
+<style>
+    th,td{
+        padding: 5px 10px;
+    }
+    .admin-card{
+        background-color: #ffffff;
+        box-shadow: 0px 0px 6px 6px rgb(204 204 204 / 0.25);
+        padding: 30px 10px;
+    }
+    .pcode.left-spacer {
+    	margin-left: 0px;
+    }
+    .pcode{
+    	margin-left: 250px;
+    }
+    @media(max-width:991px){
+        .pcode{
+	        margin-left: 0px;
+        }
+    }
+</style>
+
+
+<div class="pcode" id='nw1'>
+    <div>
+        <div class="container-fluid pt-4 " >
+            <div class="admin-card">
+            <div class="row">
+                <div class="col-xs-12 col-lg-12 ">
+                    <div class="page-content" >
+                        <div class="main-heading-wrap">
+                            <h5>{% trans 'Contact Queries' %}</h5>
+                        </div>
+                        <div class="container-fluid" >
+                            <div class="table-data__tool">
+                                <div>
+                                    <form method="get">
+                                        <!-- Search -->
+                                        <div class="row" style="margin-bottom: 12px;">
+                                            <div class="col">
+                                                <div class="input-group">
+                                                    <input type="text" id="input-search" onchange="validateEmail()"  name="subject_content" placeholder="{% trans 'Search by Email' %}"
+                                                        class="form-control" value="{{ subject_content }}" maxlength="320" required />
+                                                    <div class="input-group-btn position-relative" style="margin-left: -5px;">
+                                                        <button class="btn btn-primary" id="button-search" style="margin-left: 20px;">
+                                                            {% trans "Search" %}
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!-- Search End-->
+                                    </form>
+
+                                </div>
+                            </div>
+                        
+                            {% if request.user.role == 'admin' or request.user.role == 'superadmin' %}
+                            <!-- Profit  - start -->
+                            <p id="pro" class="user-profit-table-title mb-1 mt-3"></p>
+                            <div class="table-responsive">
+                                <table class="user-profit-table w-100 table-bordered">
+                                    <thead >
+                                        <tr>
+                                            <th>{% trans "First Name" %}</th>
+                                            <th>{% trans "Last Name" %}</th>
+                                            <th>{% trans "Email" %}</th>
+                                            <th>{% trans "Phone" %}</th>
+                                            <th>{% trans "Query" %}</th>
+                                            <th>{% trans "Status" %}</th>
+                                            <th>{% trans "Action" %}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for detail in contact_datails %}
+                                        <tr contact_id="{{ detail.pk }}">
+                                            <td> {{detail.first_name}} </td>
+                                            <td> {{detail.last_name}} </td>
+                                            <td> {{detail.email}} </td>
+                                            <td> {{detail.phone}} </td>
+                                            <td> {{detail.query}} </td>
+                                            {% if detail.status == "Active" %}
+                                            <td class="text-success"> {{detail.status}} </td>
+                                            {% else %}
+                                            <td class="text-danger"> {{detail.status}} </td>
+                                            {% endif %}
+                                            <td> 
+                                                <button contact_id="{{ detail.pk }}" type="button" onclick="manageCrmContact(this, false, true)" class="btn btn-success fnt-12" title="In-active" style="margin-bottom:4px;">
+                                                    <i class="fa fa-check"></i>
+                                                </button> 
+                                                <button contact_id="{{ detail.pk }}" type="button" onclick="manageCrmContact(this, true, false)" class="btn btn-danger fnt-12" title="Delete">
+                                                    <i class="fa fa-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% include 'includes/pagination.html' %}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+$('#mobile-collapse').click(function () {
+    $("#nw1").toggleClass('left-spacer');
+});
+    
+
+    function validateEmail(){
+        var email = $('#input-search').val();
+        if(email != ''){
+            var regex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/
+            if(!regex.test(email)){
+                Swal.fire({
+                    icon : 'error',
+                    title : 'Error',
+                    text : 'Please enter valid email address'
+
+                })
+                $('#input-search').val('');
+            }
+        }
+        
+
+    }
+    function manageCrmContact(element, is_delete, is_change_status){
+        console.log($(element).attr("contact_id"))
+        $.ajax({
+            url: "{% url 'admin-panel:cms-contact' %}",
+            type: "POST",
+            dataType: "json",
+            data: {
+                contact_id: $(element).attr("contact_id"),
+                is_delete: is_delete,
+                is_change_status: is_change_status,
+                csrfmiddlewaretoken: '{{ csrf_token }}'
+            },
+            success: function (data) {
+                if(data.status === 'error'){
+                    Swal.fire({
+                        icon: "error",
+                        title: data["status"],
+                        text: data["message"]
+                    });
+                }
+                else if(data.status === 'Success'){
+                    Swal.fire({
+                        icon: "success",
+                        title: data["status"],
+                        text: data["message"]
+                    }).then((result) => {
+                        location.reload();
+                    });
+                }
+            }
+        });
+    }
+
+
+</script>
+{% endblock content %}

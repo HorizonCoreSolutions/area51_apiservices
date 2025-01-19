@@ -1,0 +1,102 @@
+{% extends "index.html" %}
+{% load static %}
+{% load i18n %}
+{% block title %}
+    create admin
+{% endblock title %}
+{% block content %}
+<style>
+        
+    .pcode.left-spacer {
+	margin-left: 0px;
+    }
+    .pcode{
+	margin-left: 250px;
+    }
+    .create-admin-save button{
+            min-width: 100px;
+    }
+    @media(max-width:991px){
+        .pcode{
+	    margin-left: 0px;
+    }
+    }
+
+    @media(max-width:767px){
+        .create-admin-save button{
+            width: 100%;
+        }
+    }
+    .errorlist{
+        color:red
+    }
+</style>
+<div class="pcode" id='nw1' >
+<div class="page-content">
+    <div style='margin-top:10rem;'>
+    <div class="container-fluid" style="padding-top: 25px">
+
+        <div class="login-content" style="margin:0 auto; max-width: 600px; padding:20px ; background-color: #fff;">
+            <div class="login-form">
+                <form method="POST" action="{% url 'admin-panel:create-admin' %}">
+                    {% csrf_token %}
+
+                    <div class="form-group ">
+                        <label for="username" class="font-weight-bold">{% trans "Username" %}</label>
+                        <div class="input-group input-group-rounded">
+                            {{ form.username }}
+                        </div>
+                        {{ form.username.errors }}
+
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password" class="font-weight-bold">{% trans "Password" %}</label>
+                        <div class="input-group input-group-rounded">
+                            {{ form.password }}
+                            <span class="input-group-text" id="password-toggle">
+                                <i class="fa fa-eye toggle-icon" title="View/Hide Password" style="cursor:pointer;"></i>
+                            </span>
+                        </div>
+                        {{ form.password.errors }}
+                    </div>
+
+                    <div class=" form-group mt-4 create-admin-save">
+                        <button type="submit" class=" btn btn-primary "> {% trans "Save" %} </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </div>
+    </div>
+</div>
+</div>
+<script>
+        document.addEventListener('DOMContentLoaded', function() {
+        const passwordInput = document.getElementById('id_password');
+        const toggleButton = document.getElementById('password-toggle');
+
+        toggleButton.addEventListener('click', function() {
+
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleButton.querySelector('i').classList.remove('fa-eye');
+                toggleButton.querySelector('i').classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                toggleButton.querySelector('i').classList.remove('fa-eye-slash');
+                toggleButton.querySelector('i').classList.add('fa-eye');
+               
+            }
+        });
+    });
+     $('#mobile-collapse').click(function () { 
+                
+                $("#nw1").toggleClass('left-spacer');
+    
+                
+                
+            });
+</script>
+{% endblock content %}

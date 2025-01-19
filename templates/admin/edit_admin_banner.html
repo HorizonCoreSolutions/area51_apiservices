@@ -1,0 +1,599 @@
+{% extends "index.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}
+Edit Banner
+{% endblock title %}
+
+{% block javascript %}
+<script type="text/javascript" src="/static/tinymce/tinymce.min.js"></script>
+<script type="text/javascript" src="/static/django_tinymce/init_tinymce.js"></script>
+{% endblock javascript %}
+
+{% block content %}
+
+<style>
+    .admin-card{
+        background-color: #ffffff;
+        box-shadow: 0px 0px 6px 6px rgb(204 204 204 / 0.25);
+        padding: 30px 10px;
+    }
+
+    .pcode.left-spacer {
+    margin-left: 0px;
+    }
+    .pcode{
+    margin-left: 250px;
+    }
+
+    @media(max-width:991px){
+        .setting-page .card-title h3{
+        font-size: 18px;
+        }
+        .pcode{
+        margin-left: 0px;
+        }
+    }
+    .setting-page .card-title h3{
+    font-size: 18px;
+    }
+ .preview_banner{
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-top: 20px;
+    padding-bottom: 20px;
+    border: rgb(0, 0, 0);
+    }
+
+    #banner_img {
+  border-radius: 5px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+#banner_img:hover {opacity: 0.7;}
+
+/* The Modal (background) */
+.modal {
+  display: none; /* Hidden by default */
+  position: fixed; /* Stay in place */
+  z-index: 1; /* Sit on top */
+  padding-top: 100px; /* Location of the box */
+  left: 0;
+  top: 0;
+  width: 100%; /* Full width */
+  height: 100%; /* Full height */
+  overflow: auto; /* Enable scroll if needed */
+  background-color: rgb(0,0,0); /* Fallback color */
+  background-color: rgba(0,0,0,0.9); /* Black w/ opacity */
+}
+
+/* Modal Content (Image) */
+.modal-content {
+  margin: auto;
+  display: block;
+  width: 80%;
+  max-width: 700px;
+}
+ 
+/* Caption of Modal Image (Image Text) - Same Width as the Image */
+#caption {
+  margin: auto;
+  display: block;
+  width: 80%;
+  max-width: 700px;
+  text-align: center;
+  color: #ccc;
+  padding: 10px 0;
+  height: 150px;
+}
+
+/* Add Animation - Zoom in the Modal */
+.modal-content, #caption {
+  animation-name: zoom;
+  animation-duration: 0.6s;
+}
+
+@keyframes zoom {
+  from {transform:scale(0)}
+  to {transform:scale(1)}
+}
+
+
+.close {
+  position: relative;
+  top: -13px;
+  left: -275px;
+  right: 35px;
+  color: #f1f1f1;
+  font-size: 40px;
+  font-weight: bold;
+  transition: 0.3s;
+}
+
+.close:hover,
+.close:focus {
+  color: #bbb;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.jumbotron {
+  
+  height: 100px;
+  margin-top: 0px;
+  margin-bottom: 10px;
+  padding-bottom: 100px;
+  
+}
+input[type=file]{
+    border: transparent;
+}
+
+
+
+/* 100% Image Width on Smaller Screens */
+@media only screen and (max-width: 700px){
+  .modal-content {
+    width: 100%;
+  }
+}
+</style>
+<script type="text/javascript">
+     function validate_title() {
+      var maxLength = 100; // Maximum length allowed for the title
+      var titleValue = $('#banner_title').val();
+
+      // Check if the title exceeds the maximum length
+      if (titleValue.length > maxLength) {
+        // Truncate the value if it exceeds the max length
+        $(this).val(titleValue.substring(0, maxLength));
+
+        // Display a SweetAlert alert
+        Swal.fire({
+          icon: 'error',
+          title: 'Max Length Exceeded',
+          text: 'The title cannot exceed ' + maxLength + ' characters.',
+        });
+      }
+    }
+  
+  $(document).ready(function() {
+    $('#id_banner').attr('required', false);
+  });
+
+
+
+ function read_admin_banner_url(input) {
+	if (input.files && input.files[0]) {
+		var reader = new FileReader();
+
+		reader.onload = function (e) {
+			$('#banner_img').attr('src', e.target.result);
+			$("#banner_img").attr('width', '80px');
+			$("#banner_img").attr('height', '80px');
+
+			$("#banner_img_display").attr("src", e.target.result)
+			$("#banner_text_display").hide();
+			$("#banner_img_div").show();
+		};
+
+		reader.readAsDataURL(input.files[0]);
+	}else{
+		$("#banner_img_display").attr("src", "{{banner.url}}")
+	}
+}
+
+
+function banner_click(){
+    
+var modal = document.getElementById("myModal");
+
+var img = document.getElementById("banner_img_display");
+
+var modalImg = document.getElementById("banner");
+  modal.style.display = "block";
+    modalImg.src = img.src;
+}
+
+function closeImage(){
+  var modal = document.getElementById("myModal");
+  modal.style.display = "none";
+
+}
+
+function validate_image_res(fileamount,banner_count,banner_type,input, width ,height){
+  text = ""
+  banner_category = $("input[type='radio'][name='banner_category']:checked").val();
+  if(banner_category == "DESKTOP"){text = "in Desktop Banners!"}
+  else if(banner_category == "MOBILE_RESPONSIVE"){text = "in Mobile Responsive Banners"}
+  else if(banner_category == "MOBILE_APP"){text = "in Mobile App Banners"}
+  console.log('fileamount: '+fileamount);
+  console.log('banner_count: '+banner_count);
+  console.log("FILE AMOUNT: "+(fileamount+banner_count));
+  if(fileamount+banner_count > 4){
+        Swal.fire({
+                  icon: 'error',
+                  title: 'Oops...',
+                  allowOutsideClick: false,
+                  text: 'You already have 4 images on '+banner_type+' banner '+text,
+                }).then((result) => {
+                  if (result.value) {
+                    location.reload();
+                  }
+                })
+}
+
+}
+
+{% comment %} function validateURL(){
+  var pattern = new RegExp('^(https?:\\/\\/)?'+ // protocol
+    '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|'+ // domain name
+    '((\\d{1,3}\\.){3}\\d{1,3}))'+ // OR ip (v4) address
+    '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*'+ // port and path
+    '(\\?[;&a-z\\d%_.~+=-]*)?'+ // query string
+    '(\\#[-a-z\\d_]*)?$','i'); // ragment locator
+  url = $('#redirect_url').val();
+  console.log('url',url);
+  if(!!pattern.test(url)){
+    return true;
+  }
+  else{
+    Swal.fire({
+                  icon: 'error',
+                  title: 'Oops...',
+                  allowOutsideClick: false,
+                  text: 'Please enter valid URL',
+                }).then((result) => {
+                  $('#redirect_url').val('');
+                })
+    return false;
+  }
+    
+} {% endcomment %}
+$(function() {
+    var imagesPreview = function(input, placeToInsertImagePreview) {
+        $(placeToInsertImagePreview).html('')
+        console.log(input.files.length)
+        if (input.files) {
+            var fileAmount = input.files.length;
+            banner_type = $('#banner_type').val();
+            banner_type = $('#banner_type').val();
+            banner_category = $("input[type='radio'][name='banner_category']:checked").val();
+            banner_category_ = '{{banner_category}}';
+            if(banner_category == "DESKTOP"){
+            homepage_banner_count = parseInt({{ desktop_homepage_banner_count }});
+            betslip_banner_count = parseInt({{ desktop_betslip_banner_count }});
+            }
+            else if(banner_category == "MOBILE_RESPONSIVE"){
+              homepage_banner_count = parseInt({{ mobile_homepage_banner_count }});
+              betslip_banner_count = parseInt({{ mobile_betslip_banner_count }});
+            }
+            else if(banner_category == "MOBILE_APP"){
+              homepage_banner_count = parseInt({{ mobile_app_homepage_banner_count }});
+              betslip_banner_count = parseInt({{ mobile_app_betslip_banner_count }});
+
+            }          
+            if(banner_type == "HOMEPAGE"){
+              if(banner_category == banner_category_ && '{{banner_type}}' == "HOMEPAGE"){return true}
+
+                validate_image_res(fileAmount,homepage_banner_count,"HomePage", input, 1460, 350);
+            }
+            else if(banner_type == "BETSLIP"){    
+              if(banner_category == banner_category_ && '{{banner_type}}' == "BETSLIP"){return true}
+              validate_image_res(fileAmount,betslip_banner_count,"BetSlip", input, 300, 200);
+
+            }
+            }
+                        
+
+             
+          }
+         
+                                  
+    $('#id_banner').on('change', function() {
+        imagesPreview(this, 'div.gallery');
+    });
+});
+function change_banner_type_label(){
+  var banner_type = $('#banner_type').val();
+  banner_category = $("input[type='radio'][name='banner_category']:checked").val();
+  if (banner_category == "DESKTOP"){
+  if(banner_type == "HOMEPAGE"){
+    $('#banner_label').text("HomePage Banner should be equal to  (1460px x 350px)");
+  }
+  else if(banner_type == "BETSLIP"){
+    $('#banner_label').text("Betslip Banner should be equal to (300px x 200px)");
+  }
+}
+else if(banner_category == "MOBILE_RESPONSIVE"){
+  if(banner_type == "HOMEPAGE"){
+    $('#banner_label').text("HomePage Banner should be equal to  (1080px x 1920px)");
+  }
+  else if(banner_type == "BETSLIP"){
+    $('#banner_label').text("Betslip Banner should be equal to (1080px x 1920px)");
+  }
+}
+else if(banner_category == "MOBILE_APP"){
+  if(banner_type == "HOMEPAGE"){
+    $('#banner_label').text("HomePage Banner should be equal to  (1080px x 1920px)");
+  }
+  else if(banner_type == "BETSLIP"){
+    $('#banner_label').text("Betslip Banner should be equal to (1080px x 1920px)");
+  }
+}
+  validate_selection("")
+}
+
+function validate_selection(input){
+  // change_banner_type_label();
+    banner_category = $("input[type='radio'][name='banner_category']:checked").val();
+    banner_category_ = '{{banner_category}}';
+    file_len=1;
+    if(banner_category == "DESKTOP" && $('#banner_type').val() == "BETSLIP")
+    { 
+    
+      if(banner_category == banner_category_ && '{{banner_type}}' == "BETSLIP"){return true}
+      desktop_betslip_banner_count =  parseInt({{ desktop_betslip_banner_count }});
+      console.log("desktop_betslip_banner_count: "+desktop_betslip_banner_count)
+      validate_image_res(file_len,desktop_betslip_banner_count,"BetSlip", "", 300, 200);
+      }
+    
+    else if(banner_category == "DESKTOP" && $('#banner_type').val() == "HOMEPAGE")
+    { 
+      if(banner_category == banner_category_ && '{{banner_type}}' == "HOMEPAGE"){return true}
+      
+      desktop_homepage_banner_count =  parseInt({{ desktop_homepage_banner_count }});
+      console.log("desktop_homepage_banner_count: "+desktop_homepage_banner_count)
+      validate_image_res(file_len,desktop_homepage_banner_count,"HomePage", "", 1460, 350);
+  }
+    else if(banner_category == "MOBILE_RESPONSIVE" && $('#banner_type').val() == "BETSLIP")
+    {
+      if(banner_category == banner_category_ && '{{banner_type}}' == "BETSLIP"){return true}
+      
+      mobile_betslip_banner_count =  parseInt({{ mobile_betslip_banner_count }});
+      console.log("mobile_betslip_banner_count: "+mobile_betslip_banner_count)
+      validate_image_res(file_len,mobile_betslip_banner_count,"BetSlip", "", 300, 200);
+    }
+    else if(banner_category == "MOBILE_RESPONSIVE" && $('#banner_type').val() == "HOMEPAGE")
+    {
+      if(banner_category == banner_category_ && '{{banner_type}}' == "HOMEPAGE"){return true}
+      
+      mobile_homepage_banner_count =  parseInt({{ mobile_homepage_banner_count }});
+      console.log("mobile_homepage_banner_count: "+mobile_homepage_banner_count)
+      validate_image_res(file_len,mobile_homepage_banner_count,"HomePage", "", 1460, 350);
+  }
+   else if(banner_category == "MOBILE_APP" && $('#banner_type').val() == "BETSLIP")
+    { 
+      if(banner_category == banner_category_ && '{{banner_type}}' == "BETSLIP"){return true}
+      mobile_app_betslip_banner_count =  parseInt({{ mobile_app_betslip_banner_count }});
+      console.log("mobile_app_betslip_banner_count: "+mobile_app_betslip_banner_count)
+      validate_image_res(file_len,mobile_app_betslip_banner_count,"BetSlip",input, 100, 100);
+    }
+    else if(banner_category == "MOBILE_APP" && $('#banner_type').val() == "HOMEPAGE")
+    {      
+      if(banner_category == banner_category_ && '{{banner_type}}' == "HOMEPAGE"){return true}
+      mobile_app_homepage_banner_count =  parseInt({{ mobile_app_homepage_banner_count }});
+      validate_image_res(file_len,mobile_app_homepage_banner_count,"HomePage", input, 200, 200);
+    }
+    
+  }
+
+
+	tinymce.init({
+		selector: '.banner_details',
+		cleanup_on_startup: true,
+		custom_undo_redo_levels: 20,
+		theme: 'silver',
+		plugins: [
+			'textcolor preview contextmenu',
+			'fullscreen',
+			'contextmenu searchreplace',
+			'fullscreen print',
+		],
+		toolbar1: `
+			fullscreen preview bold italic underline | fontsizeselect |
+			forecolor backcolor | alignleft alignright aligncenter alignjustify |
+			indent outdent
+		`,
+		contextmenu: 'formats | link image',
+		menubar: true,
+		statusbar: true,
+		file_picker_callback: tinymce_custom_file_picker,
+		content_style: `
+			@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
+			body { font-family: 'Orbitron'; line-height:1 }
+		`,
+		skin: "oxide-dark",
+    	content_css: "dark",
+		font_formats: 'Orbitron=Orbitron, sans-serif',
+		fontsize_formats: '8pt 9pt 10pt 11pt 12pt 13pt 14pt 15pt 16pt 17pt 18pt 19pt 20pt 21pt 22pt 23pt 24pt 25pt 26pt 27pt 28pt 29pt 30pt 31pt 32pt 33pt 34pt 35pt 36pt',
+		lineheight_formats: '0.50 0.75 1 1.25 1.50 1.75 2',
+	});
+
+
+</script>
+<!-- The Modal -->
+<div id="myModal" class="modal">
+    <div class="wrapper">
+        <span  id='close' class="close" onclick="closeImage()">&times;</span>
+        <img class="modal-content" id="banner">
+    </div>
+</div>
+
+<div class="pcode" id='nw1' >
+    <div class="page-content" >
+        <div>
+        <div class="container-fluid" style="padding-top: 25px;">
+
+            <div class="create-banner-content" style="margin:0 auto; max-width: 90%; padding:5px 50px ; background-color: #fff;">
+                <div class="banner-form">
+                    <div id="notification_messages">
+                    {% if error %}
+                    <div class="alert alert-success alert-block">
+                        <button type="button" class="close" data-dismiss="alert">×</button>
+                        <strong>{{ error }}</strong>
+                    </div>
+                    {% endif %}
+                    </div>
+                    
+                    <div class="container">
+                    </br>
+                  
+                        <div id="banner_text_display" class="jumbotron text-center" style="display:none;">
+                            <h1><i class="fa fa-camera-retro" aria-hidden="true"></i>Banners</h1>
+                        </div>
+                        <div id="banner_img_div" class="text-center mb-4" style="background-color:#000000c7;">
+                          <img id="banner_img_display" onclick="banner_click()" src="{{banner.url}}" alt="" width="1110px" style="max-height:300px">
+                        </div>
+
+                        {% include "../includes/messages.html" %}
+                        <form action="" method="post" enctype="multipart/form-data">
+                            {% csrf_token %}
+
+                            {% comment %} <div class="row">
+                              <div class="col-md-10">
+                                  <div class="form-group" style="margin-bottom:0.25rem">
+                                       <label for="banner_category">Banner Category</label>
+                                       <div class="row">
+                                          <div class="col-md-2">
+                                              <div class="form-group">
+                                                  <input type="radio" name="banner_category" id="banner_category" value="DESKTOP"  onchange="validate_selection(this)" {% if banner_category == 'DESKTOP' %}checked{% endif %}>
+                                                  <label for="banner_category">Desktop</label>
+
+                                              </div>
+                                          </div>
+                                          <div class="col-md-3">
+                                              <div class="form-group">
+                                          
+                                                  <input type="radio" name="banner_category" id="banner_category" value="MOBILE_RESPONSIVE" onchange="validate_selection(this)" {% if banner_category == 'MOBILE_RESPONSIVE'  %}checked{% endif %}>
+                                                  <label for="banner_category">Mobile Responsive</label>
+                                              </div>
+                                          </div>
+                                           <!-- <div class="col-md-3">
+                                              <div class="form-group">
+                                          
+                                                  <input type="radio" name="banner_category" id="banner_category" value="MOBILE_APP" onchange="validate_selection(this)" {% if banner_category == 'MOBILE_APP'  %}checked{% endif %}>
+                                                  <label for="banner_category">Mobile App</label>
+                                              </div>
+                                          </div> -->
+                                       </div>
+      
+                                  </div>
+                                  
+                                  
+                              </div>
+                              </div>   {% endcomment %}
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                      <input type="hidden" name="admin" value="{{ admin }}" id="id_admin">
+                                        <label for="title">Title</label>
+                                        {{ form.title }}
+                                    </div>
+                                </div>
+                            </div>
+							
+
+							<div class="row">
+								<div class="col-md-4">
+									<div class="form-group">
+										<label for="banner_category">Banner Category</label>
+										<select class="form-control" name="banner_category" id="banner_category">
+											<option value="DESKTOP" {% if banner_category == "DESKTOP" %}selected{% endif %}>Desktop</option>
+											<option value="MOBILE_RESPONSIVE" {% if banner_category == "MOBILE_RESPONSIVE" %}selected{% endif %}>Mobile</option>
+										</select>
+									</div>
+                                </div>
+								
+								<div class="col-md-4">
+									<div class="form-group">
+										<label for="banner_type">Banner Type</label>
+										<select class="form-control" name="banner_type" id="banner_type">
+											<option value="HOMEPAGE" {% if banner_type == "HOMEPAGE" %}selected{% endif %}>Homepage</option>
+											<option value="TOURNAMENT" {% if banner_type == "TOURNAMENT" %}selected{% endif %}>Tournament</option>
+										</select>
+										<!-- <label  for="banner_type" style="color:green; margin-bottom: -150px;">&nbsp;&nbsp;<small id='banner_label'>HomePage Banner should be equal to  (1460px x 350px)</small></label> -->
+									</div>
+                                </div>
+
+								<div class="col-md-4">
+                                    <div class="form-group">
+										<label for="banner_image">Banner Image</label>
+										{{ form.banner }}
+                                		<label  for="banner_type" style="color:green; margin-bottom: -150px;">&nbsp;&nbsp;<small id='banner_label'>HomePage Banner should be equal to  (1460px x 350px)</small></label>
+                                    </div>
+                                </div>
+							</div>
+
+        
+                            <div class="row">
+								<div class="col-md-5">
+									<div class="form-group">
+										<label for="button_text">Button Text</label>
+										{{ form.button_text }}
+									</div>
+								</div>
+
+                                <div class="col-md-7">
+									<div class="form-group">
+										<label for="redirect_url">Redirect URL</label>
+										{{ form.redirect_url }}
+									</div>
+                                </div>
+
+								{% comment %} <div class="col-md-1">
+                                    <div class="form-group">
+                                      <div class="preview_banner">
+                                        
+                                        <img id="banner_img" width="80px" height="80px" style='margin-left:-60px' src="{{banner.url}}"  onclick="banner_click()"/>
+                                      </div>
+                                    </div>
+                                </div> {% endcomment %}
+                                
+                            </div>
+
+
+                            <div class="row">
+                              <div class="col-md-12">
+                                <div class="form-group">
+                                  <label for="banner_header">Text Over Image (Header)</label>
+                                  <textarea class="banner_details" name="banner_header" id="banner_header" rows="12" cols="80">{% if banner.header %}{{banner.header}}{% endif %}</textarea>
+                                </div>
+                              </div>
+							</div>
+              
+                            <div class="row">
+                              <div class="col-md-12">
+                                <div class="form-group">
+                                  <label for="banner_content">Text Over Image (Content)</label>
+                                  <textarea class="banner_details" name="banner_content" id="banner_content" rows="20" cols="80">{% if banner.content %}{{banner.content}}{% endif %}</textarea>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div class="row mt-2">
+                              <button type="submit" class="btn btn-primary ml-auto" style="margin-top:0px; margin-bottom: 20px;">Update</button>&nbsp;
+                              <a type='button' href="/admin/admin-banner" class="btn btn-primary"  style="margin-top:0px; margin-bottom: 20px;"id="button-search"> Cancel </a>
+                            </div>
+            
+
+                        </form>
+
+                       
+                        <div>
+
+                        </div>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div>
+    </div>
+</div>
+                     
+
+{% endblock content %}
+

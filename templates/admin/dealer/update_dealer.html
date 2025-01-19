@@ -1,0 +1,73 @@
+{% load i18n %}
+{% load static %}
+<style>
+    h3{
+        font-size: 20px;
+    }
+</style>
+<div id="edit-dealer" class="popup mfp-with-anim mfp-hide">
+    
+    <div class="popup-body" style="position:relative; height: 0px; margin-bottom: 400px;">
+        <div class="login-form" style=" width: 100%; max-width:550px;margin-left: auto;margin-right: auto; vertical-align:center; background-color: white;">
+            {# TODO: fix this #}
+            <div class="popup-header text-center mt-5 " style="padding-top: 2em;padding-bottom: 1em;">
+               <h3>{% trans "Edit Master Agent" %}</h3> 
+            </div>
+            <form id="edit-dealer-form" style="padding-left: 3rem; padding-right: 3rem;  padding-bottom: 2rem;">
+                {% csrf_token %}
+                <div class="row mb-4 justify-content-center">
+                    <div class="col-lg-5 col-6" style="margin-left:-35px; padding-left:50px">
+                        <div class="rs-select2--light rs-select2--md">
+                            <select required name="timezone" data-placeholder="{% trans 'Timezone' %}" style="width: 100%;"  class="js-select2" id="edit-timezone-select">
+                                <option></option>
+                                {% for t_zone in TIMEZONES %}
+                                    <option {% if t_zone == form.timezone.value %} selected="selected" {% endif %} value="{{t_zone}}">{% trans t_zone %}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="dropDownSelect2"></div>
+                        </div>
+                    </div>
+                    <div class=" col-lg-4 col-6">
+                        <div class="rs-select2--light rs-select2--md">
+                            <select required name="currency" data-placeholder="{% trans 'Currency' %}"  style="width: 100%;" class="js-select2" id="edit-currency-select">
+                                <option></option>
+                                {% for c_choice in CURRENCY_CHOICES %}
+                                    <option {% if c_choice == form.currency.value %} selected="selected" {% endif %} value="{{c_choice}}">{% trans c_choice %}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="dropDownSelect2"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group create-form-margin ">
+                    <span class="font-weight-bold ml-1">{% trans "Username" %}</span>
+                    <div id="edit-username-input">
+                        <div class="input-group input-group-rounded">
+                            {{ form.username }}
+                        </div>
+                        <p class="error-msg"></p>
+                    </div>
+                </div>
+
+                <div class="form-group create-form-margin">
+                    <span class="font-weight-bold ml-1">{% trans "Password" %}</span>
+                    <div id="edit-password-input">
+                        <div class="input-group input-group-rounded">
+                            {{ form.password }}
+                            <span class="input-group-text" id="password-toggle-update" onclick="view_password()">
+                                <i class="fa fa-eye toggle-icon" title="View/Hide Password" style="cursor:pointer;"></i>
+                            </span>
+                        </div>
+                        <p class="error-msg"></p>
+                    </div>
+                </div>
+
+                <div class="pt-2 ">
+                    <button type="submit" class="btn btn-primary au-btn au-btn--block au-btn--darkGreen au-btn--lg" style="margin-left:194px">
+                        {% trans "Save" %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

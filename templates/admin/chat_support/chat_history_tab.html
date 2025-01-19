@@ -1,0 +1,737 @@
+{% extends 'index.html' %}
+{% load static %}
+{% load i18n %}
+{% load math %}
+{% load date_utils %}
+
+
+{% block title %}
+    {% trans "Chat" %}
+{% endblock title %}
+{% block content %}
+
+<style>
+
+    .body {
+        background-color: #f1f0f0;
+        font-family: 'Roboto', sans-serif;
+        overflow: hidden;
+    }
+
+    .message {
+        display: flex;
+        margin: 10px;
+    }
+
+    .sent .message-bubble {
+        background-color:  #f0f0f6;
+        color: #000;
+        border-radius: 20px 20px 20px 0;
+        margin-left: auto; /* update margin-left instead of margin-right */
+        max-width: 70%;
+        padding: 15px 20px;
+        word-break: break-all;
+    }
+
+    .received .message-bubble {
+        background-color: #545456;
+        color: #fff;
+        border-radius: 20px 20px 0 20px;
+        max-width: 70%;
+        padding: 15px 20px;
+        word-break: break-all;
+    }
+
+    .received .message-bubble::after {
+        content: "";
+        position: absolute;
+        bottom: -10px;
+        border-style: solid;
+        border-width: 10px 10px 0 0; /* update border-width for the arrow */
+        transform: rotate(45deg); /* update rotation angle */
+        left: -10px; /* update left instead of right */
+        border-color: #f1f0f0 transparent transparent transparent;
+    }
+
+    .message-text {
+        font-size: 14px;
+        line-height: 1.4;
+        margin-bottom: 5px;
+    }
+
+    .message-time {
+        font-size: 10px;
+        color: #f7f1f1;
+    }
+
+    .message-time-send {
+        font-size: 10px;
+        color: #605c5c;
+    }
+    #chat-container {
+        overflow-y: scroll;
+        height: calc(100vh - 280px);
+        padding: 0 40px;
+    
+    }
+
+    #chat-form {
+    padding: 10px 10px 0;
+    }
+
+    #chat-form input {
+    border-radius: 30px;
+    padding:20px 155px 20px 20px;
+    height:50px;
+
+    }
+    #chat-form .btn {
+    border-radius: 100%;
+    height: 40px;
+    width: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 5px;
+    }
+
+    .file-link {
+    /* display: inline-block;
+    padding: 8px 12px;
+    background-color: #3e74d8;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px; */
+    height: 300px;
+    width: 300px;
+    border-radius: 5px;
+    overflow: hidden;
+
+    }
+    .file-link img {
+
+    height: 100%;
+    width: 100%;
+    object-fit: cover;
+
+    }
+
+    .chat-header {
+    padding:10px 20px;
+    background-color: #000000;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    
+
+    }
+    .chat-header h4 {
+    font-size: 16px;
+    font-weight: bold;
+    margin: 0px;
+    line-height: 16px;
+    color: #fff;
+
+
+    }
+    .chat-header span {
+    font-size: 12px;
+    color: #fff;
+    
+    }
+    .chat-wrapper {
+    /* max-width: 1000px; */
+    margin: 0 auto;
+    background-color: #007bff14;
+    padding-bottom: 10px;
+    border-bottom-left-radius: 15px;
+    border-bottom-right-radius: 15px;
+    }
+    .input-wrap {
+    position: relative;
+    width: 100%;
+
+    }
+    .input-button {
+    display: flex;
+    align-items: center;
+    position: absolute;
+    top:5px;
+    right:0;
+    }
+
+    .content-header{
+    display:none;
+    }
+
+    .admin-card{
+            background-color: #ffffff;
+            box-shadow: 0px 0px 6px 6px rgb(204 204 204 / 0.25);
+            padding: 30px 10px;
+        }
+    .chat-header-right a {
+
+    height: 30px;
+    width: 30px;
+    border-radius: 100%;
+    border:1px solid #fff;
+    display:flex;
+    align-items: center;
+    justify-content: center;
+    padding:5px;
+    
+    }
+    .chat-header-right a:hover{
+
+
+    background-color: #fff;
+    color:#000;
+
+    }
+
+    .pcode.left-spacer {
+	    margin-left: 0px;
+    }
+    .pcode{
+	    margin-left: 250px;
+    }
+    @media(max-width:767px){
+        .pcode{
+	    margin-left: 0px;
+    }
+    }
+    .verify_switch{
+        height: 0;
+        width: 0;
+        visibility: hidden;
+    }
+
+    #verify-toogle {
+        cursor: pointer;
+        text-indent: -9999px;
+        width: 80px;
+        height: 30px;
+        background: grey;
+        display: block;
+        border-radius: 100px;
+        position: relative;
+    }
+
+    #verify-toogle:after {
+        content: '';
+        position: absolute;
+        top: 5px;
+        left: 5px;
+        width: 20px;
+        height: 20px;
+        background: #fff;
+        border-radius: 90px;
+        transition: 0.3s;
+    }
+
+    .verify_switch:checked + #verify-toogle {
+        background: green;
+    }
+
+    .verify_switch:checked + #verify-toogle:after {
+        left: calc(100% - 5px);
+        transform: translateX(-100%);
+    }
+
+    #verify-toogle:active:after {
+        width: 80px;
+    }
+
+    .lb-closeContainer{
+        display: none;
+    }
+    .switch {
+        display: inline-block;
+        height: 34px;
+        position: relative;
+        width: 60px;
+    }
+
+    .switch input {
+        display: none;
+    }
+
+    .slider {
+        background-color: #ccc;
+        bottom: 0;
+        cursor: pointer;
+        left: 0;
+        position: absolute;
+        right: 0;
+        top: 0;
+        transition: 0.4s;
+    }
+
+    .slider:before {
+        background-color: #fff;
+        bottom: 4px;
+        content: "";
+        height: 26px;
+        left: 4px;
+        position: absolute;
+        transition: 0.4s;
+        width: 26px;
+    }
+
+    input:checked + .slider {
+        background-color: #66bb6a;
+    }
+
+    input:checked + .slider:before {
+        transform: translateX(26px);
+    }
+
+    .slider.round {
+        border-radius: 34px;
+    }
+
+    .slider.round:before {
+        border-radius: 50%;
+    }
+    .icon-toggle-container {
+        display: flex;
+        align-items: center;
+    }
+
+    .icon-toggle-container .btn {
+        margin-right: 10px;
+    }
+    .message.join-message {
+        background-color: #4287f5;
+        color: #fff;
+        padding: 10px;
+        border-radius: 5px;
+        margin-bottom: 10px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        border-radius: 20px;
+        
+    }
+
+    .message.end-message {
+        background-color: #c35151;
+        color: #fff;
+        padding: 10px;
+        border-radius: 5px;
+        margin-bottom: 10px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        border-radius: 20px;
+        
+    }
+
+    .file-link img {
+
+        height: 100%;
+        width: 100%;
+        object-fit: cover;
+    
+    }
+    
+    .file-link a {
+    
+        height: 100%;
+        width: 100%;
+        object-fit: cover;
+    
+    }
+    .file-link video {
+    
+        height: 100%;
+        width: 100%;
+        object-fit: cover;
+    
+    }  
+</style>
+
+
+
+<div class="pcode" id='nw1' >
+    <div>
+        <div class="container-fluid pt-5" >
+            <div class="admin-card">
+                <div class="row">
+                    <div class="col-xs-12 col-lg-12 ">
+                        <div class="page-content" >
+                            <div class="container-fluid">
+                                <div class="chat-wrapper" id="chat-wrapper">
+                                    <div class="chat-header">
+                                        <div class="user-detail">
+                                            <h4>{{chatroom.player.username}}</h4>
+                                            <div class="status-indicator-container" style="display: flex;">
+                                                <div class="status-indicator" style="display: flex; align-items: center; margin-right: 10px;">
+                                                    {% comment %} <span class="status-text" id="status_text" style="color: #888;">Created On :- {{created_date |date:"d-m-y H:i"}}</span> {% endcomment %}
+                                                </div>
+                                            </div>
+                                        </div>                                
+                                        <div class="chat-header-right">
+
+                                            <button id="start-chat-button" type="button" style='border-radius: 20px; border: #FF8353; margin-right: 10px;' {% if not can_start_chat %}disabled title="Player already picked"{% endif %} class="btn {% if chatroom.pick_by == request.user %}btn-danger{% else %}btn-success{% endif %}">
+                                                <i class="fa fa-paper-plane"></i>
+                                                <span id="start-chat-button-text">{% if chatroom.pick_by == request.user %}End Chat{% else %}Start Chat{% endif %}</span>
+                                            </button>
+
+                                            <button type="button" id="print-button" class="btn btn-primary" style="background-color: #28a745; color: white; margin-right: 10px;">
+                                                <i class="fa fa-print" aria-placeholder="Print" aria-hidden="true"></i>
+                                                Print
+                                            </button>
+                                            
+                                            <button type="button" onclick="window.location.href='{% url 'admin-panel:inbox-history-list' %}'"
+                                                class="btn btn-primary" style="background-color: #28a745; color: white;">
+                                                <i class="fa fa-arrow-left" aria-placeholder="Leave" aria-hidden="true"></i>
+                                                Back
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div id="chat-container">
+                                    </div>
+                                    <div id="message-input-div" style="{% if not can_start_chat %}display: none;{% endif %}">
+                                        <form id="chat-form">
+                                            <div class="form-row">
+                                                <div class="input-wrap row">
+                                                    <div class="col input-container">
+                                                        <input type="text" name="message" id="chat-message-input" class="form-control" placeholder="{% trans 'Type your message here' %}"  autocomplete="off" required>
+                                                    </div>
+                                                    <div>
+                                                        <button class="col-md-1 btn btn-info" type="submit"><i class="fa fa-paper-plane fa-lg"></i></button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.js"></script>
+<script type="text/javascript">
+    var chat_socket = null
+    var current_page = 0;
+    var oldest_message_id = null;
+    var is_intial_fetch_complete = false;
+
+
+    function formatTime(timestamp) {
+        const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        const utcDate = new Date(timestamp);
+        const localDate = new Date(utcDate.toLocaleString("en-US", { timeZone: userTimezone }));
+        const hours = localDate.getHours().toString().padStart(2, '0'); // Get hours (24-hour format) and pad with leading zero if needed
+        const minutes = localDate.getMinutes().toString().padStart(2, '0'); // Get minutes and pad with leading zero if needed
+        const timeString = `${hours}:${minutes}`;
+        return timeString;
+    }
+
+    function getMessageTime(sentTime) {
+        const messageDate = new Date(sentTime);
+        const currentDate = new Date();
+    
+        // Check if the message was sent today
+        if (messageDate.toDateString() === currentDate.toDateString()) {
+            return formatTimeInternal(messageDate);
+        }
+    
+        // Check if the message was sent yesterday
+        const yesterday = new Date(currentDate);
+        yesterday.setDate(currentDate.getDate() - 1);
+        if (messageDate.toDateString() === yesterday.toDateString()) {
+            return 'Yesterday ' + formatTimeInternal(messageDate);
+        }
+    
+        // Otherwise, show the full date and time
+        return messageDate.toLocaleString();
+    }
+    
+    function formatTimeInternal(date) {
+        return date.getHours() + ':' + (date.getMinutes() < 10 ? '0' : '') + date.getMinutes();
+    }
+
+    $(document).ready(function() {
+        fetchMessages("{{ chatroom.id }}")
+
+        function getFilePreview(fileUrl) {
+            const fileExtension = getFileExtension(fileUrl);
+            if (isImageFile(fileExtension)) {
+                return `<a href="${fileUrl}"data-lightbox="image-preview" data-title="Image Preview"><div class="file-link"><img src="${fileUrl}" alt="Image Preview" class="image-preview"></a></div>`;
+            } else if (isVideoFile(fileExtension)) {
+                return `<div class="file-link"><a href="${fileUrl}" download><video poster="${fileUrl}" controls class="file-preview"><source src="${fileUrl}"></video></a></div>`;
+            } else {
+                return `<a href="${fileUrl}" target="_blank" rel="noopener noreferrer">${getFileTypeIcon(fileExtension)} Download ${fileExtension.toUpperCase()} File</a>`;
+            }
+        }
+
+
+        function getFileExtension(filename) {
+            return filename.split('.').pop().toLowerCase();
+        }
+
+
+        function isImageFile(fileExtension) {
+            return ['png', 'svg', 'jpg', 'jpeg','gif'].includes(fileExtension);
+        }
+
+
+        function isVideoFile(fileExtension) {
+            return ['mp4', 'webm', 'ogg'].includes(fileExtension);
+        }
+
+
+        function getFileTypeIcon(fileExtension) {
+            // Provide appropriate icons or styling based on file type
+            switch (fileExtension) {
+                case 'pdf':
+                return `<i class="fa fa-file-pdf-o"></i>`;
+                case 'doc':
+                case 'docx':
+                return `<i class="fa fa-file-word-o"></i>`;
+                case 'xls':
+                case 'xlsx':
+                return `<i class="fa fa-file-excel-o"></i>`;
+                case 'txt':
+                return `<i class="fa fa-file-text-o"></i>`;
+                default:
+                return `<i class="fa fa-file-o"></i>`;
+            }
+        }
+
+        $('#chat-container').scroll(function() {
+            if ($('#chat-container').scrollTop() === 0 && is_intial_fetch_complete) {
+                currentTabChatId = "{{chatroom.id}}"
+                fetchMessages(currentTabChatId);
+                console.log("scrolled Top")
+            }
+        });
+
+        if($("#start-chat-button-text").text() == "End Chat"){
+            chat_socket = socketConnection()
+        }
+    });
+
+
+    function fetchMessages(chat_id) {
+        $.ajax("{% url 'admin-panel:inbox' %}", {
+            type: 'GET',
+            data: {
+                'chatroom_id': chat_id,
+                'request_type': 'recent_messages',
+                'message_before': oldest_message_id,
+                'is_history': true,
+                'page': current_page + 1,
+                "per_page": 20,
+            },
+            dataType: 'json',
+            success: function(data) {
+                current_user="{{request.user.id}}"
+                current_page = current_page + 1
+                for (let message of data.messages) {
+                    {% comment %} if(message.type == "offmarket_signup"){
+                        const game_code = message.message.split("-")[0]
+                        const game_username = message.message.split("-")[1]
+                        offmarket_message = `Offmarket Request <br><br> Game Code - ${game_code} <br> Username - ${game_username}`
+                        var html = `
+                            <div class="message ${message.sender !== "player" ? 'sent justify-content-start' : 'received'}">
+                            <div class="message-bubble">
+                                ${message.is_file === 'True' ? getFilePreview(message.message) : `<div class="message-text">${offmarket_message}</div>`}
+                                <div class="message-time${message.sender !== "player" ? '-send' : ''}">
+                                ${getMessageTime(message.sent_time)}
+                                </div>
+                            </div>
+                            </div>
+                        `;
+
+                        $('#chat-container').prepend(html);
+                        $("#chat-container").scrollTop($("#chat-container").scrollTop() + $('#chat-container .message:first').height())
+                        
+                    }else  {% endcomment %}
+                    if(message.type == "join" && message.sender_id != current_user){
+                        var html = `
+                            <div class="message join-message">${message.message}</div>
+                        `;
+                        $('#chat-container').prepend(html);
+                        $("#chat-container").scrollTop($("#chat-container").scrollTop() + $('#chat-container .message:first').height())
+                    }else if(message.type == "message" || message.type == null){
+                        var html = `
+                            <div class="message ${message.sender !== "player" ? 'sent justify-content-start' : 'received'}">
+                            <div class="message-bubble">
+                                ${message.is_file === 'True' ? getFilePreview(message.message) : `<div class="message-text">${message.message}</div>`}
+                                <div class="message-time${message.sender !== "player" ? '-send' : ''}">
+                                ${getMessageTime(message.sent_time)}
+                                </div>
+                            </div>
+                            </div>
+                        `;
+
+                        $('#chat-container').prepend(html);
+                        $("#chat-container").scrollTop($("#chat-container").scrollTop() + $('#chat-container .message:first').height())
+                    }
+                    oldest_message_id = message.id
+                }
+                is_intial_fetch_complete = true
+            }
+        });
+    }
+
+  
+    document.getElementById('print-button').addEventListener('click', () => {
+        const chatWrapper = document.getElementById('chat-wrapper');
+
+        // Clone the chat wrapper
+        const clonedWrapper = chatWrapper.cloneNode(true);
+
+        // Adjust the height of the chat container to show all messages
+        const chatContainer = clonedWrapper.querySelector('#chat-container');
+        chatContainer.style.height = 'auto';
+
+        // Generate the PDF using html2pdf library
+        html2pdf().set({
+            filename: `chathistory-{{chathistory_id}} ({{created_date}}).pdf`,
+            image: { type: 'jpeg', quality: 1.0 } // Set the image option with the highest quality value (1.0)
+        }).from(clonedWrapper).save();
+    });
+
+
+    function img_inlarge(img_url){
+        var src = img_url;
+        var modal;
+        console.log("SRC", src)
+
+        function removeModal(){ modal.remove(); $('body').off('keyup.modal-close'); }
+        modal = $('<div>').css({
+            background: 'RGBA(255 255 255 / 0%) url('+src+') no-repeat center',
+            width: "50%",
+            height: "100%",
+            margin: "0 auto",
+            position: "fixed",
+            zIndex: "10000",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            top: "0px",
+            left: "0px",
+            right: "0px",
+            cursor: "zoom-out"
+        }).click(function(){
+            removeModal();
+        }).appendTo('body');
+        //handling ESC
+
+        $('body').on('keyup.modal-close', function(e){
+            if(e.key==='Escape'){ removeModal(); } 
+        });
+    }
+
+
+    $("#start-chat-button").click(function(event){
+        const assign = $("#start-chat-button-text").text() == "Start Chat" ? true : false;
+        $.ajax("{% url 'admin-panel:inbox' %}", {
+            type: 'POST',
+            data: {
+                'chat_id': "{{chatroom.id}}",
+                'staff_id': "{{request.user.id}}",
+                'type': 'update_chat_status',
+                'assign': assign,
+                'csrfmiddlewaretoken': '{{ csrf_token }}',
+            },
+            dataType: 'json',
+            success: function(data) {
+                if(assign){
+                    chat_socket = socketConnection()
+                    $("#message-input-div").show()
+                    $("#start-chat-button-text").text("Cancel")
+                }else{
+                    if (chat_socket != null && chat_socket.readyState === WebSocket.OPEN){
+                        chat_socket.close()
+                    }
+                    $("#message-input-div").hide()
+                    $("#start-chat-button-text").text("Start Chat")
+                }
+                $("#start-chat-button").toggleClass("btn-success btn-danger")
+            },
+            error: function(data) {
+                data = data.responseJSON
+                if (data.status == "Error") {
+                    Swal.fire({
+                        title: 'Error',
+                        text: data['statusText'],
+                        icon: 'error',
+                    });
+                } else {
+                    $("#message-input-div").hide()
+                    $("#start-chat-button-text").text("Start Chat")
+                    $('#message-input-div').prop('disabled', true);
+                    Swal.fire({
+                        title: 'Already Picked',
+                        text: data.message,
+                        icon: 'info',
+                    });
+                }
+                return false;
+            },
+        });
+    });
+
+
+    $("#chat-form").submit(function(event) {
+        event.preventDefault();
+        message = $("#chat-message-input").val()
+        if(message === "" || /^\s*$/.test(message)){
+            $("#chat-message-input").val("")
+            return false;
+        }
+
+        chat_socket.send(JSON.stringify({
+            'type': 'message',
+            'message': message,
+            'is_player_sender': false,
+            'sender_id': '{{request.user.id}}'
+        }));
+        chat_socket.close()
+
+        localStorage.setItem('ActiveChat-{{request.user.id}}', "{{chatroom.id}}");
+        window.location.replace(window.location.origin + "/{{request.user.username}}/inbox/");
+    });
+
+
+    function socketConnection(){
+        ws_protocol = window.location.protocol == 'https:' ? 'wss' : 'ws';
+        user_id = "{{chatroom.player.id}}"
+        room_name = `P${user_id}Chat`
+        const socket = new WebSocket(`${ws_protocol}://${window.location.host}/ws/cschat/${room_name}/?player_id=${user_id}`);
+        
+        socket.onopen = function (event) {
+            console.log("WebSocket connection opened:", event);
+        };
+
+        socket.onmessage = function (event) {
+            console.log("Message received from server:", event.data);
+        };
+
+        socket.onerror = function (event) {
+            console.error("WebSocket error:", event);
+        };
+
+        socket.onclose = function (event) {
+            console.log("WebSocket connection closed:", event);
+        };
+
+        return socket
+    }
+
+      
+</script>
+{% endblock content %}

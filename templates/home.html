@@ -1,0 +1,1452 @@
+{% extends "index.html" %}
+
+{% load static %}
+{% load i18n %}
+{% load math %}
+{% load date_utils %}
+{% load permissions %}
+
+{% block title %}
+Dashboard
+{% endblock title %}
+
+{% block content %}
+<style>
+
+    #pop-loader {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100%;
+        background: rgba(0,0,0,0.75) url(../../../static/Desktop_static/images/loading2.gif) no-repeat center center;
+        z-index: 10000;
+    }
+
+    .admin-card{
+        background-color: #ffffff;
+        box-shadow: 0px 0px 6px 6px rgb(204 204 204 / 0.25);
+        padding: 30px 10px;
+    }
+    .pcode.left-spacer {
+        margin-left: 0px;
+    }
+    .pcode{
+        margin-left: 250px;
+    }
+    @media(max-width:767px){
+        .pcode{
+            margin-left: 0px;
+        }
+    }
+
+</style>
+
+<div class="pcode" id='nw1' >
+<div class="pcoded-inner-content">
+     
+
+    <!-- Main-body start -->
+    <div class="main-body">
+        <div class="page-wrapper">
+            <!-- Page-body start -->
+            <div class="page-body">
+                {% comment %} {% if request.user.role == 'staff' %}
+                <div class="row">
+                    <div class="col-xl-4 col-md-12 mb-4">
+                        <div class="card text-center order-visitor-card mb-0" style="padding-top:38px">
+                            <div class="card-block">
+                                <h6 class="m-b-0">{% trans "Total Tip" %}</h6>
+                                <div class="d-flex align-items-center justify-content-center">
+                                <i class="fa fa-money m-r-15 text-c-green" style="font-size:25px;"></i>
+                                <h4 class="m-t-15 m-b-15" id='total_tip'>150$</h4>
+                                </div>
+                                <p class="m-b-0">{% trans "" %}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %} {% endcomment %}
+
+
+                {% if request.user.role == 'staff' %}
+
+                <div class="row">
+            
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="form-group" style="margin-top:16px;margin-left:25px;">
+                                <select style="display: block; width: 430px;" class="form-control select-input total-sports-chart-select" >
+                                    <option selected value="week">Week</option>
+                                    <option value="month">Month</option>
+                                    <option value="three_months">Three Month</option>
+                                    <option value="year">One Year </option>
+                                </select>
+                            </div>
+                        </div>
+                    </div> 
+                    <!-- Material statustic card start -->
+                    <div class="col-xl-4 col-md-12 mb-4">
+                        <div class="card mat-clr-stat-card text-white green ">
+                            <div class="card-block">
+                                <div class="row">
+                                    <div class="col-3 text-center bg-c-green">
+                                        <div class="dashboard-icon">
+                                            <img src="{% static '/images/registration.svg' %}" alt="Registration Icon"></img>
+                                        </div>
+                                    </div>
+                                    <div class="col-9 cst-cont">
+                                        <h5 id='player_count'>~</h5>
+                                        <p class="m-b-0">{% trans "Total Player in Waiting" %}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- <div class="col-xl-4 col-md-12 mb-4">
+                        <div class="card mat-clr-stat-card text-white red">
+                            <div class="card-block">
+                                <div class="row">
+                                    <div class="col-3 text-center bg-c-red total-card">
+                                        <div class="dashboard-icon">
+                                            <img src="{% static '/images/risk.svg' %}" alt="Risk Icon"></img>
+                                        </div>
+                                    </div>
+                                    <div class="col-9 cst-cont">
+                                        <div class="d-flex align-items-center">
+                                        <h5 id='possible_risk'>~</h5>
+                                        <i class="fa fa-money m-r-15  ml-2" style="font-size:30px;"></i>
+                                        </div>
+                                        <p class="m-b-0">{% trans "Open" %}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div> -->
+                    <div class="col-xl-4 col-md-12 mb-4">
+                        <div class="card text-center order-visitor-card mb-0" style="padding-top:38px">
+                            <div class="card-block">
+                                <h6 class="m-b-0">{% trans "Total Tip" %}</h6>
+                                <div class="d-flex align-items-center justify-content-center">
+                                <i class="fa fa-money m-r-15 text-c-green" style="font-size:25px;"></i>
+                                <h4 class="m-t-15 m-b-15" id='tip_amount'>~</h4>
+                                </div>
+                                <p class="m-b-0">{% trans " " %}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- <div class="col-xl-4 col-md-12 mb-4">
+                        <div class="card text-center order-visitor-card mb-0">
+                            <div class="card-block">
+                                <h6 class="m-b-0">{% trans "Open BetSlips" %}</h6>
+                                <div class="d-flex align-items-center justify-content-center">
+                                <i class="fas fa-handshake m-r-15 text-c-green" style="font-size:25px;"></i>
+                                <h4 class="m-t-15 m-b-15" id="total_open_bets">~</h4>
+                                </div>
+                                <p class="m-b-0">{% trans "In last 7 Days" %}</p>
+                            </div>
+                        </div>
+                    </div> -->
+                    <!-- <div class="col-xl-4 col-md-12 mb-4">
+                        <div class="card text-center order-visitor-card mb-0">
+                            <div class="card-block">
+                                <h6 class="m-b-0">{% trans "Total BetSlips" %}</h6>
+                                <div class="d-flex align-items-center justify-content-center">
+                                <img class='mr-3' src="{% static '/images/dice.svg' %}" height='28' width='28'>
+                                <h4 class="m-t-15 m-b-15" id='total_betslips'>~</h4>
+                                </div>
+                                <p class="m-b-0">{% trans "In last 7 Days" %}</p>
+                            </div>
+                        </div>
+                    </div> -->
+                    <div class="col-xl-4 col-md-12 mb-4">
+                        <div class="card text-center order-visitor-card mb-0" style="padding-top:38px">
+                            <div class="card-block">
+                                <h6 class="m-b-0">{% trans "Total Players Served" %}</h6>
+                                <div class="d-flex align-items-center justify-content-center">
+                                <i class="fas fa-handshake m-r-15 text-c-green" style="font-size:25px;"></i>
+                                <h4 class="m-t-15 m-b-15" id='total_players_served'>~</h4>
+                                </div>
+                                <p class="m-b-0">{% trans "" %}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Material statustic card end -->
+                    <!-- order-visitor start -->
+
+
+                    <!-- order-visitor end -->
+
+                    <!--  sale analytics start -->
+                    <div class="col-xl-6 col-md-12">
+                        <div class="card table-card">
+                            <div class="card-header">
+                                <h5>{% trans "Latest Tips" %}</h5>
+                            </div>
+                            <div class="card-block">
+                                <div class="table-responsive">
+                                    <table class="table table-hover m-b-0 without-header">
+                                        
+                                        <tbody id='betsliptablebody'>
+                                            
+                                        </tbody>
+                                    </table>
+
+                                </div>
+                            </div>
+                        </div>
+                    
+                    </div>
+                    <div class="col-xl-6 col-md-12">
+                        <div class="row">
+                            <!-- sale card start -->
+                            {% if request.user.role == 'admin' or  request.user.role == 'superadmin' %}
+                            <div class="col-md-6">
+                                <div class="card text-center order-visitor-card">
+                                    <div class="card-block">
+                                        <h6 class="m-b-0">{% trans "Total Master Agents" %}</h6>
+                                        <div class="d-flex align-items-center justify-content-center">
+                                        <img class='mr-3' src="{% static '/images/dealer2.svg' %}" height='25' width='25'>
+                                        <h4 class="m-t-15 m-b-15 " id='total_dealers'>~</h4>
+                                        </div>
+                                        <p class="m-b-0"></p>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            {% if request.user.role == 'staff'%}
+                            <div class="col-md-12">
+                                <div class="card">
+                                    <div class="card-block">
+                                        <div class="d-flex align-items-center justify-content-between">
+                                            <div class='d-flex align-items-center total-player'>
+                                                <i class="fa fa-users m-r-15 text-c-green"></i>
+                                            <h6 class="mb-0 mr-4">{% trans "Pending CA request" %}</h6>
+                                            </div>
+                                            <h4 id='pending_ca_req'>~</h4>
+                                        </div>
+                            
+                                    </div>
+                                </div>
+
+                            </div>
+                            {% endif %}
+                            {% if request.user.role == 'dealer' or request.user.role == 'admin' or  request.user.role == 'superadmin' %}
+                            <div class="col-md-6">
+                                <div class="card text-center order-visitor-card">
+                                    <div class="card-block">
+                                        <h6 class="m-b-0">{% trans "Total Agents" %}</h6>
+                                        <div class="d-flex align-items-center justify-content-center">
+                                        <img class='mr-3' src="{% static '/images/seller.svg' %}" height='25' width='25'>
+                                        <h4 class="m-t-15 m-b-15" id='total_agents'>~</h4>
+                                        </div>
+                                        <p class="m-b-0"></p>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                            <!-- <div class="col-md-6">
+                                <div class="card bg-c-red total-card">
+                                    <div class="card-block">
+                                        <div class="text-left">
+                                            <h4>489</h4>
+                                            <p class="m-0">Total Comment</p>
+                                        </div>
+                                        <span class="label bg-c-red value-badges">15%</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card bg-c-green total-card">
+                                    <div class="card-block">
+                                        <div class="text-left">
+                                            <h4>$5782</h4>
+                                            <p class="m-0">Income Status</p>
+                                        </div>
+                                        <span class="label bg-c-green value-badges">20%</span>
+                                    </div>
+                                </div>
+                            </div> -->
+                            <div class="col-md-12 col-xl-12">
+                                <div class="card table-card">
+                                    <div class="card-header">
+                                        <h5>{% trans "Tips" %}</h5><span>{% trans " " %}</span>
+                                        <!-- <span>lorem ipsum dolor sit amet, consectetur adipisicing elit</span> -->
+                                    </div>
+                                    <div class="card-block">
+                                        <div id="morris-extra-area"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% comment %} <div class="col-md-12">
+                                <div class="card">
+                                    <div class="card-block">
+                                        <div class="d-flex align-items-center justify-content-between">
+                                            <div class='d-flex align-items-center total-player'>
+                                                <i class="fa fa-users m-r-15 text-c-green"></i>
+                                            <h6 class="mb-0 mr-4">{% trans "Total Players" %}</h6>
+                                            </div>
+                                            <h4 id='total_players'>~</h4>
+                                        </div>
+                            
+                                    </div>
+                                </div>
+
+                            </div> {% endcomment %}
+                            {% comment %} <div class="col-md-6">
+                                <a href="players/?is_verified=1">
+                                    <div class="card verified_players">
+                                        <div class="card-block">
+                                            <div class="d-flex align-items-center justify-content-between">
+                                                <div class='d-flex align-items-center total-player'>
+                                                    <i class="fa fa-users m-r-15 text-c-green"></i>
+                                                <h6 class="mb-0 mr-4">{% trans "Verified Players" %}</h6>
+                                                </div>
+                                                <h4 id='verified_players'>~</h4>
+                                            </div>
+                                
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="col-md-6">
+                                <a href="players/?is_verified=2">
+                                    <div class="card unverified_players">
+                                        <div class="card-block">
+                                            <div class="d-flex align-items-center justify-content-between">
+                                                <div class='d-flex align-items-center total-player'>
+                                                    <i class="fa fa-users m-r-15 text-c-yellow"></i>
+                                                <h6 class="mb-0 mr-4">{% trans "Unverified Players" %}</h6>
+                                                </div>
+                                                <h4 id='unverified_players'>~</h4>
+                                            </div>
+                                
+                                        </div>
+                                    </div>
+                                </a>
+                            </div> {% endcomment %}
+
+                            <!-- <div class="col-md-12">
+                                <div class="card mat-stat-card">
+                                    <div class="card-block">
+                                        <div class="row align-items-center b-b-default">
+                                            <div class="col-sm-4 b-r-default p-b-20 p-t-20">
+                                                <div class="row align-items-center text-center">
+                                                    <div class="col-4 p-r-0">
+                                                        <img src="{% static '/images/football.svg' %}" height='25' width='25'>
+                                                    </div>
+                                                    <div class="col-8 p-l-0">
+                                                        <h5 id='football_bets'>~</h5>
+                                                        <p class="text-muted m-b-0">{% trans "Bets" %}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-4 b-r-default p-b-20 p-t-20">
+                                                <div class="row align-items-center text-center">
+                                                    <div class="col-4 p-r-0">
+                                                        <img src="{% static '/images/basketball.svg' %}" height='25' width='25'>
+                                                    </div>
+                                                    <div class="col-8 p-l-0">
+                                                        <h5 id='basketball_bets'>~</h5>
+                                                        <p class="text-muted m-b-0">{% trans "Bets" %}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-4 b-r-default p-b-20 p-t-20">
+                                                <div class="row align-items-center text-center">
+                                                    <div class="col-4 p-r-0">
+                                                        <img src="{% static '/images/tennis.svg' %}" height='25' width='25'>
+                                                    </div>
+                                                    <div class="col-8 p-l-0">
+                                                        <h5 id='tennis_bets'>~</h5>
+                                                        <p class="text-muted m-b-0">{% trans "Bets" %}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row align-items-center">
+                                            <div class="col-sm-4 b-r-default p-b-20 p-t-20 b-r-default">
+                                                <div class="row align-items-center text-center">
+                                                    <div class="col-4 p-r-0">
+                                                        <img src="{% static '/images/boxing.svg' %}" height='25' width='25'>
+                                                    </div>
+                                                    <div class="col-8 p-l-0">
+                                                        <h5 id='boxing_bets'>~</h5>
+                                                        <p class="text-muted m-b-0">{% trans "Bets" %}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-4 b-r-default p-b-20 p-t-20">
+                                                <div class="row align-items-center text-center">
+                                                    <div class="col-4 p-r-0">
+                                                        <img src="{% static '/images/volleyball.png' %}" height='25' width='25'>
+                                                    </div>
+                                                    <div class="col-8 p-l-0">
+                                                        <h5 id='volleyball_bets'>~</h5>
+                                                        <p class="text-muted m-b-0">{% trans "Bets" %}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-4 b-r-default p-b-20 p-t-20">
+                                                <div class="row align-items-center text-center">
+                                                    <div class="col-4 p-r-0">
+                                                        <img src="{% static '/images/ice-hockey.svg' %}" height='25' width='25'>
+                                                    </div>
+                                                    <div class="col-8 p-l-0">
+                                                        <h5 id='ice_hockey_bets'>~</h5>
+                                                        <p class="text-muted m-b-0">{% trans "Bets" %}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+
+                                            
+                                        </div>
+                                    </div>
+                                </div>
+                               
+
+                            </div> -->
+                            
+                            <!-- <div class="col-md-6">
+                                <div class="card text-center order-visitor-card">
+                                    <div class="card-block">
+                                        <h6 class="m-b-0">Unique Visitors</h6>
+                                        <h4 class="m-t-15 m-b-15"><i class="fa fa-arrow-down m-r-15 text-c-red"></i>652</h4>
+                                        <p class="m-b-0">36% From Last 6 Months</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card text-center order-visitor-card">
+                                    <div class="card-block">
+                                        <h6 class="m-b-0">Monthly Earnings</h6>
+                                        <h4 class="m-t-15 m-b-15"><i class="fa fa-arrow-up m-r-15 text-c-green"></i>5963</h4>
+                                        <p class="m-b-0">36% From Last 6 Months</p>
+                                    </div>
+                                </div>
+                            </div> -->
+                            <!-- sale card end -->
+                        </div>
+                    </div>
+                    
+                    <!-- <div class="d-none">
+                        <div id="morris-bar-chart"></div>
+                        <div id="area-example"></div>
+                        <div id="line-example"></div>
+                    </div> -->
+
+                    <!-- EXTRA AREA CHART start -->
+                   
+                    <!-- EXTRA AREA CHART Ends -->
+
+                    <!-- Donut chart start -->
+                    {% comment %} <div class="col-md-12 col-lg-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5>{% trans "Profit Share" %}</h5><span>{% trans "(profits in percentage over 7 days)" %}</span>
+                            </div>
+                            <div class="card-block">
+                                <div id="donut-example"></div>
+                            </div>
+                        </div>
+                    </div> {% endcomment %}
+                    <!-- Donut chart Ends -->
+
+                    <!-- <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-header form-group">
+                                <h5>Sports Chart</h5>
+                                <select style="display: block; float: right; width: 130px;" class="form-control select-input total-sports-chart-select" data-selected-chart="total-bets" data-chart-for="total_bets_chart">
+                                    <option selected value="week">Week</option>
+                                    <option value="month">Month</option>
+                                    <option value="three_months">Three Month</option>
+                                </select>
+                            </div>
+                            <div  class="col-md-12" style="display: flex;">
+                                <div class="col-md-6">
+                                    <div class="card-header total-bets" style="background-color: pink;">
+                                        <h5>{% trans "Total Bets" %}</h5> 
+                                        <span>{% trans "(Total Bets Per Sports)" %}</span>
+                                    </div>
+                                    <div class="card-header total-winning">
+                                        <h5>{% trans "Total Winning" %}</h5>
+                                        <span>{% trans "(Total winning per sports)" %}</span>
+                                    </div>
+                                    <div class="card-header total-profit">
+                                        <h5>{% trans "Total Profit" %}</h5>
+                                        <span>{% trans "(Total profit per sports)" %}</span>
+                                    </div>
+                                    <div class="card-header total-profit-percentage">
+                                        <h5>{% trans "Total Profit" %}</h5>
+                                        <span>{% trans "(Total profits in percentage of bets)" %}</span>
+                                    </div>
+                                </div>
+                                <h6 id="y_axis_text" style="transform: rotate(180deg); writing-mode: vertical-lr; text-align: center; margin-right:0px; margin-left:5px; word-spacing: 5px;">Bets Count</h6>
+                                <div class="col-md-6" style="padding-left: 0px;">
+                                    <div class="card-block total-sports-chart">
+                                        <div style="height: 320px; text-align: center;" id="total_sports_chart"></div>
+                                        <h6 id="x_axis_text" style="text-align: center;">Games</h6>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div> -->
+
+                    <!--  sale analytics end -->
+
+                    <!-- Project statustic start -->
+                    <!-- <div class="col-xl-12">
+                        <div class="card proj-progress-card">
+                            <div class="card-block">
+                                <div class="row">
+                                    <div class="col-xl-3 col-md-6">
+                                        <h6>Published Project</h6>
+                                        <h5 class="m-b-30 f-w-700">532<span class="text-c-green m-l-10">+1.69%</span></h5>
+                                        <div class="progress">
+                                            <div class="progress-bar bg-c-red" style="width:25%"></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-xl-3 col-md-6">
+                                        <h6>Completed Task</h6>
+                                        <h5 class="m-b-30 f-w-700">4,569<span class="text-c-red m-l-10">-0.5%</span></h5>
+                                        <div class="progress">
+                                            <div class="progress-bar bg-c-blue" style="width:65%"></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-xl-3 col-md-6">
+                                        <h6>Successfull Task</h6>
+                                        <h5 class="m-b-30 f-w-700">89%<span class="text-c-green m-l-10">+0.99%</span></h5>
+                                        <div class="progress">
+                                            <div class="progress-bar bg-c-green" style="width:85%"></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-xl-3 col-md-6">
+                                        <h6>Ongoing Project</h6>
+                                        <h5 class="m-b-30 f-w-700">365<span class="text-c-green m-l-10">+0.35%</span></h5>
+                                        <div class="progress">
+                                            <div class="progress-bar bg-c-yellow" style="width:45%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div> -->
+                    <!-- Project statustic end -->
+                    
+                </div>
+                  {% endif %}
+
+
+
+
+                {% if request.user.role == 'superadmin' or request.user.role == 'admin' or request.user.role == 'dealer' or request.user.role == 'agent' %}
+
+                <div class="row">
+            
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="form-group" style="margin-top:16px;margin-left:25px;">
+                                <select style="display: block; width: 430px;" class="form-control select-input total-sports-chart-select" >
+                                    <option selected value="week">Week</option>
+                                    <option value="month">Month</option>
+                                    <option value="three_months">Three Month</option>
+                                    <option value="year">One Year </option>
+                                </select>
+                            </div>
+                        </div>
+                    </div> 
+                    <!-- Material statustic card start -->
+                    <div class="col-xl-4 col-md-12 mb-4">
+                        <div class="card mat-clr-stat-card text-white green ">
+                            <div class="card-block">
+                                <div class="row">
+                                    <div class="col-3 text-center bg-c-green">
+                                        <div class="dashboard-icon">
+                                            <img src="{% static '/images/registration.svg' %}" alt="Registration Icon"></img>
+                                        </div>
+                                    </div>
+                                    <div class="col-9 cst-cont">
+                                        <h5 id='new_registrations'>~</h5>
+                                        <p class="m-b-0">{% trans "New Registration" %}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- <div class="col-xl-4 col-md-12 mb-4">
+                        <div class="card mat-clr-stat-card text-white red">
+                            <div class="card-block">
+                                <div class="row">
+                                    <div class="col-3 text-center bg-c-red total-card">
+                                        <div class="dashboard-icon">
+                                            <img src="{% static '/images/risk.svg' %}" alt="Risk Icon"></img>
+                                        </div>
+                                    </div>
+                                    <div class="col-9 cst-cont">
+                                        <div class="d-flex align-items-center">
+                                        <h5 id='possible_risk'>~</h5>
+                                        <i class="fa fa-money m-r-15  ml-2" style="font-size:30px;"></i>
+                                        </div>
+                                        <p class="m-b-0">{% trans "Open" %}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div> -->
+                    <div class="col-xl-4 col-md-12 mb-4">
+                        <div class="card text-center order-visitor-card mb-0" style="padding-top:38px">
+                            <div class="card-block">
+                                <h6 class="m-b-0">{% trans "Total Deposit" %}</h6>
+                                <div class="d-flex align-items-center justify-content-center">
+                                <i class="fa fa-money m-r-15 text-c-green" style="font-size:25px;"></i>
+                                <h4 class="m-t-15 m-b-15" id='total_deposits'>~</h4>
+                                </div>
+                                <p class="m-b-0">{% trans " " %}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- <div class="col-xl-4 col-md-12 mb-4">
+                        <div class="card text-center order-visitor-card mb-0">
+                            <div class="card-block">
+                                <h6 class="m-b-0">{% trans "Open BetSlips" %}</h6>
+                                <div class="d-flex align-items-center justify-content-center">
+                                <i class="fas fa-handshake m-r-15 text-c-green" style="font-size:25px;"></i>
+                                <h4 class="m-t-15 m-b-15" id="total_open_bets">~</h4>
+                                </div>
+                                <p class="m-b-0">{% trans "In last 7 Days" %}</p>
+                            </div>
+                        </div>
+                    </div> -->
+                    <!-- <div class="col-xl-4 col-md-12 mb-4">
+                        <div class="card text-center order-visitor-card mb-0">
+                            <div class="card-block">
+                                <h6 class="m-b-0">{% trans "Total BetSlips" %}</h6>
+                                <div class="d-flex align-items-center justify-content-center">
+                                <img class='mr-3' src="{% static '/images/dice.svg' %}" height='28' width='28'>
+                                <h4 class="m-t-15 m-b-15" id='total_betslips'>~</h4>
+                                </div>
+                                <p class="m-b-0">{% trans "In last 7 Days" %}</p>
+                            </div>
+                        </div>
+                    </div> -->
+                    <div class="col-xl-4 col-md-12 mb-4">
+                        <div class="card text-center order-visitor-card mb-0" style="padding-top:38px">
+                            <div class="card-block">
+                                <h6 class="m-b-0">{% trans "Total Withdraws" %}</h6>
+                                <div class="d-flex align-items-center justify-content-center">
+                                <i class="fa fa-minus-circle m-r-15 text-c-green" style="font-size:25px;"></i>
+                                <h4 class="m-t-15 m-b-15" id='total_withdraws'>~</h4>
+                                </div>
+                                <p class="m-b-0">{% trans "" %}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Material statustic card end -->
+                    <!-- order-visitor start -->
+
+
+                    <!-- order-visitor end -->
+
+                    <!--  sale analytics start -->
+                    {% comment %} <div class="col-xl-6 col-md-12">
+                        <div class="card table-card">
+                            <div class="card-header">
+                                <h5>{% trans "Latest Betslips" %}</h5>
+                            </div>
+                            <div class="card-block">
+                                <div class="table-responsive">
+                                    <table class="table table-hover m-b-0 without-header">
+                                        
+                                        <tbody id='betsliptablebody'>
+                                            
+                                        </tbody>
+                                    </table>
+
+                                </div>
+                            </div>
+                        </div>
+                    
+                    </div>  {% endcomment %}
+                    <div class="col-xl-6 col-md-12">
+                        <div class="row">
+                            <!-- sale card start -->
+                            {% if request.user.role == 'admin' or  request.user.role == 'superadmin' %}
+                            <div class="col-md-6">
+                                <div class="card text-center order-visitor-card">
+                                    <div class="card-block">
+                                        <h6 class="m-b-0">{% trans "Total Master Agents" %}</h6>
+                                        <div class="d-flex align-items-center justify-content-center">
+                                        <img class='mr-3' src="{% static '/images/dealer2.svg' %}" height='25' width='25'>
+                                        <h4 class="m-t-15 m-b-15 " id='total_dealers'>~</h4>
+                                        </div>
+                                        <p class="m-b-0"></p>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                            {% if request.user.role == 'dealer' or request.user.role == 'admin' or  request.user.role == 'superadmin' %}
+                            <div class="col-md-6">
+                                <div class="card text-center order-visitor-card">
+                                    <div class="card-block">
+                                        <h6 class="m-b-0">{% trans "Total Agents" %}</h6>
+                                        <div class="d-flex align-items-center justify-content-center">
+                                        <img class='mr-3' src="{% static '/images/seller.svg' %}" height='25' width='25'>
+                                        <h4 class="m-t-15 m-b-15" id='total_agents'>~</h4>
+                                        </div>
+                                        <p class="m-b-0"></p>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                            <!-- <div class="col-md-6">
+                                <div class="card bg-c-red total-card">
+                                    <div class="card-block">
+                                        <div class="text-left">
+                                            <h4>489</h4>
+                                            <p class="m-0">Total Comment</p>
+                                        </div>
+                                        <span class="label bg-c-red value-badges">15%</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card bg-c-green total-card">
+                                    <div class="card-block">
+                                        <div class="text-left">
+                                            <h4>$5782</h4>
+                                            <p class="m-0">Income Status</p>
+                                        </div>
+                                        <span class="label bg-c-green value-badges">20%</span>
+                                    </div>
+                                </div>
+                            </div> -->
+                            
+                            <div class="col-md-12">
+                                <div class="card">
+                                    <div class="card-block">
+                                        <div class="d-flex align-items-center justify-content-between">
+                                            <div class='d-flex align-items-center total-player'>
+                                                <i class="fa fa-users m-r-15 text-c-green"></i>
+                                            <h6 class="mb-0 mr-4">{% trans "Total Players" %}</h6>
+                                            </div>
+                                            <h4 id='total_players'>~</h4>
+                                        </div>
+                            
+                                    </div>
+                                </div>
+
+                            </div>
+                            {% if request.user.role == 'agent' or request.user.role == 'staff'%}
+                            <div class="col-md-12">
+                                <div class="card">
+                                    <div class="card-block">
+                                        <div class="d-flex align-items-center justify-content-between">
+                                            <div class='d-flex align-items-center total-player'>
+                                                <i class="fa fa-users m-r-15 text-c-green"></i>
+                                            <h6 class="mb-0 mr-4">{% trans "Pending CA request" %}</h6>
+                                            </div>
+                                            <h4 id='pending_ca_req'>~</h4>
+                                        </div>
+                            
+                                    </div>
+                                </div>
+
+                            </div>
+                            {% endif %}
+                            {% if request.user.role == 'admin' %}
+                            
+                            <div class="col-md-12">
+                                <div class="card">
+                                    <div class="card-block">
+                                        <div class="d-flex align-items-center justify-content-between">
+                                            <div class='d-flex align-items-center total-player'>
+                                                <i class="fa fa-users m-r-15 text-c-green"></i>
+                                            <h6 class="mb-0 mr-4">{% trans "Total Players Joined By Affiliate" %}</h6>
+                                            </div>
+                                            <h4 id='total_player_joined_by_affiliate'>~</h4>
+                                        </div>
+                            
+                                    </div>
+                                </div>
+
+                            </div>
+                            <div class="col-md-12">
+                                <div class="card">
+                                    <div class="card-block">
+                                        <div class="d-flex align-items-center justify-content-between">
+                                            <div class='d-flex align-items-center total-player'>
+                                                <i class="fa fa-money m-r-15 text-c-green"></i>
+                                            <h6 class="mb-0 mr-4">{% trans "Total Earned By Affiliates" %}</h6>
+                                            </div>
+                                            <h4 id='total_earned_by_affiliates'>~</h4>
+                                        </div>
+                            
+                                    </div>
+                                </div>
+
+                            </div>
+                            {% endif %}
+                            {% comment %} <div class="col-md-6">
+                                <a href="players/?is_verified=1">
+                                    <div class="card verified_players">
+                                        <div class="card-block">
+                                            <div class="d-flex align-items-center justify-content-between">
+                                                <div class='d-flex align-items-center total-player'>
+                                                    <i class="fa fa-users m-r-15 text-c-green"></i>
+                                                <h6 class="mb-0 mr-4">{% trans "Verified Players" %}</h6>
+                                                </div>
+                                                <h4 id='verified_players'>~</h4>
+                                            </div>
+                                
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="col-md-6">
+                                <a href="players/?is_verified=2">
+                                    <div class="card unverified_players">
+                                        <div class="card-block">
+                                            <div class="d-flex align-items-center justify-content-between">
+                                                <div class='d-flex align-items-center total-player'>
+                                                    <i class="fa fa-users m-r-15 text-c-yellow"></i>
+                                                <h6 class="mb-0 mr-4">{% trans "Unverified Players" %}</h6>
+                                                </div>
+                                                <h4 id='unverified_players'>~</h4>
+                                            </div>
+                                
+                                        </div>
+                                    </div>
+                                </a>
+                            </div> {% endcomment %}
+
+                            <!-- <div class="col-md-12">
+                                <div class="card mat-stat-card">
+                                    <div class="card-block">
+                                        <div class="row align-items-center b-b-default">
+                                            <div class="col-sm-4 b-r-default p-b-20 p-t-20">
+                                                <div class="row align-items-center text-center">
+                                                    <div class="col-4 p-r-0">
+                                                        <img src="{% static '/images/football.svg' %}" height='25' width='25'>
+                                                    </div>
+                                                    <div class="col-8 p-l-0">
+                                                        <h5 id='football_bets'>~</h5>
+                                                        <p class="text-muted m-b-0">{% trans "Bets" %}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-4 b-r-default p-b-20 p-t-20">
+                                                <div class="row align-items-center text-center">
+                                                    <div class="col-4 p-r-0">
+                                                        <img src="{% static '/images/basketball.svg' %}" height='25' width='25'>
+                                                    </div>
+                                                    <div class="col-8 p-l-0">
+                                                        <h5 id='basketball_bets'>~</h5>
+                                                        <p class="text-muted m-b-0">{% trans "Bets" %}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-4 b-r-default p-b-20 p-t-20">
+                                                <div class="row align-items-center text-center">
+                                                    <div class="col-4 p-r-0">
+                                                        <img src="{% static '/images/tennis.svg' %}" height='25' width='25'>
+                                                    </div>
+                                                    <div class="col-8 p-l-0">
+                                                        <h5 id='tennis_bets'>~</h5>
+                                                        <p class="text-muted m-b-0">{% trans "Bets" %}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row align-items-center">
+                                            <div class="col-sm-4 b-r-default p-b-20 p-t-20 b-r-default">
+                                                <div class="row align-items-center text-center">
+                                                    <div class="col-4 p-r-0">
+                                                        <img src="{% static '/images/boxing.svg' %}" height='25' width='25'>
+                                                    </div>
+                                                    <div class="col-8 p-l-0">
+                                                        <h5 id='boxing_bets'>~</h5>
+                                                        <p class="text-muted m-b-0">{% trans "Bets" %}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-4 b-r-default p-b-20 p-t-20">
+                                                <div class="row align-items-center text-center">
+                                                    <div class="col-4 p-r-0">
+                                                        <img src="{% static '/images/volleyball.png' %}" height='25' width='25'>
+                                                    </div>
+                                                    <div class="col-8 p-l-0">
+                                                        <h5 id='volleyball_bets'>~</h5>
+                                                        <p class="text-muted m-b-0">{% trans "Bets" %}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-4 b-r-default p-b-20 p-t-20">
+                                                <div class="row align-items-center text-center">
+                                                    <div class="col-4 p-r-0">
+                                                        <img src="{% static '/images/ice-hockey.svg' %}" height='25' width='25'>
+                                                    </div>
+                                                    <div class="col-8 p-l-0">
+                                                        <h5 id='ice_hockey_bets'>~</h5>
+                                                        <p class="text-muted m-b-0">{% trans "Bets" %}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+
+                                            
+                                        </div>
+                                    </div>
+                                </div>
+                               
+
+                            </div> -->
+                            
+                            <!-- <div class="col-md-6">
+                                <div class="card text-center order-visitor-card">
+                                    <div class="card-block">
+                                        <h6 class="m-b-0">Unique Visitors</h6>
+                                        <h4 class="m-t-15 m-b-15"><i class="fa fa-arrow-down m-r-15 text-c-red"></i>652</h4>
+                                        <p class="m-b-0">36% From Last 6 Months</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card text-center order-visitor-card">
+                                    <div class="card-block">
+                                        <h6 class="m-b-0">Monthly Earnings</h6>
+                                        <h4 class="m-t-15 m-b-15"><i class="fa fa-arrow-up m-r-15 text-c-green"></i>5963</h4>
+                                        <p class="m-b-0">36% From Last 6 Months</p>
+                                    </div>
+                                </div>
+                            </div> -->
+                            <!-- sale card end -->
+                        </div>
+                    </div>
+                    
+                    <!-- <div class="d-none">
+                        <div id="morris-bar-chart"></div>
+                        <div id="area-example"></div>
+                        <div id="line-example"></div>
+                    </div> -->
+
+                    <!-- EXTRA AREA CHART start -->
+                    <div class="col-md-12 col-lg-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5>{% trans "Net Profits" %}</h5><span>{% trans " " %}</span>
+                                <!-- <span>lorem ipsum dolor sit amet, consectetur adipisicing elit</span> -->
+                            </div>
+                            <div class="card-block">
+                                <div id="morris-extra-area"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- EXTRA AREA CHART Ends -->
+
+                    <!-- Donut chart start -->
+                    {% comment %} <div class="col-md-12 col-lg-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5>{% trans "Profit Share" %}</h5><span>{% trans "(profits in percentage over 7 days)" %}</span>
+                            </div>
+                            <div class="card-block">
+                                <div id="donut-example"></div>
+                            </div>
+                        </div>
+                    </div> {% endcomment %}
+                    <!-- Donut chart Ends -->
+
+                    <!-- <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-header form-group">
+                                <h5>Sports Chart</h5>
+                                <select style="display: block; float: right; width: 130px;" class="form-control select-input total-sports-chart-select" data-selected-chart="total-bets" data-chart-for="total_bets_chart">
+                                    <option selected value="week">Week</option>
+                                    <option value="month">Month</option>
+                                    <option value="three_months">Three Month</option>
+                                </select>
+                            </div>
+                            <div  class="col-md-12" style="display: flex;">
+                                <div class="col-md-6">
+                                    <div class="card-header total-bets" style="background-color: pink;">
+                                        <h5>{% trans "Total Bets" %}</h5> 
+                                        <span>{% trans "(Total Bets Per Sports)" %}</span>
+                                    </div>
+                                    <div class="card-header total-winning">
+                                        <h5>{% trans "Total Winning" %}</h5>
+                                        <span>{% trans "(Total winning per sports)" %}</span>
+                                    </div>
+                                    <div class="card-header total-profit">
+                                        <h5>{% trans "Total Profit" %}</h5>
+                                        <span>{% trans "(Total profit per sports)" %}</span>
+                                    </div>
+                                    <div class="card-header total-profit-percentage">
+                                        <h5>{% trans "Total Profit" %}</h5>
+                                        <span>{% trans "(Total profits in percentage of bets)" %}</span>
+                                    </div>
+                                </div>
+                                <h6 id="y_axis_text" style="transform: rotate(180deg); writing-mode: vertical-lr; text-align: center; margin-right:0px; margin-left:5px; word-spacing: 5px;">Bets Count</h6>
+                                <div class="col-md-6" style="padding-left: 0px;">
+                                    <div class="card-block total-sports-chart">
+                                        <div style="height: 320px; text-align: center;" id="total_sports_chart"></div>
+                                        <h6 id="x_axis_text" style="text-align: center;">Games</h6>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div> -->
+
+                    <!--  sale analytics end -->
+
+                    <!-- Project statustic start -->
+                    <!-- <div class="col-xl-12">
+                        <div class="card proj-progress-card">
+                            <div class="card-block">
+                                <div class="row">
+                                    <div class="col-xl-3 col-md-6">
+                                        <h6>Published Project</h6>
+                                        <h5 class="m-b-30 f-w-700">532<span class="text-c-green m-l-10">+1.69%</span></h5>
+                                        <div class="progress">
+                                            <div class="progress-bar bg-c-red" style="width:25%"></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-xl-3 col-md-6">
+                                        <h6>Completed Task</h6>
+                                        <h5 class="m-b-30 f-w-700">4,569<span class="text-c-red m-l-10">-0.5%</span></h5>
+                                        <div class="progress">
+                                            <div class="progress-bar bg-c-blue" style="width:65%"></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-xl-3 col-md-6">
+                                        <h6>Successfull Task</h6>
+                                        <h5 class="m-b-30 f-w-700">89%<span class="text-c-green m-l-10">+0.99%</span></h5>
+                                        <div class="progress">
+                                            <div class="progress-bar bg-c-green" style="width:85%"></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-xl-3 col-md-6">
+                                        <h6>Ongoing Project</h6>
+                                        <h5 class="m-b-30 f-w-700">365<span class="text-c-green m-l-10">+0.35%</span></h5>
+                                        <div class="progress">
+                                            <div class="progress-bar bg-c-yellow" style="width:45%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div> -->
+                    <!-- Project statustic end -->
+                    
+                </div>
+                {% elif request.user|has_permission:"can_view_dashboard" %}
+
+                    <div class="row">
+                        <div class="col-md-2 ml-auto">
+                            <div class="card">
+                                <div class="form-group m-4" style="">
+                                    <select style="display: block;" class="form-control select-input total-sports-chart-select" >
+                                        <option selected value="week">Week</option>
+                                        <option value="month">Month</option>
+                                        <option value="three_months">Three Month</option>
+                                        <option value="year">One Year </option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if request.user|has_permission:"can_view_tournament" %}
+                        <div class="row">
+                            <div class="col-xl-4 col-md-12 mb-4">
+                                <div class="card text-center order-visitor-card mb-0" style="padding-top:38px">
+                                    <div class="card-block">
+                                        <h6 class="m-b-0">{% trans "Total Tournaments" %}</h6>
+                                        <div class="d-flex align-items-center justify-content-center">
+                                        <img class="m-r-15" src="{% static '/images/medal.svg' %}" height="25" width="25" alt="total_tournament">
+                                        {% comment %} <i class="fa fa-money m-r-15 text-c-green" style="font-size:25px;"></i> {% endcomment %}
+                                        <h4 class="m-t-15 m-b-15" id='total_tournaments'>~</h4>
+                                        </div>
+                                        <p class="m-b-0">{% trans " " %}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-xl-4 col-md-12 mb-4">
+                                <div class="card text-center order-visitor-card mb-0" style="padding-top:38px">
+                                    <div class="card-block">
+                                        <h6 class="m-b-0">{% trans "Total Active Tournaments" %}</h6>
+                                        <div class="d-flex align-items-center justify-content-center">
+                                        <img class="m-r-15" src="{% static '/images/medal-active.svg' %}" height="25" width="25" alt="total_tournament">
+                                        {% comment %} <i class="fa fa-money m-r-15 text-c-green" style="font-size:25px;"></i> {% endcomment %}
+                                        <h4 class="m-t-15 m-b-15" id='total_active_tournaments'>~</h4>
+                                        </div>
+                                        <p class="m-b-0">{% trans " " %}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-xl-4 col-md-12 mb-4">
+                                <div class="card text-center order-visitor-card mb-0" style="padding-top:38px">
+                                    <div class="card-block">
+                                        <h6 class="m-b-0">{% trans "Total Tournament Prize Distributed" %}</h6>
+                                        <div class="d-flex align-items-center justify-content-center">
+                                        <img class="m-r-15" src="{% static '/images/money-deduct.svg' %}" height="25" width="25" alt="total_tournament">
+                                        {% comment %} <i class="fa fa-money m-r-15 text-c-green" style="font-size:25px;"></i> {% endcomment %}
+                                        <h4 class="m-t-15 m-b-15" id='total_tournaments_prize_distributed'>~</h4>
+                                        </div>
+                                        <p class="m-b-0">{% trans " " %}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <div class="row">
+                        {% if request.user|has_permission:"can_view_website_header" %}
+                        <div class="col-xl-4 col-md-12">
+                            <div class="card table-card">
+                                <div class="card-header">
+                                    <h5>{% trans "Websit Headers" %}</h5>
+                                </div>
+                                <div class="card-block">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover m-b-0 without-header text-center">
+                                            <tbody id='websiteHeaders'>
+                                                
+                                            </tbody>
+                                        </table>
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <div class="col-xl-8 col-md-12">
+                            <div class="row">
+                                {% if request.user|has_permission:"can_view_balance_transfer_report" %}
+                                    <div class="col-xl-6 col-md-12 mb-4">
+                                        <div class="card text-center order-visitor-card mb-0" style="padding-top:38px">
+                                            <div class="card-block">
+                                                <h6 class="m-b-0">{% trans "Total Deposit" %}</h6>
+                                                <div class="d-flex align-items-center justify-content-center">
+                                                <i class="fa fa-money m-r-15 text-c-green" style="font-size:25px;"></i>
+                                                <h4 class="m-t-15 m-b-15" id='total_deposits'>~</h4>
+                                                </div>
+                                                <p class="m-b-0">{% trans " " %}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-xl-6 col-md-12 mb-4">
+                                        <div class="card text-center order-visitor-card mb-0" style="padding-top:38px">
+                                            <div class="card-block">
+                                                <h6 class="m-b-0">{% trans "Total Withdraws" %}</h6>
+                                                <div class="d-flex align-items-center justify-content-center">
+                                                <i class="fa fa-minus-circle m-r-15 text-c-green" style="font-size:25px;"></i>
+                                                <h4 class="m-t-15 m-b-15" id='total_withdraws'>~</h4>
+                                                </div>
+                                                <p class="m-b-0">{% trans "" %}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endif %}
+
+                                {% if request.user|has_permission:"can_view_banner" %}
+                                    <div class="col-xl-6 col-md-12 mb-4">
+                                        <div class="card text-center order-visitor-card mb-0" style="padding-top:38px">
+                                            <div class="card-block">
+                                                <h6 class="m-b-0">{% trans "Total Banners Count" %}</h6>
+                                                <div class="d-flex align-items-center justify-content-center">
+                                                <i class="fa fa-money m-r-15 text-c-green" style="font-size:25px;"></i>
+                                                <h4 class="m-t-15 m-b-15" id='total_banners'>~</h4>
+                                                </div>
+                                                <p class="m-b-0">{% trans " " %}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                                
+                                {% if request.user|has_permission:"can_view_pages" %}
+                                    <div class="col-xl-6 col-md-12 mb-4">
+                                        <div class="card text-center order-visitor-card mb-0" style="padding-top:38px">
+                                            <div class="card-block">
+                                                <h6 class="m-b-0">{% trans "Total Pages Count" %}</h6>
+                                                <div class="d-flex align-items-center justify-content-center">
+                                                <i class="fa fa-money m-r-15 text-c-green" style="font-size:25px;"></i>
+                                                <h4 class="m-t-15 m-b-15" id='total_pages'>~</h4>
+                                                </div>
+                                                <p class="m-b-0">{% trans " " %}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                        </div>
+
+                        
+                    </div>
+                {% endif %}
+            </div>
+            <!-- Page-body end -->
+        </div>
+        <div id="styleSelector"> </div>
+    </div>
+    
+  
+</div>
+</div>
+<div id="pop-loader"></div>
+<script>
+    var spinner = $('#pop-loader');
+    function BetSlipsTable(betSlips){
+      
+        betSlips.forEach(element => {
+
+            let tableRow = `<tr>
+                    <td><img src="{% static '/images/couponB.svg' %}" height='25' width='25'></td>
+                    <td>
+                        <div class="d-inline-block align-middle">
+                            <div class="d-inline-block">
+                                <h6>`+element['id']+`</h6>
+                                <p class="text-muted m-b-0">{% trans "ID" %}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="text-right">
+                        <h6 class="f-w-700">`+element['username']+`</h6>
+                        <p class="text-muted m-b-0">{% trans "User" %}</p>
+                        </td>
+                        <td class="text-right">
+                            <h6 class="f-w-700">`+element['amount']+`</h6>
+                            <p class="text-muted m-b-0">{% trans "Tip Amount" %}</p>
+                    </td>
+                </tr>`;
+               
+            $("#betsliptablebody").append(tableRow);
+        });
+    };
+
+    function addWebsiteHeaders(headers){
+        headers.forEach(item => {
+            statusIcon = item.is_active
+            ? '<i class="fas fa-check-circle" style="color: #12d329;"></i>'
+            : '<i class="fas fa-check-circle" style="color: red;"></i>';
+
+            let tableRow = `
+                <tr>
+                    <td><img src="/media/${item.image}" height="25" width="25" alt="${item.name}"></td>
+                    <td>
+                        <div class="d-inline-block align-middle">
+                            <div class="d-inline-block">
+                                <h6>${item.name}</h6>
+                                <p class="text-muted m-b-0">Name</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <h6 class="f-w-700">${statusIcon}</h6>
+                        <p class="text-muted m-b-0">Status</p>
+                    </td>
+                </tr>
+            `
+               
+            $("#websiteHeaders").append(tableRow);
+        });
+    };
+   
+
+    function duration()
+    {   
+        event.preventDefault();
+        spinner.show();
+        $.ajax("{% url 'admin-panel:dashboard-ajax' %}", {
+            type: "GET",
+            dataType: 'json',
+            data: {
+                data_range:$(".total-sports-chart-select").find(":selected").val()
+            },
+            success: function(data){
+                $("#total_players").text(data['total_players']);
+                $("#total_earned_by_affiliates").text(data['total_earned_by_affiliates']);
+                $("#total_player_joined_by_affiliate").text(data['total_player_joined_by_affiliate']);
+                $("#verified_players").text(data['verified_players']);
+                $("#unverified_players").text(data['unverified_players']);
+                $("#total_agents").text(data['total_agents']);
+                $("#total_dealers").text(data['total_dealers']);
+                $("#new_registrations").text(data['new_registrations']);
+                $("#total_deposits").text(data['total_deposits']);
+                $("#total_withdraws").text(data['total_withdraws']);
+                $("#tip_amount").text(data['tip_amount']);
+                $("#player_count").text(data['player_count']);
+                $('#total_tournaments').text(data['total_tournaments']);
+                $('#total_active_tournaments').text(data['total_active_tournaments']);
+                $('#total_tournaments_prize_distributed').text(data['total_tournaments_prize_distributed']);
+                $('#total_banners').text(data['total_banners']);
+                $('#total_pages').text(data['total_pages']);
+
+                if("website_headers" in data){
+                    $("#websiteHeaders").empty()
+                    addWebsiteHeaders(data["website_headers"])
+                }else{
+                    drawCharts(data['total_profit_data'], data['top_chart_data']);
+                }
+                spinner.hide();
+                
+              
+            },
+            error: function(){
+                console.log("disconnected!!!, please reload");
+            },
+            complete: function(){
+                spinner.hide();
+            }
+
+        });
+    };
+
+
+    
+    function drawCharts(profitData){
+        let netProfits = [];
+        let sportsBook = 0;
+        let dates = [];
+       
+       console.log(profitData['profitrange'])
+        for(let day = 0; day < profitData['profitrange']; day++){
+            console.log(day);
+            dates.push(profitData[day]);
+            netProfits.push(profitData[profitData[day]]["amount__sum"]);
+     
+           
+        }
+     
+      
+        $("#morris-extra-area").empty();
+        extraAreaChart(netProfits,dates);
+        $("#donut-example").empty();
+        {% comment %} donutChart(totalin_percentage,totalout_percentage,"totalin","totalout"); {% endcomment %}
+       
+    }
+
+   
+
+    $(document).ready(function (){
+
+        $(".total-sports-chart-select").on("change", function() {
+            duration();
+          });
+
+        $('#mobile-collapse').click(function () { 
+                
+                $("#nw1").toggleClass('left-spacer');
+ 
+            });
+        
+        (function poll()
+                        {
+                            $.ajax("{% url 'admin-panel:dashboard-ajax' %}", {
+                                type: "GET",
+                                dataType: 'json',
+                                data: {
+                                    data_range:$(".total-sports-chart-select").find(":selected").val()
+                                },
+                                success: function(data){
+                                    $("#total_players").text(data['total_players']);
+                                    $("#total_earned_by_affiliates").text(data['total_earned_by_affiliates']);
+                                    $("#total_player_joined_by_affiliate").text(data['total_player_joined_by_affiliate']);
+                                    $("#verified_players").text(data['verified_players']);
+                                    $("#unverified_players").text(data['unverified_players']);
+                                    $("#total_agents").text(data['total_agents']);
+                                    $("#total_dealers").text(data['total_dealers']);
+                                    $("#new_registrations").text(data['new_registrations']);
+                                    
+                                    $("#total_deposits").text(data['total_deposits']);
+                                    $("#total_withdraws").text(data['total_withdraws']);
+                                    $("#tip_amount").text(data['tip_amount']);
+                                    $("#player_count").text(data['player_count']);
+
+                                    $('#pending_ca_req').text(data['pending_ca_req'])
+                                    if(data['is_staff']=='true'){
+                                        $("#betsliptablebody").empty();
+                                        let betSlips = JSON.parse(data['latest_tips']);
+                                        BetSlipsTable(betSlips);
+                                        $("#total_players_served").text(data['total_players_served']);
+                                        
+                                    }
+                                    
+                                    if("website_headers" in data){
+                                        $('#total_tournaments').text(data['total_tournaments']);
+                                        $('#total_active_tournaments').text(data['total_active_tournaments']);
+                                        $('#total_tournaments_prize_distributed').text(data['total_tournaments_prize_distributed']);
+                                        $('#total_banners').text(data['total_banners']);
+                                        $('#total_pages').text(data['total_pages']);
+                                        addWebsiteHeaders(data["website_headers"])
+                                    }else{
+                                        drawCharts(data['total_profit_data'], data['top_chart_data']);
+                                    }
+                                },
+                                error: function(){
+                                    console.log("disconnected!!!, please reload");
+                                }
+
+                            });
+                        })() 
+
+    
+        $(".total-bets").click(function(){
+            selectedChart = $(".total-sports-chart-select").attr("data-selected-chart")
+            $("."+selectedChart).css("background-color", "#fff")
+            $(".total-sports-chart-select").attr("data-selected-chart", "total-bets")
+            $(".total-bets").css("background-color", "pink")
+            $(".total-sports-chart-select").attr("data-chart-for", "total_bets_chart")
+            $(".total-sports-chart-select").val("week")
+            
+        });
+
+        $(".total-winning").click(function(){
+            selectedChart = $(".total-sports-chart-select").attr("data-selected-chart")
+            $("."+selectedChart).css("background-color", "#fff")
+            $(".total-sports-chart-select").attr("data-selected-chart", "total-winning")
+            $(".total-winning").css("background-color", "pink")
+            $(".total-sports-chart-select").attr("data-chart-for", "total_winning_chart")
+            $(".total-sports-chart-select").val("week")
+          
+        });
+
+        $(".total-profit").click(function(){
+            selectedChart = $(".total-sports-chart-select").attr("data-selected-chart")
+            $("."+selectedChart).css("background-color", "#fff")
+            $(".total-sports-chart-select").attr("data-selected-chart", "total-profit")
+            $(".total-profit").css("background-color", "pink")
+            $(".total-sports-chart-select").attr("data-chart-for", "total_profit_chart")
+            $(".total-sports-chart-select").val("week")
+           
+        });
+
+        $(".total-profit-percentage").click(function(){
+            selectedChart = $(".total-sports-chart-select").attr("data-selected-chart")
+            $("."+selectedChart).css("background-color", "#fff")
+            $(".total-sports-chart-select").attr("data-selected-chart", "total-profit-percentage")
+            $(".total-profit-percentage").css("background-color", "pink")
+            $(".total-sports-chart-select").attr("data-chart-for", "total_profit_percentage_chart")
+            $(".total-sports-chart-select").val("week")
+           
+        });
+
+       
+
+    });
+
+</script>
+
+<script src="{% static '/js/raphael/raphael.min.js' %}"></script>
+<script src="{% static '/js/morris.js/morris.js' %}"></script>
+<script src="{% static '/js/morris.js/morris-custom-chart.js' %}"></script>
+
+{% endblock content %}

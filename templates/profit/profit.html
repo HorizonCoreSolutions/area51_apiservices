@@ -1,0 +1,615 @@
+{% extends "index.html" %}
+
+{% load static %}
+{% load i18n %}
+{% load math %}
+{% load date_utils %}
+{% load tz %}
+
+{% block title %}Profits{% endblock title %}
+{% block content %}
+
+<style>
+    th,td{
+        padding: 5px 10px;
+    }
+    .admin-card{
+        background-color: #ffffff;
+        box-shadow: 0px 0px 6px 6px rgb(204 204 204 / 0.25);
+        padding: 30px 10px;
+    }
+    .pcode.left-spacer {
+	margin-left: 0px;
+    }
+    .pcode{
+	margin-left: 250px;
+    }
+    @media(max-width:991px){
+        .pcode{
+	    margin-left: 0px;
+    }
+    }
+    </style>
+<div class="pcode" id='nw1' >
+<div >
+    <div class="container-fluid pt-4 " >
+        <div class="admin-card">
+        <div class="row">
+            <div class="col-xs-12 col-lg-12 ">
+                <div class="page-content" >
+                    <div class="container-fluid" >
+
+                        {% include "includes/messages.html" %}
+
+                        <div class="table-data__tool">
+                            <div>
+                                <form method="get">
+                                    <div class="row flex-sm-nowrap flex-wrap mb-3">
+                                        <!-- Dealer select -->
+                                        {% if request.user.role == 'admin' or request.user.role == 'superadmin' %}
+                                            <div class="col" style="min-width: 210px;">
+                                                <div class="rs-select2--light rs-select2--md" multiple="multiple">
+                                                    <select id="select-dealer" name="dealers" class="js-example-basic-multiple tokenize-open" multiple="multiple">
+                                                        {% comment %} <option selected="selected" value="{{ dealer.id }}">{{ dealer.username }}</option> {% endcomment %}
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        {% endif %}
+
+                                        <!-- Agent select -->
+                                        {% if request.user.role == 'admin' or request.user.role == 'dealer' or request.user.role == 'superadmin' %}
+                                            <div class="col" style="min-width: 210px;">
+                                                <div class="rs-select2--light rs-select2--md">
+                                                    <select id="select-agent" name="agents" class="js-example-basic-multiple tokenize-open" multiple="multiple">
+                                                        {% comment %} <option selected="selected" value="{{ agent.id }}">{{ agent.username }}</option> {% endcomment %}
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                                        <div class="col" style="min-width: 210px;"> 
+                                            <div class="rs-select2--light rs-select2--md" id="select-player">
+                                                {% comment %} <input type="text" id="select-player" placeholder='{% trans "Search by Player" %}' name="username" class="form-control" value="{{ username }}" id="username"> {% endcomment %}
+                                                <select id="username" name="username" data-width="100%" class="tokenize-open">
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                   
+                                            <div class="row flex-sm-nowrap flex-wrap">
+                                                <div class="col form-group" style="min-width: 210px;">
+                                                    <div class="date-input">
+                                                        <span>{% trans "From date" %}</span>
+                                                        <input type="text" class="form-control" placeholder='{% trans "Select from date" %}' onChange="validateDateRange(this)" id="search-date-created-from" name="from" readonly="true" style="background-color:transparent" autocomplete="off">
+                                                    </div>
+                                                </div>
+        
+                                                <div class="col form-group" style="min-width: 210px;">
+                                                    <div class="date-input">
+                                                        <span>{% trans "To date" %}</span>
+                                                        <input type="text" class="form-control" placeholder='{% trans "Select to date" %}' onChange="validateDateRange(this)" id="search-date-created-to" name="to" readonly="true" style="background-color:transparent" autocomplete="off">
+                                                    </div>
+                                                </div>
+                                            
+                                                {% comment %} <div class="col form-group" style="min-width: 210px;">
+                                                      <div class="date-input">
+                                                        <span>{% trans "Select Currency" %}</span>
+                                                         <select id="currency-search" name="currency" class="form-control">
+                                                          <option disabled selected hidden>Profit for different currency</option>
+                                                            <option value="EUR">EUR</option>
+                                                            <option value="TRY">TRY</option>
+                                                            <option value="RUB">RUB</option>
+                                                            <option value="USD">USD</option>
+                                                         </select>
+                                                      </div>
+                                                </div> {% endcomment %}
+                                              
+                                               
+                                            </div>
+  
+
+                                    <!-- Date filters -->
+                                   
+
+                                </form>
+                                <div class="row">
+                                    <div class="col-1 form-group ml-auto" style="min-width: 210px;">
+                                        <div class="input-group-btn position-relative" style="margin-left: -5px;">
+                                            <button class="btn btn-primary btn-block" id="button-search">
+                                                {% trans "Search" %}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                       
+                        
+                        {% if request.user.role == 'dealer' or request.user.role == 'agent' or request.user.role == 'admin' or request.user.role == 'superadmin' %}
+                        <!-- Profit  - start -->
+                        <p id="pro" class="user-profit-table-title mb-1 mt-3"></p>
+                        <div class="table-responsive">
+                            <table class="user-profit-table w-100 table-bordered">
+                                <thead >
+                                    <tr>
+                                        <th>{% trans "Provider" %}</th>
+                                        <th>{% trans "In" %}</th>
+                                        <th>{% trans "Out" %}</th>
+                                        <th>{% trans "Profit" %}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% comment %} <!-- <tr>
+                                        <td>{% trans "SportsBook" %}</td>
+                                        <td class="sports_book_in_sum"></td>
+                                        <td class="sports_book_out_sum"></td>
+                                        <td id="id" class="sports_book_profit"></td>
+                                    </tr> --> {% endcomment %}
+                                    <tr>
+                                        <td>{% trans "Casino" %}</td>
+                                        <td id="casino_in_sum">{{ casino_in_sum_usd|floatformat:2 }}</td>
+                                        <td id="casino_out_sum">{{ casino_out_sum_usd|floatformat:2 }}</td>
+                                        <td id="casino_profit" class="{% if casino_book_profit_usd < 0 %}text-danger{% else %}text-success{% endif %}">{{ casino_book_profit_usd|floatformat:2 }}</td>                                       
+                                    </tr>
+                                    <tr>
+                                        <td>{% trans "Offmarket" %}</td>
+                                        <td id="offmarket_in_sum"></td>
+                                        <td id="offmarket_out_sum"></td>
+                                        <td id="offmarket_profit" class="text-danger "></td>
+                                    </tr>
+<!--                                    <tr>-->
+<!--                                        <td>{% trans "Live Casino" %}</td>-->
+<!--                                        <td>{{ live_casino_in_sum_usd|floatformat:2 }}</td>-->
+<!--                                        <td>{{ live_casino_out_sum_usd|floatformat:2 }}</td>-->
+<!--                                        {% if live_casino_book_profit_usd < 0 %}-->
+<!--                                            <td class="text-danger">{{ live_casino_book_profit_usd|floatformat:2 }}</td>-->
+<!--                                        {% else %}-->
+<!--                                            <td class="text-success">{{ live_casino_book_profit_usd|floatformat:2 }}</td>-->
+<!--                                        {% endif %}-->
+<!--                                    </tr>-->
+
+                                    <tr class="font-weight-bold">
+                                        <td>{% trans "Total" %}</td>
+                                        <td class="all_in"></td>
+                                        <td class="all_out"></td>
+                                        <td id="allp" class="all_profit"></td>
+
+                                    </tr>
+                                    <tr class="bg-info">
+                                        <td>{% trans "BONUS" %}</td>
+                                        <td></td>
+                                        <td></td>
+                                        <td id="idb" class="bonus"></td>
+                                    </tr>
+
+                                    <tr>
+                                        <td>{% trans "Net Profit" %}</td>
+                                        <td></td>
+                                        <td></td>
+                                        <td id="netp" class="net_profit"></td>
+
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        {% endif %}
+
+<!-- END DATA TABLE -->
+{% endblock content %}
+
+{% block javascript %}
+<script type="text/javascript">
+    const isGreaterThanZero = value => value >= 0;
+
+    function validateDateRange(input){
+            
+        var from_date = $("#search-date-created-from").val();
+        var to_date = $("#search-date-created-to").val();
+
+        error_msg = "";
+        if(input.id == "search-date-created-from"){
+            error_msg = "From date must be less than To date!!"
+        }
+        else{
+            error_msg = "To date must be greater than From date!!"
+        }
+        from_day = parseInt(from_date.split("/")[0]);
+        from_month = parseInt(from_date.split("/")[1]);
+        from_year = from_date.split("/")[2];
+        from_year = from_year.split(" ")[0];
+        from_hour = parseInt(from_date.split(" ")[1].split(":")[0]);
+        from_minute = parseInt(from_date.split(" ")[1].split(":")[1]);
+
+        to_day = parseInt(to_date.split("/")[0]);
+        to_month = parseInt(to_date.split("/")[1]);
+        to_year = to_date.split("/")[2];
+        to_year = to_year.split(" ")[0];
+        to_hour = parseInt(to_date.split(" ")[1].split(":")[0]);
+        to_minute = parseInt(to_date.split(" ")[1].split(":")[1]);
+        // from date should be less than to date
+        current_year = new Date().getFullYear();
+        current_month = new Date().getMonth() + 1;
+        current_day = new Date().getDate();
+        current_hour = new Date().getHours();
+        current_minute = new Date().getMinutes();
+        
+        default_date = current_day+"/"+current_month+"/"+current_year+" "+current_hour+":"+current_minute;
+        if(from_year > to_year){
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: error_msg
+            });
+            $("#search-date-created-from").val(default_date);
+            $("#search-date-created-to").val(default_date);
+            return false;
+        }else if(from_year == to_year){
+            if(from_month > to_month){
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: error_msg
+                });
+                $("#search-date-created-from").val(default_date);
+                $("#search-date-created-to").val(default_date);
+                return false;
+            }else if(from_month == to_month){
+                if(from_day > to_day){
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: error_msg
+                    });
+                    $("#search-date-created-from").val(default_date);
+                    $("#search-date-created-to").val(default_date);
+                    return false;
+                }else if(from_day == to_day){
+                    if(from_hour > to_hour){
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Oops...',
+                            text: error_msg
+                        });
+                        $("#search-date-created-from").val(default_date);
+                        $("#search-date-created-to").val(default_date);
+                        return false;
+                    }else if(from_hour == to_hour){
+                        if(from_minute > to_minute){
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Oops...',
+                                text: error_msg
+                            });
+                        
+                            $("#search-date-created-from").val(default_date);
+                            $("#search-date-created-to").val(default_date);
+                            return false;
+                        }
+                    }
+                }
+            }
+        }        
+    }
+    {% comment %} $(document).ready(defaultdrop); {% endcomment %}
+
+    {% comment %} function defaultdrop(){
+        console.log("inside currency")            
+        var value="USD";
+
+        $.ajax({
+            url: "{% url 'admin-panel:profit' %}",
+            type: "POST",
+            dataType: "json",
+            data: {
+                currency_val:value,
+                csrfmiddlewaretoken: '{{ csrf_token }}',
+            },
+        }).done(function() {
+            console.log("Success")
+            profit();
+        });
+    } {% endcomment %}
+
+        
+    {% comment %} function profit(){
+        console.log("inside get ajax")
+        $.ajax("{% url 'admin-panel:profit' %}", {
+            type: "GET",
+            dataType: 'json',
+            data: {
+                from: $('#search-date-created-from').val(),
+                to: $('#search-date-created-to').val(),
+            },
+            success: function(response){
+
+                document.getElementById('search-date-created-from').defaultValue =response.from;
+                document.getElementById('search-date-created-to').defaultValue =response.to;
+                
+                $(".user-profit-table").find(".all_in").text(response.all_in);
+                $(".user-profit-table").find(".all_out").text(response.all_out);
+                $(".user-profit-table").find(".bonus").text(response.bonus);
+                $(".user-profit-table").find(".net_profit").text(response.net_profit);
+                $(".user-profit-table").find(".all_profit").text(response.all_profit);
+                $("#casino_in_sum").text(response.casino_in_sum);
+                $("#casino_out_sum").text(response.casino_out_sum);
+                $("#casino_profit").text(response.casino_book_profit);
+                $("#offmarket_in_sum").text(response.offmarket_in_sum);
+                $("#offmarket_out_sum").text(response.offmarket_out_sum);
+                $("#offmarket_profit").text(response.offmarket_profit);
+                $(".form-control").find("#username").text(response.username);
+                
+                if(response.bonus < 0){
+                    document.getElementById('idb').className += " text-danger";
+                    $(".user-profit-table").find(".bonus").text(response.bonus);
+                }
+                else{
+                    document.getElementById('idb').className += " text-success";
+                    $(".user-profit-table").find(".bonus").text(response.bonus);
+                }
+                if(response.all_profit < 0){
+                    document.getElementById('allp').className += " text-danger";
+                    $(".user-profit-table").find(".all_profit").text(response.all_profit);
+                }
+                else{
+                    document.getElementById('allp').className += " text-success";
+                    $(".user-profit-table").find(".all_profit").text(response.all_profit);
+                }
+                if(response.net_profit < 0){
+                    document.getElementById('netp').className += " text-danger";
+                    $(".user-profit-table").find(".net_profit").text(response.net_profit);
+                }
+                else{
+                    document.getElementById('netp').className += " text-success";
+                    $(".user-profit-table").find(".net_profit").text(response.net_profit);
+                }
+
+                $("#casino_profit").toggleClass('text-success', isGreaterThanZero(response.casino_book_profit)).toggleClass('text-danger', !isGreaterThanZero(response.casino_book_profit));
+                $("#offmarket_profit").toggleClass('text-success', isGreaterThanZero(response.offmarket_profit)).toggleClass('text-danger', !isGreaterThanZero(response.offmarket_profit));
+            }
+        });
+    } {% endcomment %}
+    
+
+    $(document).ready(function () {
+        console.log("Start")
+
+       
+        $('#mobile-collapse').click(function () { 
+
+                $("#nw1").toggleClass('left-spacer');
+
+            });
+
+        console.log($(window).on('load', defaultdrop ))
+        window.addEventListener('load', defaultdrop);
+        
+        $('#button-search').click(function() {
+           $(this).toggleClass('#button-search');
+        });
+
+        function defaultdrop(){
+            console.log("inside currency")            
+            var value="USD";
+
+            $.ajax({
+                url: "{% url 'admin-panel:profit' %}",
+                type: "POST",
+                dataType: "json",
+                data: {
+                    currency_val:value,
+                    csrfmiddlewaretoken: '{{ csrf_token }}',
+                },
+            }).done(function() {
+                console.log("Success")
+                profit();
+            });
+        }
+        
+      
+        $('#button-search').click(function (){
+            var value="USD";
+
+            $.ajax({
+                url: "{% url 'admin-panel:profit' %}",
+                type: "POST",
+                dataType: "json",
+                data: {
+                    currency_val:value,
+                    csrfmiddlewaretoken: '{{ csrf_token }}',
+                },
+            }).done(function() {
+                profit();
+            });
+        });
+
+        function profit(){
+            {% comment %} console.log("inside get ajax") {% endcomment %}
+            $.ajax("{% url 'admin-panel:profit' %}", {
+                type: "GET",
+                dataType: 'json',
+                data: {
+                    from: $('#search-date-created-from').val(),
+                    to: $('#search-date-created-to').val(),
+                    dealers: $("#select-dealer").val(),
+                    agents:  $("#select-agent").val(),
+                    username: $("#username").val(),
+                },
+                success: function(response){
+
+                    document.getElementById('search-date-created-from').defaultValue =response.from;
+                    document.getElementById('search-date-created-to').defaultValue =response.to;
+                
+                    $(".user-profit-table").find(".all_in").text(response.all_in);
+                    $(".user-profit-table").find(".all_out").text(response.all_out);
+                    $(".user-profit-table").find(".bonus").text(response.bonus);
+                    $(".user-profit-table").find(".net_profit").text(response.net_profit);
+                    $(".user-profit-table").find(".all_profit").text(response.all_profit);
+                    $("#casino_in_sum").text(response.casino_in_sum);
+                    $("#casino_out_sum").text(response.casino_out_sum);
+                    $("#casino_profit").text(response.casino_book_profit);
+                    $("#offmarket_in_sum").text(response.offmarket_in_sum);
+                    $("#offmarket_out_sum").text(response.offmarket_out_sum);
+                    $("#offmarket_profit").text(response.offmarket_profit);
+                    $(".form-control").find("#username").text(response.username);
+
+            
+                    {% comment %} if(response.bonus < 0){
+                        document.getElementById('idb').className += " text-danger";
+                        $(".user-profit-table").find(".bonus").text(response.bonus);
+                    }
+                    else{
+                        document.getElementById('idb').className += " text-success";
+                        $(".user-profit-table").find(".bonus").text(response.bonus);
+                    }
+
+                    if(response.all_profit < 0){
+                        document.getElementById('allp').className += " text-danger";
+                        $(".user-profit-table").find(".all_profit").text(response.all_profit);
+                    }
+                    else{
+                        document.getElementById('allp').className += " text-success";
+                        $(".user-profit-table").find(".all_profit").text(response.all_profit);
+                    }
+
+                    if(response.net_profit < 0){
+                        document.getElementById('netp').className += " text-danger";
+                        $(".user-profit-table").find(".net_profit").text(response.net_profit);
+                    }
+                    else{
+                        document.getElementById('netp').className += " text-success";
+                        $(".user-profit-table").find(".net_profit").text(response.net_profit);
+                    } {% endcomment %}
+
+                    $("#idb").toggleClass('text-success', isGreaterThanZero(response.bonus)).toggleClass('text-danger', !isGreaterThanZero(response.bonus));
+                    $("#allp").toggleClass('text-success', isGreaterThanZero(response.all_profit)).toggleClass('text-danger', !isGreaterThanZero(response.all_profit));
+                    $("#netp").toggleClass('text-success', isGreaterThanZero(response.net_profit)).toggleClass('text-danger', !isGreaterThanZero(response.net_profit));
+                    $("#casino_profit").toggleClass('text-success', isGreaterThanZero(response.casino_book_profit)).toggleClass('text-danger', !isGreaterThanZero(response.casino_book_profit));
+                    $("#offmarket_profit").toggleClass('text-success', isGreaterThanZero(response.offmarket_profit)).toggleClass('text-danger', !isGreaterThanZero(response.offmarket_profit));
+                }
+            });
+        }
+
+
+
+        $('#bettypes').tokenize2({
+            placeholder: "Bettypes...",
+            searchMinLength:3,
+        });
+
+        $("#search-date-created-from").datetimepicker({
+            format: 'd/m/Y',
+            timepicker: false
+        });
+
+        $("#search-date-created-to").datetimepicker({
+            format: 'd/m/Y',
+            timepicker: false,
+        });
+
+        $('#select-dealer').tokenize2({
+            multiple: true,
+            placeholder: "{% trans 'Search by Master Agent' %}",
+            searchMinLength:3,
+            dataSource: function(term, object){
+                $.ajax("{% url 'admin-panel:dealer-ajax' %}", {
+                    type: "POST",
+                    data: { search: term, start: 0 },
+                    dataType: 'json',
+                    global: false,
+                    success: function(data){
+                        var $items = [];
+                        $.each(data, function(k, v){
+                            $items.push(v);
+                        });
+                        object.trigger('tokenize:dropdown:fill', [$items]);
+                    }
+                });
+            }
+        });
+
+        $('#select-agent').tokenize2({
+            dropdownMaxItems:"10",
+            tags: [],
+            placeholder: '{% trans "Search by Agent" %}',
+            searchMinLength:3,
+            multiple: true,
+            dataSource: function(term, object){
+                $.ajax("{% url 'admin-panel:agent-ajax' %}", {
+                    type: "POST",
+                    data: {
+                        search: term,
+                        start: 0,
+                        // dealers: $('#select-dealer').val()
+                    },
+                    global: false,
+                    dataType: 'json',
+                    success: function(data){
+                        var $items = [];
+                        $.each(data, function(k, v){
+                            $items.push(v);
+                        });
+                        object.trigger('tokenize:dropdown:fill', [$items]);
+                    }
+                });
+            }
+        });
+
+        $('#username').select2({
+            placeholder: 'Search by Player',
+            minimumInputLength: 3,
+            allowClear: true,
+            ajax: {
+                type: "POST",
+                url: "{% url 'admin-panel:player-ajax' %}",
+                dataType: 'json',
+                delay: 250,
+                data: function (params) {
+                    return {
+                        search: params.term
+                    };
+                },
+                processResults: function (data) {
+                    var mappedData = $.map(data, function(obj) {
+                        return {
+                            id: obj.text,
+                            text: obj.text
+                        };
+                    });
+    
+                    return {
+                        results: mappedData
+                    };
+                },
+                cache: true
+            }
+        });        
+    });
+
+        $('#select-player').tokenize2({
+            tags: [],
+            placeholder: '{% trans "Search by Player" %}',
+            searchMinLength:3,
+            multiple: true,
+            dataSource: function(term, object){
+                $.ajax("{% url 'admin-panel:player-ajax' %}", {
+                    type: "POST",
+                    data: {
+                        search: term,
+                        start: 0,
+                        // dealers: $('#select-dealer').val()
+                    },
+                    global: false,
+                    dataType: 'json',
+                    success: function(data){
+                        var $items = [];
+                        $.each(data, function(k, v){
+                            $items.push(v);
+                        });
+                        object.trigger('tokenize:dropdown:fill', [$items]);
+                    }
+                });
+            }
+        });
+    
+</script>
+{% endblock %}

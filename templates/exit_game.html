@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script type="text/javascript">
+        function CloseMe(win){
+            console.log("aaaaaaaaaaaaaaaaaaaaaaaaaa");
+            console.log(win);
+            if(win!==undefined)
+                win.close();
+        }
+        console.log("bbbbbbbbbbbbbbbbbbbbbbbb")
+        if(opener!==undefined && opener !== window){
+            console.log("cccccccccccccccccccccccccccccccccccccccccccccccccccccc")
+            console.log(opener);
+            opener.CloseMe(window);
+        }
+    </script>
+</head>
+<body>
+
+</body>
+</html>

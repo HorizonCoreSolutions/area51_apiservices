@@ -1,0 +1,287 @@
+{% load i18n %}
+{% load static %}
+
+<div id="betting-limits-popup" class="popup mfp-with-anim mfp-hide">
+    <!-- <div class="popup-header">
+        {% trans "Betting Limits" %}
+    </div> -->
+
+    <div class="popup-body px-0">
+        <div class="modal-header mb-4">
+            <h5 class="modal-title">{% trans "Betting Limits" %}</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+        <div class="login-form">
+            <form method="POST">
+                {% csrf_token %}
+
+                <!-- Limits -->
+                <div class="limits-wrap px-4">
+                    <div class="container p-0">
+                        <div class="row">
+                            <!-- Max Bet -->
+                            <div class="col form-group" style="min-width: 180px;">
+                                <label class="label-sm" for="limit-1">{% trans "Max Single Bet" %}</label>
+
+                                <input type="hidden" name="dealer_id" value="">
+                                <input id="limit-1" 
+                                    type="text"
+                                    class="form-control"
+                                    name="max_single_bet"
+                                    readonly
+                                    value="">
+                            </div>
+                        </div> 
+
+                        <div class="row">
+                            <!-- Max Bet -->
+                            <div class="col form-group" style="min-width: 180px;">
+                                <label class="label-sm" for="limit-1">{% trans "Max Single Bet Other Sports" %}</label>
+
+                                <input type="hidden" name="dealer_id" value="">
+                                <input id="limit-1" 
+                                    type="text"
+                                    class="form-control"
+                                    name="max_single_bet_other_sports"
+                                    readonly
+                                    value="">
+                            </div>
+                        </div> 
+
+                        <div class="row">
+                            <!-- Max Bet -->
+                            <div class="col form-group" style="min-width: 180px;">
+                                <label class="label-sm" for="limit-1">{% trans "Max Multiple Bet" %}</label>
+
+                                <input type="hidden" name="dealer_id" value="">
+                                <input id="limit-1" 
+                                    type="text"
+                                    class="form-control"
+                                    name="max_multiple_bet"
+                                    readonly
+                                    value="">
+                            </div>
+                        </div> 
+
+                        <div class="row">
+                            <!-- Min Bet -->
+                            <div class="col form-group" style="min-width: 180px;">
+                                <label class="label-sm" for="limit-2">{% trans "Min Bet" %}</label>
+                                <input id="limit-2" 
+                                    type="text"
+                                    class="form-control"
+                                    name="min_bet"
+                                    readonly
+                                    value="">
+                            </div>
+                        </div> 
+
+                        <!-- <div class="row">
+                            Max Live Casino Amount
+                            <div class="col form-group" style="min-width: 180px;">
+                                <label class="label-sm" for="limit-live-casino">{% trans "Max Live Casino Amount" %}</label>
+                                <input id="limit-live-casino" 
+                                    type="text"
+                                    class="form-control"
+                                    name="max_live_casino_amount"
+                                    readonly
+                                    value="">
+                            </div>
+                        </div> -->
+
+
+                        <div class="row align-items-end flex-sm-nowrap flex-wrap">
+                            <!-- Max Win Amount -->
+                            <div class="col form-group" style="min-width: 180px;">
+                                <label class="label-sm" for="limit-3">{% trans "Max Win Amount" %}</label>
+                                <input id="limit-3" 
+                                    type="text"
+                                    class="form-control"
+                                    name="max_win_amount"
+                                    readonly
+                                    value="">
+                            </div>
+
+                            <!-- Max Odd -->
+                            <div class="col form-group" style="min-width: 180px;">
+                                <label class="label-sm" for="limit-4">{% trans "Max Odd" %}</label>
+                                <input id="limit-4" 
+                                    type="text"
+                                    class="form-control"
+                                    name="max_odd"
+                                    readonly
+                                    value="">
+                            </div>
+                        </div>
+
+                        <div class="row align-items-end flex-sm-nowrap flex-wrap">
+                            <!-- Max Bet Amount Per Match -->
+                            <div class="col form-group" style="min-width: 120px;">
+                                <label class="label-sm" for="limit-5"> {% trans "Max Bet Amount Per Match" %}</label>
+                                <input id="limit-5" 
+                                    type="text"
+                                    class="form-control"
+                                    name="max_bet_amount_per_match"
+                                    readonly
+                                    value="">
+                            </div>
+
+                            <!-- Max Same Bet Count Amount -->
+                            <div class="col form-group" style="min-width: 120px;">
+                                <label class="label-sm" for="limit-6">{% trans "Max Same Bet Count Amount" %}</label>
+                                <input id="limit-6" 
+                                    type="text"
+                                    class="form-control"
+                                    name="max_same_bet_count"
+                                    readonly
+                                    value="">
+                            </div>
+                        </div>
+
+                        <div class="row align-items-end flex-sm-nowrap flex-wrap">
+                            <!-- Max Multi Two Events Amount Combine -->
+                            <div class="col form-group" style="min-width: 180px;">
+                                <label class="label-sm" for="limit-7">{% trans "Max Multi Two Events Amount Combine" %}</label>
+                                <input id="limit-7" 
+                                    type="text"
+                                    class="form-control"
+                                    name="max_multi_two_events_amount"
+                                    readonly
+                                    value="">
+                            </div>
+
+                            <!-- Max Multi Three Events Amount Combine -->
+                            <div class="col form-group" style="min-width: 180px;">
+                                <label class="label-sm" for="limit-8">{% trans "Max Multi Three Events Amount Combine" %}</label>
+                                <input id="limit-8" 
+                                    type="text"
+                                    class="form-control"
+                                    name="max_multi_three_events_amount"
+                                    readonly
+                                    value="">
+                            </div>
+                        </div>
+
+                        <div class="row align-items-end flex-sm-nowrap flex-wrap">
+                            <!-- Max Multi Three Events -->
+                            <div class="col form-group" style="min-width: 180px;">
+                                <label class="label-sm" for="limit-9">{% trans "Max Multi Three Events" %}</label>
+                                <input id="limit-9" 
+                                    type="text"
+                                    class="form-control"
+                                    name="max_multi_four_events_amount"
+                                    readonly
+                                    value="">
+                            </div>
+
+                            <div class="col form-group" style="min-width: 180px;">
+                                <label class="label-sm" for="limit-10">{% trans "Cashout Commission Percentage" %}</label>
+                                <input id="limit-10" 
+                                    type="text"
+                                    class="form-control"
+                                    name="cashout_percentage"
+                                    readonly
+                                    value="">
+                            </div>
+                        </div>
+                        {% if request.user.role == 'agent' %}
+                        <div class="row align-items-end flex-sm-nowrap flex-wrap">
+                            <div class="col form-group" style="min-width: 180px;">
+                                <label class="label-sm" for="limit-10">{% trans "Cashback Time Limit(in hours)" %}</label>
+                                <input id="limit-10" 
+                                    type="text"
+                                    class="form-control"
+                                    name="cashback_time_limit"
+                                    readonly
+                                    value="">
+                            </div>                            
+
+                            <div class="col form-group" style="min-width: 180px;">
+                                <label class="label-sm" for="limit-10">{% trans "Cashback Percentage" %}</label>
+                                <input id="limit-10" 
+                                    type="text"
+                                    class="form-control"
+                                    name="cashback_percentage"
+                                    readonly
+                                    value="">
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                </div>
+
+                {% if request.user.role == 'admin' or request.user.role == 'superadmin' or request.user.role == 'dealer' %}
+                    <hr>
+
+                    <!-- Permissions -->
+                    <div class="permissions-wrap px-4">
+                        <p class="font-weight-semibold text-center mb-4">{% trans "Permissions Master Agent" %}</p>
+
+                        <div class="row form-group align-items-center">
+                            <div class="col-8">
+                                <label class="form-control-label mb-0">{% trans "Creating Agent" %}</label>
+                            </div>
+                            <div class="col-4 d-flex justify-content-end">
+                                <label class="switch switch-text switch-success switch-custom">
+                                    <input type="checkbox"
+                                        class="switch-input switch-status-input"
+                                        checked>
+                                    <span class="switch-label"></span>
+                                    <span class="switch-handle"></span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="row form-group align-items-center">
+                            <div class="col-8">
+                                <label class="form-control-label mb-0">{% trans "Block Master Agent" %}</label>
+                            </div>
+                            <div class="col-4 d-flex justify-content-end">
+                                <label class="switch switch-text switch-success switch-custom">
+                                    <input type="checkbox"
+                                        class="switch-input switch-status-input">
+                                    <span class="switch-label"></span>
+                                    <span class="switch-handle"></span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="row form-group align-items-center">
+                            <div class="col-8">
+                                <label class="form-control-label mb-0">{% trans "Max Agent" %}</label>
+                            </div>
+                            <div class="col-4">
+                                <input type="text"
+                                    name="input-small"
+                                    placeholder="0"
+                                    class="input-sm form-control-sm form-control">
+                            </div>
+                        </div>
+
+                        <div class="row form-group align-items-center">
+                            <div class="col-8">
+                                <label class="form-control-label mb-0">{% trans "Max Player per Agent" %}</label>
+                            </div>
+                            <div class="col-4">
+                                <input type="text"
+                                    name="input-small"
+                                    placeholder="0"
+                                    class="input-sm form-control-sm form-control">
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+                                                  
+                <!-- Save button -->
+                <div class="pt-4 px-4">
+                    <button type="submit" disabled class="disabled au-btn au-btn--block au-btn--darkGreen au-btn--sm">
+                        {% trans "Save" %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

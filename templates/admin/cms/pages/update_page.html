@@ -1,0 +1,548 @@
+{% extends "index.html" %}
+{% load static %}
+{% load i18n %}
+{% block title %}
+Edit Page
+{% endblock title %}
+{% block content %}
+<style>
+    #pop-loader {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100%;
+        background: rgba(0,0,0,0.75) url(../../../static/Desktop_static/images/loading2.gif) no-repeat center center;
+        z-index: 10000;
+    }
+    .admin-card{
+        background-color: #ffffff;
+        box-shadow: 0px 0px 6px 6px rgb(204 204 204 / 0.25);
+        padding: 30px 10px;
+    }
+    .pcode.left-spacer {
+	    margin-left: 0px;
+    }
+    .pcode{
+	    margin-left: 250px;
+    }
+    @media(max-width:767px){
+        .pcode{
+	        margin-left: 0px;
+        }
+    }
+    .django-ckeditor-widget{
+        display: block !important;
+    }
+    #cke_1_contents{
+        height: 150px !important;
+    }
+    #banner_img{
+        width: 500px;
+        height: 200px;
+    }
+    input[type=file]{
+    width:90px;
+}
+
+    #myImg {
+        border-radius: 5px;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+
+    #myImg:hover {opacity: 0.7;}
+
+    /* The Modal (background) */
+    .modal {
+        display: none; /* Hidden by default */
+        position: fixed; /* Stay in place */
+        z-index: 1; /* Sit on top */
+        padding-top: 100px; /* Location of the box */
+        left: 0;
+        top: 0;
+        width: 100%; /* Full width */
+        height: 100%; /* Full height */
+        overflow: auto; /* Enable scroll if needed */
+        background-color: rgb(0,0,0); /* Fallback color */
+        background-color: rgba(0,0,0,0.9); /* Black w/ opacity */
+    }
+
+    /* Modal Content (Image) */
+    .modal-content {
+        margin: auto;
+        display: block;
+        width: 80%;
+        max-width: 700px;
+    }
+
+    /* Caption of Modal Image (Image Text) - Same Width as the Image */
+    #caption {
+        margin: auto;
+        display: block;
+        width: 80%;
+        max-width: 700px;
+        text-align: center;
+        color: #ccc;
+        padding: 10px 0;
+        height: 150px;
+    }
+
+    /* Add Animation - Zoom in the Modal */
+    .modal-content, #caption {
+        animation-name: zoom;
+        animation-duration: 0.6s;
+    }
+
+    @keyframes zoom {
+        from {transform:scale(0)}
+        to {transform:scale(1)}
+    }
+
+    /* The Close Button */
+    .close {
+        position: absolute;
+        top: 15px;
+        right: 35px;
+        color: #f1f1f1;
+        font-size: 40px;
+        font-weight: bold;
+        transition: 0.3s;
+    }
+
+    .close:hover,
+    .close:focus {
+        color: #bbb;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    /* 100% Image Width on Smaller Screens */
+    @media only screen and (max-width: 700px){
+        .modal-content {
+        width: 100%;
+        }
+    }
+
+</style>
+<div id="pop-loader"></div>
+<div class="pcode" id='nw1' >
+    <div>
+        
+        <div class="container-fluid pt-4" >
+            <div class="admin-card">
+                <div class="row">
+                    
+                    <div class="col-xs-12 col-lg-12 ">
+                        <div class="page-content"  >
+                            {% comment %} <form class="main-heading-wrap">
+                                <input type="button" value="Go back!" onclick="history.back()">
+                               </form> {% endcomment %}
+                            <div class="main-heading-wrap">
+                                
+                                <h5>{% trans 'Update Page' %}</h5>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="imgPreviewModal" class="modal mt-5" style="z-index: 1000;">
+                    <span class="close">&times;</span>
+                    <img class="modal-content" id="imgPreviewModalImg">
+                </div>
+                
+                <form action=""  method="post" id="upload-file"  enctype="multipart/form-data">
+                    {% csrf_token %}
+                    {{ form.media }}
+                    <div class="row mb-3" style="margin-top:10px;">
+                        <div class="search-row col-md-12 mb-3 mb-md-0" >
+                            <div class="col" style="min-width: 210px;">
+                                <div>
+                                    <div style="margin-bottom: 7px;">
+                                        <span style="font-weight: bold;">{% trans "Title" %}
+                                        </span>
+                                    </div>
+                                    {{ form.title }}
+                                </div>
+                            </div>
+                        </div>
+                        <!-- <div class="search-row col-md-6 mb-3 mb-md-0" >
+                            <div class="col" style="min-width: 210px;">
+                                <div>
+                                    <div style="margin-bottom: 7px;">
+                                        <span style="font-weight: bold;">{% trans "More Info" %}
+                                        </span>
+                                    </div>
+                                    {{ form.more_info }}
+                                </div>
+                            </div>
+                        </div> -->
+                    </div>
+
+                    <div class="row mb-3 pl-3" style="margin-top:10px;">
+                        <div class="col-md-6 mb-3 mb-md-0" >
+                            <div style="margin-bottom: 7px;">
+                                <span style="font-weight: bold;">{% trans "Image Preview Type" %}
+                                </span>
+                            </div>
+                            <select name="preview_type" class="form-control" data-template-id={{template_id}} id="image-preview-type">
+                                <option value="none" {% if preview_type == "none" %}selected{% endif %}>No Image</option>
+                                <option value="single" {% if preview_type == "single" %}selected{% endif %}>Single</option>
+                                <option value="slider" {% if preview_type == "slider" %}selected{% endif %}>Slider</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6 mb-3 mb-md-0" >
+                            <div style="margin-bottom: 7px;">
+                                <span style="font-weight: bold;">{% trans "Image" %}
+                                </span>
+                            </div>
+                            <input type="file" name="images" id="file-input" class="form-control" accept="image/png,image/jpeg,image/jpg" style="width: 100%;" {% if media.count == 0 %}required{% endif %} {% if preview_type == "slider" %}multiple{% elif preview_type == "none" %}disabled{% endif %}>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3 pl-3" style="margin-top:10px;">
+                        <div class="col-md-12 mb-3 mb-md-0">
+                            <div style="margin-bottom: 7px;"></div>
+                            <div id="preview-container" class="ml-5">
+                                {% for page_media in media %}
+                                <div class="position-relative d-inline-block preview preview-old">
+                                    <img onclick='enlarge_img(this)' height="100" width="100" src="{{ page_media.media.url }}" class="img-thumbnail">
+                                    <button type="button" class="btn-danger position-absolute" style="top: 0; right: 0;" data-media-id={{page_media.id}} aria-label="Close" onclick="removeMedia(this)">x</button>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- <div class="row mb-3 pl-3" >
+                        <div class="search-row col-md-2 mb-0 mb-md-0">
+                            <div style="margin-bottom: 7px;">
+                                <span style="font-weight: bold;">{% trans "Page Type" %}
+                                </span>
+                            </div>
+                             <label for="chkPage" class="ml-3">
+                                <input type="radio" id="chkPage" name="is_redirect"  {%if is_page %} checked {% endif %}  value="true" onclick="ShowHideDiv()"  />
+                                Page
+                            </label>
+                            <label for="chkRedirect" class="ml-3">
+                                <input type="radio" id="chkRedirect" name="is_redirect" {%if is_redirect %} checked {% endif %}  value="true" onclick="ShowHideDiv()" />
+                                Redirect
+                            </label>
+                            <label for="chkForm" class="ml-3">
+                                <input type="radio" id="chkForm" name="is_redirect"  {%if is_form %} checked {% endif %}  value="true" onclick="ShowHideDiv()" />
+                                Form
+                            </label>
+                           
+                        </div>
+
+                        <div class="search-row col-md-5 mb-0 mb-md-0" id="dvtext" style="display: none">
+                            <span style="font-weight: bold;">{% trans "Set Redirect URL" %}
+                            </span>
+                            {{form.redirect_url}}
+                        </div>
+                        <div  class="search-row col-md-5 mb-0 mb-md-0" id="dvtext1" style="display: none">
+                            <span style="font-weight: bold;">{% trans "Please select Form" %}
+                            </span>
+                            {{form.form_name}}
+                        </div>
+                    </div> -->
+
+                    <div class="row mb-3 pl-3" style="margin-top:10px;">
+                        <div class="col-md-12 mb-3 mb-md-0" >
+                            <div style="margin-bottom: 7px;">
+                                <span style="font-weight: bold;">{% trans "Meta Description" %}
+                                </span>
+                            </div>
+                            {{ form.meta_description }}
+                        </div>
+                    </div>
+
+                    <div class="row mb-3 pl-3" style="margin-top:10px;">
+                        <div class="col-md-12 mb-3 mb-md-0" >
+                            <div style="margin-bottom: 7px;">
+                                <span style="font-weight: bold;">{% trans "Json Metadata" %}
+                                </span>
+                            </div>
+                            {{ form.json_metadata }}
+                        </div>
+                    </div>
+
+                    <div class="row mb-3 pl-3" style="margin-top:10px;">
+                        <div class="search-row col-md-12 mb-3 mb-md-0" >
+                            <div style="margin-bottom: 7px;">
+                                <span style="font-weight: bold;">{% trans "Content" %}
+                                </span>
+                            </div>
+                            {{ form.page_content }}
+                        </div>
+                    </div>
+                    <!-- <div class="row pl-3">
+                        <div class="pl-3 text-center">
+                            {% if page_thumbnail %}
+                                <img id="page_img" src="{{ page_thumbnail.url }} " onload="get_image_info()" alt="page" />
+                                </br><p id="img_info"  style="float:left"><strong>Image Info:</strong> </p></br></br>
+                            {% endif %}
+
+                            {{ form.page }}
+                            <div class="form-text">
+                                <p><strong>Note:</strong> Image size suggested to be less then 10MB and
+                                    also in ratio of 50 * 50 or 100 * 100.</p>
+                            </div>
+                        </div>
+                    </div> -->
+
+                    <div class="row mb-3 pl-3" >
+                        <div class="ml-auto col-1">
+                            <input type="submit" class="btn btn-primary btn-block" value="Submit" />
+                        </div>
+                        <div class="col-1">
+                            <a href="{% url "admin-panel:pages" %}" class="btn btn-primary btn-block">Cancel</a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+{% comment %} ShowHideDiv(); {% endcomment %}
+    
+    $(document).ready(function() {
+        $('.close').click(function() {
+            $('#imgPreviewModal').css('display', 'none');
+        });
+
+        $('#upload-file').on('submit', function(event) {
+            event.preventDefault();
+    
+            media_count = $('#preview-container .preview').length
+            if($("#image-preview-type").val()=="single" && media_count>1){
+                Swal.fire({
+                    title: "Error",
+                    text: `Max one image is allowed.`,
+                    icon: "warning",
+                }).then(function (result) {
+                    return
+                });
+            }else if($("#image-preview-type").val()=="slider" && media_count<2){
+                Swal.fire({
+                    title: "Error",
+                    text: `Please upload atleast two images.`,
+                    icon: "warning",
+                }).then(function (result) {
+                    return
+                });
+            }else{
+                this.submit();
+            }
+        });
+    });
+    
+    $("#file-input").on("change", function () {
+        var files = $(this)[0].files;
+        $("#preview-container .preview-new").remove()
+        media_count = $('#preview-container .preview').length + $("#file-input")[0].files.length
+        if($("#image-preview-type").val()=="single" && media_count > 1){
+            Swal.fire({
+                icon: "error",
+                title: "Error",
+                text: "You can select only single image."
+            });
+            $(this).val("")
+            return false;
+        }else if($("#image-preview-type").val()=="slider" && media_count <= 1){
+            Swal.fire({
+                icon: "error",
+                title: "Error",
+                text: "You must select more than one image."
+            });
+            $(this).val("")
+            return false;
+        }
+        else if (files.length > 0) {
+            for (var i = 0; i < files.length; i++) {
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    $(`<div class="position-relative d-inline-block preview preview-new">
+                            <img onclick='enlarge_img(this)' height="100" width="100" src="${e.target.result}" class="img-thumbnail">
+                        </div>`).appendTo("#preview-container");
+                };
+                reader.readAsDataURL(files[i]);
+            }
+        }
+    });
+
+    $('#image-preview-type').on("change", function () {
+        media_count = $('#preview-container .preview').length + $("#file-input")[0].files.length
+        if($("#image-preview-type").val()=="single"){
+            $("#file-input").removeAttr('multiple');
+            $("#file-input").removeAttr('disabled');
+            if(media_count < 1){
+                $("#file-input").attr("required", "required");
+            }else{
+                $("#file-input").removeAttr('required');
+            }
+        }else if($("#image-preview-type").val()=="slider"){
+            $("#file-input").attr('multiple', 'multiple');
+            $("#file-input").removeAttr('disabled');
+            if(media_count < 2){
+                $("#file-input").attr("required", "required");
+            }else{
+                $("#file-input").removeAttr('required');
+            }
+        }else{
+            $("#file-input").attr("disabled", "disabled");
+            $("#file-input").removeAttr('required');
+        }
+        $("#preview-container .preview-new").remove()
+        $("#file-input").val("")
+    });
+
+    function enlarge_img(element){
+        $('#imgPreviewModal').css('display', 'block');
+        $('#imgPreviewModalImg').attr('src', element.src);
+    }
+
+    function removeMedia(element){
+        Swal.fire({
+            title: "Are you sure?",
+            text: `This action will remove uploaded images.`,
+            icon: "warning",
+            showCancelButton: true,
+            cancelButtonColor: "#343a40",
+            showConfirmButton: true,
+        }).then(function (result) {
+            if(result.isConfirmed){
+                const mediaId = element.dataset.mediaId;
+
+                $.ajax({
+                    url: "{% url 'admin-panel:edit-page' %}",
+                    type: "PUT",
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    dataType: "json",
+                    data: {
+                        id: mediaId,
+                    },
+                    success: function(result){
+                        preview = element.closest('.preview');
+                        preview.remove();
+                        media_count = $('#preview-container .preview').length + $("#file-input")[0].files.length
+                        if(media_count<=0){
+                            $("#file-input").attr("required", "required");
+                        }
+                    },
+                    error: function(response){
+                        Swal.fire({
+                            icon: "error",
+                            title: "Error",
+                            text: response['responseJSON']['message']
+                        }).then(() => {
+                            window.location.reload();
+                        });
+                    }
+                });
+            }
+        });
+    }
+
+ function ShowHideDiv() {
+        var chkRedirect = document.getElementById("chkRedirect");
+        var chkForm = document.getElementById("chkForm");
+        var chkPage = document.getElementById("chkPage");
+        var dvtext = document.getElementById("dvtext");
+        dvtext.style.display = chkRedirect.checked ? "block" : "none";
+        dvtext1.style.display = chkForm.checked ? "block" : "none";
+        if (chkRedirect.checked){
+            $('#chkRedirect').val("is_redirect");
+        }else{
+            $('#chkRedirect').val("false");
+        }
+        if (chkForm.checked){
+            $('#chkForm').val("is_form");
+        }else{
+            $('#chkForm').val("false");
+        }
+        if (chkPage.checked){
+            $('#chkPage').val("is_page");
+        }else{
+            $('#chkPage').val("false");
+        }
+    }
+
+    function read_footer_page_url(input) {
+    if (input.files && input.files[0]) {
+     $('input[type=file]').css('width', '200px');
+    var reader = new FileReader();
+    reader.onload = function (e) {
+      $('#page_img').attr('src', e.target.result);
+      $("#page_img").attr('width', '500px');
+      $("#page_img").attr('height', '200px');
+      $("#page_img").attr('hidden', false);
+    };
+    reader.readAsDataURL(input.files[0]);
+    } else {
+        var reader = new FileReader();
+        reader.onload = function (e) {
+            $('#page_img').attr('src', '');
+        };
+    }
+}
+function get_image_info(){
+    var img = new Image();
+    img.src = $('#page_img').attr('src');
+    $('#img_info strong').text('Image size: ' + img.width + ' x ' + img.height + ' px');
+    $('#img_info').attr('hidden', false);
+}
+
+function validateTitle(){
+    title = $('#id_title').val();
+    console.log('title: ' + title);
+    if (title.replace(/\s/g, '').length == 0 ) {
+        $('#id_title').val('');
+        Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: "Title is required"
+        });
+        return false;
+}
+}
+
+function validate_more_info(){
+    more_info = $('#id_more_info').val();
+    console.log('more_info: ' + more_info);
+    if (more_info.replace(/\s/g, '').length == 0 ) {
+        $('#id_more_info').val('');
+        Swal.fire({
+            icon: "error",
+            more_info: "Error",
+            text: "More_info is required"
+        });
+        return false;
+}
+}
+function validate_title() {
+      var maxLength = 100; // Maximum length allowed for the title
+      var titleValue = $('#page_title').val();
+
+      // Check if the title exceeds the maximum length
+      if (titleValue.length > maxLength) {
+        // Truncate the value if it exceeds the max length
+        $(this).val(titleValue.substring(0, maxLength));
+
+        // Display a SweetAlert alert
+        Swal.fire({
+          icon: 'error',
+          title: 'Max Length Exceeded',
+          text: 'The title cannot exceed ' + maxLength + ' characters.',
+        });
+      }
+    }
+</script>
+{% endblock content %}

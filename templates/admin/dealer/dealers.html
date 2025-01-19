@@ -1,0 +1,1249 @@
+{% extends "index.html" %}
+{% load i18n %}
+{% load static %}
+{% load math %}
+{% block title %}
+Master Agent
+{% endblock title %}
+
+{% block content %}
+<style>
+    .admin-card{
+        background-color: #ffffff;
+        box-shadow: 0px 0px 6px 6px rgb(204 204 204 / 0.25);
+        padding: 30px 10px;
+    } 
+    .pcode.left-spacer {
+	margin-left: 0px;
+    }
+    .pcode{
+	margin-left: 250px;
+    }
+    @media(max-width:991px){
+        .pcode{
+	    margin-left: 0px;
+    }
+    }
+    .row.form-group.align-items-center {
+        padding: 0 30%;
+    }
+    .btn-dark {
+        color: #000 ;
+        background-color: #fff;
+        border-color: #000 ;
+    }
+    .btn-outline-info:hover {
+        color: #fff;
+        background-color: #000 ;
+        border-color: #ced4da;
+    }
+    
+</style>
+<div class="pcode" id='nw1' >
+   <div> 
+    <div class="container-fluid pt-4" >
+        <div class="admin-card">
+        <div class="row">
+            <div class="col-xs-12 col-lg-12">
+                <div class="page-content"  >
+                    <div class="container-fluid" >
+            
+                        {% include "includes/messages.html" %}
+            
+                        <div class="table-data__tool">
+                            <div class="container-fluid" style="padding: 0;">
+                                <!-- Order by and search -->
+                                <div class="row mb-3">
+                                    <div class="rs-select2--light rs-select2--md col-md-3 mb-3 mb-md-0">
+                                        <select id="select-sort" class="form-control">
+                                            <option {% if order == '1' %}selected="selected" {% endif %} value="1">{% trans "Recent Login" %}</option>
+                                            <option {% if order == '2' %}selected="selected" {% endif %} value="2">{% trans "Credit Ascending" %}</option>
+                                            <option {% if order == '3' %}selected="selected" {% endif %} value="3">{% trans "Credit Descending" %}</option>
+                                            <option {% if order == '4' %}selected="selected" {% endif %} value="4">{% trans "Profit Ascending" %}</option>
+                                            <option {% if order == '5' %}selected="selected" {% endif %} value="5">{% trans "Profit Descending" %}</option>
+                                            <option {% if order == '6' %}selected="selected" {% endif %} value="6">{% trans "Created Ascending" %}</option>
+                                            <option {% if order == '7' %}selected="selected" {% endif %} value="7">{% trans "Created Descending" %}</option>
+                                        </select>
+                                        <div class="dropDownSelect2"></div>
+                                    </div>
+                                    
+                                    
+                                        <div class="rs-select2--light rs-select2--md col-md-6 mb-3 mb-md-0" multiple="multiple">
+                                            <select id="input-search" name="Dealer" class="js-example-basic-multiple tokenize-open">
+                                                {% if selected_dealers %}
+                                                    {% for dealer in selected_dealers %}
+                                                        <option  selected="selected"
+                                                                value="{{ dealer.id }}">{{ dealer.username }}</option>
+                                                    {% endfor %}
+                                                {% endif %}
+            
+                                            </select>
+                                        </div>
+                                            <div class='input-group-btn position-relative col-md-3 col-xs-12'>
+                                            <button class="btn btn-primary w-100" id="button-search">
+                                                {% trans "Search" %}
+                                            </button></div>
+            
+                                    
+                                </div>
+            
+                                <!-- Date filters -->
+                                <div class="row flex-sm-nowrap flex-wrap">
+                                    <div class="col form-group" style="min-width: 210px;">
+                                        <div class="date-input">
+                                            <span>{% trans "From date" %}</span>
+                                            <input type="text" class="form-control" id="search-date-created-from" value={{from}}
+                                            name="from" readonly="true" placeholder='{% trans "Select from date" %}' onChange="validateDateRange(this)" style="background-color:transparent">
+                                        </div>
+                                    </div>
+            
+                                    <div class="col form-group" style="min-width: 210px;">
+                                        <div class="date-input">
+                                            <span>{% trans "To date" %}</span>
+                                            <input type="text" class="form-control" id="search-date-created-to" value={{to}}
+                                            name="to" readonly="true" placeholder='{% trans "Select to date" %}' onChange="validateDateRange(this)" style="background-color:transparent">
+                                        </div>
+                                    </div>
+                                </div>
+            
+                                <!-- Add dealer button -->
+                                {% if request.user.role == 'admin'  %}
+                                    <div class="text-center mb-3">
+                                        <a href="#add-dealer" data-effect="mfp-zoom-in" class="open-dealer-popup btn btn-primary btn-md btn-block waves-effect waves-light text-center m-b-20">
+                                            <i class="fa fa-plus-circle"></i> {% trans "Add Master Agent" %}
+                                        </a>
+                                    </div>
+                                {% endif %}
+            
+                            </div>
+                        </div>
+            
+                        <div class="table-responsive table-responsive-data2">
+                            <table class="table table-data2 users-table">
+                                <thead>
+                                    <tr>
+                                        <tr>
+                                            <th>{% trans "Master Agents" %}</th>
+                                            <th>{% trans "Credit" %}</th>
+                                            <th></th>
+                                        </tr>
+                                    </tr>
+                                </thead>
+            
+                                <tbody id="table-user">
+                                {% for dealer in dealers %}
+                                    <!-- Dealer summary info -->
+                                    <tr class="tr-collapse table-row tr-dealer bg-light" aria-expanded="false" dealer_id="{{ dealer.pk }}"
+                                        aria-controls="collapse-{{ forloop.counter }}" data-toggle="collapse"
+                                        data-target="#collapse-{{ forloop.counter }}">
+                                            <td>
+                                                <div class="table-arrow"><i class="fas fa-angle-down"></i></div>
+                                                <span class="user-name pl-3">{{ dealer.username }}</span>
+                                            </td>
+            
+                                            <td>
+                                                <span class="text-center text-nowrap">
+                                                    <span id="dealer-balance-{{ forloop.counter }}" class="user-credit"
+                                                        style="color: green;">{{ dealer.balance|floatformat:"2" }}</span>
+                                                </span>
+                                            </td>
+            
+                                            <td>
+                                                <div class="table-data-feature">
+                                                    <a href="#edit-dealer" data-username="{{ dealer.username }}" data-currency="EUR" data-timezone="{{ dealer.timezone }}" data-effect="mfp-zoom-in" class="edit-dealer-popup item row-button-edit ignore-collapse">
+                                                        <img src="{% static '/icon/edit.png' %}" width="15" height="15" ></img>
+                                                    </a>
+                                                </div>
+                                            </td>
+                                    </tr>
+            
+                                    <!-- Collapsed content -->
+                                    <tr class="tr-collapse-content dealer_info" dealer_id="{{ dealer.pk }}">
+                                        <td colspan="5" style="margin: 0;padding: 0;">
+                                            <div class="collapse" id="collapse-{{ forloop.counter }}" data-parent="#table-user" style="padding: 0;">
+                                                <div class="card card-body m-0 p-0 p-md-3">
+                                                    <div class="default-tab">
+                                                        <nav>
+                                                            <div class="nav nav-tabs" id="nav-tab" role="tablist">
+                                                                <!-- Profit tab start -->
+                                                                <a class="nav-item nav-link active show"
+                                                                    id="nav-profit-{{ forloop.counter }}-tab"
+                                                                    data-toggle="tab" href="#nav-profit-{{ forloop.counter }}"
+                                                                    role="tab"
+                                                                    aria-controls="nav-profit-" aria-selected="true"
+                                                                    style="padding: .5rem 0.5rem;">
+                                                                    <div class="noti__item mr-0 pl-2 pr-2">
+                                                                        <img src="{% static '/icon/profit.svg' %}" width="20" height="20" ></img>
+                                                                    </div>
+                                                                </a>
+                                                                <!-- Profit tab end -->
+
+                                                                <!--  Credit tab start -->
+                                                                {% if request.user.role == 'admin' %}
+                                                                    <a class="nav-item nav-link"
+                                                                        id="nav-credit-{{ forloop.counter }}-tab" data-toggle="tab"
+                                                                        href="#nav-credit-{{ forloop.counter }}" role="tab"
+                                                                        aria-controls="nav-credit-{{ forloop.counter }}"
+                                                                        aria-selected="false" style="padding: .5rem 0.5rem;">
+                                                                        <div class="noti__item mr-0 pl-2 pr-2">
+                                                                            <img src="{% static '/icon/money.svg' %}" width="23" height="23" ></img>
+                                                                        </div>
+                                                                    </a>
+                                                                {% endif %}
+                                                                <!--  Credit tab end -->
+
+                                                           
+                                                                <!--  Notes tab start -->
+                                                                {% if request.user.role == 'admin' %}
+                                                                    <a class="nav-item nav-link"
+                                                                        id="nav-notes-{{ forloop.counter }}-tab" data-toggle="tab"
+                                                                        href="#nav-notes-{{ forloop.counter }}" role="tab"
+                                                                        aria-controls="nav-notes-{{ forloop.counter }}"
+                                                                        aria-selected="false" style="padding: .5rem 0.5rem;">
+                                                                        <div class="noti__item mr-0 pl-2 pr-2">
+                                                                            <img src="{% static '/icon/SimpleBook.svg' %}" width="23" height="23" ></img>
+                                                                        </div>
+                                                                    </a>
+                                                                {% endif %}
+                                                                <!--  Notes tab end -->
+                                                                {% comment %}
+                                                                <!--  Permissions tab start -->
+                                                                <a class="nav-item nav-link"
+                                                                    id="nav-permissions-{{ forloop.counter }}-tab"
+                                                                    data-toggle="tab" href="#nav-permissions-{{ forloop.counter }}" role="tab"
+                                                                    aria-controls="nav-permissions-{{ forloop.counter }}" aria-selected="false"
+                                                                    style="padding: .5rem 0.5rem;">
+                                                                    <div class="noti__item mr-0 pl-2 pr-2">
+                                                                        <img src="{% static '/icon/permission.svg' %}" width="20" height="20" ></img>
+                                                                    </div>
+                                                                </a>
+                                                                <!--  Permissions tab end -->
+                                                                {% endcomment %}
+                                                            </div>
+                                                        </nav>
+
+                                                        <div class="tab-content " id="nav-tabContent">
+                                                            <!-- Profit tab content start -->
+                                                            <div class="tab-pane fade active show"
+                                                                id="nav-profit-{{ forloop.counter }}" role="tabpanel"
+                                                                aria-labelledby="nav-profit-{{ forloop.counter }}-tab">
+                                                                <div class="card m-0" style="border-top: 0;border-radius: 0;">
+                                                                    <div class="card-body pl-md-3 pr-md-2 pb-2 pl-0 pr-0">
+                                                                        <div id="user-profit-{{ forloop.counter }}">
+                                                                            <section class="card m-0" style="border: 1px solid #ccc;">
+                                                                                <div class="table-reponsive">
+                                                                                    <table class="user-profit-table w-100" >
+                                                                                        <thead>
+                                                                                            <tr>
+                                                                                                <th>{% trans "Provider" %}</th>
+                                                                                                <th>{% trans "In" %}</th>
+                                                                                                <th>{% trans "Out" %}</th>
+                                                                                                <th>{% trans "Profit" %}</th>
+                                                                                            </tr>
+                                                                                        </thead>
+                                                                                        <tbody>
+                                                                                            <!-- <tr>
+                                                                                                <td>{% trans "SportsBook" %}</td>
+                                                                                                <td class="sports_book_in_sum"></td>
+                                                                                                <td class="sports_book_out_sum"></td>
+                                                                                                <td class="sports_book_profit"></td>
+                                                                                            </tr> -->
+                                                                                            <!-- <tr>
+                                                                                                <td>{% trans "Casino" %}</td>
+                                                                                                <td class="casino_in_sum"></td>
+                                                                                                <td class="casino_out_sum"></td>
+                                                                                                <td class="casino_book_profit"></td>
+                                                                                            </tr>
+                                                                                            <tr>
+                                                                                                <td>{% trans "Live Casino" %}</td>
+                                                                                                <td class="live_casino_in_sum"></td>
+                                                                                                <td class="live_casino_out_sum"></td>
+                                                                                                <td class="live_casino_book_profit"></td>
+                                                                                            </tr> -->
+
+                                                                                            <tr>
+                                                                                                <td>{% trans "Casino" %}</td>
+                                                                                                <td id="casino_in_sum-{{dealer.id}}"></td>
+                                                                                                <td id="casino_out_sum-{{dealer.id}}"></td>
+                                                                                                <td id="casino_profit-{{dealer.id}}"></td>                                       
+                                                                                            </tr>
+                                                                                            
+                                                                                            <tr>
+                                                                                                <td>{% trans "Offmarket" %}</td>
+                                                                                                <td id="offmarket_in_sum-{{dealer.id}}"></td>
+                                                                                                <td id="offmarket_out_sum-{{dealer.id}}"></td>
+                                                                                                <td id="offmarket_profit-{{dealer.id}}" class="text-danger "></td>
+                                                                                            </tr>
+
+                                                                                            <tr class="font-weight-bold">
+                                                                                                <td>{% trans "Total" %}</td>
+                                                                                                <td class="all_in"></td>
+                                                                                                <td class="all_out"></td>
+                                                                                                <td class="all_profit"></td>
+                                                                                            </tr>
+                                                                                            <tr class="bg-yellow" style="background-color:coral; color:white;">
+                                                                                                <td>{% trans "BONUS" %}</td>
+                                                                                                <td></td>
+                                                                                                <td></td>
+                                                                                                <td class="bonus_amount"></td>
+                                                                                            </tr>
+
+                                                                                            <!-- <tr>
+                                                                                                <td>{% trans "Net Profit" %}</td>
+                                                                                                <td></td>
+                                                                                                <td></td>
+                                                                                                <td class="net_profit"></td>
+                                                                                            </tr> -->
+                                                                                        </tbody>
+                                                                                    </table>
+                                                                                </div>
+                                                                            </section>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <!-- Profit tab content end -->
+
+                                                            <!-- Credit tab content start -->
+                                                            <div class="tab-pane fade" id="nav-credit-{{ forloop.counter }}"
+                                                                role="tabpanel"
+                                                                aria-labelledby="nav-credit-{{ forloop.counter }}-tab">
+                                                                <div class="card m-0" style="border-top: 0;border-radius: 0;">
+                                                                    <div class="card-body pl-md-3 pr-md-3 pb-2  pl-0 pr-0">
+                                                                        <div id="user-credit-" class="user-credit-wrap">
+                                                                            <div class="input-group">
+                                                                                <div class="input-group-btn">
+                                                                                    <button class="au-btn au-btn-icon transaction-charge-button btn fa fa-minus-circle"
+                                                                                            data-id="1"
+                                                                                            onclick="credit_adjust()"
+                                                                                            style="background-color:lightcoral; font-size:25px;"
+                                                                                            id="credit-decrease-{{ forloop.counter }}">
+
+                                                                                    </button>
+                                                                                </div>
+                                                                                <input id="transaction-input-{{ forloop.counter }}"
+                                                                                    name="cc-payment" type="text"
+                                                                                    class="form-control transaction-input" aria-required="true"
+                                                                                    aria-invalid="false" placeholder="0" onkeypress="return isNumberKey(event)">
+                                                                                <input type="hidden"
+                                                                                    id="dealer-id-{{ forloop.counter }}"
+                                                                                    value="{{ dealer.id }}"> 
+                                                                                <div class="input-group-btn">
+                                                                                    <button class="au-btn au-btn-icon au-btn--green transaction-pay-button btn fa fa-plus-circle"
+                                                                                            id="credit-increase-{{ forloop.counter }}"
+                                                                                            style="background-color:lightblue; font-size:25px;"
+                                                                                            onclick="credit_adjust()"
+                                                                                            data-id="1">
+
+                                                                                    </button>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <!-- Credit tab content end -->
+
+
+                                                            <!-- Permissions tab content start -->
+                                                            <div class="tab-pane fade" id="nav-permissions-{{ forloop.counter }}"
+                                                                    role="tabpanel"
+                                                                    aria-labelledby="nav-permissions-{{ forloop.counter }}-tab">
+                                                                <div class="card m-0" style="border-top: 0;border-radius: 0;">
+                                                                    <div class="card-body pl-2 pr-2 pb-2">
+                                                                        <div class="card-title">
+                                                                            <h3 class="text-center title-2">{% trans "Permissions" %}</h3>
+                                                                        </div>
+                                                                        <h5 class="text-center mt-2 mb-1" style="color:gray">{% trans "Master Agents" %}: {{ dealer.username }}</h5>
+                                                                        <hr>
+                                                                       
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <!-- Permissions tab content end-->
+                                                            <!-- Notes tab content start -->
+                                                            <div class="tab-pane fade" id="nav-notes-{{ forloop.counter }}"
+                                                                role="tabpanel"
+                                                                aria-labelledby="nav-notes-{{ forloop.counter }}-tab">
+                                                                <div class="card m-0" style="border-top: 0;border-radius: 0;">
+                                                                    <div class="card-body pl-md-3 pr-md-3 pb-2  pl-0 pr-0">
+                                                                        <div id="user-credit-" class="user-credit-wrap">
+                                                                            <div class="input-group">
+                                                                                
+                                                    
+                                                                                <textarea placeholder="Add Notes" id="notes-{{ dealer.id }}" rows="5" cols="140"></textarea>
+                                                                                <input type="hidden"
+                                                                                    id="dealer-id-{{ forloop.counter }}"
+                                                                                    value="{{ dealer.id }}"> 
+                                                                                    
+                                                                            </div>
+                                                                            <button class="btn-primary form-control create-notes" data-id="{{dealer.id}}">
+                                                                                {% trans "Save note" %}
+                                                                            </button>
+                                                                        </div>
+                                                                        <div class="account-info">
+                                                                            <!-- table -->
+                                                                            <table class="table table-striped text-center">
+                                                                                <thead>
+                                                                                    <tr>
+                                                                                      <th>ID</th>
+                                                                                      <th>Message</th>
+                                                                                      <th>Created Date</th>
+                                                                                      <th>Edit</th>
+                                                                                      <th>Show Note</th>
+                                                                                      <th>Delete</th>
+                                                                                    </tr>
+                                                                                  </thead>
+                                                                                <tbody id="result-body">
+                                                                                {% for note in dealer.usernotes_set.all %}
+                                                                                 <tr id="item-{{ note.id }}">
+                                                                                    <td>
+                                                                                        <div>
+                                                                                            <p style="align-content: left; font-size: inherit;">{{ forloop.counter }}</p>
+                                                                                        </div>
+                                                                                    </td>
+                                                                                    <td class="table_body">
+                                                                                        <div>
+                                                                                            <p style="align-content: left; font-size: inherit;">{{ note.notes|truncatechars:40 }}</p>
+                                                                                        </div>
+                                                                                    </td>
+                                                                                    <td>
+                                                                                        <div>
+                                                                                            <p style="align-content: left; font-size: inherit;">{{ note.created }}</p>
+                                                                                        </div>
+                                                                                    </td>
+                                                                                    <td>
+                                                                                        <div>
+                                                                                            
+                                                                                            <a href="#edit-note" data-id="{{ note.id }}" data-note="{{ note.notes }}" data-effect="mfp-zoom-in" class="edit-note-popup item row-button-edit ignore-collapse">
+                                                                                                <img src="{% static '/icon/edit.png' %}" width="15" height="15" ></img>
+                                                                                            </a>
+                                                                                        </div>                                
+                                                                                        </div>
+                                                                                    </td>
+                                                                                    <td>
+                                                                                        <div>
+                                                                                            <a href="#show-notes" data-effect="mfp-zoom-in" data-message="{{ note.notes }}"  class="open-notes-popup btn btn-primary">
+                                                                                                <i class="fa fa-eye"></i>
+                                                                                            </a>
+                                                                                            <!-- <a  data-id="{{ note.id }}"   data-message="{{ note.notes }}" class="open-notes-popup btn btn-warning">
+                                                                                                <i class="fa fa-eye"></i>
+                                                                                            </a> -->
+                                                                                            
+                                                                                        </div>                                
+                                                                                        </div>
+                                                                                    </td>
+                                                                                    <td>
+                                                                                        <div>
+                                                                                            
+                                                                                            <a data-id="{{ note.id }}" onclick="delete_notes_ajax('{{ note.id }}')" class="delete-note-popup btn btn-primary">
+                                                                                                <i class="fa fa-trash" ></i>
+                                                                                            </a>
+                                                                                            
+                                                                                        </div>                                
+                                                                                        </div>
+                                                                                    </td>
+                                                                                 </tr>
+                                                                                 {% endfor %}
+                                                                                </tbody>
+                                                                            </table>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <!-- Notes tab content end -->
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+            
+                                    <tr class="spacer"></tr>
+                                {% endfor %}
+            
+                                </tbody>
+                            </table>
+                        </div>
+            
+                        {% include 'includes/pagination.html' %}
+            
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div>
+    </div>
+</div>
+
+    {% include './create_dealer.html' %}
+    {% include './update_dealer.html' %}
+    {% include '../show_notes.html' %}
+    {% include '../edit_note.html' %}
+
+   
+
+    </div>
+        <script type="text/javascript">
+            const isGreaterThanZero = value => value >= 0;
+
+    function view_password(){
+  const toggleButton = document.getElementById('password-toggle-update');
+
+ 
+    const passwordInput = document.querySelector('#edit-dealer-form #id_password');
+
+    if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleButton.querySelector('i').classList.remove('fa-eye');
+                toggleButton.querySelector('i').classList.add('fa-eye-slash');
+    } else {
+                passwordInput.type = 'password';
+                toggleButton.querySelector('i').classList.remove('fa-eye-slash');
+                toggleButton.querySelector('i').classList.add('fa-eye');
+               
+    }
+  
+   }
+            $('#mobile-collapse').click(function () { 
+                
+                $("#nw1").toggleClass('left-spacer');
+    
+                console.log("hey");
+                
+            });
+            
+            
+            $('.open-notes-popup').magnificPopup({
+                    type:'inline',
+                    midClick: true,
+                    fixedContentPos: true,
+                    callbacks: {
+                        beforeOpen: function() {
+                            document.getElementById('show_payload_data').innerHTML = this.st.el.attr('data-message');
+                            this.st.mainClass = this.st.el.attr('data-effect');
+                        }
+                    },
+            });
+
+            function delete_notes_ajax(note_id) {
+                    console.log("================", note_id);
+                    
+                            $.ajax({
+                                url: "{% url 'admin-panel:delete-note' %}",
+                                type: "POST",
+                                dataType: "json",
+                                data: {
+                                    note_id: note_id,
+                                    
+                                },
+                                success: function (data) {
+                                    if (data.success == true){
+                                        console.log(">>>>>>>>>>>>>>>>>>>>>>>>", data)
+                                        console.log(">>>>>>>>>>>>>>>>>>>>>>>>", typeof(data))
+                                        console.log(">>>>>>>>>>>>>>>>>>>>>>>>", data.success)
+                                        $('#item-' + note_id).fadeOut();
+                                    }
+                                    else{
+                                        console.log(">>>>>>>>>>>>>>>>>>>>>>>>", data)
+                                        console.log(">>>>>>>>>>>>>>>>>>>>>>>>", "Unable to delete")
+                                        
+                                    }
+                                   
+                                },
+
+                            });
+            } 
+
+    function validateDateRange(input){
+        
+        var from_date = $("#search-date-created-from").val();
+        var to_date = $("#search-date-created-to").val();
+
+        error_msg = "";
+        if(input.id == "search-date-created-from"){
+            error_msg = "From date must be less than To date!!"
+        }
+        else{
+            error_msg = "To date must be greater than From date!!"
+        }
+        from_day = parseInt(from_date.split("/")[0]);
+        from_month = parseInt(from_date.split("/")[1]);
+        from_year = from_date.split("/")[2];
+        from_year = from_year.split(" ")[0];
+        from_hour = parseInt(from_date.split(" ")[1].split(":")[0]);
+        from_minute = parseInt(from_date.split(" ")[1].split(":")[1]);
+
+        to_day = parseInt(to_date.split("/")[0]);
+        to_month = parseInt(to_date.split("/")[1]);
+        to_year = to_date.split("/")[2];
+        to_year = to_year.split(" ")[0];
+        to_hour = parseInt(to_date.split(" ")[1].split(":")[0]);
+        to_minute = parseInt(to_date.split(" ")[1].split(":")[1]);
+        // from date should be less than to date
+        if(from_year > to_year){
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: error_msg
+            });
+            $("#search-date-created-from").val("{{from}}");
+            $("#search-date-created-to").val("{{to}}");
+            return false;
+        }else if(from_year == to_year){
+            if(from_month > to_month){
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: error_msg
+                });
+                $("#search-date-created-from").val("{{from}}");
+                $("#search-date-created-to").val("{{to}}");
+                return false;
+            }else if(from_month == to_month){
+                if(from_day > to_day){
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: error_msg
+                    });
+                    $("#search-date-created-from").val("{{from}}");
+                    $("#search-date-created-to").val("{{to}}");
+                    return false;
+                }else if(from_day == to_day){
+                    if(from_hour > to_hour){
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Oops...',
+                            text: error_msg
+                        });
+                        $("#search-date-created-from").val("{{from}}");
+                        $("#search-date-created-to").val("{{to}}");
+                        return false;
+                    }else if(from_hour == to_hour){
+                        if(from_minute > to_minute){
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Oops...',
+                                text: error_msg
+                            });
+                            $("#search-date-created-from").val("{{from}}");
+                            $("#search-date-created-to").val("{{to}}");
+                            return false;
+                        }
+                    }
+                }
+            }
+        }        
+    }
+    
+            function isNumberKey(evt){
+                var charCode = (evt.which) ? evt.which : event.keyCode
+                if (charCode > 31 && (charCode < 48 || charCode > 57))
+                    return false;
+                return true;
+            }
+
+            function credit_adjust() {
+                var row_id = event.target.id.split("-").pop();
+                var input_id = "#transaction-input-" + row_id;
+                var amount = $(input_id).val();
+
+                if(amount == '' || isNaN(amount)){
+                    Swal.fire({
+                        title: 'Oops...',
+                        text: "Please type in an amount!!",
+                        icon: 'error',
+                    });
+                    return false;
+                }
+
+                if(amount <= 0 ){
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: "Amount must be greater than zero!!"
+                    });
+                    return false;
+                }
+                if(amount > 10000){
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: "Amount cannot be greater than 10000!!"
+                    });
+                    return false;
+                }
+
+                var dealer_id = "#dealer-id-" + row_id;
+                var balance_id = "#dealer-balance-" + row_id;
+                var type, confirmationPopupText;
+
+                if (event.target.id.includes("increase")) {
+                    type = "increase";
+                    confirmationPopupText = '<span class="swal-custom-text text-c-green">Add ' + amount + ' </span>';
+                } else {
+                    type = "decrease";
+                    confirmationPopupText = '<span class="swal-custom-text text-c-red">Subtract ' + amount + ' </span';
+                }
+
+                
+                Swal.fire({
+                    html:
+                        '<div class="swal-custom-content">' + 
+                        '<p class="swal-custom-icon"><i class="cp-icon">&#xe815;</i></p>' +
+                        '<h3 class="swal-custom-title">{% trans "Are you sure" %} ?</h3>' +
+                        confirmationPopupText + 
+                        '</div>',
+                    customClass: {
+                        actions: 'swal-custom-actions',
+                        confirmButton: 'swal-custom-btn swal-custom-confirm-btn',
+                        cancelButton: 'swal-custom-btn swal-custom-cancel-btn',
+                    },
+                    showCancelButton: true,
+                    confirmButtonText: '{% trans "Yes" %}',
+                    cancelButtonText: '{% trans "No" %}'
+                    }).then((result) => {
+                        if (result.value) {
+                            $.ajax({
+                                url: "{% url 'admin-panel:dealer-credit-ajax' %}",
+                                type: "POST",
+                                dataType: "json",
+                                data: {
+                                    value: amount,
+                                    dealer_id: $(dealer_id).val(),
+                                    type: type
+                                },
+                                success: function (data) {
+                                    if(data.status === 'Failed'){
+                                        Swal.fire({
+                                            title: 'Oops...',
+                                            text: data.message,
+                                            icon: 'error',
+                                        });
+                                        return false;
+                                    }else{
+                                        $(balance_id).text(data);
+                                    }
+                                    $(".balance-options input[type=radio]:checked").prop("checked", false);
+                                    $(".user-credit-wrap .transaction-input").val('');
+                                }
+                            });
+                        } else if (result.dismiss === "cancel") {
+                            // show message ?
+                        }
+                })
+            };
+
+            (function ($) {
+                // USE STRICT
+                "use strict";
+
+                // Select 2
+                try {
+
+                    $(".js-select2").each(function () {
+                        $(this).select2({
+                            minimumResultsForSearch: 20,
+                            dropdownParent: $(this).next('.dropDownSelect2')
+                        });
+                    });
+
+                } catch (error) {
+                    console.log(error);
+                }
+
+
+            })(jQuery);
+
+            $(document).ready(function () {
+                
+                $(".tr-dealer").click(function () {
+                    var dealer_id = $(this).attr("dealer_id");
+                    var url_mask = "{% url 'admin-panel:user-profit' 12345 %}".replace(/12345/, dealer_id);
+                    $.ajax({
+                        url: url_mask,
+                        type: "GET",
+                        dataType: "json",
+                        data: {
+                            user_id: dealer_id,
+                            {% comment %} from: $('#search-date-created-from').val(),
+                            to: $('#search-date-created-to').val(), {% endcomment %}
+                        },
+                        success: function (data) {
+                            $(".user-profit-table td").removeClass("text-c-red");
+                            $(".user-profit-table td").removeClass("text-c-green");
+
+                            $(".dealer_info[dealer_id=" + dealer_id + "]").find(".sports_book_in_sum").text(data.sports_book_in_sum);
+                            $(".dealer_info[dealer_id=" + dealer_id + "]").find(".sports_book_out_sum").text(data.sports_book_out_sum);
+                            $(".dealer_info[dealer_id=" + dealer_id + "]").find(".sports_book_profit").text(data.sports_book_profit);
+
+                            if(data.sports_book_profit < 0){
+                                $(".dealer_info[dealer_id=" + dealer_id + "]").find(".sports_book_profit").addClass("text-c-red");
+                            }
+                            else {
+                                $(".dealer_info[dealer_id=" + dealer_id + "]").find(".sports_book_profit").addClass("text-c-green");
+                            }
+
+                            $(".dealer_info[dealer_id=" + dealer_id + "]").find(".casino_in_sum").text(data.casino_in_sum);
+                            $(".dealer_info[dealer_id=" + dealer_id + "]").find(".casino_out_sum").text(data.casino_out_sum);
+                            $(".dealer_info[dealer_id=" + dealer_id + "]").find(".casino_book_profit").text(data.casino_book_profit);
+
+                            if(data.casino_book_profit < 0){
+                                $(".dealer_info[dealer_id=" + dealer_id + "]").find(".casino_book_profit").addClass("text-c-red");
+                            }
+                            else {
+                                $(".dealer_info[dealer_id=" + dealer_id + "]").find(".casino_book_profit").addClass("text-c-green");
+                            }
+
+                            $(".dealer_info[dealer_id=" + dealer_id + "]").find(".live_casino_in_sum").text(data.live_casino_in_sum);
+                            $(".dealer_info[dealer_id=" + dealer_id + "]").find(".live_casino_out_sum").text(data.live_casino_out_sum);
+                            $(".dealer_info[dealer_id=" + dealer_id + "]").find(".live_casino_book_profit").text(data.live_casino_book_profit);
+
+                            if(data.live_casino_book_profit < 0){
+                                $(".dealer_info[dealer_id=" + dealer_id + "]").find(".live_casino_book_profit").addClass("text-c-red");
+                            }
+                            else {
+                                $(".dealer_info[dealer_id=" + dealer_id + "]").find(".live_casino_book_profit").addClass("text-c-green");
+                            }
+
+                            // $(".dealer_info[dealer_id=" + dealer_id + "]").find(".casino_letplay_in_sum").text(data.casino_letplay_in_sum);
+                            // $(".dealer_info[dealer_id=" + dealer_id + "]").find(".casino_letplay_out_sum").text(data.casino_letplay_out_sum);
+                            // $(".dealer_info[dealer_id=" + dealer_id + "]").find(".casino_letplay_book_profit").text(data.casino_letplay_book_profit);
+
+                            // if(data.casino_letplay_book_profit < 0){
+                            //     $(".dealer_info[dealer_id=" + dealer_id + "]").find(".casino_letplay_book_profit").addClass("text-c-red");
+                            // }
+                            // else {
+                            //     $(".dealer_info[dealer_id=" + dealer_id + "]").find(".casino_letplay_book_profit").addClass("text-c-green");
+                            // }
+
+
+                            $(".dealer_info[dealer_id=" + dealer_id + "]").find(".all_in").text(data.all_in);
+                            $(".dealer_info[dealer_id=" + dealer_id + "]").find(".all_out").text(data.all_out);
+                            $(".dealer_info[dealer_id=" + dealer_id + "]").find(".all_profit").text(data.all_profit);
+                            $(".dealer_info[dealer_id=" + dealer_id + "]").find(".bonus_amount").text(data.bonus);
+                            // $(".dealer_info[dealer_id=" + dealer_id + "]").find(".net_profit").text(data.net_profit);
+                            $(".dealer_info[dealer_id=" + dealer_id + "]").find(".bonus_amount").addClass("text-c-red");
+
+                            if(data.all_profit < 0){
+                                $(".dealer_info[dealer_id=" + dealer_id + "]").find(".all_profit").addClass("text-c-red");
+                            }
+                            else {
+                                $(".dealer_info[dealer_id=" + dealer_id + "]").find(".all_profit").addClass("text-c-green");
+                            }
+
+                            $(`#casino_in_sum-${dealer_id}`).text(data.casino_in_sum);
+                            $(`#casino_out_sum-${dealer_id}`).text(data.casino_out_sum);
+                            $(`#casino_profit-${dealer_id}`).text(data.casino_book_profit);
+                            $(`#offmarket_in_sum-${dealer_id}`).text(data.offmarket_in_sum);
+                            $(`#offmarket_out_sum-${dealer_id}`).text(data.offmarket_out_sum);
+                            $(`#offmarket_profit-${dealer_id}`).text(data.offmarket_profit);
+                            $(`#casino_profit-${dealer_id}`).toggleClass('text-success', isGreaterThanZero(data.casino_book_profit)).toggleClass('text-danger', !isGreaterThanZero(data.casino_book_profit));
+                            $(`#offmarket_profit-${dealer_id}`).toggleClass('text-success', isGreaterThanZero(data.offmarket_profit)).toggleClass('text-danger', !isGreaterThanZero(data.offmarket_profit));
+
+                            // if(data.net_profit < 0){
+                            //     $(".dealer_info[dealer_id=" + dealer_id + "]").find(".net_profit").addClass("text-c-red");
+                            // }
+                            // else {
+                            //     $(".dealer_info[dealer_id=" + dealer_id + "]").find(".net_profit").addClass("text-c-green");
+                            // }
+
+                        },
+                    });
+                });
+
+                // $(".casino_switch").change(function () {
+                //     var casino_status = $(this).is(':checked')
+                //     var dealer_id = $(this).attr('dealer_id')
+                //     $.ajax({
+                //         url: "{% url 'admin-panel:manage-casino' %}",
+                //         type: "POST",
+                //         dataType: "json",
+                //         data: {
+                //             casino_status: casino_status,
+                //             dealer_id: dealer_id,
+                //         },
+                //         success: function(response) {
+                //             Swal.fire({
+                //                 icon: response["status"].toLowerCase(),
+                //                 title: response["status"][0].toUpperCase() + response["status"].substring(1),
+                //                 text: response['message']
+                //             });
+                //         },
+                //     });
+                // })
+
+                $(".cashback_switch").change(function () {
+                    var cashback_status = $(this).is(':checked')
+                    var dealer_id = $(this).attr('dealer_id')
+                    $.ajax({
+                        url: "{% url 'admin-panel:manage-cashback-status' %}",
+                        type: "POST",
+                        dataType: "json",
+                        data: {
+                            cashback_status: cashback_status,
+                            user_id: dealer_id,
+                        },
+                        success: function (data) {
+                            Swal.fire({
+                                title: 'Success',
+                                text: data.message,
+                                icon: 'success',
+                            }).then(() => {
+                                window.location.reload();
+                            });;
+                        },
+                        error: function(data) {
+                            Swal.fire({
+                                title: 'Error',
+                                text: data['statusText'],
+                                icon: 'error',
+                            }).then(() => {
+                                window.location.reload();
+                            });
+                        },
+                    });
+                })
+
+
+                $('#create-dealer-form').submit(function (event) {
+                    event.preventDefault();
+
+                    var username = $("#username-input input").val();
+                    var password = $("#password-input input").val();
+                    var confirm_password = $("#confirm-password-input input").val();
+                    var timezone = $("#timezone-select").val();
+                    var currency = $("#currency-select").val();
+
+                    $.ajax({
+                        url: "{% url 'admin-panel:create-dealer' %}",
+                        type: "POST",
+                        dataType: "json",
+                        data: {
+                            username: username,
+                            password: password,
+                            confirm_password, confirm_password,
+                            timezone: timezone,
+                            currency: currency,
+                            csrfmiddlewaretoken: '{{ csrf_token }}'
+                        },
+                        success: function (data) {
+                            if(data.status === 'Failed'){
+                                if(data.message.toLowerCase().includes("username")){
+                                    $("#username-input .error-msg").text(data.message);
+                                }
+                                else {
+                                    $("#username-input .error-msg").text('');
+                                }
+                                if(data.message.toLowerCase().includes("password has to be")){
+                                    $("#password-input .error-msg").text(data.message);
+                                }
+                                else {
+                                    $("#password-input .error-msg").text('');
+                                }
+                                if(data.message.toLowerCase().includes("confirm password")){
+                                    $("#confirm-password-input .error-msg").text(data.message);
+                                }
+                                else {
+                                    $("#confirm-password-input .error-msg").text('');
+                                }
+                            }else {
+                                Swal.fire({
+                                    title: 'User: ' + username + ' created successfully!',
+                                    icon: 'success',
+                                }).then((result) => {
+                                     $.magnificPopup.close();
+                                     location.reload();
+                                });
+                            }
+                        },
+                    });
+                });
+
+                $(".ignore-collapse").on("click", function(e){
+                    e.stopPropagation();
+                });
+
+                $('.open-dealer-popup').magnificPopup({
+                    type:'inline',
+                    midClick: true,
+                    fixedContentPos: true,
+                    callbacks: {
+                        beforeOpen: function() {
+                            this.st.mainClass = this.st.el.attr('data-effect');
+                        },
+                        close: function(){
+                            $("#add-dealer input").val(null);
+                            $('.error-msg').text('');
+                        }
+                    },
+                });
+
+                $('.edit-dealer-popup').magnificPopup({
+                    type:'inline',
+                    midClick: true,
+                    fixedContentPos: true,
+                    callbacks: {
+                        beforeOpen: function() {
+                            this.st.mainClass = this.st.el.attr('data-effect');
+
+                            var dealer_username = this.st.el.attr('data-username');
+                            var dealer_currency = this.st.el.attr('data-currency');
+                            var dealer_timezone = this.st.el.attr('data-timezone');
+
+                            $("#edit-dealer input[name='username']").val(dealer_username).prop('readonly', true);
+                            $("#edit-dealer select[name='currency']").val(dealer_currency).trigger('change');
+                            $("#edit-dealer select[name='timezone']").val(dealer_timezone).trigger('change');
+                        },
+                        close: function(){
+                            $("#edit-dealer input").val(null);
+                            $('.error-msg').text('');
+                        }
+                    },
+                });
+
+                $('.edit-note-popup').magnificPopup({
+                    type:'inline',
+                    midClick: true,
+                    fixedContentPos: true,
+                    callbacks: {
+                        beforeOpen: function() {
+                            this.st.mainClass = this.st.el.attr('data-effect');
+
+                            var note = this.st.el.attr('data-note');
+                            var note_id = this.st.el.attr('data-id');
+                            $("#note-content").val(note);
+                            $("#note_id").val(note_id);
+                            
+                        },
+                        close: function(){
+                            $("#edit-dealer input").val(null);
+                        }
+                    },
+                });
+
+                $('#edit-dealer-form').submit(function (event) {
+                    event.preventDefault();
+
+                    var username = $("#edit-username-input input").val();
+                    var password = $("#edit-password-input input").val();
+                    var timezone = $("#edit-timezone-select").val();
+                    var currency = $("#edit-currency-select").val();
+
+                    $.ajax({
+                        url: "{% url 'admin-panel:update-dealer' %}",
+                        type: "POST",
+                        dataType: "json",
+                        data: {
+                            username: username,
+                            password: password,
+                            timezone: timezone,
+                            currency: currency,
+                            csrfmiddlewaretoken: '{{ csrf_token }}'
+                        },
+                        success: function (data) {
+                            if(data.status === 'Failed'){
+                                if(data.message.toLowerCase().includes("password")){
+                                    $("#edit-password-input .error-msg").text(data.message);
+                                }
+                                else {
+                                    $("#edit-password-input .error-msg").text('');
+                                }
+                            }else {
+                                Swal.fire({
+                                    title: 'User: ' + username + ' edited successfully!',
+                                    icon: 'success',
+                                }).then((result) => {
+                                     $.magnificPopup.close();
+                                     location.reload();
+                                });
+                            }
+                        },
+                    });
+                });
+
+                $('#edit-note-form').submit(function (event) {
+                    event.preventDefault();
+
+                    var note = $("#note-content").val();
+                    var note_id = $("#note_id").val();
+                    console.log(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>.", note);
+                    $.ajax({
+                        url: "{% url 'admin-panel:update-note' %}",
+                        type: "POST",
+                        dataType: "json",
+                        data: {
+                            note: note,
+                            note_id: note_id,
+                            csrfmiddlewaretoken: '{{ csrf_token }}'
+                        },
+                        success: function (data) {
+                            console.log(data);
+                            if(data.status === 'error'){
+                                Swal.fire({
+                                    title: data['message'],
+                                    icon: 'error',
+                                }).then((result) => {
+                                     $.magnificPopup.close();
+                                     
+                                });
+                            }else {
+                                console.log(data);
+                                Swal.fire({
+                                    title: data['message'],
+                                    icon: 'success',
+                                }).then((result) => {
+                                     $.magnificPopup.close();
+                                     location.reload();
+                                });
+                            }
+                        },
+                    });
+                });
+
+                $('#search-date-created-from').datetimepicker({
+                        format: 'd/m/Y',
+                        defaultDate: new Date(),
+                        timepicker: false,
+                    }
+                );
+
+                $('#search-date-created-to').datetimepicker({
+                        format: 'd/m/Y',
+                        defaultDate: new Date(),
+                        timepicker: false,
+                    }
+                );
+                $('#input-search').tokenize2({
+                    dropdownMaxItems:"5",
+                    placeholder: "{% trans 'Search by Master Agent' %}",
+                    searchMinLength:3,
+                    tokensMaxItems:"1",
+                    dataSource: function(term, object){
+                        var dealer = $('#select-dealer').val();
+                        
+
+                        $.ajax("{% url 'admin-panel:dealer-ajax' %}", {
+                            type: "POST",
+                            
+                            data: { search:term,start:0 },
+                            global: false, 
+                            dataType: 'json',
+                            success: function(data){
+                                var $items = [];
+                                $.each(data, function(k, v){
+                                    $items.push(v);
+                                });
+                                object.trigger('tokenize:dropdown:fill', [$items]);
+                            }
+                        });
+                    }
+                });
+
+                function view_cnf_password(){
+            const passwordInputcnf = document.querySelector('#edit-dealer-form #id_cnf_password');
+            const toggleButtoncnf= document.getElementById('password-toggle-cnf');
+
+            if (passwordInputcnf.type === 'password') {
+        passwordInputcnf.type = 'text';
+        toggleButtoncnf.querySelector('i').classList.remove('fa-eye');
+        toggleButtoncnf.querySelector('i').classList.add('fa-eye-slash');
+      } else {
+        passwordInputcnf.type = 'password';
+        toggleButtoncnf.querySelector('i').classList.remove('fa-eye-slash');
+        toggleButtoncnf.querySelector('i').classList.add('fa-eye');
+        
+      }
+        }
+
+                $('#select-agent').tokenize2({
+                    tags: [],
+                    placeholder: "{% trans 'Search by Agent' %}",
+                    searchMinLength:3,
+                    multiple: true,
+
+                    ajax: {
+                        url: "{% url 'admin-panel:agent-ajax' %}",
+                        dataType: 'json',
+                        type: 'POST',
+                        delay: 250,
+                        global: false,
+                        processResults: function (data) {
+                            var payload = {
+                                results: data
+                            };
+                            return payload;
+                        },
+                        cache: true
+                    },
+                    templateResult: function (result) {
+                        return result.username;
+                    },
+                    templateSelection: function (selection) {
+                        return selection.text || selection.username;
+                    },
+                    minimumInputLength: 1
+                });
+
+                $('#button-search').click(function () {
+                    var dealername = $('#input-search').find(":selected").text();
+                    window.location = window.location.pathname  + "?user_name=" + (dealername) + "&from=" + $('#search-date-created-from').val() + "&to=" + $('#search-date-created-to').val();
+                });
+
+                $('#select-sort').on('change', function () {
+                    window.location = window.location.pathname + "?order=" + $('#select-sort option').filter(':selected').val() + "&from=" + $('#search-date-created-from').val() + "&to=" + $('#search-date-created-to').val();
+                });
+            });
+
+            $('.create-notes').click(function (event) {
+                event.preventDefault();
+                var dealer_id = $(this).data('id')
+                var note = $('#notes-'+dealer_id).val();
+                
+                console.log(dealer_id,"+++++++")
+                    $.ajax({
+                        url: "{% url 'admin-panel:create-notes' %}",
+                        type: "POST",
+                        dataType: "json",
+                        data: {
+                            note: note,
+                            dealer_id:dealer_id,
+                            csrfmiddlewaretoken: '{{ csrf_token }}'
+                        },
+                        success: function (data) {
+                            console.log(data)
+                                Swal.fire({
+                                    title: data['title'],
+                                    text: data['message'],
+                                    icon: data['icon'],
+                                }).then((result) => {
+                                        $.magnificPopup.close();
+                                        location.reload();
+                                });
+                            },
+                        error: function(data) {
+                                console.log(data)
+                                Swal.fire({
+                                    title: 'Error',
+                                    text: "Something Went Wrong",
+                                    icon: 'error',
+                                });
+                            },
+                    });
+                
+            });
+        </script>
+
+        <style>
+            .no-spin::-webkit-inner-spin-button, .no-spin::-webkit-outer-spin-button {
+            -webkit-appearance: none !important;
+            margin: 0 !important;
+            }
+
+            .no-spin {
+            -moz-appearance:textfield !important;
+            }
+        </style>
+
+{% endblock content %}

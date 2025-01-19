@@ -1,0 +1,545 @@
+{% extends "index.html" %} {% load static %} {% load i18n %} {% block title %} admins {% endblock title %} {% block content %}
+<style>
+    .admin-card {
+        background-color: #ffffff;
+        box-shadow: 0px 0px 6px 6px rgb(204 204 204 / 0.25);
+        padding: 30px 10px;
+    }
+    
+    .pcode.left-spacer {
+        margin-left: 0px;
+    }
+    
+    .pcode {
+        margin-left: 250px;
+    }
+    
+    .admin-search-card {
+        max-width: 700px;
+        margin: 0 auto;
+        background-color: #fff;
+        padding: 20px;
+    }
+    
+    @media(max-width:991px) {
+        .pcode {
+            margin-left: 0px;
+        }
+    }
+    
+    @media(max-width:767px) {
+        .open-agent-popup {
+            width: 100%;
+        }
+    }
+</style>
+<div class="pcode" id='nw1'>
+    <div style="margin-top: 2rem;">
+        <div class="container-fluid pt-4">
+            <div class="admin-card">
+                <div class="row">
+                    <div class="col-xs-12 col-lg-12">
+                        <div class="page-content">
+                            <div class="container-fluid px-0">
+
+                                {% include "includes/messages.html" %}
+
+                                <div class='admin-search-card'>
+                                    <!-- Search -->
+                                    <div class="row" style="margin-bottom: 12px;">
+                                        <div class="col ">
+                                            <div class="input-group">
+                                                <input type="text" id="input-search" name="input1-group2" placeholder="{% trans " Search User " %}" class="form-control" value="{{ username }}">
+                                                <div class="input-group-btn position-relative" style="margin-left: -5px;">
+                                                    <button class="btn btn-primary" id="button-search">
+                                                {% trans "Search" %}
+                                            </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Add admin button -->
+                                    {% if request.user.role == 'superadmin' %}
+                                    <div class="text-center mb-3">
+                                        <button id="button-add" class="open-agent-popup btn btn-primary" onclick="window.location.href='{% url 'admin-panel:create-admin' %}'">
+                                    <i class="zmdi zmdi-plus"></i> {% trans "Add Admin" %}
+                                </button>
+                                    </div>
+                                    {% endif %}
+
+
+                                    <div class="table-responsive table-responsive-data2 mt-4">
+                                        <table class="table table-data2 users-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>{% trans "Username" %}</th>
+                                                    {% if request.user.role == "tenant_manager" %}
+                                                    <th>{% trans "Balance" %}</th>
+                                                    {% endif %}
+
+                                                </tr>
+                                            </thead>
+                                            <tbody id="table-user">
+                                                {% for admin in admins %}
+                                                <tr class="tr-collapse table-row tr-admin bg-light" aria-expanded="false" admin_id="{{ admin.pk }}" aria-controls="collapse-{{ forloop.counter }}" data-toggle="collapse" data-target="#collapse-{{ forloop.counter }}">
+                                                    <td>
+                                                        <div class="table-arrow pt-1"><i class="fas fa-angle-down"></i></div>
+                                                        <span class="user-name-wrap pl-3" style="font-size: 1.1rem;">
+                                                    {{ admin.username }}
+                                                </span>
+                                                    </td>
+
+                                                    {% if request.user.role == "tenant_manager" %}
+                                                    <td>
+                                                        <span class="text-center">
+                                                    <span id="admin-balance-{{ admin.id }}" style="font-size: 1.1rem;">
+                                                        {{ admin.balance|floatformat:"2"}}
+                                                    </span>
+                                                        </span>
+                                                    </td>
+                                                    {% endif %}
+
+                                                </tr>
+                                                <tr class="tr-collapse-content admin_info" admin_id="{{ admin.pk }}">
+                                                    <td colspan="7" style="margin: 0;padding: 0;">
+                                                        <div class="collapse" id="collapse-{{ forloop.counter }}" data-parent="#table-user" style="padding: 0;">
+                                                            <div class="card card-body m-0 p-0 p-3">
+                                                                <div class="default-tab">
+                                                                    <nav>
+                                                                        <div class="nav nav-tabs" id="nav-tab" role="tablist" hidden='true'>
+
+                                                                            <!--  Permissions tab start -->
+                                                                            {% if request.user.role == "superadmin" %}
+                                                                            <a class="nav-item nav-link" id="nav-permissions-{{ forloop.counter }}-tab" data-toggle="tab" href="#nav-permissions-{{ forloop.counter }}" role="tab" aria-controls="nav-permissions-{{ forloop.counter }}" aria-selected="false" style="padding: .5rem 0.5rem;">
+                                                                                <div class="noti__item mr-0 pl-2 pr-2">
+                                                                                    <img src="{% static 'icon/permission.svg' %}" width="20" height="20"></img>
+                                                                                </div>
+                                                                            </a>
+                                                                            {% endif %}
+                                                                            <!--  Permissions tab end -->
+
+                                               
+
+                                                                        </div>
+                                                                    </nav>
+
+
+                                                                </div>
+
+                                                            </div>
+
+                                                        
+                                                            <!-- Permissions tab content start -->
+                                                            <div class="tab-pane" id="nav-permissions-{{ forloop.counter }}" role="tabpanel" aria-labelledby="nav-permissions-{{ forloop.counter }}-tab">
+                                                                <div class="card m-0" style="border-top: 0;border-radius: 0;">
+                                                                    <div class="card-body pl-2 pr-2 pb-2">
+                                                                        <div class="card-title">
+                                                                            <h3 class="text-center title-2">{% trans "Permissions" %}</h3>
+                                                                        </div>
+                                                                        <h5 class="text-center mt-2 mb-1" style="color:gray">{% trans "Admin" %}: {{ admin.username }}</h5>
+                                                                        <hr>
+
+
+                                                                        <div class="row form-group align-items-center">
+                                                                            <div class="col-8">
+                                                                                <label class="form-control-label mb-0 fs-16">{% trans "Deposit Bonus" %}</label>
+                                                                            </div>
+                                                                            <div class="col-4 d-flex justify-content-end">
+                                                                                <label class="switch switch-text switch-success switch-custom">
+                                                                                    <input adminid="{{ admin.id }}" type="checkbox" class="switch-input switch-status-input cancel_betslip_switch" {% if admin.is_deposit_bonus_enabled %} checked {% endif %}
+                                                                                        {% if request.user.role == "tenant_manager" %} onclick="return false;" onkeydown="return false;" {% else %} onclick="depositbonuspermission(this)" {% endif %}>
+                                                                                    <span class="switch-label"></span>
+                                                                                    <span class="switch-handle"></span>
+                                                                                </label>
+                                                                            </div>
+                                                                        </div>
+
+                                                                        <div class="row form-group align-items-center">
+                                                                            <div class="col-8">
+                                                                                <label class="form-control-label mb-0 fs-16">{% trans "Sign Up Bonus" %}</label>
+                                                                            </div>
+                                                                            <div class="col-4 d-flex justify-content-end">
+                                                                                <label class="switch switch-text switch-success switch-custom">
+                                                                                    <input adminid="{{ admin.id }}" type="checkbox" class="switch-input switch-status-input cancel_betslip_switch" {% if admin.is_welcome_bonus_enabled %} checked {% endif %}
+                                                                                        {% if request.user.role == "tenant_manager" %} onclick="return false;" onkeydown="return false;" {% else %} onclick="EnableSignUpBonusPermission(this)" {% endif %}>
+                                                                                    <span class="switch-label"></span>
+                                                                                    <span class="switch-handle"></span>
+                                                                                </label>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="row form-group align-items-center">
+                                                                            <div class="col-8">
+                                                                                <label class="form-control-label mb-0 fs-16">{% trans "Coming Soon Page" %}</label>
+                                                                            </div>
+                                                                            <div class="col-4 d-flex justify-content-end">
+                                                                                <label class="switch switch-text switch-success switch-custom">
+                                                                                    <input admin_id="{{ admin.id }}" type="checkbox" class="switch-input switch-status-input" {% if admin.is_coming_soon_enabled %}checked{% endif %}
+                                                                                        {% if request.user.role == "tenant_manager" %}onclick="return false;" onkeydown="return false;"{% else %}onclick="managecomingSoonPermissions(this)"{% endif %}>
+                                                                                    <span class="switch-label"></span>
+                                                                                    <span class="switch-handle"></span>
+                                                                                </label>
+                                                                            </div>
+                                                                        </div>
+
+
+                                                                        {% comment %} <div class="row form-group align-items-center">
+                                                                            <div class="col-8">
+                                                                                <label class="form-control-label mb-0 fs-16">{% trans "Refer-A-Friend Bonus" %}</label>
+                                                                            </div>
+                                                                            <div class="col-4 d-flex justify-content-end">
+                                                                                <label class="switch switch-text switch-success switch-custom">
+                                                                                    <input adminid="{{ admin.id }}" type="checkbox" class="switch-input switch-status-input cancel_betslip_switch" {% if admin.is_referral_bonus_enabled %} checked {% endif %}
+                                                                                        {% if request.user.role == "tenant_manager" %} onclick="return false;" onkeydown="return false;" {% else %} onclick="EnableReferralBonusPermission(this)" {% endif %}>
+                                                                                    <span class="switch-label"></span>
+                                                                                    <span class="switch-handle"></span>
+                                                                                </label>
+                                                                            </div>
+                                                                        </div>
+
+                                                                        <div class="row form-group align-items-center">
+                                                                            <div class="col-8">
+                                                                                <label class="form-control-label mb-0 fs-16">{% trans "Losing Bonus" %}</label>
+                                                                            </div>
+                                                                            <div class="col-4 d-flex justify-content-end">
+                                                                                <label class="switch switch-text switch-success switch-custom">
+                                                                                    <input adminid="{{ admin.id }}" type="checkbox" class="switch-input switch-status-input cancel_betslip_switch" {% if admin.is_losing_bonus_enabled %} checked {% endif %}
+                                                                                        {% if request.user.role == "tenant_manager" %} onclick="return false;" onkeydown="return false;" {% else %} onclick="EnableLosingBonusPermission(this)" {% endif %}>
+                                                                                    <span class="switch-label"></span>
+                                                                                    <span class="switch-handle"></span>
+                                                                                </label>
+                                                                            </div>
+                                                                        </div> {% endcomment %}
+
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                           
+                                                            <!-- Permissions tab content end-->
+                                                          
+                                                        </div>
+                                    </div>
+                                </div>
+
+                                </td>
+                                </tr>
+                                {% endfor %}
+                                </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        {% include 'includes/pagination.html' %}
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+</div>
+
+
+{% block javascript %}
+<script type="text/javascript">
+    $('#mobile-collapse').click(function() {
+
+        $("#nw1").toggleClass('left-spacer');
+
+        console.log("hey");
+
+    });
+
+    $(document).ready(function() {
+
+        $('#button-search').click(function() {
+            window.location = window.location.pathname + "?user_name=" + ($("#input-search").val());
+        });
+
+    });
+
+    function EnableSignUpBonusPermission(element){
+        adminID = $(element).attr("adminid");
+        isSignUpBonusEnabled = element.checked;
+        $.ajax({
+            url: "{% url 'admin-panel:enable-signup-bonus-permissions' %}",
+            type: "POST",
+            dataType: "json",
+            data: {
+                isSignUpBonusEnabled: isSignUpBonusEnabled,
+                adminID: adminID,
+                csrfmiddlewaretoken: '{{ csrf_token }}'
+            },
+            success: function(response){
+                Swal.fire({
+                    icon: response["status"],
+                    title: response["status"][0].toUpperCase() + response["status"].substring(1),
+                    text: response['message']
+                }).then(() => {
+                    window.location.reload();
+                });
+            },
+            error: function(response){
+                Swal.fire({
+                    icon: "error",
+                    title: "Error",
+                    text: response['responseJSON']['message']
+                });
+            }
+        });
+
+    }
+
+
+    function EnableReferralBonusPermission(element){
+        adminID = $(element).attr("adminid");
+        isReferralBonusEnabled = element.checked;
+        $.ajax({
+            url: "{% url 'admin-panel:enable-referral-bonus-permissions' %}",
+            type: "POST",
+            dataType: "json",
+            data: {
+                isReferralBonusEnabled: isReferralBonusEnabled,
+                adminID: adminID,
+                csrfmiddlewaretoken: '{{ csrf_token }}'
+            },
+            success: function(response){
+                Swal.fire({
+                    icon: response["status"],
+                    title: response["status"][0].toUpperCase() + response["status"].substring(1),
+                    text: response['message']
+                }).then(() => {
+                    window.location.reload();
+                });
+            },
+            error: function(response){
+                Swal.fire({
+                    icon: "error",
+                    title: "Error",
+                    text: response['responseJSON']['message']
+                });
+            }
+        });
+
+    }
+
+    function EnableLosingBonusPermission(element){
+        adminID = $(element).attr("adminid");
+        isLosingBonusEnabled = element.checked;
+        $.ajax({
+            url: "{% url 'admin-panel:enable-losing-bonus-permissions' %}",
+            type: "POST",
+            dataType: "json",
+            data: {
+                isLosingBonusEnabled: isLosingBonusEnabled,
+                adminID: adminID,
+                bonus_type: "losing_bonus",
+                csrfmiddlewaretoken: '{{ csrf_token }}'
+            },
+            success: function(response){
+                Swal.fire({
+                    icon: response["status"],
+                    title: response["status"][0].toUpperCase() + response["status"].substring(1),
+                    text: response['message']
+                }).then(() => {
+                    window.location.reload();
+                });
+            },
+            error: function(response){
+                Swal.fire({
+                    icon: "error",
+                    title: "Error",
+                    text: response['responseJSON']['message']
+                });
+            }
+        });
+
+    }
+
+    function manageSpecialAgentPermissions(element){
+        adminID = $(element).attr("adminid");
+        isSpecialAgentEnabled = element.checked;
+        $.ajax({
+            url: "{% url 'admin-panel:manage-special-agent-permissions' %}",
+            type: "POST",
+            dataType: "json",
+            data: {
+                isSpecialAgentEnabled: isSpecialAgentEnabled,
+                adminID: adminID,
+                csrfmiddlewaretoken: '{{ csrf_token }}'
+            },
+            success: function(response){
+                Swal.fire({
+                    icon: response["status"],
+                    title: response["status"][0].toUpperCase() + response["status"].substring(1),
+                    text: response['message']
+                }).then(() => {
+                    window.location.reload();
+                });
+            },
+            error: function(response){
+                Swal.fire({
+                    icon: "error",
+                    title: "Error",
+                    text: response['responseJSON']['message']
+                });
+            }
+        });
+    }
+
+    function manageOtpPermissions(element) {
+        adminId = $(element).attr("admin_id");
+        enabled = element.checked;
+        $.ajax({
+            url: "{% url 'admin-panel:manage-otp-permissions' %}",
+            type: "POST",
+            dataType: "json",
+            data: {
+                enabled: enabled,
+                admin_id: adminId,
+                csrfmiddlewaretoken: '{{ csrf_token }}'
+            },
+            success: function(data) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success',
+                    text: data['message'],
+                });
+            },
+        });
+    }
+
+    $(".betslip_bonus_enabled_change").change(function () {
+        var betslip_bonus_enabled = $(this).is(':checked')
+        var admin_id = $(this).attr('admin_id')
+        $.ajax({
+            url: "{% url 'admin-panel:admin-betslip-bonus-permission-ajax' %}",
+            type: "POST",
+            dataType: "json",
+            data: {
+                betslip_bonus_enabled: betslip_bonus_enabled,
+                admin_id: admin_id,
+            },
+            success: function(data) {
+                Swal.fire({
+                    icon: data["status"].toLowerCase(),
+                    title: data["status"][0].toUpperCase() + data["status"].substring(1),
+                    text: data['message'],
+                }).then(() => {
+                    window.location.reload();
+                });
+            },
+        });
+    })
+
+    function manageJackpotPermissions(element) {
+        adminID = $(element).attr("adminid");
+        isJackpotEnabled = element.checked;
+
+        $.ajax({
+            url: "{% url 'admin-panel:manage-jackpot-permissions' %}",
+            type: "POST",
+            dataType: "json",
+            data: {
+                isJackpotEnabled: isJackpotEnabled,
+                adminID: adminID,
+                csrfmiddlewaretoken: '{{ csrf_token }}'
+            },
+            success: function(response) {
+                Swal.fire({
+                    icon: response["status"],
+                    title: response["status"][0].toUpperCase() + response["status"].substring(1),
+                    text: response['message']
+                }).then(() => {
+                    window.location.reload();
+                });
+            },
+            error: function(response) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Error",
+                    text: response['responseJSON']['message']
+                }).then(() => {
+                    window.location.reload();
+                });
+            }
+        });
+    }
+    function manageBonusPermissions(element, bonusType){
+        adminId = $(element).attr("admin_id");
+        enabled = element.checked;
+        $.ajax({
+            url: "{% url 'admin-panel:manage-bonus-permissions' %}",
+            type: "POST",
+            dataType: "json",
+            data: {
+                enabled: enabled,
+                admin_id: adminId,
+                bonus_type: bonusType,
+                csrfmiddlewaretoken: '{{ csrf_token }}'
+            },
+            success: function(data){
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success',
+                    text: data['message'],
+                });
+            },
+        });
+    }
+    function depositbonuspermission(element){
+        adminID = $(element).attr("adminid");
+        is_deposit_bonus_enabled = element.checked;
+        $.ajax({
+            url: "{% url 'admin-panel:deposit-permissions' %}",
+            type: "POST",
+            dataType: "json",
+            data: {
+                is_deposit_bonus_enabled: is_deposit_bonus_enabled,
+                adminID: adminID,
+                csrfmiddlewaretoken: '{{ csrf_token }}'
+            },
+            success: function(response){
+                Swal.fire({
+                    icon: response["status"],
+                    title: response["status"][0].toUpperCase() + response["status"].substring(1),
+                    text: response['message']
+                }).then(() => {
+                    window.location.reload();
+                });
+            },
+            error: function(response){
+                Swal.fire({
+                    icon: "error",
+                    title: "Error",
+                    text: response['responseJSON']['message']
+                });
+            }
+        });
+
+    }
+    function managecomingSoonPermissions(element){
+        adminId = $(element).attr("admin_id");
+        enabled = element.checked;
+        $.ajax({
+            url: "{% url 'admin-panel:manage-coming-soon-permissions' %}",
+            type: "POST",
+            dataType: "json",
+            data: {
+                enabled: enabled,
+                admin_id: adminId,
+                csrfmiddlewaretoken: '{{ csrf_token }}'
+            },
+            success: function(data){
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success',
+                    text: data['message'],
+                });
+            },
+        });
+    }
+</script>
+
+{% endblock javascript %} {% endblock content %}

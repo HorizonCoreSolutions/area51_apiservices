@@ -1,0 +1,451 @@
+{% extends "index.html" %}
+{% load static %}
+{% load i18n %}
+{% load math %}
+{% load date_utils %}
+{% load i18n %}
+
+{% block content %}
+<style>
+    .admin-card{
+        background-color: #ffffff;
+        box-shadow: 0px 0px 6px 6px rgb(204 204 204 / 0.25);
+        padding: 30px 10px;
+    }
+
+    .pcode.left-spacer {
+    margin-left: 0px;
+    }
+    .pcode{
+    margin-left: 250px;
+    }
+
+    @media(max-width:991px){
+        .setting-page .card-title h3{
+        font-size: 18px;
+        }
+        .pcode{
+        margin-left: 0px;
+        }
+    }
+    .setting-page .card-title h3{
+    font-size: 18px;
+    }
+ 
+</style>
+
+<div class="pcode" id='nw1' >
+<div>
+    <div class="container-fluid ">
+        <div class="pt-3 mx-auto" style="max-width: 540px;">
+            {% include "includes/messages.html" %}
+        </div>
+        <div class="row">
+            <div class="col-xs-12 col-lg-12 ">
+                <div class="page-content pt-4 setting-page">
+                    <div class='container-fluid pt-2'>
+                        <!-- Bonus Section -->
+                        {% if request.user.is_welcome_bonus_enabled or request.user.is_referral_bonus_enabled or request.user.is_losing_bonus_enabled %}
+                            <div class="row mb-4">
+                                <!-- Referral Bonus -->
+                                {% if request.user.is_referral_bonus_enabled %}
+                                        <div class="page-content col mb-3 mb-md-0">
+                                            <div class="admin-card">
+                                                <div class="main-heading-wrap">
+                                                    <h5>{% trans "Refer-A-Friend Bonus" %}</h5>
+                                                </div>
+                                                <div class="container-fluid " style="padding-top: 10px">
+                                                    <form>
+                                                        <div class="col-xs-12 col-md-4 form-group d-md-inline-block">
+                                                            <div style="font-weight: bold; color:black;">
+                                                                <span style="font-weight: bold;">{% trans "Percentage" %}</span>
+                                                                <input type="text" id="input-bonus-percentage" name="input1-group2"
+                                                                    placeholder="{% trans 'Enter Refer-A-Friend Bonus Percentage.' %}" class="form-control disablepaste"
+                                                                    required="required" autocomplete='off' value="{{referral_bonus}}"
+                                                                    onkeypress='return event.charCode >= 48 && event.charCode <= 57 ||
+                                                                    event.charCode == 46'>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-xs-12 col-md-4 form-group d-md-inline-block">
+                                                            <div style="font-weight: bold; color:black;">
+                                                                <span style="font-weight: bold;">{% trans "Maximum Bonus Limit" %}</span>
+                                                                <input type="text" id="referral-bonus-limit" name="input1-group2"
+                                                                    placeholder="{% trans 'Enter maximum bonus limit.' %}" class="form-control"
+                                                                    required="required" autocomplete='off' value="{{referral_bonus_limit}}"
+                                                                    onkeypress='return event.charCode >= 48 && event.charCode <= 57' maxlength="6">
+                                                            </div>
+                                                        </div>
+                                                        <div class="text-center col-xs-12 col-md-1 d-md-inline-block" >
+                                                            <span style='padding:0.5em;'></span>
+                                                            <button class="btn btn-primary" id="referral-button-add">
+                                                                {% trans "Submit" %}
+                                                            </button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                {% endif %}
+                                
+                                <!-- Referral Bonus Ends -->
+                            </div>
+                        {% endif %}
+                        <!-- Bonus Section Ends -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+</div>
+</div>
+<script>
+    $('#mobile-collapse').click(function () {
+        $("#nw1").toggleClass('left-spacer');
+    });
+
+    $("#input-start-time-losing").datetimepicker({
+        defaultDate: new Date(),
+        format: 'd/m/Y',
+        value: '{{ from }}',
+        timepicker: false,
+    });
+
+    $("#input-end-time-losing").datetimepicker({
+        defaultDate: new Date(),
+        format: 'd/m/Y',
+        value: '{{ to }}',
+        timepicker: false,
+    });
+
+    function validateDateRange(input){
+        
+        var from_date = $("#input-start-time-losing").val();
+        var to_date = $("#input-end-time-losing").val();
+        error_msg = "";
+        if(input.id == "input-start-time-losing"){
+            error_msg = "From date must be less than To date!!"
+        }
+        else{
+            error_msg = "To date must be greater than From date!!"
+        }
+
+        from_day = parseInt(from_date.split("/")[0]);
+        from_month = parseInt(from_date.split("/")[1]);
+        from_year = from_date.split("/")[2];
+        from_year = from_year.split(" ")[0];
+
+        to_day = parseInt(to_date.split("/")[0]);
+        to_month = parseInt(to_date.split("/")[1]);
+        to_year = to_date.split("/")[2];
+        // from date should be less than to date
+        if(from_year > to_year){
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: error_msg
+            });
+            $("#input-start-time-losing").val("{{losing_start_date}}");
+            $("#input-end-time-losing").val("{{losing_end_date}}");
+            return false;
+        }else if(from_year == to_year){
+            if(from_month > to_month){
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: error_msg
+                });
+                
+                $("#input-start-time-losing").val("{{losing_start_date}}");
+                $("#input-end-time-losing").val("{{losing_end_date}}");
+                return false;
+            }else if(from_month == to_month){
+                if(from_day > to_day){
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: error_msg
+                    });
+                
+                    $("#input-start-time-losing").val("{{losing_start_date}}");
+                    $("#input-end-time-losing").val("{{losing_end_date}}");
+                    return false;
+                }
+            }
+        }        
+    }
+
+    $('.disablepaste').bind('copy paste cut',function(e) {
+      e.preventDefault();
+      Swal.fire('cut,copy & paste options are disabled !!');
+});
+
+    $("#welcome-bonus-submit").click(function(e){
+        e.preventDefault();
+        let percentage = $("#welcome-bonus").val();
+       
+        if(percentage < 0){
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: "Bonus percentage should not be less than 0",
+            });
+            $("#welcome-bonus").val(null);
+            return false;
+        }
+        if(percentage == ""){
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: "Input Field cannot be empty",
+            });
+        }
+        else{
+            $.ajax({
+                url: "{% url 'admin-panel:bonus-percentage' %}",
+                type: "POST",
+                dataType: "json",
+                data: {
+                    percentage: percentage,
+                    bonusType: "welcome_bonus",
+                    csrfmiddlewaretoken: '{{ csrf_token }}'
+                },
+                success: function(data){
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success',
+                        text: data['message'],
+                    });
+                    location.reload();
+                },
+                error: function(data){
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data['responseJSON'],
+                    })
+                }
+            });
+        }
+    });
+
+    $("#referral-button-add").click(function (e) {
+        var referral_bonus_percentage = $("#input-bonus-percentage").val()
+        var referral_bonus_limit = $("#referral-bonus-limit").val()
+        if (referral_bonus_percentage < 0 || referral_bonus_percentage.length == 0) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Invalid Bonus Percentage',
+            })
+            return false
+        }
+        if (referral_bonus_percentage > 100)  {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Referral Bonus Percentage must be less then 100',
+            })
+            return false
+        }
+        if (referral_bonus_limit == "" )  {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Please Enter bonus limit.',
+            })
+            return false
+        }else {
+            e.preventDefault()
+            Swal.fire({
+                html:
+                    '<div class="swal-custom-content">' +
+                    '<p class="swal-custom-icon"><i class="cp-icon">&#xe815;</i></p>' +
+                    '<p class="swal-custom-title">{% trans "Are you sure" %} ?</p>' +
+                    '</div>',
+                customClass: {
+                    actions: 'swal-custom-actions',
+                    confirmButton: 'swal-custom-btn swal-custom-confirm-btn',
+                    cancelButton: 'swal-custom-btn swal-custom-cancel-btn',
+                },
+                showCancelButton: true,
+                confirmButtonText: '{% trans "Yes" %}',
+                cancelButtonText: '{% trans "No" %}'
+            }).then((result) => {
+                if (result.value) {
+                    $.ajax({
+                        url: "{% url 'admin-panel:bonus-percentage' %}",
+                        type: "POST",
+                        dataType: "json",
+                        data: {
+                            percentage: referral_bonus_percentage,
+                            usage_limit : referral_bonus_limit,
+                            bonusType: "referral_bonus",
+                            csrfmiddlewaretoken: '{{ csrf_token }}'
+                        },
+                        success: function (data) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success',
+                                text: data['message'],
+                            })
+                            location.reload();
+                        },
+                    });
+                } else if (result.dismiss === "cancel") {
+                    // show message ?
+                }
+            })
+        }
+    })
+
+    $("#losing-button-add").click(function (e) {
+        e.preventDefault();
+        console.log("Inside losign lkdkckjdjkdkdkdkddkdkdk")
+        var losing_start_time = $("#input-start-time-losing").val();
+        var losing_end_time = $("#input-end-time-losing").val();
+        var losing_bonus_percentage = $("#input-losing-bonus-percentage").val();
+        var losing_max_bet_limit = $("#input-losing-max-bet-limit").val();
+        var losing_promo_code = $("#input-losing-promo-code").val();
+        var promoUsageLimit = $("#input-promo-code-usage-limit").val();
+
+        start_temp= losing_start_time.split("/");
+        end_temp= losing_end_time.split("/");
+
+        if(losing_promo_code.length == 0) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Promo-Code must not be empty',
+            })
+            return false
+        }
+        else if(losing_bonus_percentage < 0 || losing_bonus_percentage.length == 0) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Invalid Percentage',
+            })
+            return false
+        }
+        else if(losing_max_bet_limit.length == 0 || losing_max_bet_limit < 0){
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Invalid bet-limit',
+            })
+            return false
+        }
+        else if(promoUsageLimit < 1 || promoUsageLimit.length == 0) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Promo-Code usage limit must not be less than 1',
+            })
+            return false
+        }
+
+        else {
+            Swal.fire({
+                html:
+                    '<div class="swal-custom-content">' +
+                    '<p class="swal-custom-icon"><i class="cp-icon">&#xe815;</i></p>' +
+                    '<p class="swal-custom-title">{% trans "Are you sure" %} ?</p>' +
+                    '</div>',
+                customClass: {
+                    actions: 'swal-custom-actions',
+                    confirmButton: 'swal-custom-btn swal-custom-confirm-btn',
+                    cancelButton: 'swal-custom-btn swal-custom-cancel-btn',
+                },
+                showCancelButton: true,
+                confirmButtonText: '{% trans "Yes" %}',
+                cancelButtonText: '{% trans "No" %}'
+            }).then((result) => {
+                if (result.value) {
+                    $.ajax({
+                        url: "{% url 'admin-panel:bonus-percentage' %}",
+                        type: "POST",
+                        dataType: "json",
+                        data: {
+                            losing_start_time: losing_start_time,
+                            losing_end_time: losing_end_time,
+                            percentage: losing_bonus_percentage,
+                            losing_max_bet_limit: losing_max_bet_limit,
+                            promo_code_usage_limit: promoUsageLimit,
+                            losing_promo_code: losing_promo_code,
+
+                            bonusType: "losing_bonus",
+                            csrfmiddlewaretoken: '{{ csrf_token }}'
+                        },
+                        success: function (data) {
+                            Swal.fire({
+                                icon: data["status"],
+                                title: data["status"][0].toUpperCase() + data["status"].substring(1),
+                                text: data['message'],
+                            }).then(() => {
+                                window.location.reload();
+                            });
+                        },
+                        error : function(data) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: data['message'],
+                            })
+                        }
+                    });
+                } else if (result.dismiss === "cancel") {
+                    // show message ?
+                }
+            })
+        }
+    })
+
+    $("#disablepromobutton").click(function(e){
+        e.preventDefault();
+        Swal.fire({
+            html:
+                '<div class="swal-custom-content">' +
+                '<p class="swal-custom-icon"><i class="cp-icon">&#xe815;</i></p>' +
+                '<p class="swal-custom-title">{% trans "Are you sure" %} ?</p>' +
+                '</div>',
+            customClass: {
+                actions: 'swal-custom-actions',
+                confirmButton: 'swal-custom-btn swal-custom-confirm-btn',
+                cancelButton: 'swal-custom-btn swal-custom-cancel-btn',
+            },
+            showCancelButton: true,
+            confirmButtonText: '{% trans "Yes" %}',
+            cancelButtonText: '{% trans "No" %}'
+        }).then((resp) => {
+            if(resp.value){
+                console.log(resp.value);
+
+                if(String(resp.value == "true")){
+                    var bonus_id = $(this).attr("bonus_id");
+                    console.log(bonus_id);
+                    var url_mask = "{% url 'admin-panel:disable-bonus' %}";
+                    $.ajax({
+                        url: url_mask,
+                        type: "POST",
+                        dataType: "json",
+                        data: {
+                            bonus_id: bonus_id
+                        },
+                        success: function (data) {
+                            console.log(data);
+                            Swal.fire({
+                                    icon: data["status"],
+                                    title: data["message"],
+                                    text: data['message'],
+                                });
+                        },
+                    });
+                    location.reload();
+                }
+            }
+        });
+    });
+</script>
+
+{% endblock content %}

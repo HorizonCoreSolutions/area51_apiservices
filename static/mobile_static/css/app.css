@@ -1,0 +1,39 @@
+.box-section {
+  text-align: center;
+  float: left;
+  margin: 0em;
+  overflow: hidden;
+}
+
+.box-section .content {
+  padding: 1em;
+  margin: 0.1em;
+  box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  background: #fff;
+}
+
+.box-section .content span {
+  font-weight: bold;
+  font-size: 1.5em;
+}
+
+.box-3 {
+  position: relative;
+  width: 33%;
+}
+
+.box-3:before {
+  content: "";
+  display: block;
+  padding-top: 100%;
+}
+
+.box-3 article {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+

@@ -1,0 +1,46 @@
+{% load navigate %}
+<nav class="my-4 text-center text-lg-left">
+    <ul class="pagination pagination-md justify-content-center">
+        {% if page_obj.has_previous %}
+            <li class="page-item"><a class="page-link" href="?{{ '1' | pagination_url_replace:request  }}"><i class="fa fa-angle-double-left"></i></a></li>
+            <li class="page-item"><a class="page-link" href="?{{ page_obj.previous_page_number | pagination_url_replace:request }}"><i class="fa fa-angle-left"></i></a></li>
+        {% else %}
+            <li class="page-item disabled"><span class="page-link"><i class="fa fa-angle-double-left"></i></span></li>
+            <li class="page-item disabled"><span class="page-link"><i class="fa fa-angle-left"></i></span></li>
+        {% endif %}
+        {% if not page_obj.has_next and page_obj.number >= 3 %}
+            <li class="page-item"><a class="page-link" href="?{{ page_obj.number|add:"-2" | pagination_url_replace:request }}">{{ page_obj.number|add:"-2" }}</a></li>
+        {% endif %}
+        {% if page_obj.has_previous %}
+            <li class="page-item"><a class="page-link" href="?{{ page_obj.previous_page_number | pagination_url_replace:request}}">{{ page_obj.previous_page_number }}</a></li>
+        {% endif %}
+        {% if  page_obj.number%}
+            <li class="page-item active"><a class="page-link" href="#">{{ page_obj.number }}</a></li>
+        {% endif %}
+        {% if page_obj.has_next %}
+            <li class="page-item"><a class="page-link" href="?{{ page_obj.next_page_number | pagination_url_replace:request }}">{{ page_obj.next_page_number }}</a></li>
+        {% endif %}
+        {% if page_obj.has_next and page_obj.has_previous and page_obj.number|add:"2" in page_obj.paginator.page_range %}
+            <li class="page-item"><a class="page-link" href="?{{ page_obj.number|add:"2" | pagination_url_replace:request }}">{{ page_obj.number|add:"2" }}</a></li>
+        {% endif %}
+        {% if page_obj.has_next and page_obj.has_previous and page_obj.number|add:"3" in page_obj.paginator.page_range %}
+            <li class="page-item"><a class="page-link" href="?{{ page_obj.number|add:"3" | pagination_url_replace:request }}">{{ page_obj.number|add:"3" }}</a></li>
+        {% endif %}
+        {% if not page_obj.has_previous and page_obj.number|add:"2" in page_obj.paginator.page_range %}
+            <li class="page-item"><a class="page-link" href="?{{ page_obj.number|add:"2" | pagination_url_replace:request }}">{{ page_obj.number|add:"2" }}</a></li>
+        {% endif %}
+        {% if  not page_obj.has_previous and page_obj.number|add:"3" in page_obj.paginator.page_range %}
+            <li class="page-item"><a class="page-link" href="?{{ page_obj.number|add:"3" | pagination_url_replace:request }}">{{ page_obj.number|add:"3" }}</a></li>
+        {% endif %}
+        {% if  not page_obj.has_previous and page_obj.number|add:"4" in page_obj.paginator.page_range %}
+            <li class="page-item"><a class="page-link" href="?{{ page_obj.number|add:"4" | pagination_url_replace:request }}">{{ page_obj.number|add:"4" }}</a></li>
+        {% endif %}
+        {% if page_obj.has_next %}
+            <li class="page-item"><a class="page-link" href="?{{ page_obj.next_page_number | pagination_url_replace:request }}"><i class="fa fa-angle-right"></i></a></li>
+            <li class="page-item"><a class="page-link"href="?{{ page_obj.paginator.num_pages | pagination_url_replace:request }}"><i class="fa fa-angle-double-right"></i></a></li>
+        {% else %}
+            <li class="page-item disabled"><span class="page-link"><i class="fa fa-angle-right"></i></span></li>
+            <li class="page-item disabled"><span class="page-link"><i class="fa fa-angle-double-right"></i></span></li>
+        {% endif %}
+  </ul>
+</nav>

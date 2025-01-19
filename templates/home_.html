@@ -1,0 +1,200 @@
+{% extends "index.html" %}
+{% load static %}
+{% load i18n %}
+{% block content %}
+
+    <nav class="navbar" id="top-navbar">
+        <h3 class="title-6">
+            <span class="text-capitalize">{% trans request.user.role %}:</span> <span class="badge label-info"> {{ request.user.username }} </span>
+        </h3>
+    </nav>
+
+    <div class="page-content">
+        <div class="container clearfix" style="padding-top:25px;padding-bottom:25px;">
+
+            {% include "includes/messages.html" %}
+
+            <div class="box-section box-3">
+                <article class="content" id="player-statistic">
+                    <span class="number">&nbsp;</span>
+                    <div class="icon">
+                        <i class="cp-icon">&#xe820;</i>
+                    </div>
+                    <span class="desc">{% trans "Players" %}</span>
+                </article>
+            </div>
+
+            {% if request.user.role == 'admin' or request.user.role == 'dealer' or request.user.role == 'superadmin' %}
+
+                <div class="box-section box-3">
+                    <article class="content" id="agent-statistic">
+                        <span class="number">&nbsp;</span>
+                        <div class="icon">
+                            <i class="cp-icon ">&#xe822;</i>
+                        </div>
+                        <span class="desc">{% trans "Agent" %}</span>
+                    </article>
+                </div>
+
+            {% endif %}
+
+            {% if request.user.role == 'admin' or request.user.role == 'superadmin' %}
+
+                {% if request.user.role == 'superadmin' %}
+                <div class="box-section box-3">
+                    <article class="content" id="admin-statistic">
+                        <span class="number">&nbsp;</span>
+                        <div class="icon">
+                            <i class="cp-icon ">&#xe816;</i>
+                        </div>
+                        <span class="desc">{% trans "Admin" %}</span>
+                    </article>
+                </div>
+                {% endif %}
+
+                <div class="box-section box-3">
+                    <article class="content" id="dealer-statistic">
+                        <span class="number">&nbsp;</span>
+                        <div class="icon">
+                            <i class="cp-icon ">&#xe81c;</i>
+                        </div>
+                        <span class="desc">{% trans "Master Agents" %}</span>
+                    </article>
+                </div>
+
+                <div class="box-section box-3">
+                    <article class="content" id="manager-statistic">
+                        <span class="number">&nbsp;</span>
+                        <div class="icon">
+                            <i class="cp-icon ">&#xe81f;</i>
+                        </div>
+                        <span class="desc">{% trans "Manager" %}</span>
+                    </article>
+                </div>
+
+                <div class="box-section box-3">
+                    <article class="content" id="terminal-statistic">
+                        <span class="number">&nbsp;</span>
+                        <div class="icon">
+                            <i class="cp-icon">&#xe80a;</i>
+                        </div>
+                        <span class="desc">{% trans "Terminals" %}</span>
+                    </article>
+                </div>
+
+            {% endif %}
+
+            <div class="box-section box-3">
+                <article class="content" id="profit-statistic">
+                    <span class="number">&nbsp;</span>
+                    <div class="icon">
+                        <i class="cp-icon ">&#xe821;</i>
+                    </div>
+                    <span class="desc">{% trans "Profit" %}</span>
+                </article>
+            </div>
+
+            {% if request.user.role == 'admin' or request.user.role == 'superadmin' or request.user.role == 'dealer' or request.user.role == 'agent' %}
+
+                <div class="box-section box-3">
+                    <article class="content" id="transaction-statistic">
+                        <span class="number">&nbsp;</span>
+                        <div class="icon">
+                            <!-- <i class="cp-icon">&#xe80b;</i> -->
+                            <i class="fa fa-retweet"></i>
+                        </div>
+                        <span class="desc">{% trans "Transaction" %}</span>
+                    </article>
+                </div>
+            {% endif %}
+            {% if request.user.role == 'admin' or request.user.role == 'superadmin' %}
+                <div class="box-section box-3">
+                    <article class="content" id="e-voucher-statistic">
+                        <span class="number">&nbsp;</span>
+                        <div class="icon">
+                            <i class="cp-icon">&#xe81d;</i>
+                        </div>
+                        <span class="desc">{% trans "E-Vouchers" %}</span>
+                    </article>
+                </div>
+
+            {% endif %}
+
+            {% if request.user.role == 'admin' or request.user.role == 'superadmin' or request.user.role == 'dealer' or request.user.role == 'agent' %}
+
+                <div class="box-section box-3">
+                    <article class="content" id="coupons-statistic">
+                        <span class="number">&nbsp;</span>
+                        <div class="icon">
+                            <i class="cp-icon ">&#xe81a;</i>
+                        </div>
+                        <span class="desc">{% trans "Coupons" %}</span>
+                    </article>
+                </div>
+
+            {% endif %}
+            
+            {% if request.user.role == 'agent'  or request.user.role == 'dealer' %}
+                <div class="box-section box-3">
+                    <article class="content" id="betting-limits-statistic">
+                        <a href="#betting-limits-popup" data-effect="mfp-zoom-in" class="open-limits-popup d-block text-gray">
+                            <span class="number">&nbsp;</span>
+                            <div class="icon">
+                                <i class="cp-icon ">&#xe813;</i>
+                            </div>
+                            <span class="desc">{% trans "Betting Limits" %}</span>
+                        </a>
+                    </article>
+                </div>
+            {% endif %}
+            {% if request.user.role == 'admin' %}
+                <div class="box-section box-3">
+                    <article class="content" id="setting-statistic">
+                        <span class="number">&nbsp;</span>
+                        <div class="icon">
+                            <i class="fa fa-lock">&#xe81a;</i>
+                        </div>
+                        <span class="desc">{% trans "Settings" %}</span>
+                    </article>
+                </div>
+            {% endif %}
+        </div>
+
+    </div>
+
+    {% include 'includes/betting_limits_popup.html' %}
+
+    {% block javascript %}
+        <script>
+            $(document).ready(function () {
+
+                $("#player-statistic").on("click", function () {
+                    window.location.href = "{% url 'admin-panel:players' %}"; //Change it
+                });
+                $("#agent-statistic").on("click", function () {
+                    window.location.href = "{% url 'admin-panel:agents' %}";
+                });
+                $("#dealer-statistic").on("click", function () {
+                    window.location.href = "{% url 'admin-panel:dealers' %}"; //Change it
+                });
+
+                $("#admin-statistic").on("click", function () {
+                    window.location.href = "{% url 'admin-panel:admins' %}"; //Change it
+                });
+               
+                $("#transaction-statistic").on("click", function () {
+                    window.location.href = "{% url 'admin-panel:transactions' %}";
+                });
+                $("#profit-statistic").on("click", function () {
+                    window.location.href = "{% url 'admin-panel:profit' %}";
+                });
+                $("#setting-statistic").on("click", function () {
+                    window.location.href = "{% url 'admin-panel:setting' %}";
+                });
+
+            });
+
+        </script>
+    {% endblock %}
+
+{% endblock content %}

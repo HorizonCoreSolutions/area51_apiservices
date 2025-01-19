@@ -1,0 +1,1054 @@
+{% extends "index.html" %}
+{% load static %}
+{% load i18n %}
+{% block title %}
+Create Tournament
+{% endblock title %}
+{% block content %}
+<style>
+    #pop-loader {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100%;
+        background: rgba(0,0,0,0.75) url(../../../static/Desktop_static/images/loading2.gif) no-repeat center center;
+        z-index: 10000;
+    }
+    .admin-card{
+        background-color: #ffffff;
+        box-shadow: 0px 0px 6px 6px rgb(204 204 204 / 0.25);
+        padding: 30px 10px;
+    }
+    .pcode.left-spacer {
+	    margin-left: 0px;
+    }
+    .pcode{
+	    margin-left: 250px;
+    }
+    @media(max-width:767px){
+        .pcode{
+	        margin-left: 0px;
+        }
+    }
+    .django-ckeditor-widget{
+        display: block !important;
+    }
+    #cke_1_contents{
+        height: 150px !important;
+    }
+    #banner_img{
+        width: 500px;
+        height: 200px;
+    }
+    input[type=file]{
+        width:90px;
+    }
+
+
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 47px;
+        height: 21px;
+        vertical-align: middle;
+    }
+    
+    .switch input {
+        display: none;
+    }
+    
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        -webkit-transition: .4s;
+        transition: .4s;
+        border-radius: 34px;
+    }
+    
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 15px;
+        width: 15px;
+        left: 3px;
+        bottom: 3px;
+        background-color: white;
+        -webkit-transition: .4s;
+        transition: .4s;
+        border-radius: 50%;
+    }
+    
+    input:checked + .slider {
+        background-color: #54ca30;
+    }
+    
+    input:focus + .slider {
+        box-shadow: 0 0 1px #333333;
+    }
+    
+    input:checked + .slider:before {
+        -webkit-transform: translateX(26px);
+        -ms-transform: translateX(26px);
+        transform: translateX(26px);
+    }
+
+    .game-checkbox{
+        zoom: 1.5;
+    }
+
+    .required-field{
+        color:red;
+    }
+
+    
+</style>
+<div id="pop-loader"></div>
+<div class="pcode" id='nw1' >
+    <div>
+        <div class="container-fluid pt-4" >
+            <div class="admin-card">
+                <div></div>
+                {% comment %} <div class="row">
+                    <div class="col-xs-12 col-lg-6 col-md-6">
+                        <div class="page-content"  >
+                            <div class="main-heading-wrap">
+                                <h5>{% trans 'Create Tournament' %}</h5>
+                            </div>
+                        </div>
+                    </div>
+                </div> {% endcomment %}
+                <div class="ml-4 mr-4 mb-4">
+                    {% comment %} <form action=""  method="post" id="tournament-create-form"  enctype="multipart/form-data"> {% endcomment %}
+                    <form id="tournament-create-form"  enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="first-page">
+                            <div class="tournamet-details">
+                                <div class="admin-card">
+
+                                    <div class="row">
+                                        <div class="col-xs-12 col-lg-6 col-md-6">
+                                            <div class="page-content"  >
+                                                <div class="main-heading-wrap">
+                                                    <h5>{% trans 'Tournament Details' %}</h5>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col text-right mr-3">
+                                            <div style="">
+                                                <label class="switch">
+                                                    <input type="checkbox" name="is_tournament_enabled" id="is-tournament-enabled" game-id='{{ game.game.game_id }}' checked>
+                                                    <span title="Disable Tournament" onclick="switchToggle(this)" class="slider"></span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-6 mt-3">
+                                            <label for="tournament-name">Name <span class="required-field">*</span></label>
+                                            <input type="text" class="form-control" name="tournament_name" id="tournament-name" placeholder="Enter Tournament Name" required>
+                                        </div>
+
+                                        <div class="col-md-6 mt-3 form-group" id="tournament-image-input-div">
+                                            <label for="tournament-image">Image <span class="required-field">*</span></label>
+                                            <input type="file" name="tournament_image" onchange="validate_and_show_image(this)" class="form-control" id="tournament-image" accept="image/png,image/jpeg,image/jpg" style="width: 100%;" required>
+                                        </div>
+
+                                        <div class="col-md-3 mt-3 form-group text-center" id="tournament-image-display-div" style="display:none;">
+                                            <img src="" id="tournament-image-display" alt="Tournament Image" height="150" width="250" srcset="">
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-4 mt-3">
+                                            <label for="tournament-start-date">Start Date (UTC) <span class="required-field">*</span></label>
+                                            <input type="datetime-local" onChange="validateDateTimeRange(this)" class="form-control" name="tournament_start_date" id="tournament-start-date" placeholder="Enter Tournament Start Date" min="{{current_date}}" required>
+                                        </div>
+                                        <div class="col-md-4 mt-3">
+                                            <label for="tournament-end-date">End Date (UTC) <span class="required-field">*</span></label>
+                                            <input type="datetime-local" onChange="validateDateTimeRange(this)" class="form-control" name="tournament_end_date" id="tournament-end-date" placeholder="Enter Tournament End Date" min="{{current_date}}" required>
+                                        </div>
+                                        <div class="col-md-4 mt-3">
+                                            <label for="registration-end-date">Registration End Date (UTC) <span class="required-field">*</span></label>
+                                            <input type="datetime-local" onChange="validateDateTimeRange(this)" class="form-control" name="registration_end_date" id="registration-end-date" placeholder="Enter Tournament Registration End Date" min="{{current_date}}" required>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-4 mt-3">
+                                            <label for="tournament-fees">Tournament Fees <span class="required-field">*</span></label>
+                                            <input type="number" min=1 class="form-control" name="tournament_fees" id="tournament-fees" placeholder="Enter Fees" required>
+                                        </div>
+                                        <div class="col-md-4 mt-3">
+                                            <label for="tournament-initial-credit">Initial Credit Amount <span class="required-field">*</span></label>
+                                            <input type="number" min=1 class="form-control" name="tournament_initial_credit" id="tournament-initial-credit" placeholder="Enter Initial Credit" required>
+                                        </div>
+                                        <div class="col-md-4 mt-3">
+                                            <label for="tournament-jackpot-amount">Jackpot Amount <span class="required-field">*</span></label>
+                                            <input type="number" min=1 class="form-control" name="tournament_jackpot_amount" id="tournament-jackpot-amount" placeholder="Enter Jackpot Amount" required>
+                                        </div>
+                                    </div>
+
+                                    <div class="row mb-3">
+                                        <div class="col mt-2">
+                                            <label for="tournament-description">Description <span class="required-field">*</span></label>
+                                            <textarea name="tournament_description" id="tournament-description" rows="3" style="height:100%;" class="form-control" placeholder="Enter Tournament Description" required></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="limit-details">
+                                <div class="row">
+                                    <div class="col-md-6 rebuy-details">
+                                        <div class="admin-card mt-5">
+                                            <div class="row">
+                                                <div class="col-xs-12 col-lg-6 col-md-6">
+                                                    <div class="page-content"  >
+                                                        <div class="main-heading-wrap">
+                                                            <h5>{% trans 'Rebuy Details' %}</h5>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="col text-right mr-3">
+                                                    <div style="">
+                                                        <label class="switch">
+                                                            <input type="checkbox" name="is_rebuy_enabled" id="is-rebuy-enabled" game-id='{{ game.game.game_id }}' checked>
+                                                            <span title="Disable Rebuy" class="slider"></span>
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="row" id="rebuy-details-div">
+                                                <div class="col-md-6 mt-2">
+                                                    <label for="tournament-rebuy-fees">Rebuy Fees <span class="required-field">*</span></label>
+                                                    <input type="number" min=1 class="form-control" name="tournament_rebuy_fees" id="tournament-rebuy-fees" placeholder="Enter Rebuy Fees" required>
+                                                </div>
+                                                <div class="col-md-6 mt-2">
+                                                    <label for="tournament-rebuy-limit">Rebuy Limit <span class="required-field">*</span></label>
+                                                    <input type="number" min=1 class="form-control" name="tournament_rebuy_limit" id="tournament-rebuy-limit" placeholder="Enter Rebuy Limit" required>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6 player-limit-details">
+                                        <div class="admin-card mt-5">
+                                            <div class="row">
+                                                <div class="col-xs-12 col-lg-6 col-md-6">
+                                                    <div class="page-content"  >
+                                                        <div class="main-heading-wrap">
+                                                            <h5>{% trans 'Player Limit Details' %}</h5>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="col text-right mr-2">
+                                                    <div style="">
+                                                        <label class="switch">
+                                                            <input type="checkbox" name="is_player_limit_enabled" id="is-player-limit-enabled" game-id='{{ game.game.game_id }}' checked>
+                                                            <span title="Disable Player Limit" onclick="" class="slider"></span>
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-6 mt-2" id="min-player-limit-div">
+                                                    <label for="min-player-limit">Min player required <span class="required-field">*</span></label>
+                                                    <input type="number" min=1 class="form-control" name="min_player_limit" id="min-player-limit" placeholder="Enter Minimum Player Limit" required>
+                                                </div>
+                                                <div class="col-md-6 mt-2" id="max-player-limit-div">
+                                                    <label for="max-player-limit">Max player allowed  <span class="required-field">*</span></label>
+                                                    <input type="number" min=1 class="form-control" name="max_player_limit" id="max-player-limit" placeholder="Enter Maximum Player Limit" required>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="next-previous-btn">
+                                <div class="row mt-5 text-right">
+                                    <div class="col text-left">
+                                        <a href="{% url "admin-panel:tournaments" %}" class="btn btn-primary">Cancel</a>
+                                    </div>
+
+                                    <div class="col">
+                                        <button type="button" onclick="nextSection('first-page', 'second-page')" class="btn btn-primary">Next</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <div class="second-page d-none">
+                            <div class="tournamet-game-details">
+                                <div class="admin-card">
+                                    <div class="row">
+                                        <div class="col-xs-12 col-lg-6 col-md-6">
+                                            <div class="page-content"  >
+                                                <div class="main-heading-wrap">
+                                                    <h5>{% trans 'Game Selection' %}</h5>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-12 table-responsive">
+                                            <table class="table table-striped tournament-casino-games-table text-center">
+                                                <thead>
+                                                    <tr>
+                                                        <th></th>
+                                                        <th>ID</th>
+                                                        <th>Name</th>
+                                                        <th>Category</th>
+                                                        <th>Device Supported</th>
+                                                    </tr>
+                                                </thead>
+
+                                                <tbody>
+                                                    {% for game in casino_games %}
+                                                        <tr onclick="selectGames(this)">
+                                                            <td>
+                                                                <input type="checkbox" class="game-checkbox" name="{{ game.id }}-checkbox" id="{{ game.id }}">
+                                                            </td>
+                                                            <td>{{ game.game.game_id }}</td>
+                                                            <td>{{ game.game.game_name }}</td>
+                                                            <td>{{ game.game.game_category }}</td>
+								                            <td style="text-align: center;" >{% if game.game.is_mobile_supported and game.game.is_desktop_supported  %}Mobile, Desktop{% elif game.game.is_desktop_supported %}Desktop{% else %}Mobile{% endif %}</td>
+                                                        </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="next-previous-btn">
+                                <div class="row mt-5 text-right">
+                                    <div class="col text-left">
+                                        <a href="{% url "admin-panel:tournaments" %}" class="btn btn-primary">Cancel</a>
+                                    </div>
+                                    <div class="col">
+                                        <button type="button" onclick="prevSection('second-page', 'first-page')" class="btn btn-primary">Previous</button>
+                                        <button type="button" onclick="nextSection('second-page', 'third-page')" class="btn btn-primary">Next</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <div class="third-page d-none">
+                            <div class="tournamet-game-search">
+                                <div class="admin-card">
+
+                                    <div class="row">
+                                        <div class="col-xs-12 col">
+                                            <div class="page-content"  >
+                                                <div class="main-heading-wrap">
+                                                    <h5>{% trans 'Prize Distrubation' %}</h5>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-6 mt-3">
+                                            <label for="prize_type">Prize Type</label>
+                                            <select name="prize_type" class="form-control" id="prize-type">
+                                                <option value="cash">Cash</option>
+                                                <option value="non_cash">Non-Cash</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="col-md-6 mt-3">
+                                            <label for="number-of-winners">Number of Winners <span class="required-field">*</span></label>
+                                            <input type="number" min="1" max="99" class="form-control" oninput="manageCashNonCashField(this)" name="number_of_winners" id="number-of-winners" placeholder="Enter number of winners" required>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="tournamet-game-details">
+                                <div class="admin-card mt-5">
+                                    <div class="row">
+                                        <div class="col-xs-12 col-lg-6 col-md-6">
+                                            <div class="page-content"  >
+                                                <div class="main-heading-wrap">
+                                                    <h5>{% trans 'Prize Details' %}</h5>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div id="cash-prize">
+                                        <div class="row">
+                                            <div class="col text-left ml-2 font-weight-bold">
+                                                Jackpot Amount : <span id="progress-jackpot-amount">100</span>
+                                            </div>
+                                            <div class="col text-right mr-2 font-weight-bold">
+                                                Remaining Amount : <span id="progress-remaining-amount">100</span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="row mb-4">
+                                            <div class="col-12">
+                                                <div class="progress">
+                                                    <div class="progress-bar progress-bar-striped" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div id="winner-fields">
+                                            <div class="row">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div id="non-cash-prize" style="display:none;">
+                                        <div class="row">
+                                        </div>
+                                    </div>
+                                    
+
+                                </div>
+                            </div>
+
+                            <div class="next-previous-btn">
+                                <div class="row mt-5 text-right">
+                                    <div class="col text-left">
+                                        <a href="{% url "admin-panel:tournaments" %}" class="btn btn-primary">Cancel</a>
+                                    </div>
+
+                                    <div class="col">
+                                        <button type="button" onclick="prevSection('third-page', 'second-page')" class="btn btn-primary">Previous</button>
+                                        <button type="button" class="btn btn-primary" onclick="createTournament()">Submit</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>                        
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    var prevNumWinners = 0;
+    var prevNonCashNumWinners = 0;
+    var jackpotAmount;
+    var remainingAmount;
+    var selectedGames = [];
+
+
+    $(document).ready(function() {
+        $('.tournament-casino-games-table').DataTable({
+            searching : true,
+            ordering:false,
+            pageLength: 10,
+            lengthMenu: [[5, 10, 20, -1], [5, 10, 20, "All"]],
+        });
+
+        $('#prize-type').change(function () {
+            if($(this).val()=="non_cash"){
+                $("#cash-prize").hide()
+                $("#non-cash-prize").show()
+            }else{
+                $("#cash-prize").show()
+                $("#non-cash-prize").hide()
+            }
+        })
+
+        {% comment %} $("#max-player-limit").change(()=>{
+            if($("#is-player-limit-enabled").is(":checked")){
+                $("#number-of-winners").prop("max",this.value)
+            }
+        }); {% endcomment %}
+
+        $("#min-player-limit").on('focusout', function() {
+            if($("#is-player-limit-enabled").is(":checked") && parseInt($(this).val()) > parseInt($("#max-player-limit").val())){
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: 'Minimum player limit must be less than the maximum players allowed!'
+                }).then(()=>{
+                    $(this).val("");
+                });
+                return false;
+            }
+        });
+        
+        $("#max-player-limit").on('focusout', function() {
+            if($("#is-player-limit-enabled").is(":checked")){
+                max_player_allowed = parseInt($(this).val());
+                min_player_limit =  parseInt($("#min-player-limit").val())
+                if(max_player_allowed <= 1){
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: 'A tournament must have more than one player!'
+                    }).then(()=>{
+                        $(this).val("");
+                    });
+                    return false;
+                }else if(max_player_allowed < min_player_limit){
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: 'Maximum players allowed must be greater than the minimum players required!'
+                    }).then(()=>{
+                        $(this).val("");
+                    });
+                    return false;
+                };
+                $("#number-of-winners").prop("max", $(this).val());
+            }
+        });
+        
+    
+        $('#is-player-limit-enabled').click(function () {
+            if($("#is-player-limit-enabled").is(":checked")){
+                $("#max-player-limit").prop("disabled", false)
+                $("#max-player-limit").prop("required", true)
+                $("#number-of-winners").prop("max",$("#max-player-limit").val())
+            }else{
+                $("#max-player-limit").prop("disabled", true)
+                $("#max-player-limit").prop("required", false)
+            }
+        });
+
+    
+        $('#is-rebuy-enabled').click(function () {
+            if($("#is-rebuy-enabled").is(":checked")){
+                $('#rebuy-details-div').find('input').prop('disabled', false);
+                $('#rebuy-details-div').find('input').prop('required', true);
+            }else{
+                $('#rebuy-details-div').find('input').prop('disabled', true);
+                $('#rebuy-details-div').find('input').prop('required', false);
+            }
+        });    
+    });
+    
+
+    function selectGames(element){
+        checkbox = element.firstElementChild.firstElementChild;
+        if(checkbox.checked){
+            checkbox.checked=false;
+            index = selectedGames.indexOf(checkbox.id);
+            if (index !== -1) {
+                selectedGames.splice(index, 1);
+            }
+        }else{
+            checkbox.checked=true;
+            selectedGames.push(checkbox.id)
+        }
+    }
+
+    
+    function validateDateTimeRange(input) {
+        var error = false;
+        var currentDateTime = new Date().getTime();
+        var startDateTime = new Date($("#tournament-start-date").val()).getTime();
+        var endDateTime = new Date($("#tournament-end-date").val()).getTime();
+        var registrationEndDateTime = new Date($("#registration-end-date").val()).getTime();
+        var error_msg="";
+    
+        if ((input.id == "tournament-start-date" && isNaN(startDateTime)) || (input.id == "tournament-end-date" && isNaN(endDateTime)) || (input.id == "registration-end-date" && isNaN(registrationEndDateTime)) ) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: 'Invalid date format!'
+            });
+            return false;
+        }
+    
+        if (startDateTime < currentDateTime) {
+            $("#tournament-start-date").val("");
+            error_msg = "Start date must be greater than current date and time!!";
+        } else if (startDateTime > endDateTime || startDateTime == endDateTime) {
+            $("#tournament-end-date").val("");
+            error_msg = "End date must be greater than Start date!!";
+        } else if(registrationEndDateTime < currentDateTime || registrationEndDateTime > endDateTime){
+            $("#registration-end-date").val("");
+            error_msg = "Registration date must be in range of current date and end date!!";
+        }
+    
+        if (error_msg!="") {
+            Swal.fire({
+                icon: 'info',
+                title: 'Oops...',
+                text: error_msg
+            });
+            return false;
+        }
+    }
+    
+
+    function nextSection(currentSection, nextSection){
+        valid = validatePage(currentSection)
+        if(!valid){
+            return;
+        } else if (currentSection=="first-page"){
+            changeBar(document.getElementById("tournament-jackpot-amount"));
+            {% comment %} remainingAmount = parseInt($("#tournament-jackpot-amount").val());
+            jackpotAmount = parseInt($("#tournament-jackpot-amount").val());
+            $("#progress-jackpot-amount").text(jackpotAmount);
+            $("#progress-remaining-amount").text(remainingAmount);
+            $('.progress-bar').attr('aria-valuemax', jackpotAmount);
+            $('.progress-bar').css('width', '100%'); {% endcomment %}
+        }
+
+        $(`.${currentSection}`).addClass("d-none");
+        $(`.${nextSection}`).removeClass("d-none");
+    }
+
+    
+    function prevSection(currentSection, prevSection){
+        $(`.${currentSection}`).addClass("d-none");
+        $(`.${prevSection}`).removeClass("d-none");
+    }
+
+
+    function changeBar(element){
+        jackpotAmount = parseInt($("#tournament-jackpot-amount").val())
+        var totalDistrubutedAmount=0;
+        $('.winners').each(function() {
+            var value = $(this).val();
+            if (value !== '' && !isNaN(value)) {
+                totalDistrubutedAmount += parseInt(value);
+            }
+        });
+        remainingAmount = Math.max(0, jackpotAmount - totalDistrubutedAmount);
+
+        if(element.id=="number-of-winners" || element.id=="tournament-jackpot-amount"){
+            changeProgressBar(jackpotAmount, remainingAmount, totalDistrubutedAmount)
+            return
+        }
+
+        var errMsg = ""
+        var currentValue = parseInt(element.value);
+        var previousInput = $(`#${element.id}`).parent().prev().children(":last");
+        var nextInput = $(`#${element.id}`).parent().next().children(":last");
+
+        if(currentValue > jackpotAmount){
+            errMsg = "Prize amount must be less than jackpot amount."
+        } else if(totalDistrubutedAmount > jackpotAmount){
+            remainingAmount = jackpotAmount - (totalDistrubutedAmount - currentValue);
+            errMsg = `Total prize amount can not be greater than jackpot amount, remaining amount is ${remainingAmount}.`
+        } else if(currentValue < 0){
+            errMsg = `Prize amount should be positive integer.`
+        }
+
+        if(errMsg != ""){
+            Swal.fire({
+                icon: 'info',
+                title: 'Oops...',
+                text: errMsg
+            });
+            totalDistrubutedAmount = totalDistrubutedAmount - currentValue;
+            remainingAmount = jackpotAmount - totalDistrubutedAmount;
+            element.value=""
+        }
+        changeProgressBar(jackpotAmount, remainingAmount, totalDistrubutedAmount)
+    }
+
+
+    function validatePrizeField(element){
+
+        var errMsg = ""
+        var jackpotAmount = parseInt($("#tournament-jackpot-amount").val())
+        var currentValue = parseInt(element.value);
+        var previousInput = $(`#${element.id}`).parent().prev().children(":last");
+        var nextInput = $(`#${element.id}`).parent().next().children(":last");
+
+        var totalDistrubutedAmount=0;
+        $('.winners').each(function() {
+            var value = $(this).val();
+            if (value !== '' && !isNaN(value)) {
+                totalDistrubutedAmount += parseInt(value);
+            }
+        });
+        remainingAmount = jackpotAmount - totalDistrubutedAmount;
+
+        if (previousInput.length > 0 && currentValue >= parseInt(previousInput.val())) {
+            errMsg = "Prize amount must be less than the previous winner's prize amount."
+        } else if (nextInput.length > 0 && currentValue <= parseInt(nextInput.val())) {
+            errMsg = "Prize amount must be greater than the next winner's prize amount."
+        } else if(currentValue > jackpotAmount){
+            errMsg = "Prize amount must be less than jackpot amount."
+        } else if(totalDistrubutedAmount > jackpotAmount){
+            remainingAmount = jackpotAmount - (totalDistrubutedAmount - currentValue);
+            errMsg = `Total prize amount can not be greater than jackpot amount, remaining amount is ${remainingAmount}.`
+        } else if(currentValue < 0){
+            errMsg = `Prize amount should be positive integer.`
+        }
+
+        if(errMsg != ""){
+            Swal.fire({
+                icon: 'info',
+                title: 'Oops...',
+                text: errMsg
+            });
+            element.value=""
+            changeBar(element)
+            totalDistrubutedAmount = totalDistrubutedAmount - currentValue;
+            remainingAmount = jackpotAmount - totalDistrubutedAmount;
+        }
+    }
+
+
+    function changeProgressBar(jackpot_amount, remaining_amount, totalDistrubutedAmount){
+        $("#progress-jackpot-amount").text(jackpot_amount);
+        $("#progress-remaining-amount").text(remaining_amount);
+        fill_percentage = (remaining_amount/jackpot_amount)*100;
+        $('.progress-bar').css('width', fill_percentage + '%');
+        $('.progress-bar').attr('aria-valuenow', remaining_amount);
+        $('.progress-bar').attr('aria-valuemax', jackpot_amount);
+    }
+
+    function manageCashNonCashField(element){
+        max_allowed = $("#max-player-limit").val()
+        if (!!max_allowed && element.value > parseInt(max_allowed) && $("#is-player-limit-enabled").is(":checked")) {
+            Swal.fire({
+                icon: 'info',
+                title: 'Oops...',
+                text: "Number of winners can not be greater than maximum number of allowed players."
+            });
+            element.value=""
+            return false;
+        } 
+        // else if ((!max_allowed || !$("#is-player-limit-enabled").is(":checked")) && element.value > 99) {
+        //     return false;
+        // }
+        
+        manageNonCashPrizeField()
+        managePrizeField(element)
+    }
+
+
+    function managePrizeField(element) {
+        var input_type = "";
+        var prize_type_div = "winner-fields";
+        var numWinners = parseInt($('#number-of-winners').val());
+        var winnerFieldsContainer = $('#winner-fields');
+
+        if (numWinners > prevNumWinners) {
+            for (var i = prevNumWinners + 1; i <= numWinners; i++) {
+              var winnerField = `
+                <div class="col-xs-6 col-sm-4 col-md-3 mt-3">
+                  <label for="winner${i}">Winner ${i} <span class="required-field">*</span></label>
+                  <input type="number" min="1" onfocusout="validatePrizeField(this)" oninput="changeBar(this)" placeholder="Enter prize" class="form-control winners" name="winner${i}" id="winner${i}" required>
+                </div>
+              `;
+              winnerFieldsContainer.find('.row:last').append(winnerField);
+            }
+            prevNumWinners = numWinners;
+        } else if (numWinners < prevNumWinners) {
+            $(`#${prize_type_div} .winners`).slice(numWinners-prevNumWinners).each(function() {
+                var value = parseInt($(this).val()) || 0;
+                remainingAmount += value;
+            });
+            winnerFieldsContainer.find('.row').slice(-1).children().slice(numWinners-prevNumWinners).remove();
+            {% comment %} changeProgressBar(jackpotAmount, remainingAmount, jackpotAmount-remainingAmount); {% endcomment %}
+            changeBar(element)
+            prevNumWinners = numWinners;
+        } else if (numWinners == '' || isNaN(numWinners)){
+            winnerFieldsContainer.find('.row').children().remove();
+            prevNumWinners = 0;
+            changeBar(element)
+            {% comment %} changeProgressBar(jackpotAmount, jackpotAmount, jackpotAmount-jackpotAmount); {% endcomment %}
+        }
+    }
+
+
+    function manageNonCashPrizeField() {
+        var numWinners = parseInt($('#number-of-winners').val());
+        var winnerFieldsContainer = $(`#non-cash-prize`);
+
+        if (numWinners > prevNonCashNumWinners) {
+            for (var i = prevNonCashNumWinners + 1; i <= numWinners; i++) {
+              var winnerField = `
+                <div class="col-xs-6 col-sm-4 col-md-3 mt-3">
+                  <label for="winner${i}">Winner ${i} <span class="required-field">*</span></label>
+                  <input type="text" min="1" placeholder="Enter prize" class="form-control winners" name="winner${i}" id="winner${i}" required>
+                </div>
+              `;
+              winnerFieldsContainer.find('.row:last').append(winnerField);
+            }
+            prevNonCashNumWinners = numWinners;
+        } else if (numWinners < prevNonCashNumWinners) {
+            $(`#non-cash-prize .winners`).slice(numWinners-prevNonCashNumWinners).each(function() {
+                var value = parseInt($(this).val()) || 0;
+                remainingAmount += value;
+            });
+            winnerFieldsContainer.find('.row').slice(-1).children().slice(numWinners-prevNonCashNumWinners).remove();
+            prevNonCashNumWinners = numWinners;
+        } else if (numWinners == '' || isNaN(numWinners)){
+            winnerFieldsContainer.find('.row').children().remove();
+            prevNonCashNumWinners = 0;
+        }
+    }
+
+
+    function validatePage(pageName){
+        var isValid = true;
+        if(pageName=="first-page"){
+            $(`.${pageName} input[required]`).each(function() {
+                if (!$(this).val().trim()) {
+                    isValid = false;
+                    return false;
+                }
+            });
+
+            if (!isValid) {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Oops...',
+                    text: "Please fill in all required fields."
+                });
+                return isValid;
+            }
+
+            isValid = true;
+            $(`.${pageName} input[type="number"][required]`).each(function() {
+                var value = $(this).val();
+                if (value == '' || isNaN(value) || parseFloat(value) <= 0) {
+                    isValid = false;
+                    return false;
+                }
+            });
+
+            if (!isValid) {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Oops...',
+                    text: "Please make sure all the number fields are positive integer."
+                });
+            }
+            return isValid;
+        } else if(pageName=="second-page"){
+            var isChecked = $('.game-checkbox:checked').length > 0;
+
+            if (selectedGames.length<=0) {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Oops...',
+                    text: "Please select atleast one game to proceed on next page."
+                });
+                return false
+            }
+
+            return true;
+        } else if(pageName=="third-page"){
+
+            if($("#prize-type").val()=="non_cash"){
+                $(`#non-cash-prize input[required]`).each(function() {
+                    if (!$(this).val().trim()) {
+                        isValid = false;
+                        return false;
+                    }
+                });
+
+                if (!isValid) {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Oops...',
+                        text: "Please fill in all required fields."
+                    });
+                    return isValid;
+                }
+            }else{
+                $(`.winner-fields input[required]`).each(function() {
+                    if (!$(this).val().trim()) {
+                        isValid = false;
+                        return false;
+                    }
+                });
+
+                if (!isValid) {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Oops...',
+                        text: "Please fill in all required fields."
+                    });
+                    return isValid;
+                }
+    
+                isValid = true;
+                $(`.${pageName} input[type="number"][required]`).each(function() {
+                    var value = $(this).val();
+                    if (value == '' || isNaN(value) || parseFloat(value) <= 0) {
+                        isValid = false;
+                        return false;
+                    }
+                });
+    
+                if (!isValid) {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Oops...',
+                        text: "Please make sure all the number fields are filled and positive integer."
+                    });
+                    return false
+                }
+
+                var jackpotAmount = parseInt($("#tournament-jackpot-amount").val())
+                var totalDistrubutedAmount=0;
+                $('.winners').each(function() {
+                    var value = $(this).val();
+                    if (value !== '' && !isNaN(value)) {
+                        totalDistrubutedAmount += parseInt(value);
+                    }
+                });
+                if((jackpotAmount - totalDistrubutedAmount)<0){
+                    isValid = false
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Oops...',
+                        text: "Distributed amount cannot exceed the jackpot amount."
+                    });
+                }else if (totalDistrubutedAmount< jackpotAmount) {
+                    isValid = false
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Oops...',
+                        text: "Please ensure that the total jackpot amount is distributed to the winners."
+                    });
+                }
+            }
+
+            if($("#is-player-limit-enabled").is(":checked") && parseInt($("#number-of-winners").val()) > parseInt($("#max-player-limit").val())){
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Oops...',
+                    text: "Please ensure the number of winners does not exceed the maximum number of allowed players."
+                });
+                isValid = false;
+            }
+
+            return isValid;
+        }
+    }
+
+
+    function createTournament(){
+        valid = validatePage("third-page")
+        if (!valid){
+            return
+        }
+
+        var prize_type_div_to_remove = "non-cash-prize";
+        if($("#prize-type").val()=="non_cash"){
+            prize_type_div_to_remove = "winner-fields";
+        }
+
+        var divContentBeforeAjax = $(`#${prize_type_div_to_remove}`).clone();
+        $(`#${prize_type_div_to_remove} > .row`).remove();
+        var formData = new FormData($('#tournament-create-form')[0]);
+        formData.append('selectedGames', JSON.stringify(selectedGames));
+    
+        $.ajax({
+            type: 'POST',
+            url: "{% url 'admin-panel:create-tournament' %}",
+            data: formData,
+            processData: false,
+            contentType: false, 
+            success: function(response) {
+                if(response.success == true){
+                    title = "Success";
+                    message = response.message;
+                    
+                }else if(response.success == false){
+                    title = "Error";
+                    message = response.message;
+                }
+
+                icon="success";
+                if(title!="Success"){
+                    icon="info";
+                }
+
+                Swal.fire({
+                    icon: icon,
+                    title: title,
+                    text: message
+                }).then(() => {
+                    window.location.href = "{% url 'admin-panel:tournaments' %}";
+                });
+            },
+            error: function(xhr, status, error) {
+                $(`#${prize_type_div_to_remove}`).append(divContentBeforeAjax);
+                Swal.fire({
+                    icon: "error",
+                    title: "Error",
+                    text: xhr.responseJSON.message
+                });
+            }
+        });
+
+    }
+    
+
+    {% comment %} function get_image_info(){
+        console.log("VAL",('#cke_1_contents').val());
+        var img = new Image();
+        img.src = $('#page_img').attr('src');
+        $('#img_info strong').text('Image size: ' + img.width + ' x ' + img.height + ' px');
+        $('#img_info').attr('hidden', false);
+    } {% endcomment %}
+
+    function validate_and_show_image(input) {
+        if (input.files && input.files[0]) {
+          var reader = new FileReader();
+
+          reader.onload = function (e) {
+            var image = new Image();
+            image.src = e.target.result;
+            image.onload = function () {
+                var height = this.height;
+                var width = this.width;
+                if (height > 150 || width > 250) {
+                    input.value = '';
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: 'Image size should be 250 X 100!'
+                    });
+                    $("#tournament-image-display-div").hide();
+                    $("#tournament-image-input-div").addClass("col-md-6");
+                    $("#tournament-image-input-div").removeClass("col-md-3");
+                    return false;
+                }else{
+                    $('#tournament-image-display').attr('src', e.target.result);
+                    $("#tournament-image-display-div").show();
+                    $("#tournament-image-input-div").addClass("col-md-3");
+                    $("#tournament-image-input-div").removeClass("col-md-6");
+                }
+            };
+          };
+
+          reader.readAsDataURL(input.files[0]);
+        }else{
+            $("#tournament-image-display-div").hide();
+            $('#tournament-image-display').attr('src', "");
+            $("#tournament-image-input-div").addClass("col-md-6")
+            $("#tournament-image-input-div").removeClass("col-md-3")
+        }
+    };
+
+</script>
+{% endblock content %}

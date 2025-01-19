@@ -1,0 +1,419 @@
+{% extends "index.html" %}
+{% load static %}
+{% load i18n %}
+{% load date_utils %}
+
+{% block title %}
+Tournament Detail
+{% endblock title %}
+
+{% block content %}
+
+<style>
+    .admin-card{
+        background-color: #ffffff;
+        box-shadow: 0px 0px 6px 6px rgb(204 204 204 / 0.25);
+        padding: 30px 10px;
+    }
+
+    .pcode.left-spacer {
+        margin-left: 0px;
+    }
+    .pcode{
+        margin-left: 250px;
+    }
+
+    @media(max-width:991px){
+        .setting-page .card-title h3{
+            font-size: 18px;
+        }
+        .pcode{
+            margin-left: 0px;
+        }
+    }
+
+    .close-btn {
+        position: absolute;
+        top: 0%;
+        right: 0%;
+        color: red;
+        font-size: 35px;
+        cursor: pointer;
+        background-color: black;
+        width: 25px;
+        height: 25px;
+        text-align: center;
+        line-height: 0.6;
+    }
+
+
+    .image_block_inner{
+        position: relative;
+        border: 1px solid rgb(0, 0, 0);
+        overflow: hidden;rgb(0, 0, 0);
+        width: 100%;
+    }
+
+    .modal-dialog {
+        width: auto;
+        max-width: 50%;
+        overflow-y: auto;
+    }
+
+    body {
+        background-color: #f9f9f9;
+        font-family: 'Arial', sans-serif;
+    }
+        
+    .card {
+        background-color: white;
+        color: #333;
+        border-radius: 10px;
+        box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.3);
+    }
+        
+    h1 {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    thead{
+            border-radius: 20px;
+    }
+        
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+    }
+        
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 60px;
+        height: 34px;
+        vertical-align: middle;
+    }
+        
+    .switch input {
+        display: none;
+    }
+        
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        -webkit-transition: .4s;
+        transition: .4s;
+        border-radius: 34px;
+    }
+    
+    .pcode{
+            padding-right: 20px;
+    }
+        
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 26px;
+        width: 26px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        -webkit-transition: .4s;
+        transition: .4s;
+        border-radius: 50%;
+    }
+        
+    input:checked + .slider {
+        background-color: #54ca30;
+    }
+        
+    input:focus + .slider {
+        box-shadow: 0 0 1px #333333;
+    }
+        
+    input:checked + .slider:before {
+        -webkit-transform: translateX(26px);
+        -ms-transform: translateX(26px);
+        transform: translateX(26px);
+    }
+       
+    .gameTable tr:nth-child(even) {
+        background: #e9e4e4;
+    }
+
+    .custom-navbar {
+        background-color: #f8f9fa;
+        padding: 10px 0;
+    }
+    .custom-navbar .nav-link {
+        margin-right: 20px;
+        cursor: pointer;
+    }
+    .custom-navbar .active {
+        border-bottom: 2px solid #007bff;
+    }
+    
+</style>
+
+
+<script type="text/javascript">
+    $('#mobile-collapse').click(function () {
+        $("#nw1").toggleClass('left-spacer');
+    });
+</script>
+
+
+<div class="pcode" id='nw1'>
+    <div class="container-fluid pt-4">    
+        <div class="card">
+            <div class="card-header">
+                <h5>{% trans "Tournament Detail" %}</h5>
+                <a class="btn btn-primary float-right" href="/admin/tournaments/">Back</a>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-2 mt-6 text-center">
+                        <img src="{{tournament.image.url}}" class="img-fluid" alt="tournament image" srcset="">
+                    </div>
+                    <div class="col-md-10">
+                        <div class="row">
+                            <div class="col-12">
+                                <h2 class="card-title">{{ tournament.name }}</h5>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-4">
+                            <div class="col-md-3 col-xs-12">Active : {% if tournament.is_active %}<span class="bg-success font-size-12 badge bg-secondary">Yes</span> {% else %}<span class="bg-danger font-size-12 badge bg-secondary">No</span>{% endif %}</div>
+                            <div class="col-md-3 col-xs-12">Registration Closed : {% if is_registration_closed %}<span class="bg-danger font-size-12 badge bg-secondary">Yes</span> {% else %}<span class="bg-success font-size-12 badge bg-secondary">No</span>{% endif %}</div>
+                            <div class="col-md-3 col-xs-12">Created At : {{tournament.created}}</div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-3 card border-primary text-center">
+                                <h5>Jackpot Amount</h5>
+                                <h6>{{ tournament.jackpot_amount }}</h6>
+                            </div>
+                            <div class="col-md-3 card border-primary text-center">
+                                <h5>Initial Credit Amount</h5>
+                                <h6>{{ tournament.initial_credit }}</h6>
+                            </div>
+                            <div class="col-md-3 card border-primary text-center">
+                                <h5>Start Date</h5>
+                                <h6>{{ tournament.start_date }}</h6>
+                            </div>
+                            <div class="col-md-3 card border-primary text-center">
+                                <h5>End Date</h5>
+                                <h6>{{ tournament.end_date }}</h6>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col">
+                                <h5>Description</h5>
+                                <p class="card-text mb-4">{{tournament.description}}</p>
+                            </div>
+                        </div>
+
+                        <div class="row text-center custom-navbar">
+                            <h5></h5>
+                            <div class="col nav-link active" data-target="#overview">
+                                Overview
+                            </div>
+                            <div class="col nav-link" data-target="#prize_distribution">
+                                Prize Distribution
+                            </div>
+                            <div class="col nav-link" data-target="#selected_games">
+                                Selected Games
+                            </div>
+                            {% if is_tournament_end %}
+                                <div class="col nav-link" data-target="#winners">
+                                    Winners
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="container mt-3">
+                            <div id="overview" class="content">
+                                <h2>Overview</h2>
+                                <table class="table">
+                                    <tbody>
+                                        <tr>
+                                            <td>Tournament Name</td>
+                                            <td>{{ tournament.name }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Tournament ID</td>
+                                            <td>{{ tournament.id }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Entry Fees</td>
+                                            <td>{{ tournament.entry_fees }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Initial Credit</td>
+                                            <td>{{ tournament.initial_credit }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Jackpot Amount</td>
+                                            <td>{{ tournament.jackpot_amount }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Re-Buy Fees</td>
+                                            <td>{% if tournament.is_rebuy_enabled and tournament.rebuy_fees %}{{ tournament.rebuy_fees }}{% else %}Not Available{% endif %}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Re-Buy Limit</td>
+                                            <td>{% if tournament.is_rebuy_enabled and tournament.rebuy_limit %}{{ tournament.rebuy_limit }}{% else %}Not Available{% endif %}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Minimum Player Limit</td>
+                                            <td>{% if tournament.min_player_limit %}{{ tournament.min_player_limit }}{% else %}Not Available{% endif %}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Maximum Player Limit</td>
+                                            <td>{% if tournament.is_player_limit_enabled and tournament.max_player_limit %}{{ tournament.max_player_limit }}{% else %}Not Available{% endif %}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Prize Type</td>
+                                            <td>{{ prize_type }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Number Of Winners</td>
+                                            <td>{{ tournament.tournamentprize_set.all.count }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Registered Users Count</td>
+                                            <td>{{ tournament.usertournament_set.all.count }}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div id="prize_distribution" class="content" style="display: none;">
+                                <h2>Prize Distribution</h2>
+                                <table class="table">
+                                    <thead>
+                                        <th>Position</th>
+                                        <th>Prize</th>
+                                    </thead>
+
+                                    <tbody>
+                                        {% for tournament_prize in tournament.tournamentprize_set.all  %}
+                                            <tr>
+                                                <td>{{ tournament_prize.rank }}</td>
+                                                <td>{% if tournament_prize.type == "cash" %} {{tournament_prize.amount}} {% else %} {{tournament_prize.non_cash_prize}} {% endif %}</td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div id="selected_games" class="content" style="display: none;">
+                                <h2>Selected Games</h2>
+                                <div class="table-responsive">
+                                    <table class="table">
+                                        <thead>
+                                            <th>ID</th>
+                                            <th>Name</th>
+                                            <th>Device Supported</th>
+                                            <th>Category</th>
+                                        </thead>
+
+                                        <tbody>
+                                            {% for game in tournament.games.all  %}
+                                                <tr>
+                                                    <td>{{ game.game.game_id }}</td>
+                                                    <td>{{ game.game.game_name }}</td>
+                                                    <td>{% if game.game.is_mobile_supported and game.game.is_desktop_supported  %}Mobile, Desktop{% elif game.game.is_desktop_supported %}Desktop{% else %}Mobile{% endif %}</td>
+                                                    <td>{{ game.game.game_category }}</td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            {% if is_tournament_end %}
+                                <div id="winners" class="content" style="display: none;">
+                                    <h2>Tournament Winners</h2>
+                                    <div class="table-responsive">
+                                        <table class="table text-center">
+                                            <thead>
+                                                <th>Rank</th>
+                                                <th>Win Points</th>
+                                                <th>User</th>
+                                                <th>Prize</th>
+                                            </thead>
+
+                                            <tbody>
+                                                {% for user in won_users  %}
+                                                    <tr>
+                                                        <td>{{ forloop.counter }}</td>
+                                                        <td>{{ user.win_points }}</td>
+                                                        <td>{{ user.user.username }}</td>
+                                                        <td>{{ user.win_prize }}</td>
+                                                    </tr>
+                                                {% empty %}
+                                                    {% if tournament.usertournament_set.count <= 0 %}
+                                                        <tr>
+                                                            <td colspan="4" class="text-center">The tournament had no participants.</td>
+                                                        </tr>
+                                                    {% elif tournament.is_prize_distributed and tournament.usertournament_set.count < tournament.min_player_limit %}
+                                                        <tr>
+                                                            <td colspan="4" class="text-center">The minimum player requirement was not met. Tournament fees were refunded.</td>
+                                                        </tr>
+                                                    {% elif tournament.is_prize_distributed and are_no_tournament_winner %}
+                                                        <tr>
+                                                            <td colspan="4" class="text-center">The prize could not be distributed for the tournament because none of the players had enough win points (greater than 0) to qualify.</td>
+                                                        </tr>
+                                                    {% else %}
+                                                        <tr>
+                                                            <td colspan="4" class="text-center">Winners Will Be Announced Soon!!</td>
+                                                        </tr>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>                          
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% comment %} {% include '../../includes/pagination.html' %} {% endcomment %}
+                
+    </div>
+</div>
+
+
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        setTimeout(function(){
+            $('#notification_messages').remove();
+        }, 3000);
+
+        
+        {% comment %} $('#scheduled_at').datetimepicker({
+                format: 'd/m/Y H:i',
+                timepicker: true,
+            }
+        ); {% endcomment %}
+
+        $('.nav-link').click(function(){
+            var target = $(this).data('target');
+            $('.content').hide();
+            $(target).show();
+            $('.nav-link').removeClass('active');
+            $(this).addClass('active');
+          });
+    });
+
+</script>
+{% endblock content %}
+

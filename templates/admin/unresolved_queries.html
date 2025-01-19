@@ -1,0 +1,588 @@
+{% extends "index.html" %}
+{% load date_utils %}
+{% load static %}
+{% load i18n %}
+{% load tz %}
+
+{% block title %}Unresolved Queries{% endblock title %}
+{% block content %}
+<style>
+    #pop-loader {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100%;
+        background: rgba(0,0,0,0.75) url(../../../static/Desktop_static/images/loading2.gif) no-repeat center center;
+        z-index: 10000;
+    }
+    th,td{
+        padding: 5px 10px;
+    }
+    .admin-card{
+        background-color: #ffffff;
+        box-shadow: 0px 0px 6px 6px rgb(204 204 204 / 0.25);
+        padding: 30px 10px;
+    }
+    .pcode.left-spacer {
+    	margin-left: 0px;
+    }
+    .pcode{
+    	margin-left: 250px;
+    }
+    .action_btn{
+        padding: 3%;
+    }
+    @media(max-width:991px){
+        .pcode{
+	        margin-left: 0px;
+        }
+    }
+    input[type=search]::-webkit-search-cancel-button {
+    -webkit-appearance: searchfield-cancel-button;
+}
+
+.modal-body {
+    max-height: calc(100vh - 200px);
+    overflow-y:auto;
+    overflow-x: auto;
+}
+
+.message {
+    display: flex;
+    margin: 10px;
+}
+
+.sent .message-bubble {
+    background-color:  #f0f0f6;
+    color: #000;
+    border-radius: 20px 20px 20px 0;
+    margin-left: auto; /* update margin-left instead of margin-right */
+    max-width: 70%;
+    padding: 15px 20px;
+    word-break: break-all;
+}
+
+.received .message-bubble {
+    background-color: #545456;
+    color: #fff;
+    border-radius: 20px 20px 0 20px;
+    max-width: 70%;
+    padding: 15px 20px;
+    word-break: break-all;
+}
+
+.received .message-bubble::after {
+    content: "";
+    position: absolute;
+    bottom: -10px;
+    border-style: solid;
+    border-width: 10px 10px 0 0; /* update border-width for the arrow */
+    transform: rotate(45deg); /* update rotation angle */
+    left: -10px; /* update left instead of right */
+    border-color: #f1f0f0 transparent transparent transparent;
+}
+
+.message-text {
+    font-size: 14px;
+    line-height: 1.4;
+    margin-bottom: 5px;
+}
+
+.message-time {
+    font-size: 10px;
+    color: #f7f1f1;
+}
+
+.message-time-send {
+    font-size: 10px;
+    color: #605c5c;
+}
+#chat-container {
+    overflow-y: scroll;
+    height: calc(100vh - 280px);
+    padding: 0 40px;
+   
+}
+.file-link img {
+
+height: 100%;
+width: 100%;
+object-fit: cover;
+
+}
+.custom-modal-dialog {
+  max-width: 1000px; /* Set your desired width */
+}
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+    vertical-align: middle;
+  }
+  
+  .switch input {
+    display: none;
+  }
+  
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    -webkit-transition: .4s;
+    transition: .4s;
+    border-radius: 34px;
+  }
+  .pcode{
+      padding-right: 20px;
+  }
+  
+  .slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    -webkit-transition: .4s;
+    transition: .4s;
+    border-radius: 50%;
+  }
+  
+  input:checked + .slider {
+    background-color: #000000;
+  }
+  
+  input:focus + .slider {
+    box-shadow: 0 0 1px #333333;
+  }
+  
+  input:checked + .slider:before {
+    -webkit-transform: translateX(26px);
+    -ms-transform: translateX(26px);
+    transform: translateX(26px);
+  }
+</style>
+
+<div id="pop-loader"></div>
+<div class="pcode" id='nw1'>
+    <div>
+        <div class="container-fluid pt-4 " >
+            <div class="admin-card">
+            <div class="row">
+                <div class="col-xs-12 col-lg-12 ">
+                    <div class="page-content" >
+                        <div class="main-heading-wrap">
+                            <h5>Queries</h5>
+                        </div>
+                        <div class="container-fluid" >
+                            <div class="table-data__tool">
+                                <div>
+                                    <form method="get">
+                                        
+                                         
+                                        <div class="row" style="padding-top:10px">
+                                            
+                                            <div class="col-md-12">
+                                                <div class="rs-select2--light rs-select2--md">
+                                                    
+                                                        <select id="select-players" name="players" class="js-example-basic-multiple tokenize-open">
+                                                            {% if selected_players %}
+                                                                {% for player in selected_players %}
+                                                                    <option  selected="selected"
+                                                                            value="{{ player.id }}">{{ player.username }}</option>
+                                                                {% endfor %}
+                                                            {% endif %}   
+                                                        </select>
+                                              
+                                                </div>
+                                            </div>                              
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                <div class="date-input">
+                                                    <span>{% trans "From date" %}</span>
+                                                    <input value="{{ from }}"  type="text" class="form-control" placeholder="Select from date" id="search-date-created-from" onChange="validateDateRange(this)" name="from" readonly="true" style="background-color:transparent">
+                                                </div>
+                                            </div>
+                                            </div>
+    
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                <div class="date-input">
+                                                    <span>{% trans "To date" %}</span>
+                                                    <input value="{{ to }}"  type="text" class="form-control" placeholder="Select to date" id="search-date-created-to" name="to" onChange="validateDateRange(this)"  readonly="true" style="background-color:transparent"> 
+                                                </div>
+                                                </div>
+                                            </div>
+    
+                                    </div>
+
+                                    <div class="row" style="margin-bottom: -15px">
+                                        <div class="col-md-0 ml-3">
+                                            <div class="input-group">
+
+                                                <div class="input-group-btn">
+                                                    <button class="btn btn-primary" id="button-search" >
+                                                        {% trans "Search" %}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                    </form>
+
+                                    
+                                </div>
+                            </div>
+                        
+                            <!-- Profit  - start -->
+                            <p id="pro" class="user-profit-table-title mb-1 mt-3"></p>
+                            <div class="table-responsive">
+                                <table id="ChatHistoryTable" class="table table-condensed" style="border-collapse:collapse;">
+                                    <thead >
+                                        <tr>
+
+                                            <th class="col-md-1 text-center">{% trans "ID" %}</th>
+                                            <th class="col-md-2 text-center">{% trans "Created At" %}</th>
+                                            <th class="col-md-2 text-center">{% trans "Player" %}</th>
+                                            <th class="col-md-2 text-center">{% trans "Email" %}</th>
+                                            <th class="col-md-2 text-center">{% trans "Subject" %}</th>
+                                            <th class="col-md-2 text-center">{% trans "Query" %}</th>
+                                            <th class="col-md-2 text-center">{% trans "Status" %}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for chathistory in chathistories %}
+                                        <tr chathistory_id="{{ chathistory.pk }}" >
+                                            <td class="text-center"> {{chathistory.id}} </td>
+                                            <td class="text-center"> {{chathistory.created|local_date:request.session.user_timezone |date:"d-m-y H:i"}} </td>
+                                            <td class="text-center"> {{ chathistory.user.username }}</td>
+                                            <td class="text-center"> {{ chathistory.user.email }}</td>
+                                            <td class="text-center"> {{chathistory.subject}}</td>
+                                            <td class="text-center"> 
+                                                <div>
+                                                    <button type="button" class="btn btn-primary view-content-btn" data-toggle="modal" data-target="#commentModal{{ chathistory.pk }}">View Query</button>
+                                                </div>
+                                                
+                                            </td>
+                                            <td style="text-align: center;">
+                                                <label class="switch">
+                                                    <input type="checkbox" brand-id='{{ chathistory.id }}' {% if not chathistory.is_active %}checked{% endif %}>
+                                                    <span title="{% if chathistory.is_active %}Pending {% else %} Resolved {% endif %}" onclick="switchToggle(this)" class="slider"></span>
+                                                </label>
+                                            </td>
+
+                                        </tr>
+                                                      <!-- New Modal code -->
+                                <div class="modal fade" id="commentModal{{ chathistory.pk }}" tabindex="2" role="dialog" aria-labelledby="commentModalLabel{{ chathistory.pk }}" aria-hidden="true">
+                                    <!-- Modal content -->
+                                    <div class="modal-dialog" role="document" >
+                                    <div class="modal-content">
+                                        <!-- Modal header -->
+                                        <div class="modal-header">
+                                        <h5 class="modal-title" id="commentModalLabel{{ chathistory.pk }}">Query</h5>
+                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                        </div>
+                                        <!-- Modal body -->
+                                        <div class="modal-body">
+                                        <!-- Display the comment here -->
+                                        {% if chathistory.text %}
+                                        <p>{{ chathistory.text }}</p>
+                                        {% else %}
+                                        <p>Not Available</p>
+                                        {% endif %}
+
+                                        </div>
+                                        <!-- Modal footer -->
+                                        <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                        </div>
+                                    </div>
+                                    </div>
+                                </div>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <!-- {% include 'includes/pagination.html' %} -->
+                        </div>
+          <!-- Chat Modal Popup Start -->
+                        <!-- <div class="modal fade"  id="jsonTreeModal" tabindex="-1" role="dialog" aria-labelledby="jsonTreeModalLabel" aria-hidden="true">
+                            <div class="modal-dialog modal-lg custom-modal-dialog"   role="document">
+                              <div class="modal-content">
+                                <div class="modal-header">
+                                  <h5 class="modal-title" id="jsonTreeModalLabel">Chat History</h5>
+                                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                  </button>
+                                </div>
+                                <div class="modal-body">
+                                  <div id="jsonTree">
+                                    <pre id="chat_history"></pre>
+                                    <textarea id="chat_history_hidden" hidden="true"></textarea>
+                                  </div>
+                                </div>
+                                <div class="modal-footer">
+                                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                  <button type="button" id="copy_button" onclick="downloadChatHistoryAsPDF()" class="btn btn-success">Print</button>
+                                </div>
+                              </div>
+                            </div>
+                        </div> -->
+           <!-- Chat Modal Popup End -->
+                </div>
+            </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+
+<script type="text/javascript">
+   
+    $(document).ready(function () {
+
+        $('#ChatHistoryTable').DataTable({
+            searching: false,
+            ordering: false,
+            pageLength: 10,
+            lengthMenu: [[5, 10, 20, -1], [5, 10, 20, "All"]],
+            order: [[1, 'desc']], 
+          });
+
+
+  $('#mobile-collapse').click(function () {
+        $("#nw1").toggleClass('left-spacer');
+    });
+    $("#search-date-created-from").datetimepicker({
+                format: 'd/m/Y',
+                timepicker: false,
+            });
+            
+            $("#search-date-created-to").datetimepicker({
+                format: 'd/m/Y',
+                timepicker: false,
+            });
+        });
+
+   
+    function validateDateRange(input){
+        
+        var from_date = $("#search-date-created-from").val();
+        var to_date = $("#search-date-created-to").val();
+        error_msg = "";
+        if(input.id == "search-date-created-from"){
+            error_msg = "From date must be less than To date!!"
+        }
+        else{
+            error_msg = "To date must be greater than From date!!"
+        }
+        from_day = parseInt(from_date.split("/")[0]);
+        from_month = parseInt(from_date.split("/")[1]);
+        from_year = from_date.split("/")[2];
+        from_year = from_year.split(" ")[0];
+
+        to_day = parseInt(to_date.split("/")[0]);
+        to_month = parseInt(to_date.split("/")[1]);
+        to_year = to_date.split("/")[2];
+        // from date should be less than to date
+        if(from_year > to_year){
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: error_msg,
+            });
+            $("#search-date-created-from").val("{{from}}");
+            $("#search-date-created-to").val("{{to}}");
+            return false;
+        }else if(from_year == to_year){
+            if(from_month > to_month){
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: error_msg,
+                });
+                $("#search-date-created-from").val("{{from}}");
+                $("#search-date-created-to").val("{{to}}");
+                return false;
+            }else if(from_month == to_month){
+                if(from_day > to_day){
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: error_msg,
+                    });
+                    $("#search-date-created-from").val("{{from}}");
+                    $("#search-date-created-to").val("{{to}}");
+                    return false;
+                }
+            }
+        }        
+    }
+
+
+ 
+    function showChatHistory(chatHistoryJSON) {
+  const chatHistoryElement = document.getElementById('chat_history');
+
+  // Clear the chat history element before appending new messages
+  chatHistoryElement.innerHTML = '';
+
+  // Iterate over each message in the chat history JSON
+  chatHistoryJSON.forEach((message) => {
+    const is_staff_sent = message.is_staff_sent;
+    const is_file = message.is_file;
+    const message_text = message.message_text;
+    const message_sent_time = message.message_sent_time;
+
+    // Generate the HTML markup for the message
+    let messageHTML = `
+      <div class="message ${is_staff_sent ? 'sent justify-content-start' : 'received'}">
+        <div class="message-bubble ${is_staff_sent ? 'sent justify-content-start' : 'received'}">
+          <div class="${is_file ? 'message-file' : 'message-text'}">
+            ${is_file ? `<div onclick='img_inlarge("${message_text}")' class="file-link"><a href="#" class="img-enlargeable"><img src="${message_text}"></a></div>` : message_text}
+          </div>
+          <div class="${is_staff_sent ? 'message-time-send' : 'message-time'}">${message_sent_time}</div>
+        </div>
+      </div>
+    `;
+
+    // Append the message HTML to the chat history element
+    chatHistoryElement.innerHTML += messageHTML;
+  });
+}
+
+
+// function openChatHistoryModal(chats) {
+//   try {
+//     var messageHTML = '';
+//     chats.forEach(function(chat) {
+
+//       var is_staff_sent = chat.sender === 'staff';
+//       var is_file = chat.is_file=='True';
+//       var message_text = chat.message;
+//       var message_sent_time = chat.sent_time;
+//       messageHTML += `
+//         <div class="message ${is_staff_sent ? 'sent justify-content-start' : 'received'}">
+//           <div class="message-bubble ${is_staff_sent ? 'sent justify-content-start' : 'received'}">
+//             <div class="${is_file ? 'message-file' : 'message-text'}">
+//               ${is_file ? `<div onclick='img_inlarge("${message_text}")' class="file-link"><a href="#" class="img-enlargeable"><img src="${message_text}" /></a></div>` : message_text}
+//             </div>
+//             <div class="${is_staff_sent ? 'message-time-send' : 'message-time'}">${message_sent_time}</div>
+//           </div>
+//         </div>
+//       `;
+//     });
+
+//     // Update the modal content with the generated message HTML
+//     document.getElementById('jsonTree').innerHTML = messageHTML;
+
+//     // Open the modal
+//     $('#jsonTreeModal').modal('show');
+//   } catch (error) {
+//     console.error("Error parsing JSON: ", error);
+//   }
+
+//   // Rest of your code
+// }
+
+// function downloadChatHistoryAsPDF() {
+// console.log("Nothing")
+// }
+
+function img_inlarge(img_url){
+                    var src = img_url;
+                    var modal;
+                    console.log("SRC", src)
+
+                    function removeModal(){ modal.remove(); $('body').off('keyup.modal-close'); }
+                    modal = $('<div>').css({
+                        background: 'RGBA(255 255 255 / 0%) url('+src+') no-repeat center',
+                        width: "50%",
+                        height: "100%",
+                        margin: "0 auto",
+                        position: "fixed",
+                        zIndex: "10000",
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        top: "0px",
+                        left: "0px",
+                        right: "0px",
+                        cursor: "zoom-out"
+    
+    
+                    }).click(function(){
+                        removeModal();
+                    }).appendTo('body');
+                    //handling ESC
+                    $('body').on('keyup.modal-close', function(e){
+                    if(e.key==='Escape'){ removeModal(); } 
+                    });
+                }
+                function switchToggle(element) {
+                    element = element.previousElementSibling
+                    const providerId = element.getAttribute('brand-id');
+                    console.log("providerId");
+                    console.log(providerId);
+                    $.ajax({
+                        url: "{% url 'admin-panel:change-query-status' %}",
+                        type: "POST",
+                        dataType: "json",
+                        data: {
+                            provider: providerId,
+                            csrfmiddlewaretoken: '{{ csrf_token }}'
+                        },
+                        success: function(data){
+                            element.parentNode.classList.toggle('active');
+                            if (data['message']=="Query marked as Resolved") {
+                              element.checked = false
+                            } else if (data['message']=="Query marked as Pending") {
+                              element.checked = true
+                            }
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success',
+                                text: data['message'],
+                            });
+                        },
+                    });
+                  } 
+                  $('#select-players').tokenize2({
+                    multiple: true,
+                    placeholder: "{% trans 'Search by player' %}",
+                    searchMinLength:3,
+                    dataSource: function(term, object){
+                        $.ajax("{% url 'admin-panel:player-ajax' %}", {
+                            type: "POST",
+                            data: { search: term, start: 0 },
+                            global: false, 
+                            dataType: 'json',
+                            success: function(data){
+                                var $items = [];
+                                $.each(data, function(k, v){
+                                    $items.push(v);
+                                });
+                                object.trigger('tokenize:dropdown:fill', [$items]);
+                            }
+                        });
+                    }
+                });
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.3.2/jspdf.min.js"></script>
+
+{% endblock content %}

@@ -1,0 +1,141 @@
+{% load static %}
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Betslip Info</title>
+    <!-- <link rel="stylesheet" href="" media="all" /> -->
+
+  </head>
+  <body>
+    <style>
+        
+         #invoiceItems tr td {
+                text-align: center;
+                padding: 0.6rem 0;
+        }
+        #thanks {
+            text-align: center;
+         }
+        
+        span.span-1 {
+                width: 200px;
+                display: inline-block;
+                text-align: left;
+        }
+
+        .top-heading {
+            text-align: center;
+        }
+
+        .date {
+            padding-bottom: 15px;
+        }
+
+        .total-section {
+            display: inline-block;
+            width: 100%;
+        }
+    
+
+      
+    </style>
+    <header class="clearfix">
+      <!-- <div id="logo">
+        <img src="/home/rails/Downloads/landing_img_1.jpeg" class="brand-logo" width=60 height=60>
+      </div> -->
+      <div class="top-heading">
+        <h1 class="to">Betslip Data</h1>
+      </div>
+      <div id="company">
+        <h2 class="name">{{invoice.company_details.name}}</h2>
+        <div>{{invoice.company_details.address}}</div>
+        <div>{{invoice.company_details.phone}}</div>
+        <div>{{invoice.company_details.email}}</div>
+      </div>
+      </div>
+    </header>
+    <main>
+      <div id="details" class="clearfix">
+        <div id="client">
+          
+          <h3 class="name">Coupon ID :- {{ betslip_obj.coupon_id }}</h3>
+          <div class="address">Total Stake :- {{ betslip_obj.stake }}</div>
+          <div class="email">Total Odds :- {{ betslip_obj.multi_price }}</div>
+        </div>
+        <div id="invoice">
+          <h1>{{invoice.invoice_number}}</h1>
+          <div class="date">Date of Creation :- {{ betslip_obj.created }}</div>
+        </div>
+      </div>
+      <table width="100%" border="0" cellspacing="0" cellpadding="0">
+        <thead>
+          <tr>
+            <th class="desc">Bet ID</th>
+            <th class="desc">League Name</th>  
+            <th class="unit">Participant 1</th>
+            <th class="qty">Participant 2</th>
+            <th class="total">Bet settlement status</th>
+          </tr>
+        </thead>
+        <tbody id="invoiceItems">
+		
+		 {% for bet in bets_obj %}
+          <tr>
+            <td class="no">{{ bet.id }}</td>
+            <td class="no">{{ bet.event.league.name_en }}</td>
+            {% for participant in bet.event.participants.all %}
+                <td class="desc">{{ participant.name_en }}</td>
+            {% endfor %}
+            <td class="unit">{{bet.settlement_status}}</td>
+            
+          </tr>
+		  {% endfor %}
+		  
+        </tbody>
+        <!-- <tfoot>
+          <tr>
+            <td colspan="2"></td>
+            <td colspan="2">Stake Amount</td>
+            <td>{{ betslip_obj.stake }}</td>
+          </tr>
+          <tr>
+            <td colspan="2"></td>
+            <td colspan="2">Total Odds</td>
+            <td>{{ betslip_obj.multi_price }}</td>
+          </tr>
+          <tr>
+            <td colspan="2"></td>
+            <td colspan="2">GRAND TOTAL</td>
+            <td>{{invoice.grand_total}}</td>
+          </tr>
+        </tfoot> -->
+      </table>
+      <div class="total-section">
+
+        
+            
+                <P>
+                    <span class="span-1" style="width: 200px; display: inline-block;
+                    text-align: left;">Total Stake </span>
+                    <span>{{ betslip_obj.stake }}</span>
+                </P>
+                <p>
+                    <span class="span-1" style="width: 200px; display: inline-block;
+                    text-align: left;">Total Odds </span>
+                    <span>{{ betslip_obj.multi_price }}</span>
+                </p>
+                <!-- <p>
+                    <span class="span-1" style="width: 200px; display: inline-block;
+                    text-align: left;">Grand Total </span>
+                    <span>150.00</span>
+                </p> -->
+        
+        </div>
+      <div id="thanks">Thank you!</div>
+      <!-- <div id="notices">
+        <div>NOTICE:</div>
+        <div class="notice">A finance charge of 1.5% will be made on unpaid balances after 30 days.</div>
+      </div> -->
+    </main>
+  </body>
+</html>

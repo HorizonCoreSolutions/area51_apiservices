@@ -1,0 +1,193 @@
+msgid "Esportes"
+msgstr "Esports"
+
+msgid "LIVE"
+msgstr "EN VIVO"
+
+msgid "Upcoming"
+msgstr "Suivant"
+
+msgid "Tomorrow"
+msgstr "Matin"
+
+msgid "Highlights"
+msgstr "Moments importants"
+
+msgid "Results"
+msgstr "Résultats"
+
+msgid "Last Minute"
+msgstr "Dernière minute"
+
+msgid "Live Casino"
+msgstr "Casino en direct"
+
+msgid "Casino"
+msgstr "Casino"
+
+msgid "My Bets"
+msgstr "Mes paris"
+
+msgid "Home"
+msgstr "Maison"
+
+msgid "Login"
+msgstr "Accès"
+
+msgid "Sign up"
+msgstr "Inscrivez-vous"
+
+msgid "Betslip"
+msgstr "Billet de pari"
+
+msgid "Search"
+msgstr "Chercher"
+
+msgid "Search here"
+msgstr "Chercher ici"
+
+msgid "Transaction"
+msgstr "Opérations"
+
+msgid "Change password"
+msgstr "Changer le mot de passe"
+
+msgid "Logout"
+msgstr "Fermer la session"
+
+msgid "Single"
+msgstr "Unique"
+
+msgid "Multiple"
+msgstr "Plusieurs"
+
+msgid "Possible win"
+msgstr "gain posible"
+
+msgid "Amount"
+msgstr "Montant"
+
+msgid "Ok"
+msgstr "OK"
+
+msgid "Total odds"
+msgstr "Total des lignes"
+
+msgid "Odd"
+msgstr "Ligne"
+
+msgid "Total possible win"
+msgstr "gain total possible"
+
+msgid "Place bet"
+msgstr "Parier"
+
+msgid "Fast"
+msgstr "Vite"
+
+msgid "bet"
+msgstr "pari"
+
+msgid "Username"
+msgstr "Nom d'utilisateur"
+
+msgid "Password"
+msgstr "Mot de passe"
+
+msgid "Stay logged in"
+msgstr "Rester connecté"
+
+msgid "All"
+msgstr "Toutes"
+
+msgid "In Game"
+msgstr "En jue"
+
+msgid "Won"
+msgstr "gagné"
+
+msgid "Lost"
+msgstr "Perdu"
+
+msgid "Refund"
+msgstr "Remboursement"
+
+msgid "Date"
+msgstr "Date"
+
+msgid "Win amount"
+msgstr "Montant des gains"
+
+msgid "Stake"
+msgstr "Parier"
+
+msgid "Pick"
+msgstr "Choisir"
+
+msgid "My Account"
+msgstr "Mon compte"
+
+
+msgid "This pick can not be combined"
+msgstr "Cette sélection ne peut pas être combinée"
+
+msgid "Cashout"
+msgstr "paiement"
+
+msgid "Deposit"
+msgstr "Dépôt"
+
+msgid "Withdraw"
+msgstr "Retirer"
+
+msgid "Total Odd"
+msgstr "Ligne totale"
+
+msgid "Insufficient balance"
+msgstr "Saldo insuffisant"
+
+msgid "Old Password"
+msgstr "Ancien mot de passe"
+
+msgid "New Password"
+msgstr "Nouveau mot de passe"
+
+msgid "Confirm New Password"
+msgstr "Confirmer le nouveau mot de passe"
+
+
+msgid "Change"
+msgstr "Changement"
+
+msgid "From Date"
+msgstr "À partir de la date"
+
+msgid "To Date"
+msgstr "Jusqu'à la date"
+
+msgid "Activity Type"
+msgstr "Type d'activité"
+
+msgid "Status"
+msgstr "État"
+
+msgid "Coupon"
+msgstr "Coupon"
+
+msgid "Max win amount"
+msgstr "Montant maximum des gains"
+
+msgid "Date/Time"
+msgstr "Date et heure"
+
+msgid "Type"
+msgstr "Type"
+
+msgid "Vendor"
+msgstr "Vendeur"
+
+msgid "The stake must be less then"
+msgstr "La mise doit être inférieure à"
+
+msgid "The stake must be greater then"
+msgstr "La mise doit être supérieure à"

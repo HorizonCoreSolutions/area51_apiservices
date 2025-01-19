@@ -1,0 +1,406 @@
+{% extends "index.html" %}
+{% load static %}
+{% load i18n %}
+{% load date_utils %}
+{% block title %}
+Offmarket Withdrawal Request
+{% endblock title %}
+
+{% block content %}
+
+<style>
+    .admin-card{
+        background-color: #ffffff;
+        box-shadow: 0px 0px 6px 6px rgb(204 204 204 / 0.25);
+        padding: 30px 10px;
+    }
+
+    .pcode.left-spacer {
+    margin-left: 0px;
+    }
+    .pcode{
+    margin-left: 250px;
+    }
+    .pcode.left-spacer {
+	margin-left: 0px;
+    }
+
+    @media(max-width:991px){
+        .setting-page .card-title h3{
+        font-size: 18px;
+        }
+        .pcode{
+        margin-left: 0px;
+        }
+    }
+    .setting-page .card-title h3{
+    font-size: 18px;
+    }
+    .btn-close {
+        position: absolute;
+        top: 0;
+        right: 0;
+        z-index: 1;
+        padding: 1rem;
+        background-color: transparent;
+        border: none;
+      }
+    .image_block_inner{
+        position: relative;
+        border: 1px solid rgb(0, 0, 0);
+        overflow: hidden;rgb(0, 0, 0);
+        width: 100%;
+    }
+    p strong {
+        font-weight: bold !important;
+      }
+    
+</style>
+<script type="text/javascript">
+
+$('#mobile-collapse').click(function () {
+    $("#nw1").toggleClass('left-spacer');
+});
+
+function validateDateRange(input){
+        
+    var from_date = $("#search-date-created-from").val();
+    var to_date = $("#search-date-created-to").val();
+    error_msg = "";
+    if(input.id == "search-date-created-from"){
+        error_msg = "From date must be less than To date!!"
+    }
+    else{
+        error_msg = "To date must be greater than From date!!"
+    }
+    from_day = parseInt(from_date.split("/")[0]);
+    from_month = parseInt(from_date.split("/")[1]);
+    from_year = from_date.split("/")[2];
+    from_year = from_year.split(" ")[0];
+    from_hour = parseInt(from_date.split(" ")[1].split(":")[0]);
+    from_minute = parseInt(from_date.split(" ")[1].split(":")[1]);
+
+    to_day = parseInt(to_date.split("/")[0]);
+    to_month = parseInt(to_date.split("/")[1]);
+    to_year = to_date.split("/")[2];
+    to_year = to_year.split(" ")[0];
+    to_hour = parseInt(to_date.split(" ")[1].split(":")[0]);
+    to_minute = parseInt(to_date.split(" ")[1].split(":")[1]);
+    // from date should be less than to date
+    if(from_year > to_year){
+        Swal.fire({
+            icon: 'error',
+            title: 'Oops...',
+            text: error_msg,
+        });
+        $("#search-date-created-from").val("{{from}}");
+        $("#search-date-created-to").val("{{to}}");
+        return false;
+    }else if(from_year == to_year){
+        if(from_month > to_month){
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: error_msg,
+            });
+            $("#search-date-created-from").val("{{from}}");
+            $("#search-date-created-to").val("{{to}}");
+            return false;
+        }else if(from_month == to_month){
+            if(from_day > to_day){
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: error_msg,
+                });
+                $("#search-date-created-from").val("{{from}}");
+                $("#search-date-created-to").val("{{to}}");
+                return false;
+            }else if(from_day == to_day){
+                if(from_hour > to_hour){
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: error_msg,
+                    });
+                    $("#search-date-created-from").val("{{from}}");
+                    $("#search-date-created-to").val("{{to}}");
+                    return false;
+                }else if(from_hour == to_hour){
+                    if(from_minute > to_minute){
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Oops...',
+                            text: error_msg,
+                        });
+                        $("#search-date-created-from").val("{{from}}");
+                        $("#search-date-created-to").val("{{to}}");
+                        return false;
+                    }
+                }
+            }
+        }
+    }        
+}   
+$(document).ready(function() {
+    setTimeout(function(){
+      $('#notification_messages').remove();
+    }, 3000);
+
+    $("#search-date-created-from").datetimepicker({
+        format: 'd/m/Y',
+        timepicker: false,
+    });
+    $("#search-date-created-to").datetimepicker({
+        format: 'd/m/Y',
+        timepicker: false,
+    });
+
+    $('.modal').on('hidden.bs.modal', function () {
+        $(this).find('form')[0].reset();
+      });
+
+    
+      $('#select-players').tokenize2({
+        multiple: true,
+        placeholder: "{% trans 'Search by player' %}",
+        searchMinLength:3,
+        dataSource: function(term, object){
+            $.ajax("{% url 'admin-panel:player-ajax' %}", {
+                type: "POST",
+                data: { search: term, start: 0 },
+                global: false, 
+                dataType: 'json',
+                success: function(data){
+                    var $items = [];
+                    $.each(data, function(k, v){
+                        $items.push(v);
+                    });
+                    object.trigger('tokenize:dropdown:fill', [$items]);
+                }
+            });
+        }
+    });
+     
+  
+   
+
+    $("#reporttable").DataTable({
+        responsive: true,
+        searching: false,
+        order: [],
+        dom: 'Bfrtip',
+        buttons: [
+         ]
+    });
+
+});
+
+ 
+function update_request_status(trans_id, status) {
+    Swal.fire({
+        title: "Are you sure, you want to Change the withdrawal request status?",
+        text: "",
+        icon: "warning",
+        showCancelButton: true,
+        cancelButtonColor: "#343a40",
+        showConfirmButton: true,
+}).then(function (result) {
+    if(result.isConfirmed){
+
+    $.ajax("{% url 'admin-panel:update-offmarket-withdrawal-request-status' %}", {
+        type: "POST",
+        dataType: "json",
+        data: {
+            trans_id: trans_id,
+            status: status,
+            csrfmiddlewaretoken: '{{ csrf_token }}'
+        },
+        success: function (data) {
+            Swal.fire({
+                icon: data["status"],
+                title: data["status"][0].toUpperCase() + data["status"].substring(1),
+                text: data['message'],
+            }).then(() => {
+                window.location.reload();
+            });
+        },
+        error : function(data) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: data['message'],
+            })
+        }
+    })
+}
+});
+}
+   
+
+
+</script>
+
+<div class="pcode" id='nw1'>
+    <div>
+        <div class="container-fluid pt-4 " >
+            {% include "../includes/messages.html" %}
+            <div class="admin-card">
+                <div id="notification_messages">
+                    {% if error %}
+                    <div class="alert alert-success alert-block">
+                        <button type="button" class="close" data-dismiss="alert">×</button>
+                        <strong>{{ error }}</strong>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="row">
+                    <div class="col-xs-12 col-lg-12 ">
+                        <div class="page-content" >
+                            <div class="main-heading-wrap">
+                                <h5>{% trans 'Withdrawal Request' %}</h5>
+
+                            </div>
+                            <div class="container-fluid" >
+                                    <div class="table-data__tool">
+                                        <div  style="padding: 0;">
+                                            <form method="get">
+                                                <div class="row flex-sm-nowrap flex-wrap mb-4">
+
+                                                    <div class="col">
+                                                        <div class="rs-select2--light rs-select2--md">
+                                                            <select id="select-players" name="players" class="js-example-basic-multiple tokenize-open">
+                                                                {% if selected_players %}
+                                                                    {% for player in selected_players %}
+                                                                        <option  selected="selected"
+                                                                                value="{{ player.id }}">{{ player.username }}</option>
+                                                                    {% endfor %}
+                                                                {% endif %}   
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                   
+                                                    
+                                                </div>
+                                                
+                                                <div class="row" style="margin-top:0px">
+                                                    <!-- Date filters -->
+                                                    <div class="col-md-4">
+                                                        <div class="form-group">
+                                                        <div class="date-input">
+                                                            <span>{% trans "From date" %}</span>
+                                                            <input  type="text" class="form-control" value={{from}} id="search-date-created-from" placeholder='{% trans "Select from date" %}' onChange="validateDateRange(this)" name="from" readonly="true" style="background-color:transparent">
+                                                        </div>
+                                                    </div>
+                                                    </div>
+                        
+                                                    <div class="col-md-4">
+                                                        <div class="form-group">
+                                                        <div class="date-input">
+                                                            <span>{% trans "To date" %}</span>
+                                                            <input type="text" class="form-control" value={{to}} id="search-date-created-to" placeholder='{% trans "Select to date" %}' onChange="validateDateRange(this)" name="to" readonly="true" style="background-color:transparent">
+                                                        </div>
+                                                    </div>
+                                                    </div>
+                                                    <!-- Role and Trans Type -->
+                                                   
+                                                    <div class="col-md-4">
+                                                        <div class="form-group">
+                                                            <span style="font-weight: bold; color: black;">{% trans "Transaction Status" %}</span>
+                                                            <select class="form-control select-input" id="status" name="status" >
+                                                                <option {% if status == None or status == 'all' %}selected="selected" {% endif %} value="all">{% trans "--All--" %}</option>
+                                                                <option {% if status == 'approved' %}selected="selected" {% endif %} value="approved">{% trans "Approved" %}</option>
+                                                                <option {% if status == 'rejected' %}selected="selected" {% endif %} value="rejected">{% trans "Rejected" %}</option>
+                                                                <option {% if status == 'pending' %}selected="selected" {% endif %} value="pending">{% trans "Pending" %}</option>
+                                                            </select>
+                                                            <div class="dropDownSelect2" ></div>
+                                                        </div>
+                                                    </div>
+        
+                                                    <!-- Duration Filter -->
+                                                
+                                                </div>
+                                                <div class="row" >
+                                                    {% if request.user.role == 'superadmin' %}
+                                                    <div class="input-group-btn mb-2 ml-3" style="position: relative;" >
+                                                        <button class="btn btn-primary " style="width: 120px;" id="button-report-download">
+                                                            {% trans "Download" %}
+                                                        </button>
+                                                    </div>
+                                                {% endif %}
+                                                <div class="input-group-btn mb-2 ml-3" style="position: relative;">
+                                                    <button class="btn btn-primary" id="button-search">
+                                                        {% trans "Search" %}
+                                                    </button>
+                                                </div>
+        
+                                                </div>
+                                                
+                                                
+                                            </form>
+                                        </div>
+                                    </div>
+                                    <div class="table-responsive table-responsive-data2 mt-2">
+                                        <table class="table table-data2 transactions-table table-bordered" width="100%" id="reporttable">
+                                            <thead class="thead-dark">
+                                                <tr>
+                                                    <th class="col-md-2">{% trans 'Created' %}</th>
+                                                    <th class="col-md-1">{% trans 'User' %}</th>
+                                                    <th class="col-md-1">{% trans 'Amount(USD)' %}</th>
+                                                    <th class="col-md-1">{% trans 'Game Code' %}</th>
+                                                    {% comment %} <th class="col-md-1">{% trans 'Info' %}</th> {% endcomment %}
+                                                    <th class="col-md-1">{% trans 'Status' %}</th>
+                                                    <th class="col-md-2">{% trans 'Action' %}</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for withdrawal in PendingWithdrawals %}
+                                                    <tr>
+                                                        <td>{{ withdrawal.created |local_date:request.session.user_timezone |date:"d-m-y H:i" }}</td>
+                                                        <td>{{ withdrawal.user.username }}</td>
+                                                        <td>{{ withdrawal.amount|floatformat:"2"}}</td>
+                                                        <td>{{ withdrawal.code }}</td>
+                                                        <td>
+                                                                {{ withdrawal.status|capfirst }}
+                                                        </td>
+                                       
+                                                        <td>
+                                                            <div class="dropdown" >
+                                                                <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                                                                 {% if withdrawal.status != 'pending' %}disabled{% endif %}>
+                                                                    Change Status
+                                                                </button>
+                                                                <div class="dropdown-menu" aria-labelledby="statusDropdown{{ withdrawal.id }}">
+                                                                    <a class="dropdown-item" href="#" onclick="update_request_status({{ withdrawal.id }}, 'approved')">Approve</a>
+                                                                    <a class="dropdown-item" href="#" onclick="update_request_status({{ withdrawal.id }}, 'cancelled')">Reject</a>
+                                                                </div>
+                                                                 
+                                                               
+                                                                
+
+                                                            </div>
+                                                           
+                                                        
+                                                        </td>
+                                                    </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                        {% comment %} {% include 'includes/pagination.html' %} {% endcomment %}
+                                    </div>
+                                    
+                                      
+                                    
+                                </div>
+                        
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
+
+

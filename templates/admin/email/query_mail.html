@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>User Query Received</title>
+</head>
+<body>
+    <p>Hello,</p>
+    
+    <p>We have received your query. Our support team will review it and get back to you as soon as possible.</p>
+    
+    <h2>Here's What You Told Us:</h2>
+    <p><strong>Your Topic:</strong> {{ query.subject }}</p>
+    <p><strong>Message:</strong></p>
+    <blockquote>{{ query.text|linebreaks }}</blockquote>
+    
+    <p>While you wait, take a deep breath and know that we're already working to get you the answers you need.</p>
+    
+    <p>Thank you for reaching out to us.</p>
+    
+    <p>Best regards,<br>
+    Area51 Support Team</p>
+</body>
+</html>

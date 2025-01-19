@@ -1,0 +1,4061 @@
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-07-28 07:56+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: apps/admin_panel/forms.py:38 apps/admin_panel/forms.py:83
+#: apps/admin_panel/forms.py:122
+#: templates/Desktop_template/admin/admins.html:81
+#: templates/Desktop_template/admin/create-admin.html:41
+#: templates/Desktop_template/login.html:28
+#: templates/mobile_template/admin/admins.html:65
+#: templates/mobile_template/admin/create-admin.html:17
+#: templates/mobile_template/login.html:19
+msgid "Username"
+msgstr "사용자 이름"
+
+#: apps/admin_panel/forms.py:48 apps/admin_panel/forms.py:94
+#: apps/admin_panel/forms.py:133
+#: templates/Desktop_template/admin/create-admin.html:65
+#: templates/Desktop_template/login.html:39
+#: templates/mobile_template/admin/create-admin.html:25
+#: templates/mobile_template/login.html:33
+msgid "Password"
+msgstr "비밀번호"
+
+#: apps/admin_panel/forms.py:186 apps/admin_panel/views.py:412
+#: apps/admin_panel/views.py:504 apps/admin_panel/views.py:699
+#: apps/admin_panel/views.py:759 apps/admin_panel/views.py:876
+#: apps/admin_panel/views.py:935
+msgid "The username has to be at least 4 characters"
+msgstr "사용자 이름은 4 자 이상이어야합니다"
+
+#: apps/admin_panel/forms.py:189 apps/admin_panel/views.py:420
+#: apps/admin_panel/views.py:512 apps/admin_panel/views.py:707
+#: apps/admin_panel/views.py:767 apps/admin_panel/views.py:884
+#: apps/admin_panel/views.py:943
+msgid "The password has to be at least 5 characters"
+msgstr "암호는 최소 5 자이어야합니다"
+
+#: apps/admin_panel/forms.py:192
+#| msgid "The password has to be at least 5 characters"
+msgid "The password has to be at least 3 characters"
+msgstr "암호는 최소 5 자이어야합니다"
+
+#: apps/admin_panel/validators.py:12
+msgid ""
+"Enter a valid username. This value may contain only English letters, numbers."
+msgstr ""
+"유효한 사용자 이름을 입력합니다. 이 값은 숫자를 영어 문자를 포함 할 수 있습니"
+"다."
+
+#: apps/admin_panel/views.py:399 apps/admin_panel/views.py:686
+msgid "Username already exists"
+msgstr "사용자 이름이 이미 존재합니다"
+
+#: apps/admin_panel/views.py:525
+msgid "Player has been edited."
+msgstr "플레이어 편집되었습니다."
+
+#: apps/admin_panel/views.py:692
+msgid "Username must be Alphanumeric"
+msgstr "사용자 이름은 영숫자해야합니다"
+
+#: apps/admin_panel/views.py:781
+msgid "Agent has been edited."
+msgstr "에이전트가 수정되었습니다."
+
+#: apps/admin_panel/views.py:891
+msgid "Username must be unique."
+msgstr "이름은 고유해야합니다."
+
+#: apps/admin_panel/views.py:912
+msgid "Dealer has been created."
+msgstr "판매점이 생성되었습니다."
+
+#: apps/admin_panel/views.py:958
+msgid "Dealer has been edited."
+msgstr "딜러 편집되었습니다."
+
+#: apps/admin_panel/views.py:2525 apps/admin_panel/views.py:2535
+msgid "Casino has been enabled successfully."
+msgstr "카지노가 성공적으로 활성화되었습니다."
+
+#: apps/admin_panel/views.py:2528 apps/admin_panel/views.py:2538
+msgid "Casino has been disabled successfully."
+msgstr "카지노는 성공적으로 비활성화되었습니다."
+
+#: apps/admin_panel/views.py:2561
+msgid "Live Casino has been enabled successfully."
+msgstr "라이브 카지노가 성공적으로 활성화되었습니다."
+
+#: apps/admin_panel/views.py:2564
+msgid "Live Casino has been disabled successfully."
+msgstr "라이브 카지노 성공적으로 비활성화되었습니다."
+
+#: apps/admin_panel/views.py:2592 apps/admin_panel/views.py:2608
+msgid "Cashback has been enabled successfully."
+msgstr "캐쉬백은 성공적으로 활성화되었습니다."
+
+#: apps/admin_panel/views.py:2598 apps/admin_panel/views.py:2614
+msgid "Cashback has been disabled successfully."
+msgstr "캐쉬백은 성공적으로 비활성화되었습니다."
+
+#: apps/admin_panel/views.py:2638
+msgid "Player has been activated successfully."
+msgstr "플레이어가 성공적으로 활성화되었습니다."
+
+#: apps/admin_panel/views.py:2641
+msgid "Player has been deactivated successfully."
+msgstr "플레이어가 성공적으로 비활성화되었습니다."
+
+#: apps/admin_panel/views.py:3585
+msgid "You can withdraw after : "
+msgstr ""
+
+#: apps/bets/filters.py:10
+#: templates/Desktop_template/includes/transactions.html:47
+#: templates/Desktop_template/includes/transactions.html:147
+#: templates/Desktop_template/report/transaction_report.html:80
+#: templates/mobile_template/includes/transactions.html:43
+#: templates/mobile_template/includes/transactions.html:139
+msgid "Withdraw"
+msgstr "철회하다"
+
+#: apps/bets/filters.py:11 apps/bets/filters.py:14
+#: templates/Desktop_template/includes/transactions.html:46
+#: templates/Desktop_template/includes/transactions.html:146
+#: templates/Desktop_template/report/transaction_report.html:79
+#: templates/mobile_template/includes/transactions.html:42
+#: templates/mobile_template/includes/transactions.html:138
+msgid "Deposit"
+msgstr "보증금"
+
+#: apps/bets/filters.py:12
+msgid "Credit"
+msgstr "Credit"
+
+#: apps/bets/filters.py:13
+msgid "Debit"
+msgstr "Debit"
+
+#: apps/bets/models.py:27
+msgid "Pending Charge"
+msgstr "보류 충전"
+
+#: apps/bets/models.py:28
+msgid "Failed Charge"
+msgstr "실패 요금"
+
+#: apps/bets/models.py:29
+msgid "Charged"
+msgstr "충전"
+
+#: apps/bets/models.py:30
+msgid "Pending Pay"
+msgstr "보류 지불"
+
+#: apps/bets/models.py:31
+msgid "Failed Reject"
+msgstr "거부 실패"
+
+#: apps/bets/models.py:37 templates/Desktop_template/bets/betslips.html:72
+#: templates/Desktop_template/report/betslip_report.html:117
+#: templates/mobile_template/bets/betslips.html:45
+msgid "Single"
+msgstr "하나의"
+
+#: apps/bets/models.py:37 templates/Desktop_template/bets/betslips.html:77
+#: templates/Desktop_template/report/betslip_report.html:118
+#: templates/mobile_template/bets/betslips.html:50
+msgid "Multiple"
+msgstr "다수의"
+
+#: apps/bets/models.py:58
+msgid "multi stake"
+msgstr "멀티 지분"
+
+#: apps/bets/models.py:61
+msgid "multi price"
+msgstr "멀티 가격"
+
+#: apps/bets/models.py:64
+msgid "possible win amount"
+msgstr "가능한 승리 금액"
+
+#: apps/bets/models.py:69
+msgid "bet slip unique id"
+msgstr "베팅 슬립 고유 ID"
+
+#: apps/bets/models.py:456
+msgid "bet id"
+msgstr "내기 아이디"
+
+#: apps/bets/models.py:459 apps/pulls/models.py:162
+msgid "fixture id"
+msgstr "고정 ID"
+
+#: apps/bets/models.py:460 apps/pulls/models.py:38
+msgid "market id"
+msgstr "시장 ID"
+
+#: apps/bets/models.py:461
+msgid "provider id"
+msgstr "공급자 ID"
+
+#: apps/bets/models.py:462
+msgid "champ"
+msgstr "챔피언"
+
+#: apps/bets/models.py:463
+msgid "match"
+msgstr "성냥"
+
+#: apps/bets/models.py:464
+msgid "market"
+msgstr "시장"
+
+#: apps/bets/models.py:466 apps/pulls/models.py:39 apps/pulls/models.py:40
+#: apps/pulls/models.py:41 apps/pulls/models.py:42 apps/pulls/models.py:43
+#: apps/pulls/models.py:44 apps/pulls/models.py:45 apps/pulls/models.py:46
+#: apps/pulls/models.py:47 apps/pulls/models.py:48 apps/pulls/models.py:49
+#: apps/pulls/models.py:50 apps/pulls/models.py:51 apps/pulls/models.py:52
+#: apps/pulls/models.py:57 apps/pulls/models.py:58 apps/pulls/models.py:59
+#: apps/pulls/models.py:60 apps/pulls/models.py:61 apps/pulls/models.py:62
+#: apps/pulls/models.py:63 apps/pulls/models.py:64 apps/pulls/models.py:65
+#: apps/pulls/models.py:66 apps/pulls/models.py:67 apps/pulls/models.py:68
+#: apps/pulls/models.py:69 apps/pulls/models.py:70 apps/pulls/models.py:75
+#: apps/pulls/models.py:76 apps/pulls/models.py:77 apps/pulls/models.py:78
+#: apps/pulls/models.py:79 apps/pulls/models.py:80 apps/pulls/models.py:81
+#: apps/pulls/models.py:82 apps/pulls/models.py:83 apps/pulls/models.py:84
+#: apps/pulls/models.py:85 apps/pulls/models.py:86 apps/pulls/models.py:87
+#: apps/pulls/models.py:88 apps/pulls/models.py:92 apps/pulls/models.py:93
+#: apps/pulls/models.py:94 apps/pulls/models.py:95 apps/pulls/models.py:96
+#: apps/pulls/models.py:97 apps/pulls/models.py:98 apps/pulls/models.py:99
+#: apps/pulls/models.py:100 apps/pulls/models.py:101 apps/pulls/models.py:102
+#: apps/pulls/models.py:103 apps/pulls/models.py:104 apps/pulls/models.py:105
+#: apps/pulls/models.py:115 apps/pulls/models.py:116 apps/pulls/models.py:117
+#: apps/pulls/models.py:118 apps/pulls/models.py:119 apps/pulls/models.py:120
+#: apps/pulls/models.py:121 apps/pulls/models.py:122 apps/pulls/models.py:123
+#: apps/pulls/models.py:124 apps/pulls/models.py:125 apps/pulls/models.py:126
+#: apps/pulls/models.py:127 apps/pulls/models.py:128 apps/pulls/models.py:164
+#: apps/pulls/models.py:165 apps/pulls/models.py:166 apps/pulls/models.py:167
+#: apps/pulls/models.py:168 apps/pulls/models.py:169 apps/pulls/models.py:170
+#: apps/pulls/models.py:171 apps/pulls/models.py:172 apps/pulls/models.py:173
+#: apps/pulls/models.py:174 apps/pulls/models.py:175 apps/pulls/models.py:176
+#: apps/pulls/models.py:177 apps/pulls/models.py:179 apps/pulls/models.py:180
+#: apps/pulls/models.py:181 apps/pulls/models.py:182 apps/pulls/models.py:183
+#: apps/pulls/models.py:184 apps/pulls/models.py:185 apps/pulls/models.py:186
+#: apps/pulls/models.py:187 apps/pulls/models.py:188 apps/pulls/models.py:189
+#: apps/pulls/models.py:190 apps/pulls/models.py:191 apps/pulls/models.py:192
+#: apps/pulls/models.py:194 apps/pulls/models.py:195 apps/pulls/models.py:196
+#: apps/pulls/models.py:197 apps/pulls/models.py:198 apps/pulls/models.py:199
+#: apps/pulls/models.py:200 apps/pulls/models.py:201 apps/pulls/models.py:202
+#: apps/pulls/models.py:203 apps/pulls/models.py:204 apps/pulls/models.py:205
+#: apps/pulls/models.py:206 apps/pulls/models.py:207
+msgid "name"
+msgstr "이름"
+
+#: apps/bets/models.py:469
+msgid "price"
+msgstr "가격"
+
+#: apps/bets/models.py:471
+msgid "start_date"
+msgstr "START_DATE"
+
+#: apps/bets/models.py:503
+msgid "amount"
+msgstr "양"
+
+#: apps/bets/models.py:506
+msgid "journal_entry"
+msgstr "분개"
+
+#: apps/bets/models.py:509
+msgid "status"
+msgstr "상태"
+
+#: apps/bets/models.py:512
+msgid "previous_balance"
+msgstr "이전 잔고"
+
+#: apps/bets/models.py:515
+msgid "new_balance"
+msgstr "새로운 균형"
+
+#: apps/bets/models.py:518
+msgid "reference"
+msgstr "참조"
+
+#: apps/bets/models.py:520
+msgid "description"
+msgstr "설명"
+
+#: apps/bets/serializers.py:210 apps/bets/serializers.py:222
+#: apps/bets/serializers.py:254
+#| msgid "Fixture id"
+msgid "Fixture id "
+msgstr "기구 아이디"
+
+#: apps/bets/serializers.py:260
+msgid "Insufficient balance!"
+msgstr "잔액 불충분!"
+
+#: apps/bets/serializers.py:264
+msgid "Stake can't be empty."
+msgstr "스테이크는 비워 둘 수 없습니다."
+
+#: apps/bets/serializers.py:310 apps/bets/serializers.py:318
+#| msgid "Bet stake must be less or equal to"
+msgid "Bet stake must be less or equal to "
+msgstr "베팅 지분이 작거나 같음한다"
+
+#: apps/bets/serializers.py:314 apps/bets/serializers.py:322
+#| msgid "Bet stake must be great than"
+msgid "Bet stake must be great than "
+msgstr "베팅 지분보다 커야"
+
+#: apps/bets/serializers.py:326
+#| msgid "Max odd must be"
+msgid "Max odd must be "
+msgstr "최대 홀수이어야합니다"
+
+#: apps/bets/serializers.py:330
+#| msgid "Max win amount can be"
+msgid "Max win amount can be "
+msgstr "최대 승리 금액이 될 수 있습니다"
+
+#: apps/bets/serializers.py:348
+#| msgid "Same bet count must be"
+msgid "Same bet count must be "
+msgstr "동일 내기 수는 있어야합니다"
+
+#: apps/bets/serializers.py:361
+#| msgid "For one bet max amount is"
+msgid "For one bet max amount is "
+msgstr "하나 내기 위해 최대 금액입니다"
+
+#: apps/bets/serializers.py:370
+#| msgid "For multiple bet with count 2 and price lower than 2.2 max bet is"
+msgid "For multiple bet with count 2 and price lower than 2.2 max bet is "
+msgstr "카운트 2 가격으로 여러 내기 위해보다 낮은 2.2 최대 베팅입니다"
+
+#: apps/bets/serializers.py:380
+#| msgid "For multiple bet with count 3 and price lower than 3.2 max bet is"
+msgid "For multiple bet with count 3 and price lower than 3.2 max bet is "
+msgstr "카운트 3 가격 여러 내기 위해보다 낮은 3.2 최대 베팅입니다"
+
+#: apps/bets/serializers.py:390
+#| msgid "For multiple bet with count 4 and price lower than 4.2 max bet is"
+msgid "For multiple bet with count 4 and price lower than 4.2 max bet is "
+msgstr "수 4 가격으로 여러 내기 위해보다 낮은 4.2 최대 베팅입니다"
+
+#: apps/bets/views.py:188 apps/bets/views.py:725 apps/bets/views.py:796
+msgid "error"
+msgstr "오류"
+
+#: apps/bets/views.py:220
+msgid "Bet created"
+msgstr "베팅 생성"
+
+#: apps/bets/views.py:714 apps/bets/views.py:751 apps/bets/views.py:790
+msgid "Cashout Not Available"
+msgstr "사용할 수 없음 Cashout"
+
+#: apps/bets/views.py:801
+msgid "Cashout Processed successfully"
+msgstr "Cashout 성공적으로 처리"
+
+#: apps/casino/views.py:44
+msgid "Not valid category for games."
+msgstr "게임에 대한 유효하지 카테고리."
+
+#: apps/core/custom_refresh_token.py:32
+#: apps/core/jwt_token_authentication.py:82
+#: apps/core/jwt_token_authentication.py:86
+msgid "Invalid payload."
+msgstr "잘못된 페이로드."
+
+#: apps/core/custom_refresh_token.py:39
+msgid "User doesn't exist."
+msgstr "사용자가 존재하지 않습니다."
+
+#: apps/core/custom_refresh_token.py:43
+#: apps/core/jwt_token_authentication.py:96
+msgid "User account is disabled."
+msgstr "사용자 계정을 사용할 수 없습니다."
+
+#: apps/core/custom_refresh_token.py:68
+msgid "Refresh has expired."
+msgstr "새로 고침이 만료되었습니다."
+
+#: apps/core/custom_refresh_token.py:71
+msgid "orig_iat field is required."
+msgstr "orig_iat 필드는 필수입니다."
+
+#: apps/core/custom_refresh_token.py:76
+#: apps/core/jwt_token_authentication.py:68
+msgid "repeated_login"
+msgstr "repeated_login"
+
+#: apps/core/jwt_token_authentication.py:40
+msgid "Invalid Authorization header. No credentials provided."
+msgstr "잘못된 인증 헤더. 어떤 자격 증명을 제공하지 않습니다."
+
+#: apps/core/jwt_token_authentication.py:43
+msgid ""
+"Invalid Authorization header. Credentials string should not contain spaces."
+msgstr "잘못된 인증 헤더. 자격 증명 문자열 공백이 포함되지 않아야합니다."
+
+#: apps/core/jwt_token_authentication.py:92
+msgid "Invalid signature."
+msgstr "잘못된 서명."
+
+#: apps/pulls/models.py:25
+msgid "NOT_STARTED"
+msgstr "NOT_STARTED"
+
+#: apps/pulls/models.py:26
+msgid "IN_PROGRESS"
+msgstr "IN_PROGRESS"
+
+#: apps/pulls/models.py:27
+msgid "FINISHED"
+msgstr "완성 된"
+
+#: apps/pulls/models.py:28
+msgid "CANCELLED"
+msgstr "취소 된"
+
+#: apps/pulls/models.py:29
+msgid "POSTPONED"
+msgstr "이 연기"
+
+#: apps/pulls/models.py:30
+msgid "INTERRUPTED"
+msgstr "중단 된"
+
+#: apps/pulls/models.py:31
+msgid "ABANDONED"
+msgstr "버려진"
+
+#: apps/pulls/models.py:32
+msgid "COVERAGE_LOST"
+msgstr "COVERAGE_LOST"
+
+#: apps/pulls/models.py:33
+msgid "ABOUT_TO_START"
+msgstr "ABOUT_TO_START"
+
+#: apps/pulls/models.py:56
+msgid "sport id"
+msgstr "스포츠 ID"
+
+#: apps/pulls/models.py:74
+msgid "location id"
+msgstr "위치 ID"
+
+#: apps/pulls/models.py:91
+msgid "league id"
+msgstr "리그 ID"
+
+#: apps/pulls/models.py:109
+msgid "season"
+msgstr "계절"
+
+#: apps/pulls/models.py:114
+msgid "participant id"
+msgstr "참가자 ID"
+
+#: apps/pulls/models.py:210
+msgid "Start date"
+msgstr "시작 날짜"
+
+#: apps/pulls/models.py:213
+msgid "Last update"
+msgstr "마지막 업데이트"
+
+#: apps/pulls/models.py:218
+msgid "is event blacklisted"
+msgstr "이벤트는 블랙리스트"
+
+#: apps/pulls/models.py:314
+msgid "Participant position"
+msgstr "참가자 위치"
+
+#: apps/pulls/models.py:316
+msgid "Participant rotation id"
+msgstr "참가자 회전 ID"
+
+#: apps/pulls/models.py:317
+msgid "Participant active status"
+msgstr "참가자 활성 상태"
+
+#: apps/pulls/serializers.py:1505
+msgid "Event is already in favorites."
+msgstr "이벤트는 이미 즐겨 찾기에 있습니다."
+
+#: apps/pulls/views.py:1475
+msgid "Favorite added"
+msgstr "즐겨 찾기 추가"
+
+#: apps/pulls/views.py:1478
+msgid "Event not found."
+msgstr "이벤트를 찾을 수 없습니다."
+
+#: apps/pulls/views.py:1566
+msgid "You don't have permission to delete this favorite event."
+msgstr "당신이 좋아하는 이벤트를 삭제할 권한이 없습니다."
+
+#: apps/pulls/views.py:1731
+msgid "Event not booked"
+msgstr "이벤트는 예약하지"
+
+#: apps/pulls/views.py:1979, python-brace-format
+#| msgid "Events {processed_fixtures} are reset successfully"
+msgid "Events {removed_fixtures} are removed successfully"
+msgstr "이벤트 {processed_fixtures}이 성공적으로 재설정"
+
+#: apps/pulls/views.py:1987
+msgid "Events are reset successfully"
+msgstr "이벤트가 성공적으로 재설정"
+
+#: apps/pulls/views.py:1994 apps/pulls/views.py:2089
+#, python-brace-format
+msgid "Events {processed_fixtures} are reset successfully"
+msgstr "이벤트 {processed_fixtures}이 성공적으로 재설정"
+
+#: apps/pulls/views.py:2082
+msgid "Events already present in dynamo"
+msgstr "발전기에 이미 이벤트"
+
+#: apps/pulls/views.py:2096
+msgid "Error in reseting events"
+msgstr "다시 설정하라는 이벤트 오류"
+
+#: apps/pulls/views.py:2204
+msgid "Project Setting added"
+msgstr ""
+
+#: apps/users/filters.py:7
+#: templates/Desktop_template/admin/agent/agents.html:68
+#: templates/Desktop_template/admin/dealer/dealers.html:44
+#: templates/Desktop_template/admin/player/players.html:84
+#: templates/mobile_template/admin/agent/agents.html:51
+#: templates/mobile_template/admin/dealer/dealers.html:26
+#: templates/mobile_template/admin/player/players.html:58
+msgid "Recent Login"
+msgstr "최근 로그인"
+
+#: apps/users/filters.py:8
+#: templates/Desktop_template/admin/agent/agents.html:69
+#: templates/Desktop_template/admin/dealer/dealers.html:45
+#: templates/Desktop_template/admin/player/players.html:85
+#: templates/mobile_template/admin/agent/agents.html:52
+#: templates/mobile_template/admin/dealer/dealers.html:27
+#: templates/mobile_template/admin/player/players.html:59
+msgid "Credit Ascending"
+msgstr "신용 오름차순"
+
+#: apps/users/filters.py:9
+#: templates/Desktop_template/admin/agent/agents.html:70
+#: templates/Desktop_template/admin/dealer/dealers.html:46
+#: templates/Desktop_template/admin/player/players.html:86
+#: templates/mobile_template/admin/agent/agents.html:53
+#: templates/mobile_template/admin/dealer/dealers.html:28
+#: templates/mobile_template/admin/player/players.html:60
+msgid "Credit Descending"
+msgstr "신용 내림차순"
+
+#: apps/users/filters.py:10
+#: templates/Desktop_template/admin/agent/agents.html:71
+#: templates/Desktop_template/admin/dealer/dealers.html:47
+#: templates/Desktop_template/admin/player/players.html:87
+#: templates/mobile_template/admin/agent/agents.html:54
+#: templates/mobile_template/admin/dealer/dealers.html:29
+#: templates/mobile_template/admin/player/players.html:61
+msgid "Profit Ascending"
+msgstr "이익 오름차순"
+
+#: apps/users/filters.py:11
+#: templates/Desktop_template/admin/agent/agents.html:72
+#: templates/Desktop_template/admin/dealer/dealers.html:48
+#: templates/Desktop_template/admin/player/players.html:88
+#: templates/mobile_template/admin/agent/agents.html:55
+#: templates/mobile_template/admin/dealer/dealers.html:30
+#: templates/mobile_template/admin/player/players.html:62
+msgid "Profit Descending"
+msgstr "이익 내림차순"
+
+#: apps/users/models.py:22
+#: templates/Desktop_template/admin/player/players.html:672
+#: templates/Desktop_template/bets/betslips.html:164
+#: templates/Desktop_template/report/betslip_report.html:166
+#: templates/Desktop_template/report/sportsbook_report.html:123
+#: templates/Desktop_template/report/transaction_report.html:66
+#: templates/mobile_template/admin/player/players.html:613
+#: templates/mobile_template/bets/betslips.html:132
+msgid "Player"
+msgstr "플레이어"
+
+#: apps/users/models.py:23
+#: templates/Desktop_template/admin/agent/agents.html:134
+#: templates/Desktop_template/admin/agent/agents.html:652
+#: templates/Desktop_template/report/betslip_report.html:167
+#: templates/Desktop_template/report/transaction_report.html:65
+#: templates/mobile_template/admin/agent/agents.html:106
+#: templates/mobile_template/admin/agent/agents.html:624
+#: templates/mobile_template/header.html:89
+#: templates/mobile_template/home.html:35
+msgid "Agent"
+msgstr "에이전트"
+
+#: apps/users/models.py:24
+#: templates/Desktop_template/admin/agent/agents.html:53
+#: templates/Desktop_template/admin/agent/agents.html:135
+#: templates/Desktop_template/admin/dealer/dealers.html:111
+#: templates/Desktop_template/admin/dealer/dealers.html:615
+#: templates/Desktop_template/report/betslip_report.html:168
+#: templates/Desktop_template/report/transaction_report.html:64
+#: templates/mobile_template/admin/agent/agents.html:37
+#: templates/mobile_template/admin/dealer/dealers.html:84
+#: templates/mobile_template/admin/dealer/dealers.html:562
+msgid "Dealer"
+msgstr "상인"
+
+#: apps/users/models.py:25 templates/mobile_template/header.html:118
+#: templates/mobile_template/home.html:72
+msgid "Manager"
+msgstr "관리자"
+
+#: apps/users/models.py:26 templates/Desktop_template/header.html:223
+#: templates/mobile_template/header.html:100
+#: templates/mobile_template/home.html:50
+msgid "Admin"
+msgstr "관리자"
+
+#: apps/users/models.py:27
+msgid "Super Admin"
+msgstr "최고 관리자"
+
+#: apps/users/models.py:31
+#: templates/Desktop_template/admin/dealer/create_dealer.html:25
+#: templates/Desktop_template/admin/dealer/update_dealer.html:29
+#: templates/mobile_template/admin/dealer/create_dealer.html:18
+#: templates/mobile_template/admin/dealer/update_dealer.html:18
+msgid "Europe/Berlin"
+msgstr "유럽 ​​/ 베를린"
+
+#: apps/users/models.py:32
+#: templates/Desktop_template/admin/dealer/create_dealer.html:24
+#: templates/Desktop_template/admin/dealer/update_dealer.html:28
+#: templates/mobile_template/admin/dealer/create_dealer.html:17
+#: templates/mobile_template/admin/dealer/update_dealer.html:17
+msgid "Europe/Amsterdam"
+msgstr "유럽 ​​/ 암스테르담"
+
+#: apps/users/models.py:33
+#: templates/Desktop_template/admin/dealer/create_dealer.html:26
+#: templates/Desktop_template/admin/dealer/update_dealer.html:30
+#: templates/mobile_template/admin/dealer/create_dealer.html:19
+#: templates/mobile_template/admin/dealer/update_dealer.html:19
+msgid "Europe/Istanbul"
+msgstr "유럽 ​​/ 이스탄불"
+
+#: apps/users/models.py:34
+#: templates/Desktop_template/admin/dealer/create_dealer.html:27
+#: templates/Desktop_template/admin/dealer/update_dealer.html:31
+#: templates/mobile_template/admin/dealer/create_dealer.html:20
+#: templates/mobile_template/admin/dealer/update_dealer.html:20
+msgid "UTC"
+msgstr "UTC"
+
+#: apps/users/models.py:37
+msgid "transaction delay"
+msgstr "거래 지연"
+
+#: apps/users/models.py:40
+msgid "EUR"
+msgstr "EUR"
+
+#: apps/users/models.py:41
+msgid "TRY"
+msgstr "노력하다"
+
+#: apps/users/models.py:42
+msgid "RUB"
+msgstr "장애"
+
+#: apps/users/models.py:123
+msgid "password"
+msgstr "비밀번호"
+
+#: apps/users/models.py:132
+msgid "user type"
+msgstr "사용자 유형"
+
+#: apps/users/models.py:134
+msgid "active"
+msgstr "활동적인"
+
+#: apps/users/models.py:137
+msgid ""
+"Designates whether this user should be treated as active. Unselect this "
+"instead of deleting accounts."
+msgstr ""
+"이 사용자가 액티브로 간주할지 여부를 지정한다. 대신 삭제 계정이 선택 취소."
+
+#: apps/users/models.py:142
+msgid "username"
+msgstr "사용자 이름"
+
+#: apps/users/models.py:158
+#| msgid "Invalid phone number"
+msgid "phone number"
+msgstr "유효하지 않은 전화 번호"
+
+#: apps/users/models.py:159
+#| msgid "Bank account number must be Alphanumeric"
+msgid "bank account number"
+msgstr "은행 계좌 번호는 영숫자해야합니다"
+
+#: apps/users/models.py:160
+#| msgid "cron name"
+msgid "bank account name"
+msgstr "크론 이름"
+
+#: apps/users/models.py:163
+msgid "balance"
+msgstr "균형"
+
+#: apps/users/models.py:166
+msgid "pending"
+msgstr "보류 중"
+
+#: apps/users/models.py:169
+msgid "locked"
+msgstr "고정"
+
+#: apps/users/models.py:172
+msgid "timezone"
+msgstr "시간대"
+
+#: apps/users/models.py:191
+msgid "callback key"
+msgstr "콜백 키"
+
+#: apps/users/models.py:195
+msgid "currency"
+msgstr "통화"
+
+#: apps/users/models.py:197
+msgid "system id"
+msgstr "시스템 ID"
+
+#: apps/users/models.py:199
+msgid "access token"
+msgstr "액세스 토큰"
+
+#: apps/users/models.py:336 apps/users/models.py:357
+msgid "max single bet"
+msgstr "최대 단일 내기"
+
+#: apps/users/models.py:338 apps/users/models.py:359
+msgid "max single bet other sports"
+msgstr "최대 단일 내기 다른 스포츠"
+
+#: apps/users/models.py:340 apps/users/models.py:361
+msgid "min bet"
+msgstr "최소 베팅"
+
+#: apps/users/models.py:341 apps/users/models.py:362
+msgid "max multiple bet"
+msgstr "최대 여러 내기"
+
+#: apps/users/models.py:363
+msgid "max win amount"
+msgstr "최대 승리 금액"
+
+#: apps/users/models.py:364
+msgid "max odd"
+msgstr "최대 홀수"
+
+#: apps/users/models.py:366
+msgid "max bet amount per match"
+msgstr "경기 당 최대 베팅 금액"
+
+#: apps/users/models.py:368
+msgid "max same bet count"
+msgstr "최대 동일한 내기 수"
+
+#: apps/users/models.py:370
+msgid "max multi two events amount"
+msgstr "최대 멀티 두 가지 이벤트 금액"
+
+#: apps/users/models.py:373
+msgid "max multi three events amount"
+msgstr "최대 멀티 세 가지 이벤트 금액"
+
+#: apps/users/models.py:376
+msgid "max multi four events amount"
+msgstr "최대 멀티 네 개의 이벤트 금액"
+
+#: apps/users/models.py:462
+msgid "config name"
+msgstr "설정 이름"
+
+#: apps/users/models.py:463
+msgid "config value"
+msgstr "설정 값"
+
+#: apps/users/serializers.py:184
+msgid "You can not change your role."
+msgstr "당신은 당신의 역할을 변경할 수 없습니다."
+
+#: apps/users/serializers.py:188 apps/users/serializers.py:191
+msgid "Username already exists."
+msgstr "사용자 이름이 이미 존재합니다."
+
+#: apps/users/serializers.py:232
+msgid "User with these credentials doesn't exist"
+msgstr "이러한 자격 증명을 가지고있는 사용자가 존재하지 않습니다"
+
+#: apps/users/serializers.py:235
+msgid "Your account has been deactivated. Please contact you agent."
+msgstr ""
+"당신의 계정이 비활성화되었습니다. 당신에게 대리점에 문의하시기 바랍니다."
+
+#: apps/users/serializers.py:238
+msgid "Your account is deactivated"
+msgstr "계정이 비활성화됩니다"
+
+#: apps/users/serializers.py:241
+#, python-brace-format
+msgid "Must include \"{username_field}\" and \"password\"."
+msgstr "\"{username_field}\"와 \"비밀번호\"를 포함해야합니다."
+
+#: apps/users/views.py:441
+msgid "Invalid current password"
+msgstr "잘못된 현재 암호"
+
+#: apps/users/views.py:481
+msgid "Invalid Token"
+msgstr "잘못된 토큰"
+
+#: apps/users/views.py:582
+msgid "Invalid User"
+msgstr "잘못된 사용자"
+
+#: apps/users/views.py:611
+msgid "Cashback added to your balance"
+msgstr "캐쉬백 잔액에 추가"
+
+#: apps/users/views.py:617
+msgid "Invalid User or Cashback Not available"
+msgstr "잘못된 사용 또는 사용할 수 없음 캐쉬백"
+
+#: templates/Desktop_template/admin/admins.html:57
+#: templates/Desktop_template/admin/player/players.html:113
+#: templates/Desktop_template/report/transaction_report.html:90
+#: templates/Desktop_template/transactions/transactions.html:58
+#: templates/mobile_template/admin/admins.html:24
+#: templates/mobile_template/admin/agent/agents.html:63
+#: templates/mobile_template/admin/dealer/dealers.html:38
+#: templates/mobile_template/admin/player/players.html:71
+#: templates/mobile_template/transactions/transactions.html:32
+msgid "Search User"
+msgstr "검색 사용자"
+
+#: templates/Desktop_template/admin/admins.html:61
+#: templates/Desktop_template/admin/agent/agents.html:93
+#: templates/Desktop_template/admin/dealer/dealers.html:69
+#: templates/Desktop_template/admin/player/players.html:108
+#: templates/Desktop_template/admin/player/players.html:117
+#: templates/Desktop_template/bets/betslips.html:133
+#: templates/Desktop_template/includes/transactions.html:76
+#: templates/Desktop_template/profit/profit.html:89
+#: templates/Desktop_template/report/betslip_report.html:126
+#: templates/Desktop_template/report/sportsbook_report.html:89
+#: templates/Desktop_template/report/transaction_report.html:94
+#: templates/Desktop_template/transactions/transactions.html:62
+#: templates/mobile_template/admin/admins.html:28
+#: templates/mobile_template/admin/agent/agents.html:67
+#: templates/mobile_template/admin/dealer/dealers.html:42
+#: templates/mobile_template/admin/player/players.html:75
+#: templates/mobile_template/bets/betslips.html:95
+#: templates/mobile_template/bets/betslips.html:100
+#: templates/mobile_template/includes/transactions.html:72
+#: templates/mobile_template/profit/profit.html:68
+#: templates/mobile_template/transactions/transactions.html:36
+msgid "Search"
+msgstr "찾다"
+
+#: templates/Desktop_template/admin/admins.html:72
+#: templates/mobile_template/admin/admins.html:55
+msgid "Add Admin"
+msgstr "관리자 추가"
+
+#: templates/Desktop_template/admin/admins.html:82
+#: templates/mobile_template/admin/admins.html:66
+msgid "Balance"
+msgstr "균형"
+
+#: templates/Desktop_template/admin/admins.html:83
+#: templates/Desktop_template/admin/create-admin.html:49
+#: templates/Desktop_template/login.html:34
+#: templates/mobile_template/admin/admins.html:67
+#: templates/mobile_template/admin/create-admin.html:33
+#: templates/mobile_template/login.html:26
+msgid "Project Name"
+msgstr ""
+
+#: templates/Desktop_template/admin/admins.html:84
+#: templates/Desktop_template/admin/create-admin.html:57
+#: templates/mobile_template/admin/create-admin.html:41
+msgid "Project Domain"
+msgstr ""
+
+#: templates/Desktop_template/admin/admins.html:85
+#: templates/mobile_template/admin/admins.html:68
+msgid "Project ID"
+msgstr ""
+
+#: templates/Desktop_template/admin/admins.html:160
+#: templates/Desktop_template/admin/admins.html:167
+#: templates/Desktop_template/admin/admins.html:205
+#: templates/Desktop_template/admin/admins.html:212
+#: templates/Desktop_template/admin/admins.html:251
+#: templates/Desktop_template/admin/admins.html:258
+#: templates/Desktop_template/admin/agent/agents.html:271
+#: templates/Desktop_template/admin/dealer/dealers.html:224
+#: templates/Desktop_template/admin/player/players.html:407
+#: templates/Desktop_template/home.html:436
+#: templates/Desktop_template/profit/profit.html:119
+#: templates/Desktop_template/profit/profit.html:127
+#: templates/Desktop_template/profit/profit.html:211
+#: templates/Desktop_template/profit/profit.html:219
+#: templates/Desktop_template/profit/profit.html:303
+#: templates/Desktop_template/profit/profit.html:311
+#: templates/mobile_template/admin/admins.html:141
+#: templates/mobile_template/admin/admins.html:148
+#: templates/mobile_template/admin/admins.html:186
+#: templates/mobile_template/admin/admins.html:193
+#: templates/mobile_template/admin/admins.html:232
+#: templates/mobile_template/admin/admins.html:239
+#: templates/mobile_template/admin/agent/agents.html:236
+#: templates/mobile_template/admin/dealer/dealers.html:196
+#: templates/mobile_template/admin/player/players.html:350
+#: templates/mobile_template/header.html:135
+#: templates/mobile_template/home.html:94
+#: templates/mobile_template/profit/profit.html:15
+#: templates/mobile_template/profit/profit.html:98
+#: templates/mobile_template/profit/profit.html:108
+#: templates/mobile_template/profit/profit.html:184
+#: templates/mobile_template/profit/profit.html:194
+#: templates/mobile_template/profit/profit.html:270
+#: templates/mobile_template/profit/profit.html:280
+msgid "Profit"
+msgstr "이익"
+
+#: templates/Desktop_template/admin/admins.html:164
+#: templates/Desktop_template/admin/admins.html:209
+#: templates/Desktop_template/admin/admins.html:255
+#: templates/Desktop_template/admin/agent/agents.html:268
+#: templates/Desktop_template/admin/dealer/dealers.html:221
+#: templates/Desktop_template/admin/player/players.html:404
+#: templates/Desktop_template/profit/profit.html:124
+#: templates/Desktop_template/profit/profit.html:216
+#: templates/Desktop_template/profit/profit.html:308
+#: templates/mobile_template/admin/admins.html:145
+#: templates/mobile_template/admin/admins.html:190
+#: templates/mobile_template/admin/admins.html:236
+#: templates/mobile_template/admin/agent/agents.html:233
+#: templates/mobile_template/admin/dealer/dealers.html:193
+#: templates/mobile_template/admin/player/players.html:347
+#: templates/mobile_template/profit/profit.html:105
+#: templates/mobile_template/profit/profit.html:191
+#: templates/mobile_template/profit/profit.html:277
+msgid "Provider"
+msgstr "공급자"
+
+#: templates/Desktop_template/admin/admins.html:165
+#: templates/Desktop_template/admin/admins.html:210
+#: templates/Desktop_template/admin/admins.html:256
+#: templates/Desktop_template/admin/agent/agents.html:269
+#: templates/Desktop_template/admin/dealer/dealers.html:222
+#: templates/Desktop_template/admin/player/players.html:405
+#: templates/Desktop_template/profit/profit.html:125
+#: templates/Desktop_template/profit/profit.html:217
+#: templates/Desktop_template/profit/profit.html:309
+#: templates/mobile_template/admin/admins.html:146
+#: templates/mobile_template/admin/admins.html:191
+#: templates/mobile_template/admin/admins.html:237
+#: templates/mobile_template/admin/agent/agents.html:234
+#: templates/mobile_template/admin/dealer/dealers.html:194
+#: templates/mobile_template/admin/player/players.html:348
+#: templates/mobile_template/profit/profit.html:106
+#: templates/mobile_template/profit/profit.html:192
+#: templates/mobile_template/profit/profit.html:278
+msgid "In"
+msgstr "입력"
+
+#: templates/Desktop_template/admin/admins.html:166
+#: templates/Desktop_template/admin/admins.html:211
+#: templates/Desktop_template/admin/admins.html:257
+#: templates/Desktop_template/admin/agent/agents.html:270
+#: templates/Desktop_template/admin/dealer/dealers.html:223
+#: templates/Desktop_template/admin/player/players.html:406
+#: templates/Desktop_template/profit/profit.html:126
+#: templates/Desktop_template/profit/profit.html:218
+#: templates/Desktop_template/profit/profit.html:310
+#: templates/mobile_template/admin/admins.html:147
+#: templates/mobile_template/admin/admins.html:192
+#: templates/mobile_template/admin/admins.html:238
+#: templates/mobile_template/admin/agent/agents.html:235
+#: templates/mobile_template/admin/dealer/dealers.html:195
+#: templates/mobile_template/admin/player/players.html:349
+#: templates/mobile_template/profit/profit.html:107
+#: templates/mobile_template/profit/profit.html:193
+#: templates/mobile_template/profit/profit.html:279
+msgid "Out"
+msgstr "밖"
+
+#: templates/Desktop_template/admin/admins.html:172
+#: templates/Desktop_template/admin/admins.html:217
+#: templates/Desktop_template/admin/admins.html:263
+#: templates/Desktop_template/admin/agent/agents.html:276
+#: templates/Desktop_template/admin/dealer/dealers.html:229
+#: templates/Desktop_template/admin/player/players.html:412
+#: templates/Desktop_template/profit/profit.html:132
+#: templates/Desktop_template/profit/profit.html:224
+#: templates/Desktop_template/profit/profit.html:316
+#: templates/mobile_template/admin/admins.html:153
+#: templates/mobile_template/admin/admins.html:198
+#: templates/mobile_template/admin/admins.html:244
+#: templates/mobile_template/admin/agent/agents.html:241
+#: templates/mobile_template/admin/dealer/dealers.html:201
+#: templates/mobile_template/admin/player/players.html:355
+#: templates/mobile_template/profit/profit.html:113
+#: templates/mobile_template/profit/profit.html:199
+#: templates/mobile_template/profit/profit.html:285
+msgid "SportsBook"
+msgstr "스포츠 북"
+
+#: templates/Desktop_template/admin/admins.html:182
+#: templates/Desktop_template/admin/admins.html:227
+#: templates/Desktop_template/admin/admins.html:273
+#: templates/Desktop_template/admin/agent/agents.html:303
+#: templates/Desktop_template/admin/dealer/dealers.html:255
+#: templates/Desktop_template/admin/player/players.html:438
+#: templates/Desktop_template/profit/profit.html:175
+#: templates/Desktop_template/profit/profit.html:267
+#: templates/Desktop_template/profit/profit.html:358
+#: templates/mobile_template/admin/admins.html:163
+#: templates/mobile_template/admin/admins.html:208
+#: templates/mobile_template/admin/admins.html:254
+#: templates/mobile_template/admin/agent/agents.html:262
+#: templates/mobile_template/admin/dealer/dealers.html:222
+#: templates/mobile_template/admin/player/players.html:376
+#: templates/mobile_template/profit/profit.html:146
+#: templates/mobile_template/profit/profit.html:232
+#: templates/mobile_template/profit/profit.html:318
+msgid "Total"
+msgstr "총"
+
+#: templates/Desktop_template/admin/admins.html:188
+#: templates/Desktop_template/admin/admins.html:233
+#: templates/Desktop_template/admin/admins.html:279
+#: templates/Desktop_template/admin/agent/agents.html:309
+#: templates/Desktop_template/admin/dealer/dealers.html:261
+#: templates/Desktop_template/admin/player/players.html:444
+#: templates/Desktop_template/profit/profit.html:185
+#: templates/Desktop_template/profit/profit.html:277
+#: templates/Desktop_template/profit/profit.html:368
+#: templates/mobile_template/admin/admins.html:169
+#: templates/mobile_template/admin/admins.html:214
+#: templates/mobile_template/admin/admins.html:260
+#: templates/mobile_template/admin/agent/agents.html:268
+#: templates/mobile_template/admin/dealer/dealers.html:228
+#: templates/mobile_template/admin/player/players.html:382
+#: templates/mobile_template/profit/profit.html:156
+#: templates/mobile_template/profit/profit.html:242
+#: templates/mobile_template/profit/profit.html:328
+msgid "BONUS"
+msgstr "보너스"
+
+#: templates/Desktop_template/admin/admins.html:197
+#: templates/Desktop_template/admin/admins.html:242
+#: templates/Desktop_template/admin/admins.html:288
+#: templates/Desktop_template/admin/agent/agents.html:316
+#: templates/Desktop_template/admin/dealer/dealers.html:268
+#: templates/Desktop_template/admin/player/players.html:450
+#: templates/Desktop_template/profit/profit.html:192
+#: templates/Desktop_template/profit/profit.html:284
+#: templates/Desktop_template/profit/profit.html:375
+#: templates/mobile_template/admin/admins.html:178
+#: templates/mobile_template/admin/admins.html:223
+#: templates/mobile_template/admin/admins.html:269
+#: templates/mobile_template/admin/agent/agents.html:277
+#: templates/mobile_template/admin/dealer/dealers.html:237
+#: templates/mobile_template/admin/player/players.html:391
+#: templates/mobile_template/profit/profit.html:165
+#: templates/mobile_template/profit/profit.html:251
+#: templates/mobile_template/profit/profit.html:337
+msgid "Net Profit"
+msgstr "순이익"
+
+#: templates/Desktop_template/admin/agent/agents.html:73
+#: templates/Desktop_template/admin/dealer/dealers.html:49
+#: templates/Desktop_template/admin/player/players.html:89
+#: templates/mobile_template/admin/agent/agents.html:56
+#: templates/mobile_template/admin/dealer/dealers.html:31
+#: templates/mobile_template/admin/player/players.html:63
+msgid "Created Ascending"
+msgstr "만든 오름차순"
+
+#: templates/Desktop_template/admin/agent/agents.html:74
+#: templates/Desktop_template/admin/dealer/dealers.html:50
+#: templates/Desktop_template/admin/player/players.html:90
+#: templates/mobile_template/admin/agent/agents.html:57
+#: templates/mobile_template/admin/dealer/dealers.html:32
+#: templates/mobile_template/admin/player/players.html:64
+msgid "Created Descending"
+msgstr "만든 내림차순"
+
+#: templates/Desktop_template/admin/agent/agents.html:105
+#: templates/Desktop_template/admin/dealer/dealers.html:79
+#: templates/Desktop_template/admin/player/players.html:131
+#: templates/Desktop_template/admin/player/players.html:147
+#: templates/Desktop_template/bets/betslips.html:144
+#: templates/Desktop_template/includes/transactions.html:22
+#: templates/Desktop_template/profit/profit.html:100
+#: templates/Desktop_template/report/betslip_report.html:137
+#: templates/Desktop_template/report/sportsbook_report.html:100
+#: templates/Desktop_template/report/transaction_report.html:106
+#: templates/Desktop_template/transactions/transactions.html:74
+#: templates/mobile_template/admin/admins.html:38
+#: templates/mobile_template/admin/agent/agents.html:77
+#: templates/mobile_template/admin/dealer/dealers.html:52
+#: templates/mobile_template/admin/player/players.html:86
+#: templates/mobile_template/admin/player/players.html:102
+#: templates/mobile_template/bets/betslips.html:112
+#: templates/mobile_template/includes/transactions.html:18
+#: templates/mobile_template/profit/profit.html:79
+#: templates/mobile_template/transactions/transactions.html:48
+msgid "From date"
+msgstr "날로부터"
+
+#: templates/Desktop_template/admin/agent/agents.html:112
+#: templates/Desktop_template/admin/dealer/dealers.html:87
+#: templates/Desktop_template/admin/player/players.html:138
+#: templates/Desktop_template/admin/player/players.html:154
+#: templates/Desktop_template/bets/betslips.html:151
+#: templates/Desktop_template/includes/transactions.html:34
+#: templates/Desktop_template/profit/profit.html:107
+#: templates/Desktop_template/report/betslip_report.html:144
+#: templates/Desktop_template/report/sportsbook_report.html:107
+#: templates/Desktop_template/report/transaction_report.html:113
+#: templates/Desktop_template/transactions/transactions.html:81
+#: templates/mobile_template/admin/admins.html:45
+#: templates/mobile_template/admin/agent/agents.html:84
+#: templates/mobile_template/admin/dealer/dealers.html:60
+#: templates/mobile_template/admin/player/players.html:93
+#: templates/mobile_template/admin/player/players.html:109
+#: templates/mobile_template/bets/betslips.html:119
+#: templates/mobile_template/includes/transactions.html:30
+#: templates/mobile_template/profit/profit.html:86
+#: templates/mobile_template/transactions/transactions.html:55
+msgid "To date"
+msgstr "현재까지"
+
+#: templates/Desktop_template/admin/agent/agents.html:122
+#: templates/mobile_template/admin/agent/agents.html:94
+#: templates/mobile_template/admin/agent/create_agent.html:6
+msgid "Add Agent"
+msgstr "에이전트 추가"
+
+#: templates/Desktop_template/admin/agent/agents.html:136
+#: templates/Desktop_template/admin/dealer/dealers.html:112
+#: templates/Desktop_template/header.html:123
+#: templates/Desktop_template/includes/transactions.html:48
+#: templates/Desktop_template/includes/transactions.html:148
+#: templates/Desktop_template/includes/transactions.html:156
+#: templates/Desktop_template/report/transaction_report.html:77
+#: templates/mobile_template/admin/agent/agents.html:107
+#: templates/mobile_template/admin/dealer/dealers.html:85
+#: templates/mobile_template/header.html:18
+#: templates/mobile_template/includes/transactions.html:44
+#: templates/mobile_template/includes/transactions.html:140
+#: templates/mobile_template/includes/transactions.html:151
+msgid "Credit"
+msgstr "신용 거래"
+
+#: templates/Desktop_template/admin/agent/agents.html:380
+#: templates/Desktop_template/admin/dealer/dealers.html:331
+#: templates/mobile_template/admin/agent/agents.html:336
+#: templates/mobile_template/admin/dealer/dealers.html:296
+msgid "Betting limits"
+msgstr "한계를 내기"
+
+#: templates/Desktop_template/admin/agent/agents.html:392
+#: templates/Desktop_template/admin/dealer/dealers.html:342
+#: templates/Desktop_template/admin/player/players.html:486
+#: templates/Desktop_template/admin/player/players.html:504
+#: templates/Desktop_template/header.html:456
+#: templates/Desktop_template/includes/betting_limits_popup.html:26
+#: templates/Desktop_template/includes/transactions.html:20
+#: templates/mobile_template/admin/agent/agents.html:348
+#: templates/mobile_template/admin/dealer/dealers.html:307
+#: templates/mobile_template/admin/player/players.html:427
+#: templates/mobile_template/admin/player/players.html:445
+#: templates/mobile_template/includes/betting_limits_popup.html:19
+#: templates/mobile_template/includes/transactions.html:16
+msgid "Max Single Bet"
+msgstr "최대 단일 베팅"
+
+#: templates/Desktop_template/admin/agent/agents.html:410
+#: templates/Desktop_template/admin/dealer/dealers.html:361
+#: templates/Desktop_template/header.html:471
+#: templates/Desktop_template/includes/betting_limits_popup.html:41
+#: templates/mobile_template/admin/agent/agents.html:366
+#: templates/mobile_template/admin/dealer/dealers.html:326
+#: templates/mobile_template/includes/betting_limits_popup.html:34
+msgid "Max Single Bet Other Sports"
+msgstr "최대 단일 기타 스포츠 베팅"
+
+#: templates/Desktop_template/admin/agent/agents.html:428
+#: templates/Desktop_template/admin/dealer/dealers.html:380
+#: templates/Desktop_template/admin/player/players.html:522
+#: templates/Desktop_template/header.html:486
+#: templates/Desktop_template/includes/betting_limits_popup.html:56
+#: templates/Desktop_template/includes/transactions.html:31
+#: templates/mobile_template/admin/agent/agents.html:384
+#: templates/mobile_template/admin/dealer/dealers.html:345
+#: templates/mobile_template/admin/player/players.html:463
+#: templates/mobile_template/includes/betting_limits_popup.html:49
+#: templates/mobile_template/includes/transactions.html:27
+msgid "Max Multiple Bet"
+msgstr "최대 다수의 베팅"
+
+#: templates/Desktop_template/admin/agent/agents.html:446
+#: templates/Desktop_template/admin/dealer/dealers.html:399
+#: templates/Desktop_template/admin/player/players.html:540
+#: templates/Desktop_template/header.html:501
+#: templates/Desktop_template/includes/betting_limits_popup.html:71
+#: templates/Desktop_template/includes/transactions.html:43
+#: templates/mobile_template/admin/agent/agents.html:402
+#: templates/mobile_template/admin/dealer/dealers.html:364
+#: templates/mobile_template/admin/player/players.html:481
+#: templates/mobile_template/includes/betting_limits_popup.html:64
+#: templates/mobile_template/includes/transactions.html:39
+msgid "Min Bet"
+msgstr "최소 베팅"
+
+#: templates/Desktop_template/admin/agent/agents.html:528
+#: templates/Desktop_template/admin/dealer/dealers.html:417
+#: templates/Desktop_template/admin/player/players.html:555
+#: templates/Desktop_template/header.html:541
+#: templates/Desktop_template/includes/betting_limits_popup.html:98
+#: templates/mobile_template/admin/agent/agents.html:501
+#: templates/mobile_template/admin/dealer/dealers.html:382
+#: templates/mobile_template/admin/player/players.html:496
+#: templates/mobile_template/includes/betting_limits_popup.html:90
+msgid "Max Win Amount"
+msgstr "최대 승리 금액"
+
+#: templates/Desktop_template/admin/agent/agents.html:543
+#: templates/Desktop_template/admin/dealer/dealers.html:435
+#: templates/Desktop_template/admin/player/players.html:570
+#: templates/Desktop_template/header.html:552
+#: templates/Desktop_template/includes/betting_limits_popup.html:109
+#: templates/mobile_template/admin/agent/agents.html:516
+#: templates/mobile_template/admin/dealer/dealers.html:400
+#: templates/mobile_template/admin/player/players.html:511
+#: templates/mobile_template/includes/betting_limits_popup.html:101
+msgid "Max Odd"
+msgstr "최대 홀수"
+
+#: templates/Desktop_template/admin/agent/agents.html:558
+#: templates/Desktop_template/admin/dealer/dealers.html:453
+#: templates/Desktop_template/header.html:565
+#: templates/Desktop_template/includes/betting_limits_popup.html:122
+#: templates/mobile_template/admin/agent/agents.html:531
+#: templates/mobile_template/admin/dealer/dealers.html:418
+#: templates/mobile_template/includes/betting_limits_popup.html:114
+msgid "Max Bet Amount Per Match"
+msgstr "최대 베팅 금액 당 일치"
+
+#: templates/Desktop_template/admin/agent/agents.html:573
+#: templates/Desktop_template/admin/dealer/dealers.html:471
+#: templates/Desktop_template/admin/player/players.html:600
+#: templates/Desktop_template/header.html:576
+#: templates/Desktop_template/includes/betting_limits_popup.html:133
+#: templates/mobile_template/admin/agent/agents.html:546
+#: templates/mobile_template/admin/dealer/dealers.html:436
+#: templates/mobile_template/admin/player/players.html:541
+#: templates/mobile_template/includes/betting_limits_popup.html:125
+msgid "Max Same Bet Count Amount"
+msgstr "최대 동일한 베팅 카운트 금액"
+
+#: templates/Desktop_template/admin/agent/agents.html:588
+#: templates/Desktop_template/admin/dealer/dealers.html:489
+#: templates/Desktop_template/admin/player/players.html:615
+#: templates/Desktop_template/header.html:589
+#: templates/Desktop_template/includes/betting_limits_popup.html:146
+#: templates/mobile_template/admin/agent/agents.html:561
+#: templates/mobile_template/admin/dealer/dealers.html:454
+#: templates/mobile_template/admin/player/players.html:556
+#: templates/mobile_template/includes/betting_limits_popup.html:138
+msgid "Max Multi Two Events Amount Combine"
+msgstr "최대 멀티 두 이벤트 금액 결합"
+
+#: templates/Desktop_template/admin/agent/agents.html:603
+#: templates/Desktop_template/admin/dealer/dealers.html:507
+#: templates/Desktop_template/admin/player/players.html:630
+#: templates/Desktop_template/header.html:600
+#: templates/Desktop_template/includes/betting_limits_popup.html:157
+#: templates/mobile_template/admin/agent/agents.html:576
+#: templates/mobile_template/admin/dealer/dealers.html:472
+#: templates/mobile_template/admin/player/players.html:571
+#: templates/mobile_template/includes/betting_limits_popup.html:149
+msgid "Max Multi Three Events Amount Combine"
+msgstr "최대 멀티 세 가지 이벤트 금액 결합"
+
+#: templates/Desktop_template/admin/agent/agents.html:618
+#: templates/Desktop_template/admin/dealer/dealers.html:525
+#: templates/Desktop_template/admin/player/players.html:645
+#: templates/Desktop_template/header.html:613
+#: templates/Desktop_template/includes/betting_limits_popup.html:170
+#: templates/mobile_template/admin/agent/agents.html:591
+#: templates/mobile_template/admin/dealer/dealers.html:490
+#: templates/mobile_template/admin/player/players.html:586
+#: templates/mobile_template/includes/betting_limits_popup.html:162
+msgid "Max Multi Three Events"
+msgstr "최대 멀티 세 가지 이벤트"
+
+#: templates/Desktop_template/admin/agent/agents.html:631
+#: templates/Desktop_template/admin/agent/update_agent.html:37
+#: templates/Desktop_template/admin/banner/create-banner.html:58
+#: templates/Desktop_template/admin/create-admin.html:73
+#: templates/Desktop_template/admin/dealer/dealers.html:596
+#: templates/Desktop_template/admin/dealer/update_dealer.html:65
+#: templates/Desktop_template/admin/player/update_player.html:28
+#: templates/Desktop_template/includes/betting_limits_popup.html:281
+#: templates/mobile_template/admin/agent/agents.html:604
+#: templates/mobile_template/admin/agent/update_agent.html:30
+#: templates/mobile_template/admin/create-admin.html:49
+#: templates/mobile_template/admin/dealer/dealers.html:543
+#: templates/mobile_template/admin/dealer/update_dealer.html:54
+#: templates/mobile_template/admin/player/update_player.html:30
+#: templates/mobile_template/includes/betting_limits_popup.html:251
+msgid "Save"
+msgstr "구하다"
+
+#: templates/Desktop_template/admin/agent/agents.html:650
+#: templates/Desktop_template/admin/dealer/dealers.html:613
+#: templates/Desktop_template/admin/player/players.html:670
+#: templates/Desktop_template/admin/settings.html:61
+#: templates/mobile_template/admin/agent/agents.html:622
+#: templates/mobile_template/admin/dealer/dealers.html:560
+#: templates/mobile_template/admin/player/players.html:611
+#: templates/mobile_template/admin/settings.html:16
+msgid "Permissions"
+msgstr "권한"
+
+#: templates/Desktop_template/admin/agent/agents.html:681
+#: templates/Desktop_template/admin/dealer/dealers.html:632
+#: templates/Desktop_template/includes/transactions.html:50
+#: templates/mobile_template/admin/agent/agents.html:652
+#: templates/mobile_template/admin/agent/agents.html:668
+#: templates/mobile_template/admin/dealer/dealers.html:578
+#: templates/mobile_template/includes/transactions.html:46
+msgid "Cashback"
+msgstr "캐쉬백"
+
+#: templates/Desktop_template/admin/agent/agents.html:781
+#: templates/Desktop_template/admin/dealer/dealers.html:728
+#: templates/Desktop_template/admin/player/players.html:794
+#: templates/Desktop_template/admin/player/players.html:891
+#: templates/Desktop_template/admin/settings.html:471
+#: templates/Desktop_template/admin/settings.html:550
+#: templates/Desktop_template/admin/settings.html:610
+#: templates/mobile_template/admin/agent/agents.html:756
+#: templates/mobile_template/admin/dealer/dealers.html:662
+#: templates/mobile_template/admin/player/players.html:701
+#: templates/mobile_template/admin/settings.html:365
+#: templates/mobile_template/admin/settings.html:444
+#: templates/mobile_template/admin/settings.html:504
+msgid "Are you sure"
+msgstr "확실해"
+
+#: templates/Desktop_template/admin/agent/agents.html:790
+#: templates/Desktop_template/admin/dealer/dealers.html:737
+#: templates/Desktop_template/admin/player/players.html:803
+#: templates/Desktop_template/admin/player/players.html:900
+#: templates/Desktop_template/admin/settings.html:479
+#: templates/Desktop_template/admin/settings.html:558
+#: templates/Desktop_template/admin/settings.html:618
+#: templates/mobile_template/admin/agent/agents.html:765
+#: templates/mobile_template/admin/dealer/dealers.html:671
+#: templates/mobile_template/admin/player/players.html:710
+#: templates/mobile_template/admin/settings.html:373
+#: templates/mobile_template/admin/settings.html:452
+#: templates/mobile_template/admin/settings.html:512
+#: venv/lib/python3.8/site-packages/django/forms/widgets.py:710
+msgid "Yes"
+msgstr "예"
+
+#: templates/Desktop_template/admin/agent/agents.html:791
+#: templates/Desktop_template/admin/dealer/dealers.html:738
+#: templates/Desktop_template/admin/player/players.html:804
+#: templates/Desktop_template/admin/player/players.html:901
+#: templates/Desktop_template/admin/settings.html:480
+#: templates/Desktop_template/admin/settings.html:559
+#: templates/Desktop_template/admin/settings.html:619
+#: templates/mobile_template/admin/agent/agents.html:766
+#: templates/mobile_template/admin/dealer/dealers.html:672
+#: templates/mobile_template/admin/player/players.html:711
+#: templates/mobile_template/admin/settings.html:374
+#: templates/mobile_template/admin/settings.html:453
+#: templates/mobile_template/admin/settings.html:513
+#: venv/lib/python3.8/site-packages/django/forms/widgets.py:711
+msgid "No"
+msgstr "아니요"
+
+#: templates/Desktop_template/admin/agent/create_agent.html:37
+#: templates/mobile_template/admin/agent/create_agent.html:30
+msgid "Create Agent"
+msgstr "에이전트 만들기"
+
+#: templates/Desktop_template/admin/banner/banners.html:42
+#: templates/Desktop_template/admin/banner/create-banner.html:44
+#| msgid "market id"
+msgid "Project id"
+msgstr "시장 ID"
+
+#: templates/Desktop_template/admin/banner/banners.html:50
+#: templates/Desktop_template/admin/create-match-banner.html:84
+#: templates/Desktop_template/admin/update-match-banner.html:82
+#: templates/Desktop_template/admin/upload-match-backgrounds.html:50
+msgid "Submit"
+msgstr ""
+
+#: templates/Desktop_template/admin/banner/create-banner.html:51
+#: venv/lib/python3.8/site-packages/django/db/models/fields/files.py:379
+msgid "Image"
+msgstr ""
+
+#: templates/Desktop_template/admin/create-match-banner.html:41
+#: templates/Desktop_template/admin/update-match-banner.html:41
+msgid "Fixture id"
+msgstr "기구 아이디"
+
+#: templates/Desktop_template/admin/create-match-banner.html:50
+#: templates/Desktop_template/admin/match-banner-info.html:35
+#: templates/Desktop_template/admin/update-match-banner.html:50
+msgid "Background Image"
+msgstr ""
+
+#: templates/Desktop_template/admin/create-match-banner.html:64
+#: templates/Desktop_template/admin/match-banner-info.html:43
+#: templates/Desktop_template/admin/update-match-banner.html:63
+msgid "Logo 1"
+msgstr ""
+
+#: templates/Desktop_template/admin/create-match-banner.html:73
+#: templates/Desktop_template/admin/match-banner-info.html:49
+#: templates/Desktop_template/admin/update-match-banner.html:72
+msgid "Logo 2"
+msgstr ""
+
+#: templates/Desktop_template/admin/dealer/create_dealer.html:22
+#: templates/Desktop_template/admin/dealer/update_dealer.html:27
+#: templates/mobile_template/admin/dealer/create_dealer.html:15
+#: templates/mobile_template/admin/dealer/update_dealer.html:16
+msgid "Timezone"
+msgstr "시간대"
+
+#: templates/Desktop_template/admin/dealer/create_dealer.html:61
+#: templates/mobile_template/admin/dealer/create_dealer.html:54
+msgid "Create Dealer"
+msgstr "판매점 만들기"
+
+#: templates/Desktop_template/admin/dealer/dealers.html:98
+#: templates/mobile_template/admin/dealer/create_dealer.html:6
+#: templates/mobile_template/admin/dealer/dealers.html:71
+msgid "Add Dealer"
+msgstr "대리점 추가"
+
+#: templates/Desktop_template/admin/markets.html:49
+#: templates/Desktop_template/header.html:346
+#: templates/mobile_template/admin/markets.html:10
+#: templates/mobile_template/admin/markets.html:21
+#: templates/mobile_template/admin/markets.html:54
+#: templates/mobile_template/header.html:168
+#: templates/mobile_template/home.html:171
+#| msgid "market"
+msgid "Markets"
+msgstr "시장"
+
+#: templates/Desktop_template/admin/orderevents.html:49
+#: templates/mobile_template/admin/orderevents.html:34
+#: templates/mobile_template/admin/orderevents.html:112
+#| msgid "Sport"
+msgid "Sports"
+msgstr "스포츠"
+
+#: templates/Desktop_template/admin/orderevents.html:74
+#: templates/mobile_template/admin/orderevents.html:61
+#: templates/mobile_template/admin/orderevents.html:137
+#| msgid "league id"
+msgid "Leagues"
+msgstr "리그 ID"
+
+#: templates/Desktop_template/admin/orderevents.html:89
+#: templates/mobile_template/admin/orderevents.html:77
+#: templates/mobile_template/admin/orderevents.html:151
+#| msgid "Reset Events"
+msgid "Events"
+msgstr "리셋 이벤트"
+
+#: templates/Desktop_template/admin/player/create_player.html:7
+#: templates/Desktop_template/admin/player/players.html:165
+#: templates/mobile_template/admin/player/create_player.html:6
+#: templates/mobile_template/admin/player/players.html:120
+msgid "Add Player"
+msgstr "플레이어 추가"
+
+#: templates/Desktop_template/admin/player/create_player.html:32
+#: templates/mobile_template/admin/player/create_player.html:30
+msgid "Create player"
+msgstr "플레이어 만들기"
+
+#: templates/Desktop_template/admin/player/players.html:473
+#: templates/Desktop_template/header.html:387
+#: templates/Desktop_template/header.html:441
+#: templates/Desktop_template/includes/betting_limits_popup.html:6
+#: templates/Desktop_template/includes/betting_limits_popup.html:11
+#: templates/mobile_template/admin/player/players.html:414
+#: templates/mobile_template/header.html:186
+#: templates/mobile_template/home.html:146
+#: templates/mobile_template/includes/betting_limits_popup.html:6
+msgid "Betting Limits"
+msgstr "제한 베팅"
+
+#: templates/Desktop_template/admin/player/players.html:585
+#: templates/mobile_template/admin/player/players.html:526
+msgid "Max Single Bet Amount Per Match"
+msgstr "최대 단일 베팅 금액 당 일치"
+
+#: templates/Desktop_template/admin/player/players.html:676
+#: templates/mobile_template/admin/player/players.html:617
+msgid "Ability to play"
+msgstr "플레이 할 수있는 능력"
+
+#: templates/Desktop_template/admin/settings.html:66
+#: templates/mobile_template/admin/settings.html:21
+msgid "Disable Betting Permission"
+msgstr "안 도박 권한"
+
+#: templates/Desktop_template/admin/settings.html:90
+#: templates/mobile_template/admin/settings.html:40
+msgid "Change Bet Status"
+msgstr "변경 내기 상태"
+
+#: templates/Desktop_template/admin/settings.html:96
+#: templates/mobile_template/admin/settings.html:45
+msgid "Enter Bet ID"
+msgstr "베팅 ID를 입력"
+
+#: templates/Desktop_template/admin/settings.html:112
+#: templates/mobile_template/admin/settings.html:58
+msgid "Enter Coupon ID"
+msgstr "쿠폰 ID를 입력"
+
+#: templates/Desktop_template/admin/settings.html:120
+#: templates/mobile_template/admin/settings.html:65
+msgid "Change Status"
+msgstr "상태 변경"
+
+#: templates/Desktop_template/admin/settings.html:149
+#: templates/mobile_template/admin/settings.html:85
+msgid "Reset Events"
+msgstr "리셋 이벤트"
+
+#: templates/Desktop_template/admin/settings.html:156
+#: templates/mobile_template/admin/settings.html:90
+msgid "Enter Fixture ID , seperated"
+msgstr "고정 장치 ID를 입력 구분"
+
+#: templates/Desktop_template/admin/settings.html:162
+#: templates/mobile_template/admin/settings.html:94
+msgid "Prematch"
+msgstr "Prematch"
+
+#: templates/Desktop_template/admin/settings.html:163
+#: templates/mobile_template/admin/settings.html:95
+msgid "Live"
+msgstr "살다"
+
+#: templates/Desktop_template/admin/settings.html:172
+#: templates/mobile_template/admin/settings.html:101
+msgid "Reset"
+msgstr "초기화"
+
+#: templates/Desktop_template/admin/settings.html:176
+#: templates/mobile_template/admin/settings.html:104
+msgid "Remove"
+msgstr ""
+
+#: templates/Desktop_template/admin/settings.html:189
+#: templates/mobile_template/admin/settings.html:116
+msgid "Blacklist Events"
+msgstr "블랙리스트 이벤트"
+
+#: templates/Desktop_template/admin/settings.html:196
+#: templates/mobile_template/admin/settings.html:121
+msgid "Enter Fixture ID"
+msgstr "고정 장치 ID를 입력"
+
+#: templates/Desktop_template/admin/settings.html:202
+#: templates/mobile_template/admin/settings.html:126
+msgid "Add"
+msgstr "추가하다"
+
+#: templates/Desktop_template/admin/upload-match-backgrounds.html:41
+msgid "Background image"
+msgstr ""
+
+#: templates/Desktop_template/bets/betslips.html:57
+#: templates/Desktop_template/report/betslip_report.html:114
+#: templates/mobile_template/bets/betslips.html:30
+msgid "Won"
+msgstr "이겼다"
+
+#: templates/Desktop_template/bets/betslips.html:62
+#: templates/Desktop_template/report/betslip_report.html:115
+#: templates/mobile_template/bets/betslips.html:35
+msgid "Lost"
+msgstr "잃어버린"
+
+#: templates/Desktop_template/bets/betslips.html:67
+#: templates/Desktop_template/report/betslip_report.html:116
+#: templates/mobile_template/bets/betslips.html:40
+msgid "Current"
+msgstr "현재의"
+
+#: templates/Desktop_template/bets/betslips.html:165
+#: templates/Desktop_template/report/betslip_report.html:160
+#: templates/mobile_template/bets/betslips.html:133
+msgid "Bet Amount"
+msgstr "베팅 금액"
+
+#: templates/Desktop_template/bets/betslips.html:166
+#: templates/mobile_template/bets/betslips.html:134
+msgid "Possible Win"
+msgstr "가능한 승리"
+
+#: templates/Desktop_template/bets/betslips.html:167
+#: templates/mobile_template/bets/betslips.html:135
+msgid "Win Amount"
+msgstr "승리 금액"
+
+#: templates/Desktop_template/bets/betslips.html:168
+#: templates/Desktop_template/includes/transactions.html:84
+#: templates/Desktop_template/transactions/transactions.html:98
+#: templates/mobile_template/bets/betslips.html:136
+#: templates/mobile_template/includes/transactions.html:80
+#: templates/mobile_template/transactions/transactions.html:71
+msgid "Date"
+msgstr "날짜"
+
+#: templates/Desktop_template/bets/betslips.html:169
+#| msgid "Date"
+msgid "Won Date"
+msgstr "날짜"
+
+#: templates/Desktop_template/bets/betslips.html:288
+#: templates/mobile_template/bets/betslips.html:245
+msgid "ID"
+msgstr "ID"
+
+#: templates/Desktop_template/bets/betslips.html:289
+#: templates/Desktop_template/includes/transactions.html:86
+#: templates/mobile_template/bets/betslips.html:246
+#: templates/mobile_template/includes/transactions.html:82
+msgid "Type"
+msgstr "유형"
+
+#: templates/Desktop_template/bets/betslips.html:322
+#: templates/Desktop_template/bets/betslips.html:323
+#: templates/mobile_template/bets/betslips.html:281
+#: templates/mobile_template/bets/betslips.html:282
+msgid "Pick"
+msgstr "선택하다"
+
+#: templates/Desktop_template/bets/betslips.html:323
+#: templates/mobile_template/bets/betslips.html:282
+msgid "Tip"
+msgstr "팁"
+
+#: templates/Desktop_template/header.html:171
+#: venv/lib/python3.8/site-packages/rest_framework_swagger/templates/rest_framework_swagger/index.html:28
+msgid "Logout"
+msgstr ""
+
+#: templates/Desktop_template/header.html:209
+msgid "Dashboard"
+msgstr "계기반"
+
+#: templates/Desktop_template/header.html:237
+#: templates/mobile_template/admin/player/players.html:10
+#: templates/mobile_template/header.html:79
+#: templates/mobile_template/home.html:22
+msgid "Players"
+msgstr "플레이어"
+
+#: templates/Desktop_template/header.html:250
+#: templates/mobile_template/admin/agent/agents.html:12
+msgid "Agents"
+msgstr "자치령 대표"
+
+#: templates/Desktop_template/header.html:264
+#: templates/mobile_template/admin/dealer/dealers.html:12
+#: templates/mobile_template/header.html:110
+#: templates/mobile_template/home.html:62
+msgid "Dealers"
+msgstr "딜러"
+
+#: templates/Desktop_template/header.html:277
+#| msgid "Profit"
+msgid "Profits"
+msgstr "이익"
+
+#: templates/Desktop_template/header.html:289
+#: templates/mobile_template/transactions/transactions.html:17
+msgid "Transactions"
+msgstr "업무"
+
+#: templates/Desktop_template/header.html:301
+msgid "Betslips"
+msgstr ""
+
+#: templates/Desktop_template/header.html:310
+#| msgid "Sport"
+msgid "Reports"
+msgstr "스포츠"
+
+#: templates/Desktop_template/header.html:317
+#| msgid "Transaction data"
+msgid "Transaction Report"
+msgstr "트랜잭션 데이터"
+
+#: templates/Desktop_template/header.html:324
+msgid "BetSlip Report"
+msgstr ""
+
+#: templates/Desktop_template/header.html:331
+#| msgid "SportsBook"
+msgid "SportsBook Report"
+msgstr "스포츠 북"
+
+#: templates/Desktop_template/header.html:359
+#: templates/mobile_template/admin/orderevents.html:11
+#: templates/mobile_template/header.html:176
+#: templates/mobile_template/home.html:183
+#| msgid "Reset Events"
+msgid "Order Events"
+msgstr "리셋 이벤트"
+
+#: templates/Desktop_template/header.html:372
+#: templates/mobile_template/admin/settings.html:10
+#: templates/mobile_template/header.html:160
+#: templates/mobile_template/home.html:159
+msgid "Settings"
+msgstr "설정"
+
+#: templates/Desktop_template/header.html:666
+#| msgid "Permissions"
+msgid "Permissions "
+msgstr "권한"
+
+#: templates/Desktop_template/header.html:673
+#: templates/Desktop_template/includes/betting_limits_popup.html:254
+#: templates/mobile_template/includes/betting_limits_popup.html:224
+msgid "Max Agent"
+msgstr "최대 에이전트"
+
+#: templates/Desktop_template/header.html:685
+#: templates/Desktop_template/includes/betting_limits_popup.html:266
+#: templates/mobile_template/includes/betting_limits_popup.html:236
+msgid "Max Player per Agent"
+msgstr "에이전트 당 최대 플레이어"
+
+#: templates/Desktop_template/home.html:53
+msgid "New Registration"
+msgstr ""
+
+#: templates/Desktop_template/home.html:73
+#| msgid "Possible Win"
+msgid "Possible Risk"
+msgstr "가능한 승리"
+
+#: templates/Desktop_template/home.html:82
+#| msgid "Deposit"
+msgid "Total Deposit"
+msgstr "보증금"
+
+#: templates/Desktop_template/home.html:87
+#: templates/Desktop_template/home.html:99
+#: templates/Desktop_template/home.html:111
+#: templates/Desktop_template/home.html:123
+msgid "In last 7 Days"
+msgstr ""
+
+#: templates/Desktop_template/home.html:94
+msgid "Open BetSlips"
+msgstr ""
+
+#: templates/Desktop_template/home.html:106
+msgid "Total BetSlips"
+msgstr ""
+
+#: templates/Desktop_template/home.html:118
+#| msgid "Withdraw"
+msgid "Total Withdraws"
+msgstr "철회하다"
+
+#: templates/Desktop_template/home.html:137
+msgid "Latest Betslips"
+msgstr ""
+
+#: templates/Desktop_template/home.html:160
+#| msgid "Dealers"
+msgid "Total Dealers"
+msgstr "딜러"
+
+#: templates/Desktop_template/home.html:174
+#| msgid "Agents"
+msgid "Total Agents"
+msgstr "자치령 대표"
+
+#: templates/Desktop_template/home.html:213
+#| msgid "Players"
+msgid "Total Players"
+msgstr "플레이어"
+
+#: templates/Desktop_template/home.html:233
+#: templates/Desktop_template/home.html:244
+#: templates/Desktop_template/home.html:255
+#: templates/Desktop_template/home.html:268
+#: templates/Desktop_template/home.html:279
+#: templates/Desktop_template/home.html:290
+msgid "Bets"
+msgstr ""
+
+#: templates/Desktop_template/home.html:336
+#| msgid "Net Profit"
+msgid "Net Profits"
+msgstr "순이익"
+
+#: templates/Desktop_template/home.html:336
+msgid "(over 7 days)"
+msgstr ""
+
+#: templates/Desktop_template/home.html:350
+#| msgid "Profit"
+msgid "Profit Share"
+msgstr "이익"
+
+#: templates/Desktop_template/home.html:350
+msgid "(profits in percentage over 7 days)"
+msgstr ""
+
+#: templates/Desktop_template/home.html:377
+msgid "Betslip ID"
+msgstr ""
+
+#: templates/Desktop_template/home.html:383
+#| msgid "Bet Amount"
+msgid "Stake Amount"
+msgstr "베팅 금액"
+
+#: templates/Desktop_template/home.html:387
+#: templates/Desktop_template/report/betslip_report.html:162
+#| msgid "possible win amount"
+msgid "Possible Win Amount"
+msgstr "가능한 승리 금액"
+
+#: templates/Desktop_template/home.html:434
+#: templates/Desktop_template/includes/transactions.html:61
+#: templates/mobile_template/admin/agent/agents.html:247
+#: templates/mobile_template/admin/agent/agents.html:628
+#: templates/mobile_template/admin/dealer/dealers.html:207
+#: templates/mobile_template/admin/dealer/dealers.html:566
+#: templates/mobile_template/admin/player/players.html:361
+#: templates/mobile_template/includes/transactions.html:57
+#: templates/mobile_template/profit/profit.html:123
+#: templates/mobile_template/profit/profit.html:209
+#: templates/mobile_template/profit/profit.html:295
+msgid "Casino"
+msgstr "카지노"
+
+#: templates/Desktop_template/home.html:434
+#: templates/Desktop_template/includes/transactions.html:62
+#: templates/mobile_template/admin/agent/agents.html:253
+#: templates/mobile_template/admin/agent/agents.html:640
+#: templates/mobile_template/admin/dealer/dealers.html:213
+#: templates/mobile_template/admin/player/players.html:367
+#: templates/mobile_template/includes/transactions.html:58
+#: templates/mobile_template/profit/profit.html:133
+#: templates/mobile_template/profit/profit.html:219
+#: templates/mobile_template/profit/profit.html:305
+msgid "Live Casino"
+msgstr "라이브 카지노"
+
+#: templates/Desktop_template/home.html:434
+#: templates/Desktop_template/includes/transactions.html:60
+#: templates/mobile_template/includes/transactions.html:56
+msgid "Sportsbook"
+msgstr "스포츠 북"
+
+#: templates/Desktop_template/home.html:434
+msgid "Casino Letplay Book"
+msgstr ""
+
+#: templates/Desktop_template/includes/betting_limits_popup.html:84
+#: templates/mobile_template/admin/agent/agents.html:418
+#: templates/mobile_template/admin/dealer/dealers.html:527
+#: templates/mobile_template/includes/betting_limits_popup.html:77
+msgid "Max Live Casino Amount"
+msgstr "최대 라이브 카지노 금액"
+
+#: templates/Desktop_template/includes/betting_limits_popup.html:180
+#: templates/mobile_template/admin/dealer/dealers.html:508
+#: templates/mobile_template/includes/betting_limits_popup.html:172
+msgid "Cashout Commission Percentage"
+msgstr "Cashout위원회 비율"
+
+#: templates/Desktop_template/includes/betting_limits_popup.html:192
+#: templates/mobile_template/admin/agent/agents.html:452
+#: templates/mobile_template/admin/agent/agents.html:485
+msgid "Cashback Time Limit(in hours)"
+msgstr "(시간) 캐쉬백 시간 제한"
+
+#: templates/Desktop_template/includes/betting_limits_popup.html:202
+#: templates/mobile_template/admin/agent/agents.html:434
+#: templates/mobile_template/admin/agent/agents.html:467
+msgid "Cashback Percentage"
+msgstr "캐쉬백 비율"
+
+#: templates/Desktop_template/includes/betting_limits_popup.html:221
+#: templates/mobile_template/includes/betting_limits_popup.html:191
+msgid "Permissions Dealer"
+msgstr "권한 판매점"
+
+#: templates/Desktop_template/includes/betting_limits_popup.html:225
+#: templates/mobile_template/includes/betting_limits_popup.html:195
+msgid "Creating Agent"
+msgstr "에이전트 만들기"
+
+#: templates/Desktop_template/includes/betting_limits_popup.html:240
+#: templates/mobile_template/includes/betting_limits_popup.html:210
+msgid "Block dealer"
+msgstr "블록 대리점"
+
+#: templates/Desktop_template/includes/transactions.html:45
+#: templates/Desktop_template/includes/transactions.html:145
+#: templates/Desktop_template/includes/transactions.html:155
+#: templates/mobile_template/includes/transactions.html:41
+#: templates/mobile_template/includes/transactions.html:137
+#: templates/mobile_template/includes/transactions.html:146
+#: templates/mobile_template/includes/transactions.html:150
+msgid "All"
+msgstr "모두"
+
+#: templates/Desktop_template/includes/transactions.html:49
+#: templates/Desktop_template/includes/transactions.html:149
+#: templates/Desktop_template/includes/transactions.html:157
+#: templates/Desktop_template/report/transaction_report.html:78
+#: templates/mobile_template/includes/transactions.html:45
+#: templates/mobile_template/includes/transactions.html:141
+#: templates/mobile_template/includes/transactions.html:152
+msgid "Debit"
+msgstr "직불"
+
+#: templates/Desktop_template/includes/transactions.html:84
+#: templates/mobile_template/includes/transactions.html:80
+#: venv/lib/python3.8/site-packages/ddt_request_history/panels/request_history.html:9
+#: venv/lib/python3.8/site-packages/django/db/models/fields/__init__.py:2088
+msgid "Time"
+msgstr "시간"
+
+#: templates/Desktop_template/includes/transactions.html:85
+#: templates/Desktop_template/report/transaction_report.html:133
+#: templates/mobile_template/includes/transactions.html:81
+msgid "Trans Type"
+msgstr "트랜스 유형"
+
+#: templates/Desktop_template/includes/transactions.html:87
+#: templates/Desktop_template/report/transaction_report.html:134
+#: templates/Desktop_template/transactions/transactions.html:97
+#: templates/mobile_template/includes/transactions.html:83
+#: templates/mobile_template/transactions/transactions.html:70
+msgid "Amount"
+msgstr "양"
+
+#: templates/Desktop_template/limits/limits.html:13
+#: templates/mobile_template/limits/limits.html:13
+msgid "Betting Limit2"
+msgstr "Limit2 베팅"
+
+#: templates/Desktop_template/login.html:21
+msgid "Sign In"
+msgstr ""
+
+#: templates/Desktop_template/login.html:49
+msgid "Sign in"
+msgstr ""
+
+#: templates/Desktop_template/profit/profit.html:85
+#: templates/mobile_template/profit/profit.html:64
+msgid "Search Player"
+msgstr "검색 플레이어"
+
+#: templates/Desktop_template/report/betslip_report.html:111
+#: templates/Desktop_template/report/sportsbook_report.html:74
+#: templates/Desktop_template/report/transaction_report.html:61
+msgid "Role"
+msgstr ""
+
+#: templates/Desktop_template/report/betslip_report.html:113
+#| msgid "All status"
+msgid "All Bettypes"
+msgstr "모든 상태"
+
+#: templates/Desktop_template/report/betslip_report.html:158
+#: templates/Desktop_template/report/sportsbook_report.html:121
+msgid "BetSlip Id"
+msgstr ""
+
+#: templates/Desktop_template/report/betslip_report.html:159
+#| msgid "Bet Amount"
+msgid "Bets Count"
+msgstr "베팅 금액"
+
+#: templates/Desktop_template/report/betslip_report.html:161
+msgid "Odds"
+msgstr ""
+
+#: templates/Desktop_template/report/betslip_report.html:163
+#| msgid "Win Amount"
+msgid "Won Amount"
+msgstr "승리 금액"
+
+#: templates/Desktop_template/report/betslip_report.html:164
+#| msgid "Type"
+msgid "Bet Type"
+msgstr "유형"
+
+#: templates/Desktop_template/report/betslip_report.html:165
+#: templates/Desktop_template/report/transaction_report.html:135
+#| msgid "status"
+msgid "Status"
+msgstr "상태"
+
+#: templates/Desktop_template/report/betslip_report.html:169
+#: templates/Desktop_template/report/sportsbook_report.html:124
+#: templates/Desktop_template/report/transaction_report.html:132
+#| msgid "Create Dealer"
+msgid "Create Date"
+msgstr "판매점 만들기"
+
+#: templates/Desktop_template/report/betslip_report.html:170
+msgid "Modified Date"
+msgstr ""
+
+#: templates/Desktop_template/report/betslip_report.html:171
+#| msgid "Time"
+msgid "Won Time"
+msgstr "시간"
+
+#: templates/Desktop_template/report/sportsbook_report.html:76
+#| msgid "All status"
+msgid "All Games"
+msgstr "모든 상태"
+
+#: templates/Desktop_template/report/sportsbook_report.html:77
+msgid "FootBall"
+msgstr ""
+
+#: templates/Desktop_template/report/sportsbook_report.html:78
+msgid "Ice Hockey"
+msgstr ""
+
+#: templates/Desktop_template/report/sportsbook_report.html:79
+msgid "Tennis"
+msgstr ""
+
+#: templates/Desktop_template/report/sportsbook_report.html:80
+msgid "Basket-Ball"
+msgstr ""
+
+#: templates/Desktop_template/report/sportsbook_report.html:81
+msgid "Volley-Ball"
+msgstr ""
+
+#: templates/Desktop_template/report/sportsbook_report.html:82
+msgid "Boxing"
+msgstr ""
+
+#: templates/Desktop_template/report/sportsbook_report.html:120
+#| msgid "Bet placed"
+msgid "Bet Id"
+msgstr "베팅 배치"
+
+#: templates/Desktop_template/report/sportsbook_report.html:122
+#| msgid "Net Profit"
+msgid "Bet Price"
+msgstr "순이익"
+
+#: templates/Desktop_template/report/sportsbook_report.html:125
+msgid "Event Id"
+msgstr ""
+
+#: templates/Desktop_template/report/sportsbook_report.html:126
+#| msgid "Fixture id"
+msgid "Fixture Id"
+msgstr "기구 아이디"
+
+#: templates/Desktop_template/report/sportsbook_report.html:127
+#| msgid "market"
+msgid "Market"
+msgstr "시장"
+
+#: templates/Desktop_template/report/sportsbook_report.html:128
+#| msgid "market id"
+msgid "Market Side"
+msgstr "시장 ID"
+
+#: templates/Desktop_template/report/sportsbook_report.html:129
+msgid "Championship"
+msgstr ""
+
+#: templates/Desktop_template/report/sportsbook_report.html:130
+#| msgid "match"
+msgid "Match"
+msgstr "성냥"
+
+#: templates/Desktop_template/report/sportsbook_report.html:131
+#| msgid "Change Bet Status"
+msgid "Bet Status"
+msgstr "변경 내기 상태"
+
+#: templates/Desktop_template/report/sportsbook_report.html:132
+msgid "Bet Settlement Status"
+msgstr ""
+
+#: templates/Desktop_template/report/transaction_report.html:63
+#: templates/Desktop_template/report/transaction_report.html:76
+msgid "--All--"
+msgstr ""
+
+#: templates/Desktop_template/report/transaction_report.html:74
+#| msgid "Transaction"
+msgid "Transaction Type"
+msgstr "거래"
+
+#: templates/Desktop_template/report/transaction_report.html:129
+#: templates/Desktop_template/transactions/transactions.html:94
+#| msgid "Trans Type"
+msgid "Trans Id"
+msgstr "트랜스 유형"
+
+#: templates/Desktop_template/report/transaction_report.html:130
+#| msgid "Username"
+msgid "User"
+msgstr "사용자 이름"
+
+#: templates/Desktop_template/report/transaction_report.html:131
+#| msgid "Merchant"
+msgid "User Merchant"
+msgstr "상인"
+
+#: templates/Desktop_template/report/transaction_report.html:136
+#| msgid "previous_balance"
+msgid "Previous Balance"
+msgstr "이전 잔고"
+
+#: templates/Desktop_template/report/transaction_report.html:137
+#| msgid "Balance"
+msgid "New Balance"
+msgstr "균형"
+
+#: templates/Desktop_template/report/transaction_report.html:138
+#| msgid "reference"
+msgid "Reference"
+msgstr "참조"
+
+#: templates/Desktop_template/report/transaction_report.html:139
+msgid "Description"
+msgstr "설명"
+
+#: templates/Desktop_template/report/transaction_report.html:140
+msgid "Betslip Id"
+msgstr ""
+
+#: templates/Desktop_template/transactions/transactions.html:95
+#: templates/mobile_template/transactions/transactions.html:68
+msgid "Paid"
+msgstr "유급의"
+
+#: templates/Desktop_template/transactions/transactions.html:96
+#: templates/mobile_template/transactions/transactions.html:69
+msgid "Received"
+msgstr "받았다"
+
+#: templates/mobile_template/admin/admins.html:11
+msgid "Admin Data"
+msgstr "관리 데이터"
+
+#: templates/mobile_template/admin/agent/update_agent.html:6
+msgid "Edit Agent"
+msgstr "편집 에이전트"
+
+#: templates/mobile_template/admin/dealer/update_dealer.html:6
+msgid "Edit Dealer"
+msgstr "편집 판매점"
+
+#: templates/mobile_template/bets/betslips.html:15
+#: templates/mobile_template/header.html:152
+#: templates/mobile_template/home.html:132
+msgid "Coupons"
+msgstr "쿠폰"
+
+#: templates/mobile_template/header.html:126
+#: templates/mobile_template/home.html:82
+msgid "Terminals"
+msgstr "터미널"
+
+#: templates/mobile_template/header.html:144
+#: templates/mobile_template/home.html:107
+msgid "Transaction"
+msgstr "거래"
+
+#: templates/mobile_template/header.html:196
+msgid "Log Out"
+msgstr "로그 아웃"
+
+#: templates/mobile_template/home.html:118
+msgid "E-Vouchers"
+msgstr "E-바우처"
+
+#: templates/mobile_template/includes/transactions.html:6
+msgid "Player Transactions"
+msgstr "플레이어 거래"
+
+#: templates/mobile_template/login.html:40
+msgid "Login"
+msgstr "로그인"
+
+#: venv/lib/python3.8/site-packages/auditlog/models.py:174
+#| msgid "Bet created"
+msgid "create"
+msgstr "베팅 생성"
+
+#: venv/lib/python3.8/site-packages/auditlog/models.py:175
+#| msgid "Last update"
+msgid "update"
+msgstr "마지막 업데이트"
+
+#: venv/lib/python3.8/site-packages/auditlog/models.py:176
+msgid "delete"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/auditlog/models.py:180
+msgid "content type"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/auditlog/models.py:182
+msgid "object pk"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/auditlog/models.py:184
+#| msgid "bet id"
+msgid "object id"
+msgstr "내기 아이디"
+
+#: venv/lib/python3.8/site-packages/auditlog/models.py:185
+msgid "object representation"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/auditlog/models.py:187
+#| msgid "Transaction"
+msgid "action"
+msgstr "거래"
+
+#: venv/lib/python3.8/site-packages/auditlog/models.py:188
+msgid "change message"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/auditlog/models.py:190
+msgid "actor"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/auditlog/models.py:192
+msgid "remote address"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/auditlog/models.py:194
+msgid "timestamp"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/auditlog/models.py:196
+#| msgid "Transaction data"
+msgid "additional data"
+msgstr "트랜잭션 데이터"
+
+#: venv/lib/python3.8/site-packages/auditlog/models.py:203
+#| msgid "Journal entry"
+msgid "log entry"
+msgstr "분개"
+
+#: venv/lib/python3.8/site-packages/auditlog/models.py:204
+msgid "log entries"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/auditlog/models.py:208
+#| msgid "Create Dealer"
+msgid "Created {repr:s}"
+msgstr "판매점 만들기"
+
+#: venv/lib/python3.8/site-packages/auditlog/models.py:210
+msgid "Updated {repr:s}"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/auditlog/models.py:212
+msgid "Deleted {repr:s}"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/auditlog/models.py:214
+msgid "Logged {repr:s}"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/ddt_request_history/panels/request_history.html:10
+msgid "Method"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/ddt_request_history/panels/request_history.html:11
+msgid "Path"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/ddt_request_history/panels/request_history.html:12
+msgid "Post Variables"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/ddt_request_history/panels/request_history.py:172
+msgid "Request History"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/contrib/messages/apps.py:7
+msgid "Messages"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/contrib/sitemaps/apps.py:7
+msgid "Site Maps"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/contrib/staticfiles/apps.py:9
+msgid "Static Files"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/contrib/syndication/apps.py:7
+msgid "Syndication"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/core/paginator.py:48
+msgid "That page number is not an integer"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/core/paginator.py:50
+msgid "That page number is less than 1"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/core/paginator.py:55
+msgid "That page contains no results"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/core/validators.py:20
+msgid "Enter a valid value."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/core/validators.py:91
+#: venv/lib/python3.8/site-packages/django/forms/fields.py:671
+msgid "Enter a valid URL."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/core/validators.py:145
+#| msgid "Invalid signature."
+msgid "Enter a valid integer."
+msgstr "잘못된 서명."
+
+#: venv/lib/python3.8/site-packages/django/core/validators.py:156
+msgid "Enter a valid email address."
+msgstr ""
+
+#. Translators: "letters" means latin letters: a-z and A-Z.
+#: venv/lib/python3.8/site-packages/django/core/validators.py:230
+msgid ""
+"Enter a valid “slug” consisting of letters, numbers, underscores or hyphens."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/core/validators.py:237
+msgid ""
+"Enter a valid “slug” consisting of Unicode letters, numbers, underscores, or "
+"hyphens."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/core/validators.py:246
+#: venv/lib/python3.8/site-packages/django/core/validators.py:266
+msgid "Enter a valid IPv4 address."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/core/validators.py:251
+#: venv/lib/python3.8/site-packages/django/core/validators.py:267
+msgid "Enter a valid IPv6 address."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/core/validators.py:261
+#: venv/lib/python3.8/site-packages/django/core/validators.py:265
+msgid "Enter a valid IPv4 or IPv6 address."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/core/validators.py:295
+msgid "Enter only digits separated by commas."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/core/validators.py:301
+#, python-format
+msgid "Ensure this value is %(limit_value)s (it is %(show_value)s)."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/core/validators.py:334
+#, python-format
+msgid "Ensure this value is less than or equal to %(limit_value)s."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/core/validators.py:343
+#, python-format
+msgid "Ensure this value is greater than or equal to %(limit_value)s."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/core/validators.py:353
+#, python-format
+msgid ""
+"Ensure this value has at least %(limit_value)d character (it has "
+"%(show_value)d)."
+msgid_plural ""
+"Ensure this value has at least %(limit_value)d characters (it has "
+"%(show_value)d)."
+msgstr[0] ""
+msgstr[1] ""
+
+#: venv/lib/python3.8/site-packages/django/core/validators.py:368
+#, python-format
+msgid ""
+"Ensure this value has at most %(limit_value)d character (it has "
+"%(show_value)d)."
+msgid_plural ""
+"Ensure this value has at most %(limit_value)d characters (it has "
+"%(show_value)d)."
+msgstr[0] ""
+msgstr[1] ""
+
+#: venv/lib/python3.8/site-packages/django/core/validators.py:387
+#: venv/lib/python3.8/site-packages/django/forms/fields.py:292
+#: venv/lib/python3.8/site-packages/django/forms/fields.py:327
+#| msgid "Is not a number"
+msgid "Enter a number."
+msgstr "숫자가 아니다"
+
+#: venv/lib/python3.8/site-packages/django/core/validators.py:389
+#, python-format
+msgid "Ensure that there are no more than %(max)s digit in total."
+msgid_plural "Ensure that there are no more than %(max)s digits in total."
+msgstr[0] ""
+msgstr[1] ""
+
+#: venv/lib/python3.8/site-packages/django/core/validators.py:394
+#, python-format
+msgid "Ensure that there are no more than %(max)s decimal place."
+msgid_plural "Ensure that there are no more than %(max)s decimal places."
+msgstr[0] ""
+msgstr[1] ""
+
+#: venv/lib/python3.8/site-packages/django/core/validators.py:399
+#, python-format
+msgid ""
+"Ensure that there are no more than %(max)s digit before the decimal point."
+msgid_plural ""
+"Ensure that there are no more than %(max)s digits before the decimal point."
+msgstr[0] ""
+msgstr[1] ""
+
+#: venv/lib/python3.8/site-packages/django/core/validators.py:461
+#, python-format
+msgid ""
+"File extension “%(extension)s” is not allowed. Allowed extensions are: "
+"%(allowed_extensions)s."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/core/validators.py:513
+msgid "Null characters are not allowed."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/db/models/base.py:1190
+#: venv/lib/python3.8/site-packages/django/forms/models.py:760
+msgid "and"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/db/models/base.py:1192
+#, python-format
+msgid "%(model_name)s with this %(field_labels)s already exists."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/db/models/fields/__init__.py:100
+#, python-format
+msgid "Value %(value)r is not a valid choice."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/db/models/fields/__init__.py:101
+msgid "This field cannot be null."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/db/models/fields/__init__.py:102
+msgid "This field cannot be blank."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/db/models/fields/__init__.py:103
+#, python-format
+msgid "%(model_name)s with this %(field_label)s already exists."
+msgstr ""
+
+#. Translators: The 'lookup_type' is one of 'date', 'year' or 'month'.
+#. Eg: "Title must be unique for pub_date year"
+#: venv/lib/python3.8/site-packages/django/db/models/fields/__init__.py:107
+#, python-format
+msgid ""
+"%(field_label)s must be unique for %(date_field_label)s %(lookup_type)s."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/db/models/fields/__init__.py:126
+#, python-format
+msgid "Field of type: %(field_type)s"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/db/models/fields/__init__.py:939
+#, python-format
+msgid "“%(value)s” value must be either True or False."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/db/models/fields/__init__.py:940
+#, python-format
+msgid "“%(value)s” value must be either True, False, or None."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/db/models/fields/__init__.py:942
+msgid "Boolean (Either True or False)"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/db/models/fields/__init__.py:983
+#, python-format
+msgid "String (up to %(max_length)s)"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/db/models/fields/__init__.py:1047
+msgid "Comma-separated integers"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/db/models/fields/__init__.py:1096
+#, python-format
+msgid ""
+"“%(value)s” value has an invalid date format. It must be in YYYY-MM-DD "
+"format."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/db/models/fields/__init__.py:1098
+#: venv/lib/python3.8/site-packages/django/db/models/fields/__init__.py:1241
+#, python-format
+msgid ""
+"“%(value)s” value has the correct format (YYYY-MM-DD) but it is an invalid "
+"date."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/db/models/fields/__init__.py:1101
+msgid "Date (without time)"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/db/models/fields/__init__.py:1239
+#, python-format
+msgid ""
+"“%(value)s” value has an invalid format. It must be in YYYY-MM-DD HH:MM[:ss[."
+"uuuuuu]][TZ] format."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/db/models/fields/__init__.py:1243
+#, python-format
+msgid ""
+"“%(value)s” value has the correct format (YYYY-MM-DD HH:MM[:ss[.uuuuuu]]"
+"[TZ]) but it is an invalid date/time."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/db/models/fields/__init__.py:1247
+msgid "Date (with time)"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/db/models/fields/__init__.py:1395
+#, python-format
+msgid "“%(value)s” value must be a decimal number."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/db/models/fields/__init__.py:1397
+msgid "Decimal number"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/db/models/fields/__init__.py:1536
+#, python-format
+msgid ""
+"“%(value)s” value has an invalid format. It must be in [DD] [[HH:]MM:]ss[."
+"uuuuuu] format."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/db/models/fields/__init__.py:1539
+#| msgid "Transaction"
+msgid "Duration"
+msgstr "거래"
+
+#: venv/lib/python3.8/site-packages/django/db/models/fields/__init__.py:1589
+msgid "Email address"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/db/models/fields/__init__.py:1612
+msgid "File path"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/db/models/fields/__init__.py:1678
+#, python-format
+msgid "“%(value)s” value must be a float."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/db/models/fields/__init__.py:1680
+#| msgid "Invalid phone number"
+msgid "Floating point number"
+msgstr "유효하지 않은 전화 번호"
+
+#: venv/lib/python3.8/site-packages/django/db/models/fields/__init__.py:1718
+#, python-format
+msgid "“%(value)s” value must be an integer."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/db/models/fields/__init__.py:1720
+msgid "Integer"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/db/models/fields/__init__.py:1803
+msgid "Big (8 byte) integer"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/db/models/fields/__init__.py:1819
+msgid "IPv4 address"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/db/models/fields/__init__.py:1850
+msgid "IP address"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/db/models/fields/__init__.py:1930
+#: venv/lib/python3.8/site-packages/django/db/models/fields/__init__.py:1931
+#, python-format
+msgid "“%(value)s” value must be either None, True or False."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/db/models/fields/__init__.py:1933
+msgid "Boolean (Either True, False or None)"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/db/models/fields/__init__.py:1976
+msgid "Positive big integer"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/db/models/fields/__init__.py:1989
+msgid "Positive integer"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/db/models/fields/__init__.py:2002
+msgid "Positive small integer"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/db/models/fields/__init__.py:2016
+#, python-format
+msgid "Slug (up to %(max_length)s)"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/db/models/fields/__init__.py:2048
+msgid "Small integer"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/db/models/fields/__init__.py:2055
+msgid "Text"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/db/models/fields/__init__.py:2083
+#, python-format
+msgid ""
+"“%(value)s” value has an invalid format. It must be in HH:MM[:ss[.uuuuuu]] "
+"format."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/db/models/fields/__init__.py:2085
+#, python-format
+msgid ""
+"“%(value)s” value has the correct format (HH:MM[:ss[.uuuuuu]]) but it is an "
+"invalid time."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/db/models/fields/__init__.py:2214
+#| msgid "EUR"
+msgid "URL"
+msgstr "EUR"
+
+#: venv/lib/python3.8/site-packages/django/db/models/fields/__init__.py:2236
+msgid "Raw binary data"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/db/models/fields/__init__.py:2301
+#, python-format
+msgid "“%(value)s” is not a valid UUID."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/db/models/fields/__init__.py:2303
+msgid "Universally unique identifier"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/db/models/fields/files.py:231
+msgid "File"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/db/models/fields/json.py:18
+msgid "A JSON object"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/db/models/fields/json.py:20
+msgid "Value must be valid JSON."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/db/models/fields/related.py:790
+#, python-format
+msgid "%(model)s instance with %(field)s %(value)r does not exist."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/db/models/fields/related.py:792
+msgid "Foreign Key (type determined by related field)"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/db/models/fields/related.py:1045
+msgid "One-to-one relationship"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/db/models/fields/related.py:1099
+#, python-format
+msgid "%(from)s-%(to)s relationship"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/db/models/fields/related.py:1100
+#, python-format
+msgid "%(from)s-%(to)s relationships"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/db/models/fields/related.py:1142
+msgid "Many-to-many relationship"
+msgstr ""
+
+#. Translators: If found as last label character, these punctuation
+#. characters will prevent the default label_suffix to be appended to the label
+#: venv/lib/python3.8/site-packages/django/forms/boundfield.py:150
+msgid ":?.!"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/forms/fields.py:54
+#| msgid "orig_iat field is required."
+msgid "This field is required."
+msgstr "orig_iat 필드는 필수입니다."
+
+#: venv/lib/python3.8/site-packages/django/forms/fields.py:247
+#| msgid "Invalid phone number"
+msgid "Enter a whole number."
+msgstr "유효하지 않은 전화 번호"
+
+#: venv/lib/python3.8/site-packages/django/forms/fields.py:398
+#: venv/lib/python3.8/site-packages/django/forms/fields.py:1139
+msgid "Enter a valid date."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/forms/fields.py:422
+#: venv/lib/python3.8/site-packages/django/forms/fields.py:1140
+msgid "Enter a valid time."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/forms/fields.py:450
+msgid "Enter a valid date/time."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/forms/fields.py:484
+msgid "Enter a valid duration."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/forms/fields.py:485
+#, python-brace-format
+msgid "The number of days must be between {min_days} and {max_days}."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/forms/fields.py:545
+msgid "No file was submitted. Check the encoding type on the form."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/forms/fields.py:546
+msgid "No file was submitted."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/forms/fields.py:547
+msgid "The submitted file is empty."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/forms/fields.py:549
+#, python-format
+msgid "Ensure this filename has at most %(max)d character (it has %(length)d)."
+msgid_plural ""
+"Ensure this filename has at most %(max)d characters (it has %(length)d)."
+msgstr[0] ""
+msgstr[1] ""
+
+#: venv/lib/python3.8/site-packages/django/forms/fields.py:552
+msgid "Please either submit a file or check the clear checkbox, not both."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/forms/fields.py:613
+msgid ""
+"Upload a valid image. The file you uploaded was either not an image or a "
+"corrupted image."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/forms/fields.py:775
+#: venv/lib/python3.8/site-packages/django/forms/fields.py:865
+#: venv/lib/python3.8/site-packages/django/forms/models.py:1296
+#, python-format
+msgid "Select a valid choice. %(value)s is not one of the available choices."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/forms/fields.py:866
+#: venv/lib/python3.8/site-packages/django/forms/fields.py:981
+#: venv/lib/python3.8/site-packages/django/forms/models.py:1295
+msgid "Enter a list of values."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/forms/fields.py:982
+msgid "Enter a complete value."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/forms/fields.py:1198
+msgid "Enter a valid UUID."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/forms/fields.py:1228
+msgid "Enter a valid JSON."
+msgstr ""
+
+#. Translators: This is the default suffix added to form field labels
+#: venv/lib/python3.8/site-packages/django/forms/forms.py:78
+msgid ":"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/forms/forms.py:205
+#, python-format
+msgid "(Hidden field %(name)s) %(error)s"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/forms/formsets.py:93
+msgid "ManagementForm data is missing or has been tampered with"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/forms/formsets.py:345
+#, python-format
+msgid "Please submit %d or fewer forms."
+msgid_plural "Please submit %d or fewer forms."
+msgstr[0] ""
+msgstr[1] ""
+
+#: venv/lib/python3.8/site-packages/django/forms/formsets.py:352
+#, python-format
+msgid "Please submit %d or more forms."
+msgid_plural "Please submit %d or more forms."
+msgstr[0] ""
+msgstr[1] ""
+
+#: venv/lib/python3.8/site-packages/django/forms/formsets.py:379
+#: venv/lib/python3.8/site-packages/django/forms/formsets.py:386
+msgid "Order"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/forms/formsets.py:391
+msgid "Delete"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/forms/models.py:755
+#, python-format
+msgid "Please correct the duplicate data for %(field)s."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/forms/models.py:759
+#, python-format
+msgid "Please correct the duplicate data for %(field)s, which must be unique."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/forms/models.py:765
+#, python-format
+msgid ""
+"Please correct the duplicate data for %(field_name)s which must be unique "
+"for the %(lookup)s in %(date_field)s."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/forms/models.py:774
+msgid "Please correct the duplicate values below."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/forms/models.py:1096
+msgid "The inline value did not match the parent instance."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/forms/models.py:1180
+msgid "Select a valid choice. That choice is not one of the available choices."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/forms/models.py:1298
+#, python-format
+msgid "“%(pk)s” is not a valid value."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/forms/utils.py:167
+#, python-format
+msgid ""
+"%(datetime)s couldn’t be interpreted in time zone %(current_timezone)s; it "
+"may be ambiguous or it may not exist."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/forms/widgets.py:398
+msgid "Clear"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/forms/widgets.py:399
+#| msgid "Current"
+msgid "Currently"
+msgstr "현재의"
+
+#: venv/lib/python3.8/site-packages/django/forms/widgets.py:400
+#| msgid "Change Status"
+msgid "Change"
+msgstr "상태 변경"
+
+#: venv/lib/python3.8/site-packages/django/forms/widgets.py:709
+msgid "Unknown"
+msgstr ""
+
+#. Translators: Please do not add spaces around commas.
+#: venv/lib/python3.8/site-packages/django/template/defaultfilters.py:790
+msgid "yes,no,maybe"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/template/defaultfilters.py:819
+#: venv/lib/python3.8/site-packages/django/template/defaultfilters.py:836
+#, python-format
+msgid "%(size)d byte"
+msgid_plural "%(size)d bytes"
+msgstr[0] ""
+msgstr[1] ""
+
+#: venv/lib/python3.8/site-packages/django/template/defaultfilters.py:838
+#, python-format
+msgid "%s KB"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/template/defaultfilters.py:840
+#, python-format
+msgid "%s MB"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/template/defaultfilters.py:842
+#, python-format
+msgid "%s GB"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/template/defaultfilters.py:844
+#, python-format
+msgid "%s TB"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/template/defaultfilters.py:846
+#, python-format
+msgid "%s PB"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/utils/dateformat.py:65
+msgid "p.m."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/utils/dateformat.py:66
+msgid "a.m."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/utils/dateformat.py:71
+msgid "PM"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/utils/dateformat.py:72
+msgid "AM"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/utils/dateformat.py:149
+msgid "midnight"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/utils/dateformat.py:151
+msgid "noon"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/utils/dates.py:6
+#: venv/lib/python3.8/site-packages/tornado/locale.py:295
+msgid "Monday"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/utils/dates.py:6
+#: venv/lib/python3.8/site-packages/tornado/locale.py:296
+msgid "Tuesday"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/utils/dates.py:6
+#: venv/lib/python3.8/site-packages/tornado/locale.py:297
+msgid "Wednesday"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/utils/dates.py:6
+#: venv/lib/python3.8/site-packages/tornado/locale.py:298
+msgid "Thursday"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/utils/dates.py:6
+#: venv/lib/python3.8/site-packages/tornado/locale.py:299
+msgid "Friday"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/utils/dates.py:7
+#: venv/lib/python3.8/site-packages/tornado/locale.py:300
+msgid "Saturday"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/utils/dates.py:7
+#: venv/lib/python3.8/site-packages/tornado/locale.py:301
+msgid "Sunday"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/utils/dates.py:10
+#| msgid "Won"
+msgid "Mon"
+msgstr "이겼다"
+
+#: venv/lib/python3.8/site-packages/django/utils/dates.py:10
+msgid "Tue"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/utils/dates.py:10
+msgid "Wed"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/utils/dates.py:10
+msgid "Thu"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/utils/dates.py:10
+msgid "Fri"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/utils/dates.py:11
+msgid "Sat"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/utils/dates.py:11
+msgid "Sun"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/utils/dates.py:14
+#: venv/lib/python3.8/site-packages/tornado/locale.py:281
+msgid "January"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/utils/dates.py:14
+#: venv/lib/python3.8/site-packages/tornado/locale.py:282
+msgid "February"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/utils/dates.py:14
+#: venv/lib/python3.8/site-packages/tornado/locale.py:283
+#| msgid "Search"
+msgid "March"
+msgstr "찾다"
+
+#: venv/lib/python3.8/site-packages/django/utils/dates.py:14
+#: venv/lib/python3.8/site-packages/tornado/locale.py:284
+msgid "April"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/utils/dates.py:14
+#: venv/lib/python3.8/site-packages/tornado/locale.py:285
+msgid "May"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/utils/dates.py:14
+#: venv/lib/python3.8/site-packages/tornado/locale.py:286
+msgid "June"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/utils/dates.py:15
+#: venv/lib/python3.8/site-packages/tornado/locale.py:287
+msgid "July"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/utils/dates.py:15
+#: venv/lib/python3.8/site-packages/tornado/locale.py:288
+msgid "August"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/utils/dates.py:15
+#: venv/lib/python3.8/site-packages/tornado/locale.py:289
+msgid "September"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/utils/dates.py:15
+#: venv/lib/python3.8/site-packages/tornado/locale.py:290
+msgid "October"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/utils/dates.py:15
+#: venv/lib/python3.8/site-packages/tornado/locale.py:291
+msgid "November"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/utils/dates.py:16
+#: venv/lib/python3.8/site-packages/tornado/locale.py:292
+msgid "December"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/utils/dates.py:19
+msgid "jan"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/utils/dates.py:19
+msgid "feb"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/utils/dates.py:19
+#| msgid "market"
+msgid "mar"
+msgstr "시장"
+
+#: venv/lib/python3.8/site-packages/django/utils/dates.py:19
+msgid "apr"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/utils/dates.py:19
+msgid "may"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/utils/dates.py:19
+msgid "jun"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/utils/dates.py:20
+msgid "jul"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/utils/dates.py:20
+msgid "aug"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/utils/dates.py:20
+msgid "sep"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/utils/dates.py:20
+msgid "oct"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/utils/dates.py:20
+msgid "nov"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/utils/dates.py:20
+msgid "dec"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/utils/dates.py:23
+msgctxt "abbrev. month"
+msgid "Jan."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/utils/dates.py:24
+msgctxt "abbrev. month"
+msgid "Feb."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/utils/dates.py:25
+#| msgid "Search"
+msgctxt "abbrev. month"
+msgid "March"
+msgstr "찾다"
+
+#: venv/lib/python3.8/site-packages/django/utils/dates.py:26
+msgctxt "abbrev. month"
+msgid "April"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/utils/dates.py:27
+msgctxt "abbrev. month"
+msgid "May"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/utils/dates.py:28
+msgctxt "abbrev. month"
+msgid "June"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/utils/dates.py:29
+msgctxt "abbrev. month"
+msgid "July"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/utils/dates.py:30
+msgctxt "abbrev. month"
+msgid "Aug."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/utils/dates.py:31
+msgctxt "abbrev. month"
+msgid "Sept."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/utils/dates.py:32
+msgctxt "abbrev. month"
+msgid "Oct."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/utils/dates.py:33
+msgctxt "abbrev. month"
+msgid "Nov."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/utils/dates.py:34
+msgctxt "abbrev. month"
+msgid "Dec."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/utils/dates.py:37
+msgctxt "alt. month"
+msgid "January"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/utils/dates.py:38
+msgctxt "alt. month"
+msgid "February"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/utils/dates.py:39
+#| msgid "Search"
+msgctxt "alt. month"
+msgid "March"
+msgstr "찾다"
+
+#: venv/lib/python3.8/site-packages/django/utils/dates.py:40
+msgctxt "alt. month"
+msgid "April"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/utils/dates.py:41
+msgctxt "alt. month"
+msgid "May"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/utils/dates.py:42
+msgctxt "alt. month"
+msgid "June"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/utils/dates.py:43
+msgctxt "alt. month"
+msgid "July"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/utils/dates.py:44
+msgctxt "alt. month"
+msgid "August"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/utils/dates.py:45
+msgctxt "alt. month"
+msgid "September"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/utils/dates.py:46
+msgctxt "alt. month"
+msgid "October"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/utils/dates.py:47
+msgctxt "alt. month"
+msgid "November"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/utils/dates.py:48
+msgctxt "alt. month"
+msgid "December"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/utils/ipv6.py:8
+msgid "This is not a valid IPv6 address."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/utils/text.py:70
+#, python-format
+msgctxt "String to return when truncating text"
+msgid "%(truncated_text)s…"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/utils/text.py:236
+msgid "or"
+msgstr ""
+
+#. Translators: This string is used as a separator between list elements
+#: venv/lib/python3.8/site-packages/django/utils/text.py:255
+#: venv/lib/python3.8/site-packages/django/utils/timesince.py:83
+msgid ", "
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/utils/timesince.py:9
+#, python-format
+msgid "%d year"
+msgid_plural "%d years"
+msgstr[0] ""
+msgstr[1] ""
+
+#: venv/lib/python3.8/site-packages/django/utils/timesince.py:10
+#, python-format
+msgid "%d month"
+msgid_plural "%d months"
+msgstr[0] ""
+msgstr[1] ""
+
+#: venv/lib/python3.8/site-packages/django/utils/timesince.py:11
+#, python-format
+msgid "%d week"
+msgid_plural "%d weeks"
+msgstr[0] ""
+msgstr[1] ""
+
+#: venv/lib/python3.8/site-packages/django/utils/timesince.py:12
+#, python-format
+msgid "%d day"
+msgid_plural "%d days"
+msgstr[0] ""
+msgstr[1] ""
+
+#: venv/lib/python3.8/site-packages/django/utils/timesince.py:13
+#, python-format
+msgid "%d hour"
+msgid_plural "%d hours"
+msgstr[0] ""
+msgstr[1] ""
+
+#: venv/lib/python3.8/site-packages/django/utils/timesince.py:14
+#, python-format
+msgid "%d minute"
+msgid_plural "%d minutes"
+msgstr[0] ""
+msgstr[1] ""
+
+#: venv/lib/python3.8/site-packages/django/views/csrf.py:110
+msgid "Forbidden"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/views/csrf.py:111
+msgid "CSRF verification failed. Request aborted."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/views/csrf.py:115
+msgid ""
+"You are seeing this message because this HTTPS site requires a “Referer "
+"header” to be sent by your Web browser, but none was sent. This header is "
+"required for security reasons, to ensure that your browser is not being "
+"hijacked by third parties."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/views/csrf.py:120
+msgid ""
+"If you have configured your browser to disable “Referer” headers, please re-"
+"enable them, at least for this site, or for HTTPS connections, or for “same-"
+"origin” requests."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/views/csrf.py:124
+msgid ""
+"If you are using the <meta name=\"referrer\" content=\"no-referrer\"> tag or "
+"including the “Referrer-Policy: no-referrer” header, please remove them. The "
+"CSRF protection requires the “Referer” header to do strict referer checking. "
+"If you’re concerned about privacy, use alternatives like <a rel=\"noreferrer"
+"\" …> for links to third-party sites."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/views/csrf.py:132
+msgid ""
+"You are seeing this message because this site requires a CSRF cookie when "
+"submitting forms. This cookie is required for security reasons, to ensure "
+"that your browser is not being hijacked by third parties."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/views/csrf.py:137
+msgid ""
+"If you have configured your browser to disable cookies, please re-enable "
+"them, at least for this site, or for “same-origin” requests."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/views/csrf.py:142
+msgid "More information is available with DEBUG=True."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/views/generic/dates.py:41
+msgid "No year specified"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/views/generic/dates.py:61
+#: venv/lib/python3.8/site-packages/django/views/generic/dates.py:111
+#: venv/lib/python3.8/site-packages/django/views/generic/dates.py:208
+msgid "Date out of range"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/views/generic/dates.py:90
+msgid "No month specified"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/views/generic/dates.py:142
+msgid "No day specified"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/views/generic/dates.py:188
+msgid "No week specified"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/views/generic/dates.py:338
+#: venv/lib/python3.8/site-packages/django/views/generic/dates.py:367
+#, python-format
+msgid "No %(verbose_name_plural)s available"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/views/generic/dates.py:589
+#, python-format
+msgid ""
+"Future %(verbose_name_plural)s not available because %(class_name)s."
+"allow_future is False."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/views/generic/dates.py:623
+#, python-format
+msgid "Invalid date string “%(datestr)s” given format “%(format)s”"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/views/generic/detail.py:54
+#, python-format
+msgid "No %(verbose_name)s found matching the query"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/views/generic/list.py:67
+msgid "Page is not “last”, nor can it be converted to an int."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/views/generic/list.py:72
+#, python-format
+msgid "Invalid page (%(page_number)s): %(message)s"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/views/generic/list.py:154
+#, python-format
+msgid "Empty list and “%(class_name)s.allow_empty” is False."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/views/static.py:40
+msgid "Directory indexes are not allowed here."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/views/static.py:42
+#, python-format
+msgid "“%(path)s” does not exist"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/views/static.py:80
+#, python-format
+msgid "Index of %(directory)s"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/views/templates/default_urlconf.html:7
+msgid "Django: the Web framework for perfectionists with deadlines."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/views/templates/default_urlconf.html:346
+#, python-format
+msgid ""
+"View <a href=\"https://docs.djangoproject.com/en/%(version)s/releases/\" "
+"target=\"_blank\" rel=\"noopener\">release notes</a> for Django %(version)s"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/views/templates/default_urlconf.html:368
+msgid "The install worked successfully! Congratulations!"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/views/templates/default_urlconf.html:369
+#, python-format
+msgid ""
+"You are seeing this page because <a href=\"https://docs.djangoproject.com/en/"
+"%(version)s/ref/settings/#debug\" target=\"_blank\" rel=\"noopener"
+"\">DEBUG=True</a> is in your settings file and you have not configured any "
+"URLs."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/views/templates/default_urlconf.html:384
+msgid "Django Documentation"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/views/templates/default_urlconf.html:385
+msgid "Topics, references, &amp; how-to’s"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/views/templates/default_urlconf.html:396
+msgid "Tutorial: A Polling App"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/views/templates/default_urlconf.html:397
+msgid "Get started with Django"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/views/templates/default_urlconf.html:408
+msgid "Django Community"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django/views/templates/default_urlconf.html:409
+msgid "Connect, get help, or contribute"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django_celery_results/admin.py:40
+msgid "Parameters"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django_celery_results/admin.py:47
+msgid "Result"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django_celery_results/apps.py:15
+msgid "Celery Results"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django_celery_results/models.py:29
+msgid "Task ID"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django_celery_results/models.py:30
+msgid "Celery ID for the Task that was run"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django_celery_results/models.py:33
+msgid "Task Name"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django_celery_results/models.py:34
+msgid "Name of the Task which was run"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django_celery_results/models.py:37
+msgid "Task Positional Arguments"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django_celery_results/models.py:38
+msgid "JSON representation of the positional arguments used with the task"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django_celery_results/models.py:42
+msgid "Task Named Arguments"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django_celery_results/models.py:43
+msgid "JSON representation of the named arguments used with the task"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django_celery_results/models.py:48
+msgid "Task State"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django_celery_results/models.py:49
+msgid "Current state of the task being run"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django_celery_results/models.py:52
+msgid "Worker"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django_celery_results/models.py:52
+msgid "Worker that executes the task"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django_celery_results/models.py:56
+msgid "Result Content Type"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django_celery_results/models.py:57
+msgid "Content type of the result data"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django_celery_results/models.py:60
+msgid "Result Encoding"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django_celery_results/models.py:61
+msgid "The encoding used to save the task result data"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django_celery_results/models.py:64
+msgid "Result Data"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django_celery_results/models.py:65
+msgid ""
+"The data returned by the task.  Use content_encoding and content_type fields "
+"to read."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django_celery_results/models.py:69
+#| msgid "Create Dealer"
+msgid "Created DateTime"
+msgstr "판매점 만들기"
+
+#: venv/lib/python3.8/site-packages/django_celery_results/models.py:70
+msgid "Datetime field when the task result was created in UTC"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django_celery_results/models.py:73
+msgid "Completed DateTime"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django_celery_results/models.py:74
+msgid "Datetime field when the task was completed in UTC"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django_celery_results/models.py:77
+msgid "Traceback"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django_celery_results/models.py:78
+msgid "Text of the traceback if the task generated one"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django_celery_results/models.py:81
+msgid "Task Meta Information"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django_celery_results/models.py:82
+msgid ""
+"JSON meta information about the task, such as information on child tasks"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django_celery_results/models.py:92
+msgid "task result"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django_celery_results/models.py:93
+msgid "task results"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django_celery_results/models.py:123
+msgid "Group ID"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django_celery_results/models.py:124
+msgid "Celery ID for the Chord header group"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django_celery_results/models.py:128
+msgid ""
+"JSON serialized list of task result tuples. use .group_result() to decode"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/django_celery_results/models.py:134
+msgid "Starts at len(chord header) and decrements after each task is finished"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/drf_extra_fields/fields.py:74
+msgid "Invalid type. This is not an base64 string: {}"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/drf_extra_fields/fields.py:112
+msgid "Please upload a valid image."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/drf_extra_fields/fields.py:113
+msgid "The type of the image couldn't be determined."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/drf_extra_fields/fields.py:163
+msgid "Please upload a valid file."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/drf_extra_fields/fields.py:164
+msgid "The type of the file couldn't be determined."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/drf_extra_fields/fields.py:175
+#, python-brace-format
+msgid "Expected a dictionary of items but got type \"{input_type}\"."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/drf_extra_fields/fields.py:176
+#, python-brace-format
+msgid "Extra content not allowed \"{extra}\"."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/drf_extra_fields/fields.py:177
+msgid "The start of the range must not exceed the end of the range."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/drf_extra_fields/geo_fields.py:26
+msgid "Enter a valid location."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/httplib2/__init__.py:368
+#, python-format
+msgid "Content purported to be compressed with %s but failed to decompress."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/httplib2/__init__.py:532
+#, python-format
+msgid "Unsupported value for qop: %s."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/httplib2/__init__.py:536
+#: venv/lib/python3.8/site-packages/httplib2/__init__.py:614
+#, python-format
+msgid "Unsupported value for algorithm: %s."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/httplib2/__init__.py:609
+msgid "The challenge doesn't contain a server nonce, or this one is empty."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/httplib2/__init__.py:619
+#, python-format
+msgid "Unsupported value for pw-algorithm: %s."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/httplib2/__init__.py:1448
+msgid "Redirected but the response is missing a Location: header."
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/kombu/transport/qpid.py:1303
+#, python-format
+msgid "Attempting to connect to qpid with SASL mechanism %s"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/kombu/transport/qpid.py:1308
+#, python-format
+msgid "Connected to qpid with SASL mechanism %s"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/kombu/transport/qpid.py:1326
+#, python-format
+msgid "Unable to connect to qpid with SASL mechanism %s"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/rest_framework_swagger/templates/rest_framework_swagger/index.html:30
+#| msgid "Recent Login"
+msgid "Session Login"
+msgstr "최근 로그인"
+
+#: venv/lib/python3.8/site-packages/rest_framework_swagger/templates/rest_framework_swagger/index.html:41
+msgid "You are logged in as: "
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/rest_framework_swagger/templates/rest_framework_swagger/index.html:43
+msgid "Viewing as an anoymous user"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/rest_framework_swagger/templates/rest_framework_swagger/index.html:55
+msgid "Powered by "
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/tornado/locale.py:371
+msgid "1 second ago"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/tornado/locale.py:377
+msgid "1 minute ago"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/tornado/locale.py:382
+msgid "1 hour ago"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/tornado/locale.py:385
+#, python-format
+msgid "%(time)s"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/tornado/locale.py:387
+msgid "yesterday"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/tornado/locale.py:387
+#, python-format
+msgid "yesterday at %(time)s"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/tornado/locale.py:389
+#, python-format
+msgid "%(weekday)s"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/tornado/locale.py:389
+#, python-format
+msgid "%(weekday)s at %(time)s"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/tornado/locale.py:392
+#: venv/lib/python3.8/site-packages/tornado/locale.py:445
+#, python-format
+msgid "%(month_name)s %(day)s"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/tornado/locale.py:394
+#, python-format
+msgid "%(month_name)s %(day)s at %(time)s"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/tornado/locale.py:399
+#, python-format
+msgid "%(month_name)s %(day)s, %(year)s"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/tornado/locale.py:401
+#, python-format
+msgid "%(month_name)s %(day)s, %(year)s at %(time)s"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/tornado/locale.py:439
+#, python-format
+msgid "%(weekday)s, %(month_name)s %(day)s"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/tornado/locale.py:462
+#, python-format
+msgid "%(commas)s and %(last)s"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/tornado/test/locale_test.py:68
+msgctxt "law"
+msgid "right"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/tornado/test/locale_test.py:69
+msgctxt "good"
+msgid "right"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/tornado/test/locale_test.py:71
+#: venv/lib/python3.8/site-packages/tornado/test/locale_test.py:74
+msgctxt "organization"
+msgid "club"
+msgstr ""
+
+#: venv/lib/python3.8/site-packages/tornado/test/locale_test.py:76
+#: venv/lib/python3.8/site-packages/tornado/test/locale_test.py:77
+msgctxt "stick"
+msgid "club"
+msgstr ""
+
+#~ msgid "is_casino_enabled"
+#~ msgstr "is_casino_enabled"
+
+#~ msgid "cashback_amount"
+#~ msgstr "cashback_amount"
+
+#~ msgid "is_cashback_enabled"
+#~ msgstr "is_cashback_enabled"
+
+#~ msgid "live casino limit"
+#~ msgstr "라이브 카지노 한계"
+
+#~ msgid "cashback percentage"
+#~ msgstr "캐쉬백 비율"
+
+#~ msgid "cashback time limit"
+#~ msgstr "캐쉬백 시간 제한"
+
+#~ msgid "cashout percentage"
+#~ msgstr "cashout 비율"
+
+#~ msgid "New Password"
+#~ msgstr "새 비밀번호"
+
+#~ msgid "Max single bet"
+#~ msgstr "최대 단일 내기"
+
+#~ msgid "Max single bet other sports"
+#~ msgstr "최대 단일 내기 다른 스포츠"
+
+#~ msgid "Max multiple bet"
+#~ msgstr "최대 여러 내기"
+
+#~ msgid "Max win amount"
+#~ msgstr "최대 승리 금액"
+
+#~ msgid "Max odd"
+#~ msgstr "최대 홀수"
+
+#~ msgid "Max bet amount per match"
+#~ msgstr "경기 당 최대 베팅 금액"
+
+#~ msgid "Max same bet count"
+#~ msgstr "맥스 같은 건 수"
+
+#~ msgid "Min single bet"
+#~ msgstr "최소 하나의 내기"
+
+#~ msgid "Logs"
+#~ msgstr "로그"
+
+#~ msgid "Confirm password"
+#~ msgstr "비밀번호 확인"
+
+#~ msgid "Charge"
+#~ msgstr "요금"
+
+#~ msgid "Data"
+#~ msgstr "데이터"
+
+#~ msgid "Bet"
+#~ msgstr "내기"
+
+#~ msgid "Min bet amount"
+#~ msgstr "최소 베팅 금액"
+
+#~ msgid "Max bet amount"
+#~ msgstr "최대 베팅 금액"
+
+#~ msgid "Invalid Unique ID"
+#~ msgstr "잘못된 고유 ID"
+
+#~ msgid "Low balance"
+#~ msgstr "낮은 균형"
+
+#~ msgid "Event already exists."
+#~ msgstr "이벤트가 이미 있습니다."
+
+#~ msgid "password required"
+#~ msgstr "비밀번호 필요"
+
+#~ msgid "Wrong password"
+#~ msgstr "잘못된 비밀번호"
+
+#~ msgid "Please provide coupon number of betslip"
+#~ msgstr "betslip의 쿠폰 번호를 입력하십시오"
+
+#~ msgid "status changed successfully"
+#~ msgstr "상태가 성공적으로 변경"
+
+#~ msgid "coupon not found"
+#~ msgstr "쿠폰을 찾을 수 없습니다"
+
+#~ msgid ""
+#~ "Wrong status; status should be one of -1 cancel; 1 loose; 2 winner; 3 "
+#~ "refund; 4 half-lost; 5 half-won; 6 void"
+#~ msgstr ""
+#~ "잘못된 상태; 상태 -1 취소되어야 하나; 이른바 1; 2 우승자; 3 환불; 4 반은-"
+#~ "손실; 5 절반 - 원; 6 무효"
+
+#~ msgid "bet_id and status arguments are missing in request"
+#~ msgstr "bet_id 및 상태 인수 요청에 누락"
+
+#~ msgid "Internal Server Error"
+#~ msgstr "인터넷 서버 오류"
+
+#~ msgid "Event updated Successfully"
+#~ msgstr "이벤트가 성공적으로 업데이트"
+
+#~ msgid "Password Changed Successfully"
+#~ msgstr "비밀번호가 성공적으로 변경"
+
+#~ msgid "Something went wrong"
+#~ msgstr "문제가 발생했습니다"
+
+#~ msgid "Successfully Signed-Up"
+#~ msgstr "성공적으로 서명 업"
+
+#~ msgid "Username field must not be empty"
+#~ msgstr "사용자 이름 필드는 비워 둘 수 없습니다"
+
+#~ msgid "Agent code field must not be empty"
+#~ msgstr "에이전트 코드 필드는 비워 둘 수 없습니다"
+
+#~ msgid "Invalid Agent code"
+#~ msgstr "잘못된 에이전트 코드"
+
+#~ msgid "Password and Confirm password must be same"
+#~ msgstr "암호 및 암호 확인은 동일해야합니다"
+
+#~ msgid "Currency field must not be empty"
+#~ msgstr "환율 필드는 비워 둘 수 없습니다"
+
+#~ msgid "Invalid currency value"
+#~ msgstr "잘못된 통화 값"
+
+#~ msgid "Bank Account Number field must not be empty"
+#~ msgstr "은행 계좌 번호 필드는 비워 둘 수 없습니다"
+
+#~ msgid "Account with given Bank account number already exists"
+#~ msgstr "주어진 은행 계좌 번호와 계정이 이미 존재"
+
+#~ msgid "Bank Account Name field must not be empty"
+#~ msgstr "은행 계정 이름 필드는 비워 둘 수 없습니다"
+
+#~ msgid "Bank account name must contain only Alphabets"
+#~ msgstr "은행 계좌 이름은 알파벳을 포함해야"
+
+#~ msgid "Phone number field must not be empty"
+#~ msgstr "전화 번호 필드는 비워 둘 수 없습니다"
+
+#~ msgid "Phone number must be Numeric"
+#~ msgstr "전화 번호는 숫자 여야합니다"
+
+#~ msgid "Account with given Phone Number already exists"
+#~ msgstr "주어진 전화 번호와 계정이 이미 존재"

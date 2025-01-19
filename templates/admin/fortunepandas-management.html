@@ -1,0 +1,435 @@
+{% extends "../index.html" %}
+{% load i18n %}
+{% load static %}
+{% load math %}
+{% block title %}
+Fortunepanda Games
+{% endblock title %}
+{% block content %}
+	<!-- <link rel="stylesheet" href="style.css"> -->
+	<!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script> -->
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js" integrity="sha512-Eezs+g9Lq4TCCq0wae01s9PuNWzHYoCMkE97e2qdkYthpI0pzC3UGB03lgEHn2XM85hDOUF6qgqqszs+iXU4UA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+	<style>
+		body {
+  background-color: #f9f9f9;
+  font-family: 'Arial', sans-serif;
+}
+
+.card {
+  background-color: white;
+  color: #333;
+  border-radius: 10px;
+  box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.3);
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+thead{
+    border-radius: 20px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+}
+
+th,
+td {
+  padding-inline: 20px;
+  padding-top: 12px;
+  padding-bottom: 12px;
+  text-align: left;
+  /* border-bottom: 1px solid #ddd; */
+}
+
+th {
+  background-color: #333333;
+  color: white;
+  padding: 20px;
+}
+
+tr:hover {
+  background-color: #f5f5f5;
+}
+
+.tag {
+  display: inline-block;
+  margin: 4px;
+  padding: 4px 8px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.tag.red {
+  background-color: #b3423c;
+  color: white;
+}
+
+.tag.green {
+  background-color: #3b8a3b;
+  color: white;
+}
+
+.tag.blue {
+  background-color: #4268a7;
+  color: white;
+}
+
+.tag.orange {
+  background-color: #af7201;
+  color: white;
+}
+
+.tag.purple {
+  background-color: #8e7caf;
+  color: white;
+}
+
+.tag.yellow {
+  background-color: #b89c00;
+  color: white;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 34px;
+  vertical-align: middle;
+}
+
+.switch input {
+  display: none;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  -webkit-transition: .4s;
+  transition: .4s;
+  border-radius: 34px;
+}
+.pcode{
+    padding-right: 20px;
+}
+
+.pcode.left-spacer {
+        margin-left: 0px;
+    }
+    .pcode{
+        margin-left: 250px;
+    }
+    @media(max-width:767px){
+        .pcode{
+            margin-left: 0px;
+        }
+    }
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 26px;
+  width: 26px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  -webkit-transition: .4s;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: #54ca30;
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px #333333;
+}
+
+input:checked + .slider:before {
+  -webkit-transform: translateX(26px);
+  -ms-transform: translateX(26px);
+  transform: translateX(26px);
+}
+
+/* Search bar styles */
+.search-container {
+  padding-left: 0px;
+  display: flex;
+  justify-content: left;
+  margin-bottom: 20px;
+}
+
+.search-container input[type=text] {
+  padding: 10px;
+  margin-right: 5px;
+  border: none;
+  border-radius: 3px;
+  font-size: 17px;
+  background-color: #f1f1f1;
+}
+
+.search-container input[type=text]:focus {
+  background-color: #ddd;
+  outline: none;
+}
+
+.search-container button {
+  background-color: #363636;
+  color: white;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.search-container button:hover {
+  background-color: #505050;
+}
+
+.ui-sortable-helper {
+    display: table;
+}
+
+.gameTable tr:nth-child(even) {
+  background: #e9e4e4;
+}
+
+
+.row-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  width: 16px;
+  height: 16px;
+  border: 1px solid #999999;
+  border-radius: 3px;
+  outline: none;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.row-select:checked {
+  background-color: #999999;
+}
+
+.slider-red {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  -webkit-transition: .4s;
+  transition: .4s;
+  border-radius: 34px;
+}
+.slider-red:before {
+  position: absolute;
+  content: "";
+  height: 26px;
+  width: 26px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  -webkit-transition: .4s;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+input:checked + .slider-red {
+  background-image: linear-gradient(to right, red , yellow);
+}
+
+input:focus + .slider-red {
+  box-shadow: 0 0 1px #333333;
+}
+
+input:checked + .slider-red:before {
+  -webkit-transform: translateX(26px);
+  -ms-transform: translateX(26px);
+  transform: translateX(26px);
+}
+	</style>
+
+
+<div class="pcode" id='nw1' style="">
+    <div class="pcoded-inner-content container-fluid pt-4">
+        <!-- Search and filters -->
+        <div class="card">
+            <div class="ml-3 mt-3 main-heading-wrap">
+                <h5>{% trans "Fortunepanda Games" %}</h5>
+            </div>
+            
+            <div class="row ml-2 mr-2 mb-2">
+                <!-- Search by provider -->
+                <div class="col-md-5">
+					<div class="mt-2 mb-2 rs-select2--light rs-select2--md" style="min-width: 200px;" multiple="multiple">
+						<select id="select-game" name="casinogames" class="js-example-basic-multiple tokenize-open form-control text-truncate" style="min-width: 210px;"
+						multiple="multiple" >
+							{% if selected_games %}
+								{% for game in selected_games %}
+									<option selected="selected" value="{{game.id}}">{{ game.game.game_name }}</option>
+								{% endfor %}
+							{% endif %}
+						</select>
+					</div>
+                </div>
+
+                <div class="col-md-5">
+					<div class="mt-2 mb-2 rs-select2--light rs-select2--md" style="min-width: 200px;" multiple="multiple">
+						<select id="select-search-category" name="casinocategory" class="js-example-basic-multiple tokenize-open form-control text-truncate" style="min-width: 210px;"
+						multiple="multiple" >
+							{% if selected_categories %}
+								{% for category in selected_categories %}
+									<option selected="selected" value="{{ category }}">{{ category }}</option>
+								{% endfor %}
+							{% endif %}
+						</select>
+					</div>
+                </div>
+
+                <div class="col-md-2">
+                    <button id="button-search" style="margin-top: 8px;" class="btn btn-primary btn-block" type="submit">Search</button>
+                </div> 
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="table-responsive">
+                <table class="gameTable">
+                    <thead>
+                        <tr>
+                            <th style="text-align: center;">Game ID</th>
+                            <th style="text-align: center;">Game Name</th>
+                            <th style="text-align: center;">Game Category</th>
+                            <th style="text-align: center;">Status</th>
+                            {% comment %} <th style="text-align: center;">Top Pick</th> {% endcomment %}
+                        </tr>
+                    </thead>
+                    
+                    <tbody id="gameList">
+						{% for game in fortunepandas_games %}
+							<tr class="casino_game" game_id="{{ game.game.game_id }}">
+								<td style="text-align: center;">{{ game.game.game_id }}</td>
+								<td style="text-align: center;" >{{ game.game.game_name }}</td>
+								<td style="text-align: center;" >{{ game.game.game_category }}</td>
+								<td style="text-align: center;"><label class="switch"><input type="checkbox" game-id='{{ game.game.game_id }}'
+									{% if game.enabled %}checked{% endif %}><span title="{% if game.enabled %}Disable Game {% else %} Enable Game {% endif %}" onclick="switchToggle(this)" class="slider"></span></label>
+								</td>
+							</tr>
+						{% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    {% include './add_casino_categories.html' %}
+    {% include '../includes/pagination.html' %}
+        
+</div>
+<script>
+    $('#mobile-collapse').click(function () { 
+        $("#nw1").toggleClass('left-spacer');
+    });
+
+    $('#button-search').click(function (){
+        var conceptName = $('#input-search').find(":selected").text();
+        conceptName = conceptName.split("(")[0];
+        game = $('#select-game').val();
+        category = $('#select-search-category').val();
+        window.location = window.location.pathname + "?game_id=" + game + "&category=" + category;
+        return false;
+    });
+
+    $('#select-game').tokenize2({
+        dropdownMaxItems:"10",
+        multiple: true,
+        placeholder: '{% trans "Search by Game Name" %}',
+        searchMinLength:2,
+        dataSource: function(term, object){
+            $.ajax("{% url 'admin-panel:fortunepandas-game-ajax' %}", {
+                type: "GET",
+                data: { search: term, start: 0 },
+                global: false, 
+                dataType: 'json',
+                success: function(data){
+                    var $items = [];
+                    $.each(data, function(k, v){
+                        $items.push(v);
+                    });
+                    object.trigger('tokenize:dropdown:fill', [$items]);
+                }
+            });
+        }
+    });
+
+    $('#select-search-category').tokenize2({
+      dropdownMaxItems:"10",
+      multiple: true,
+      placeholder: '{% trans "Search by Game Category" %}',
+      searchMinLength:2,
+      dataSource: function(term, object){
+          $.ajax("{% url 'admin-panel:fortunepandas-categories' %}", {
+              type: "Get",
+              data: { search: term, start: 0 },
+              global: false, 
+              dataType: 'json',
+              success: function(data){
+                  var $items = [];
+                  $.each(data, function(k, v){
+                      $items.push(v);
+                  });
+                  object.trigger('tokenize:dropdown:fill', [$items]);
+              }
+          });
+      }
+    });
+
+   
+    function switchToggle(element, switch_type="status") {
+        element = element.previousElementSibling
+        const gameId = element.getAttribute('game-id');
+        console.log(gameId);
+        $.ajax({
+            url: "{% url 'admin-panel:manage-fortunepandas-game-status' %}",
+            type: "POST",
+            dataType: "json",
+            data: {
+                game_id: gameId,
+                switch: switch_type,
+                csrfmiddlewaretoken: '{{ csrf_token }}'
+            },
+            success: function(data){
+                element.parentNode.classList.toggle('active');
+                if (data['message']=="Game disabled") {
+                  element.checked = false
+                } else if (data['message']=="Game enabled") {
+                  element.checked = true
+                }
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success',
+                    text: data['message'],
+                });
+            },
+        });
+      }
+    
+</script>
+{% endblock content %}

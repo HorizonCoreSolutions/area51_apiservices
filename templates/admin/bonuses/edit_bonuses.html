@@ -1,0 +1,218 @@
+{% load static %}
+{% load i18n %}
+{% load math %}
+{% load date_utils %}
+{% load i18n %}
+<style>
+    h3{
+        font-size: 20px;
+    }
+</style>
+<div id="edit-signup-page" class="popup mfp-with-anim mfp-hide">
+    
+    <div>
+        <div class="container-fluid ">
+            <div class="pt-3 mx-auto" style="max-width: 540px;">
+                {% include "includes/messages.html" %}
+            </div>
+            <div class="row">
+                <div class="col-xs-12 col-lg-12 ">
+                    <div class="page-content pt-4 setting-page">
+                        <div class='container-fluid pt-2'>
+                            <!-- Bonus Section -->
+                            {% if request.user.is_welcome_bonus_enabled or request.user.is_referral_bonus_enabled or request.user.is_losing_bonus_enabled %}
+                                <!-- Sign-Up bonus start -->
+                                {% if request.user.is_welcome_bonus_enabled %}
+                                <form id="edit-signup-form" style="padding-left: 3rem; padding-right: 3rem;  padding-bottom: 2rem;" bonus_id="{{ bonus.id }}">
+                                    {% csrf_token %}
+                                    <div class="row mb-4">
+                                        <div class="page-content col-xs-12 col-md-12 mb-3 mb-md-0">
+                                            <div class="admin-card">
+                                                <div class="main-heading-wrap">
+                                                    <h5>{% trans "Edit Sign Up Bonus" %}</h5>
+                                                </div>
+                                                <div class="container-fluid" style="padding-top: 10px">
+                                                    <form autocomplete="off">
+                                                        <div class="setting-select">
+                                                            <div class="row">
+                                                                <div class="col-xs-12 col-md-4 form-group" name="promo-field-div" style="min-width: 210px;">
+                                                                    <div style="font-weight: bold; color:black;">
+                                                                        <span style="font-weight: bold;">{% trans "Promo Code" %}</span>
+                                                                        <input type="text" id="input-signup-promo-code" name="signup-promo-code"
+                                                                            placeholder="{% trans 'Enter promo code.' %}" class="form-control"
+                                                                            required="required" autocomplete='off'
+                                                                            onkeypress='return event.charCode >= 65 && event.charCode <= 90 ||
+                                                                            event.charCode >= 97 && event.charCode <= 122 ||
+                                                                            event.charCode >= 48 && event.charCode <= 57 ||
+                                                                            event.charCode == 45' readonly>
+                                                                    </div>
+                                                                    <span style='padding:0.5em;'></span>
+                                                                </div>
+                                                                <div class="col-xs-12 col-md-4 form-group" name="bonus-percentage-field-div" style="min-width: 210px;">
+                                                                    <div style="font-weight: bold; color:black;">
+                                                                        <span style="font-weight: bold;">{% trans "Percentage" %}</span>
+                                                                        <input type="text" id="welcome-bonus" name="welcome-bonus-percentage"
+                                                                            placeholder="{% trans 'Enter Sign-Up Bonus Percentage' %}" class="form-control"
+                                                                            value="{{welcome_bonus}}" required="required" autocomplete='off'
+                                                                            onkeypress='return event.charCode >= 48 && event.charCode <= 57 ||
+                                                                                event.charCode == 46'>
+                                                                    </div>
+                                                                    <span style='padding:0.5em;'></span>
+                                                                </div>
+                                                                <div class="col-xs-12 col-md-4 form-group" name="max-bonus-field-div" style="min-width: 210px;">
+                                                                    <div style="font-weight: bold; color:black;">
+                                                                        <span style="font-weight: bold;">{% trans "Maximum Bonus Limit" %}</span>
+                                                                        <input type="text" id="max-bonus-limit" name="max-bonus-limit"
+                                                                            autocomplete="off"
+                                                                            placeholder="{% trans 'Enter Max Bonus Limit' %}" class="form-control disablepaste"
+                                                                            value="" required="required"
+                                                                            onkeypress='return event.charCode >= 48 && event.charCode <= 57 ||
+                                                                                event.charCode == 46' maxlength="6">
+                                                                    </div>
+                                                                    <span style='padding:0.5em;'></span>
+                                                                </div>
+                                                                <div class="col-xs-12 col-md-6 form-group" style="display:none;" name="instant-bonus-field-div">
+                                                                    <div style="font-weight: bold; color:black;">
+                                                                        <span style="font-weight: bold;">{% trans "Instant Bonus Amount" %}</span>
+                                                                        <input type="text" id="instant-bonus-amount" name="instant-bonus-amount" autocomplete="off" value="" 
+                                                                            placeholder="{% trans 'Enter Instant Bonus Amount' %}" class="form-control disablepaste"
+                                                                            onkeypress='return event.charCode >= 48 && event.charCode <= 57 || event.charCode == 46' maxlength="6">
+                                                                    </div>
+                                                                    <span style='padding:0.5em;'></span>
+                                                                </div>
+                                                            </div>
+                                                            <div class="row">
+                                                                <div class="col-xs-12 col-md-3 form-group" style="min-width: 210px; display:none">
+                                                                    <div class="date-input">
+                                                                        <span>{% trans "Promo-Code Usage Limit (per player)" %}</span>
+                                                                        <input  value="{{promo_code_usage_limit}}" type="text" class="form-control"
+                                                                            id="input-signup-promo-code-usage-limit" name="signup-promo-code-usage-limit"
+                                                                            onkeypress='return event.charCode >= 48 && event.charCode <= 57'>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-xs-12 col-md-6 form-group" style="min-width: 210px;">
+                                                                    <div class="date-input">
+                                                                        <span>{% trans "From date" %}</span>
+                                                                        <input  value="{{losing_start_date}}" type="text" onChange="validateDateRange(this)" class="form-control" id="input-start-time-losing" name="losing-start-time" style="background-color:transparent">
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-xs-12 col-md-6 form-group" style="min-width: 210px;">
+                                                                    <div class="date-input">
+                                                                        <span>{% trans "To date" %}</span>
+                                                                        <input value="{{losing_end_date}}" type="text" class="form-control" onChange="validateDateRange(this)" id="input-end-time-losing" name="losing-end-time" style="background-color:transparent">
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-xs col-md-4 form-group">
+                                                                    <div class="date-input">
+                                                                        <input  value="{{promo_code_usage_limit}}" type="text" class="form-control"
+                                                                            id="input-bonus-id" name="bonus-id"
+                                                                            onkeypress='return event.charCode >= 48 && event.charCode <= 57' hidden>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-xs-12 col-md-2 form-group mt-md-4 ml-auto">
+                                                                    <button class="btn btn-primary btn-block" id="signup-button-add">
+                                                                        {% trans "Submit" %}
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                                {% endif %}
+                                <!-- Sign Up Bonus Ends -->
+                            {% endif %}
+                            <!-- Bonus Section Ends -->
+    
+                           </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+    </div>
+</div>
+
+<script>
+    $("#input-start-time-losing").datetimepicker({
+        defaultDate: new Date(),
+        format: 'd/m/Y',
+        value: '{{ from }}',
+        timepicker: false,
+    });
+
+    $("#input-end-time-losing").datetimepicker({
+        defaultDate: new Date(),
+        format: 'd/m/Y',
+        value: '{{ to }}',
+        timepicker: false,
+    });
+
+    $('.form-control').bind('copy paste cut',function(e) {
+      e.preventDefault();
+      Swal.fire('cut,copy & paste options are disabled !!');
+});
+
+
+    function validateDateRange(input){
+        
+        var from_date = $("#input-start-time-losing").val();
+        var to_date = $("#input-end-time-losing").val();
+        error_msg = "";
+        if(input.id == "input-start-time-losing"){
+            error_msg = "From date must be less than To date!!"
+        }
+        else{
+            error_msg = "To date must be greater than From date!!"
+        }
+
+        var from_day = parseInt(from_date.split("/")[0]);
+        var from_month = parseInt(from_date.split("/")[1]);
+        var from_year = from_date.split("/")[2];
+        from_year = from_year.split(" ")[0];
+        var to_day = parseInt(to_date.split("/")[0]);
+        var to_month = parseInt(to_date.split("/")[1]);
+        var to_year = to_date.split("/")[2];
+        
+        // from date should be less than to date
+        if(from_year > to_year){
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: error_msg
+            });
+            $("#input-start-time-losing").val("{{losing_start_date}}");
+            $("#input-end-time-losing").val("{{losing_end_date}}");
+            return false;
+        }else if(from_year == to_year){
+            if(from_month > to_month){
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: error_msg
+                });
+                
+                $("#input-start-time-losing").val("{{losing_start_date}}");
+                $("#input-end-time-losing").val("{{losing_end_date}}");
+                return false;
+            }else if(from_month == to_month){
+                if(from_day > to_day){
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: error_msg
+                    });
+                
+                    $("#input-start-time-losing").val("{{losing_start_date}}");
+                    $("#input-end-time-losing").val("{{losing_end_date}}");
+                    return false;
+                }
+            }
+        }        
+    }
+</script>

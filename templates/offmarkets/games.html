@@ -1,0 +1,253 @@
+{% extends "index.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}
+Off Market Games
+{% endblock title %}
+
+{% block content %}
+
+<style>
+    .admin-card{
+        background-color: #ffffff;
+        box-shadow: 0px 0px 6px 6px rgb(204 204 204 / 0.25);
+        padding: 30px 10px;
+    }
+
+    .pcode.left-spacer {
+    margin-left: 0px;
+    }
+    .pcode{
+    margin-left: 250px;
+    }
+    .pcode.left-spacer {
+	margin-left: 0px;
+    }
+
+    @media(max-width:991px){
+        .setting-page .card-title h3{
+        font-size: 18px;
+        }
+        .pcode{
+        margin-left: 0px;
+        }
+    }
+    .setting-page .card-title h3{
+    font-size: 18px;
+    }
+    .close-btn {
+            position: absolute;
+            top: 0%;
+            right: 0%;
+            color: red;
+            font-size: 35px;
+            cursor: pointer;
+            background-color: black;
+            width: 25px;
+            height: 25px;
+            text-align: center;
+            line-height: 0.6;
+    }
+    .image_block_inner{
+        position: relative;
+        border: 1px solid rgb(0, 0, 0);
+        overflow: hidden;rgb(0, 0, 0);
+        width: 100%;
+    }
+
+
+</style>
+<script type="text/javascript">
+$('#mobile-collapse').click(function () {
+    $("#nw1").toggleClass('left-spacer');
+});
+
+function delete_page(page_id){
+    Swal.fire({
+                title: "Are you sure, you want to delete this game?",
+                text: "",
+                icon: "warning",
+                showCancelButton: true,
+                cancelButtonColor: "#343a40",
+                showConfirmButton: true,
+        }).then(function (result) {
+            if(result.isConfirmed){
+                $.ajax("{% url 'admin-panel:delete-offmarket' %}",{
+                    type: "POST",
+                    dataType: "json",
+                    data: {
+                        game_id: page_id,
+                        csrfmiddlewaretoken: '{{ csrf_token }}'
+                    },
+                    success: function (data) {
+                        Swal.fire({
+                            title: data['status'].toLowerCase(),
+                            text: data["message"],
+                            icon: "success",
+
+                        }).then((result) => {
+                            location.reload();
+                        });
+                    }
+                })
+            }
+        });
+    }
+    
+$(document).ready(function() {
+    setTimeout(function(){
+      $('#notification_messages').remove();
+    }, 3000);
+
+  });
+
+
+$(document).ready(function () {
+  $('#OffMarketGames').DataTable({
+    searching : true,
+    ordering:false,
+    pageLength: 5,
+    lengthMenu: [[5, 10, 20, -1], [5, 10, 20, "All"]],
+  });
+
+  $('.img-enlargeable').click(function(){
+                    var src = $(this).attr('src');
+                    var modal;
+                    function removeModal(){ modal.remove(); $('body').off('keyup.modal-close'); }
+                    modal = $('<div>').css({
+                        background: 'RGBA(255 255 255 / 0%) url('+src+') no-repeat center',
+                        width: "50%",
+                        height: "100%",
+                        margin: "0 auto",
+                        position: "fixed",
+                        zIndex: "10000",
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        top: "0px",
+                        left: "0px",
+                        right: "0px",
+                        cursor: "zoom-out"
+    
+    
+                    }).click(function(){
+                        removeModal();
+                    }).appendTo('body');
+                    //handling ESC
+                    $('body').on('keyup.modal-close', function(e){
+                    if(e.key==='Escape'){ removeModal(); } 
+                    });
+                });
+});
+
+
+</script>
+
+<div class="pcode" id='nw1'>
+    <div>
+        <div class="container-fluid pt-4 " >
+            {% include "../includes/messages.html" %}
+            <div class="admin-card">
+                {% comment %} <div id="notification_messages">
+                    {% if error %}
+                    <div class="alert alert-success alert-block">
+                        <button type="button" class="close" data-dismiss="alert">×</button>
+                        <strong>{{ error }}</strong>
+                    </div>
+                    {% endif %}
+                </div> {% endcomment %}
+                <div class="row">
+                    <div class="col-xs-12 col-lg-12 ">
+                        <div class="page-content" >
+                            <div class="main-heading-wrap">
+                                <h5>{% trans 'Off Market Games' %}</h5>
+                                <a style="float:right;margin-right:5%; margin-bottom:20px" class="btn btn-primary" href="{% url 'admin-panel:create-offmarket-game' %}">{% trans 'Create' %}</a>
+                            </div>
+                            <div class="container-fluid" >
+                                <div class="table-data__tool">
+                                    <div class="table-responsive">
+                                        <table id="OffMarketGames" class="table table-striped  table-sm" cellspacing="0" width="100%">
+                                            <thead>
+                                                <tr>
+                                                    <th class="col-md-2 text-center">{% trans "Title" %}</th>
+                                                    <th class="col-md-1 text-center">{% trans "Game Code" %}</th>
+                                                    <th class="col-md-2 text-center">{% trans "Download URL" %}</th>
+                                                    <th class="col-md-1 text-center">{% trans "Bonus Percentage" %}</th>
+                                                    <th class="col-md-2 text-center">{% trans "Image URL" %}</th>            
+                                                     <th class="col-md-1 text-center">{% trans "Status" %}</th> 
+                                                    <th class="col-md-1 text-center">{% trans "Coming Soon" %}</th>
+                                                    {% if request.user.role == 'admin' %}
+                                                    <th class="col-md-2 text-center">{% trans "Action" %}</th>
+                                                    {% endif %}
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for game in offmarket_games %}
+                                                <tr>
+                                                    <td class="text-center">
+                                                        {{ game.title }}
+                                                    </td>
+                                                    <td  class="text-center">
+                                                        {{ game.code }}
+                                                    </td>
+                                                    <td  class="text-center">
+                                                       {% if game.download_url %}
+                                                       <a src="{{game.download_url}}">{{game.download_url}}</a>
+                                                       {% else %}
+                                                       <span> Not Available</span>
+                                                       {% endif %}
+                                                    </td>
+                                                    <td  class="text-center">
+                                                        {{ game.bonus_percentage }}
+                                                    </td>
+                                                    <td  class="text-center">
+                                                        {% if game.url %}
+                                                        <img src="{{ game.url.url }}" class="" alt="game-img" style="width:100px; height:50px;">
+                                                        {% else %}
+                                                        <p>Not Available</p>
+                                                        {% endif %}
+                                                    </td>
+                                                    
+                                                    <td  class="text-center">
+                                                        {% if game.game_status %}
+                                                        <span>Active</span>
+                                                        {% else %}
+                                                        <p>InActive</p>
+                                                        {% endif %}
+
+                                                    </td>
+                                                    <td  class="text-center">
+                                                        {% if game.coming_soon %}
+                                                        <span>Active</span>
+                                                        {% else %}
+                                                        <p>InActive</p>
+                                                        {% endif %}
+
+                                                    </td>
+                                             {% if request.user.role == 'admin' %}
+                                                    <td  class="text-center">
+                                                        <a type="button" class="btn btn-warning btn-sm"  href="/admin/edit-offmarket-game?game_id={{ game.id }}" title="Edit">
+                                                            <i class="fa fa-edit" style="font-size: 15px; color: #1f2d3d;"></i>
+                                                        </a>
+                                                        <button type="button" class="btn btn-danger btn-sm " onclick="delete_page({{ game.id }})">
+                                                            <i style="font-size: 20px;" class="fa fa-trash" aria-hidden="true"></i></button>&nbsp;&nbsp;
+                                                       
+                                                    </td>
+                                             {% endif %}
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                         </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+

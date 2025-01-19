@@ -1,0 +1,1421 @@
+{% load i18n %}
+{% load tz   %}
+{% load static %}
+{% load permissions %}
+<style>
+    @media (max-width:991px){
+    .pcoded .pcoded-navbar{
+        width: 235px !important;
+        margin-left: 0px !important;
+        height: 100% !important;
+        top: 59px !important;
+        z-index: 9 !important;
+        opacity: 1 !important;
+    }
+    .pcoded-overlay-box{
+        display: none;
+    } 
+    }
+    .queue-bubble {
+        position: absolute;
+        top: 50%;
+        right: -18px;
+        transform: translate(0, -50%);
+        background-color: #FF0000;
+        color: #ffffff;
+        font-size: 12px;
+        padding: 6px 10px;
+        border-radius: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+    .chat-queue-bubble {
+        float: right;
+        background-color: #2b8d20;
+        color: #ffffff;
+        font-size: 12px;
+        padding: 1px 6px;
+        border-radius: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+    
+    
+</style>
+<header>
+    <!-- <div class="loader-wrap">
+        <img src="{% static '/images/loader.gif' %}"></img>
+    </div> -->
+    <!-- Pre-loader start -->
+    <div class="theme-loader">
+        <div class="loader-track">
+            <div class="preloader-wrapper">
+                <div class="spinner-layer spinner-blue">
+                    <div class="circle-clipper left">
+                        <div class="circle"></div>
+                    </div>
+                    <div class="gap-patch">
+                        <div class="circle"></div>
+                    </div>
+                    <div class="circle-clipper right">
+                        <div class="circle"></div>
+                    </div>
+                </div>
+                <div class="spinner-layer spinner-red">
+                    <div class="circle-clipper left">
+                        <div class="circle"></div>
+                    </div>
+                    <div class="gap-patch">
+                        <div class="circle"></div>
+                    </div>
+                    <div class="circle-clipper right">
+                        <div class="circle"></div>
+                    </div>
+                </div>
+
+                <div class="spinner-layer spinner-yellow">
+                    <div class="circle-clipper left">
+                        <div class="circle"></div>
+                    </div>
+                    <div class="gap-patch">
+                        <div class="circle"></div>
+                    </div>
+                    <div class="circle-clipper right">
+                        <div class="circle"></div>
+                    </div>
+                </div>
+
+                <div class="spinner-layer spinner-green">
+                    <div class="circle-clipper left">
+                        <div class="circle"></div>
+                    </div>
+                    <div class="gap-patch">
+                        <div class="circle"></div>
+                    </div>
+                    <div class="circle-clipper right">
+                        <div class="circle"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Pre-loader end -->
+    <div id="pcoded" class="pcoded">
+        <div class="pcoded-overlay-box"></div>
+
+        <div class="pcoded-container navbar-wrapper">
+            <nav class="navbar header-navbar pcoded-header">
+                <div class="navbar-wrapper">
+                    {% if request.user.is_authenticated %}
+                        <div class="navbar-logo">
+                            <a class="mobile-menu waves-effect waves-light" id="mobile-collapse" href="#!">
+                                <i class="ti-menu"></i>
+                            </a>
+                            <div class="mobile-search waves-effect waves-light">
+                                <div class="header-search">
+                                    <div class="main-search morphsearch-search">
+                                        <div class="input-group">
+                                            <span class="input-group-prepend search-close"><i class="ti-close input-group-text"></i></span>
+                                            <input type="text" class="form-control" placeholder="Enter Keyword">
+                                            <span class="input-group-append search-btn"><i class="ti-search input-group-text"></i></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <a href="{% url 'admin-panel:home' %}" class="brand-logo">
+                                Admin
+                            </a>
+                            <a class="mobile-options waves-effect waves-light">
+                                <i class="ti-more"></i>
+                            </a>
+                        </div>
+                    {% endif %}
+                    <div class="navbar-container container-fluid">
+                        <ul class="nav-left">
+                            <li>
+                                <div class="sidebar_toggle"><a href="javascript:void(0)"><i class="ti-menu"></i></a></div>
+                            </li>
+                            <li>
+                                <a href="#!" onclick="javascript:toggleFullScreen()" class="waves-effect waves-light">
+                                    <i class="ti-fullscreen"></i>
+                                </a>
+                            </li>
+                        </ul>
+
+                        <ul class="nav-right">
+                            <div class='row mt-2 align-items-center ' >
+                                {% if request.user.is_authenticated %}
+                                    {% if request.user.role == 'admin' or request.user.role == 'agent' or request.user.role == 'staff' %}
+                                        <li class="user-profile header-notification">
+                                            <a  class="waves-effect waves-light" onclick = "paymentsUpdate();">
+                                                <i class="fas fa-sync-alt" style="font-size: initial;"></i> 
+                                                <span  style="color: #fff;">{% trans "CashApp" %}</span>
+                                            </a>
+                                        </li>
+                                    {% endif %}
+                                    {% if request.user.role == 'dealer' or request.user.role == 'agent' or request.user.role == 'staff' %}
+                                        <div class="noti__item mr-3">
+                                            <div style="font-size: 11px;">
+                                                <span style="color: #fff;">{% trans "Credit" %}</span>
+                                            </div>
+                                            <h5>
+                                                <span class=" pb-2 pt-2" id="user-balance"
+                                                        style="color: #fff; white-space:nowrap">{{ request.user.balance|floatformat:"2" }}</span>
+                                            </h5>
+                                        </div>
+                                    {% endif %}
+                                {% endif %}
+                                <form id="select-language-form" action="{% url 'change_language' %}" method="post">
+                                    <div class="waves-effect waves-light ">
+                                        {% csrf_token %}
+                                        <select id="select-language" name="language" class="form-control" style="font-size: 16px;background-color:inherit;color:white; border:none; height:auto;">
+                                            {% get_available_languages as LANGUAGES %}
+                                            {% for language in LANGUAGES %}
+                                                <option style="color:white; background-color:black;" value="{{ language.0 }}" {% if language.0 == LANGUAGE_CODE %} selected{% endif %} >
+                                                
+                                                    {{ language.0 }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </form>
+                                {% comment %} <form id="select-language-form2" action=" url 'change_timezone' " method="post">
+                                    <div class="col-sm">
+                                        {% csrf_token %}
+                                    
+                                        <select id="select-language2" name="language" class="form-control" style="background-color: #448aff; color: white ;border-bottom:none;" >
+                                            <option value="nl" {% if  request.session.time_zone  == "nl" %} selected{% endif %}>CET</option>
+                                            <option value="en" {% if request.session.time_zone == "en" %} selected{% endif %} >EST</option>
+                                            <option value="ru" {% if  request.session.time_zone  == "ru" %} selected{% endif %}>MSK</option>
+                                            <option value="tr" {% if  request.session.time_zone  == "tr" %} selected{% endif %}>TRT</option>
+                                </select>
+                                </select>
+                            
+                                        </select>
+                            
+                                    </div>
+                                </form>  {% endcomment %}
+                                {% if request.user.is_authenticated %}
+                                    <li class="user-profile header-notification">
+                                        <a  class="waves-effect waves-light">
+                                            <span>{{ request.user.username}}</span>
+                                            <i class="ti-angle-down"></i>
+                                        </a>
+                                        <ul class="show-notification profile-notification">
+                                            <li class="waves-effect waves-light">
+                                                <a href="{% url 'admin-panel:logout' %}">
+                                                    <i class="ti-layout-sidebar-left"></i> {% trans "Logout" %}
+                                                </a>
+                                            </li>
+                                            
+                                        </ul>
+                                    </li>
+                                {% endif %}
+                            </div>
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+            {% if request.user.is_authenticated %}
+                <div class="pcoded-main-container" style="min-height: 0px;">
+                    <div class="pcoded-wrapper">
+                        <nav class="pcoded-navbar">
+                            <div class="sidebar_toggle"><a href="#"><i class="icon-close icons"></i></a></div>
+                            <div class="pcoded-inner-navbar main-menu">
+                                <div class="">
+                                    <div class="main-menu-header" style="background-image: url({% static '/images/user-bg.png' %})">
+                                        <img class="img-80 img-radius" src="" >
+                                        <div class="user-details">
+                                            <span id="more-details" style="font-size: 24px;font-style: italic ;font-family: 'Times New Roman', Times, serif; font-weight: bold;">{{ request.user.role }}</span>
+                                        </div>
+                                    </div>
+                                    
+                                </div>
+                                <div style='padding-top:20px;'></div>
+                            
+                                <ul class="pcoded-item pcoded-left-item">
+                                    <li class="">
+                                        <a href="{% url 'admin-panel:home' %}" class="waves-effect waves-dark " id="dashboard">
+                                            <span class="pcoded-micon">
+                                                <img  src="{% static '/images/homeB.svg' %}" class="non-hover-ico">
+                                                <img src="{% static '/images/homeW.svg' %}" class="hover-ico">
+                                            </span>
+                                            <span class="pcoded-mtext">{% trans "Dashboard" %}</span>
+                                            <span class="pcoded-mcaret"></span>
+                                        </a>
+                                    </li>
+                                </ul>
+                
+                                {% if request.user.role == 'superadmin' or request.user.role == 'admin' or request.user.role == 'dealer' or request.user.role == 'agent' or request.user|has_permission:"can_view_balance_transfer_report" or request.user|has_permission:"can_view_offmarket_report" or request.user|has_permission:"can_view_casino_report" or request.user|has_permission:"can_view_nowpayments_report" or request.user|has_permission:"can_view_alchemy_pay_report" or request.user|has_permission:"can_view_cashapp_report" or request.user|has_permission:"can_view_bonus_report" or request.user|has_permission:"can_view_mnet_report" %}
+                                    <ul class="pcoded-item pcoded-left-item" style="padding-bottom: 0.1em;">
+                                        <li class="pcoded-hasmenu">
+                                            <a href="javascript:void(0)" class="waves-effect waves-dark">
+                                                <span class="pcoded-micon"><i class="ti-layout-grid2-alt"></i><b></b></span>
+                                                <span class="pcoded-mtext">{% trans 'Reports' %}</span>
+                                                <span class="pcoded-mcaret"></span>
+                                            </a>
+                                            <ul class="pcoded-submenu">
+                                                {% if request.user.role == 'superadmin' or request.user.role == 'admin' or request.user.role == 'dealer' or request.user.role == 'agent' or request.user|has_permission:"can_view_balance_transfer_report" %}
+                                                <li class="">
+                                                    <a href="{% url 'admin-panel:transactions-report' %}" class="waves-effect waves-dark" >
+                                                        <span class="pcoded-micon"><i class="ti-angle-right"></i></span>
+                                                        <span class="pcoded-mtext">{% trans 'Balance Transfer' %}</span>
+                                                        <span class="pcoded-mcaret"></span>
+                                                    </a>
+                                                </li>
+                                                {% endif %}
+                                                {% if request.user.role == 'superadmin' or request.user.role == 'admin' or request.user.role == 'dealer' or request.user.role == 'agent' or request.user|has_permission:"can_view_offmarket_report" %}
+                                                <li class="">
+                                                    <a href="{% url 'admin-panel:offmarket-report' %}" class="waves-effect waves-dark" >
+                                                        <span class="pcoded-micon"><i class="ti-angle-right"></i></span>
+                                                        <span class="pcoded-mtext">{% trans 'Off Market Report' %}</span>
+                                                        <span class="pcoded-mcaret"></span>
+                                                    </a>
+                                                </li>
+                                                {% endif %}
+                                                {% comment %} <li class="">
+                                                    <a href="{% url 'admin-panel:betslip-report' %}" class="waves-effect waves-dark" >
+                                                        <span class="pcoded-micon"><i class="ti-angle-right"></i></span>
+                                                        <span class="pcoded-mtext">{% trans 'BetSlip' %}</span>
+                                                        <span class="pcoded-mcaret"></span>
+                                                    </a>
+                                                </li> --> {% endcomment %}
+                                                {% if request.user.role == 'superadmin' or request.user.role == 'admin' or request.user.role == 'dealer' or request.user.role == 'agent' or request.user|has_permission:"can_view_casino_report" %}
+                                                <li class="">
+                                                    <a href="{% url 'admin-panel:casinobetslip-report' %}" class="waves-effect waves-dark" >
+                                                        <span class="pcoded-micon"><i class="ti-angle-right"></i></span>
+                                                        <span class="pcoded-mtext">{% trans 'Casino Report' %}</span>
+                                                        <span class="pcoded-mcaret"></span>
+                                                    </a>
+                                                </li>
+                                                {% endif %}
+                                                {% if request.user.role == 'superadmin' or request.user.role == 'admin' or request.user.role == 'dealer' or request.user.role == 'agent' or request.user|has_permission:"can_view_nowpayments_report" %}
+                                                <li class="">
+                                                    <a href="{% url 'admin-panel:nowpayments-report' %}" class="waves-effect waves-dark" >
+                                                        <span class="pcoded-micon"><i class="ti-angle-right"></i></span>
+                                                        <span class="pcoded-mtext">{% trans 'NowPayments Report' %}</span>
+                                                        <span class="pcoded-mcaret"></span>
+                                                    </a>
+                                                </li>
+                                                {% endif %}
+                                                {% if request.user.role == 'superadmin' or request.user.role == 'admin' or request.user.role == 'dealer' or request.user.role == 'agent' or request.user|has_permission:"can_view_alchemy_pay_report" %}
+                                                <li class="">
+                                                    <a href="{% url 'admin-panel:alchemypay-report' %}" class="waves-effect waves-dark" >
+                                                        <span class="pcoded-micon"><i class="ti-angle-right"></i></span>
+                                                        <span class="pcoded-mtext">{% trans 'AlchemyPay Report' %}</span>
+                                                        <span class="pcoded-mcaret"></span>
+                                                    </a>
+                                                </li>
+                                                {% endif %}
+                                                {% if request.user.role == 'superadmin' or request.user.role == 'admin' or request.user.role == 'dealer' or request.user.role == 'agent' or request.user|has_permission:"can_view_cashapp_report" %}
+                                                <li class="">
+                                                    <a href="{% url 'admin-panel:cashapp-report' %}" class="waves-effect waves-dark" >
+                                                        <span class="pcoded-micon"><i class="ti-angle-right"></i></span>
+                                                        <span class="pcoded-mtext">{% trans 'CashApp Report' %}</span>
+                                                        <span class="pcoded-mcaret"></span>
+                                                    </a>
+                                                </li>
+                                                {% endif %}
+                                                {% if request.user.role == 'superadmin' or request.user.role == 'admin' or request.user.role == 'dealer' or request.user.role == 'agent' or request.user|has_permission:"can_view_bonus_report" %}
+                                                <li class="">
+                                                    <a href="{% url 'admin-panel:bonus-report' %}" class="waves-effect waves-dark" >
+                                                        <span class="pcoded-micon"><i class="ti-angle-right"></i></span>
+                                                        <span class="pcoded-mtext">{% trans 'Bonus Report' %}</span>
+                                                        <span class="pcoded-mcaret"></span>
+                                                    </a>
+                                                </li>
+                                                {% endif %}
+                                                {% if request.user.role == 'superadmin' or request.user.role == 'admin' or request.user.role == 'dealer' or request.user.role == 'agent' or request.user|has_permission:"can_view_mnet_report" %}
+                                                <li class="">
+                                                    <a href="{% url 'admin-panel:mnet-report' %}" class="waves-effect waves-dark" >
+                                                        <span class="pcoded-micon"><i class="ti-angle-right"></i></span>
+                                                        <span class="pcoded-mtext">{% trans 'Mnet Report' %}</span>
+                                                        <span class="pcoded-mcaret"></span>
+                                                    </a>
+                                                </li>
+                                                {% endif %}
+                                            </ul>
+                                        </li>
+                                    </ul>
+                                {% endif %}
+                                {% if request.user.role == 'superadmin'%}
+                                    <ul class="pcoded-item pcoded-left-item "  style="padding-bottom: 0.1em;">
+                                        <li class="">
+                                            <a href="{% url 'admin-panel:admins' %}" class="waves-effect waves-dark">
+                                                <span class="pcoded-micon">
+                                                    <img  src="{% static '/images/homeB.svg' %}" class="non-hover-ico">
+                                                    <img src="{% static '/images/homeW.svg' %}" class="hover-ico">
+                                                </span>
+                                                <span class="pcoded-mtext">{% trans "Admin" %}</span>
+                                                <span class="pcoded-mcaret"></span>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                {% endif %}
+                                {% if request.user.role == 'admin'  or request.user.role == 'superadmin' %}
+                                    <ul class="pcoded-item pcoded-left-item" style="padding-bottom: 0.1em;">
+                                        <li class="">
+                                            <a href="{% url 'admin-panel:dealers' %}" class="waves-effect waves-dark">
+                                                <span class="pcoded-micon">
+                                                    <img  src="{% static '/images/dealersB.svg' %}" class="non-hover-ico">
+                                                    <img src="{% static '/images/dealersW.svg' %}" class="hover-ico">
+                                                </span>
+                                                <span class="pcoded-mtext">{% trans "Master Agents" %}</span>
+                                                <span class="pcoded-mcaret"></span>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                {%  endif %}
+                                {% if request.user.role == 'dealer'  or request.user.role == 'admin'  or request.user.role == 'superadmin' %}
+                                    <ul class="pcoded-item " style="padding-bottom: 0.1em;">
+                                        <li class="">
+                                            <a href="{% url 'admin-panel:agents' %}" class="waves-effect waves-dark">
+                                                <span class="pcoded-micon">
+                                                    <img  src="{% static '/images/agentB.svg' %}" class="non-hover-ico">
+                                                    <img src="{% static '/images/agentW.svg' %}" class="hover-ico">
+                                                </span>
+                                                <span class="pcoded-mtext">{% trans "Agents" %}</span>
+                                                <span class="pcoded-mcaret"></span>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                {% endif %}
+                                {% if request.user.role == "agent" or request.user.role == "dealer" or request.user.role == "admin" %}
+                                    <ul class="pcoded-item pcoded-left-item " style="padding-bottom: 0.1em;">
+                                        <li class="">
+                                            <a href="{% url 'admin-panel:staffs' %}" class="waves-effect waves-dark">
+                                                <span class="pcoded-micon">
+                                                    <img  src="{% static '/images/csr.svg' %}" class="non-hover-ico">
+                                                    <img src="{% static '/images/csrH.svg' %}" class="hover-ico">
+                                                    </span>
+                                                <span class="pcoded-mtext">{% trans "Staff" %}</span>
+                                                <span class="pcoded-mcaret"></span>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                {%  endif %}
+                                {% if request.user.role == 'dealer' or request.user.role == 'agent'  or request.user.role == 'admin'  or request.user.role == 'superadmin' or request.user.role == 'staff' %}
+                                    <ul class="pcoded-item pcoded-left-item " style="padding-bottom: 0.1em;">
+                                        <li class="">
+                                            <a href="{% url 'admin-panel:players' %}" class="waves-effect waves-dark">
+                                                <span class="pcoded-micon">
+                                                    <img  src="{% static '/images/playersB.svg' %}" class="non-hover-ico">
+                                                    <img src="{% static '/images/playersW.svg' %}" class="hover-ico">
+                                                </span>
+                                                <span class="pcoded-mtext">{% trans "Players" %}</span>
+                                                <span class="pcoded-mcaret"></span>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                {% endif %}
+                                
+                                {% if request.user.role == "admin" %}
+                                    <ul class="pcoded-item pcoded-left-item" style="padding-bottom: 0.1em;">
+                                        <li id="roles" class="pcoded-hasmenu roles">
+                                            <a href="javascript:void(0)" class="waves-effect waves-dark">                                
+                                                <span class="pcoded-micon"><i class="fas fa-user-secret fa-lg"></i></span>
+                                                <span class="pcoded-mtext">{% trans "Roles" %}</span>
+                                                <span class="pcoded-mcaret"></span>
+                                            </a>
+                                            <ul class="pcoded-submenu">
+                                                <li class="roles-list">
+                                                    <a href="{% url 'admin-panel:roles' %}"
+                                                    class="waves-effect waves-dark">
+                                                        <span class="pcoded-micon"><i class="ti-angle-right"></i></span>
+                                                        <span class="pcoded-mtext">{% trans "Roles List" %}</span>
+                                                        <span class="pcoded-mcaret"></span>
+                                                    </a>
+                                                </li>
+                                                {% for role in header_roles %}
+                                                    <li class="roles-list">
+                                                        <a href="{% url 'admin-panel:user-list-by-role' role=role %}"
+                                                        class="waves-effect waves-dark">
+                                                            <span class="pcoded-micon"><i class="ti-angle-right"></i></span>
+                                                            <span class="pcoded-mtext">{% trans role.get_name %}</span>
+                                                            <span class="pcoded-mcaret"></span>
+                                                        </a>
+                                                    </li>
+                                                {% endfor %}
+                                            </ul>
+                                        </li>
+                                    </ul>
+                                {% endif %}
+
+                                {% if request.user.role == "admin" %}
+                                    <ul class="pcoded-item pcoded-left-item " style="padding-bottom: 0.1em;">
+                                        <li class="">
+                                            <a href="{% url 'admin-panel:profit' %}" class="waves-effect waves-dark">
+                                                <span class="pcoded-micon">
+                                                    <img  src="{% static '/images/profitsB.svg' %}" class="non-hover-ico">
+                                                    <img src="{% static '/images/profitsW.svg' %}" class="hover-ico">
+                                                </span>
+                                                <span class="pcoded-mtext">{% trans "Profits" %}</span>
+                                                <span class="pcoded-mcaret"></span>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                {%  endif %}
+
+                                {% if request.user.role == "admin" or request.user|has_permission:"can_view_tournament" %}
+                                    <ul class="pcoded-item pcoded-left-item " style="padding-bottom: 0.1em;">
+                                        <li class="">
+                                            <a href="{% url 'admin-panel:tournaments' %}" class="waves-effect waves-dark">
+                                                <span class="pcoded-micon"><i class="fas fa-trophy"></i></span>
+                                                <span class="pcoded-mtext">{% trans "Tournaments" %}</span>
+                                                <span class="pcoded-mcaret"></span>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                {% endif %}
+
+                                {% if request.user.role == "admin" or request.user|has_permission:"can_view_website_header" %}
+                                    <ul class="pcoded-item pcoded-left-item" style="padding-bottom: 0.1em;">
+                                        <li id="casino-management" class="pcoded-hasmenu casino-management">
+                                            <a href="javascript:void(0)" class="waves-effect waves-dark">                                
+                                                <span class="pcoded-micon"><i class="fas fa-sitemap"></i></span>
+                                                <span class="pcoded-mtext">{% trans "Casino Management" %}</span>
+                                                <span class="pcoded-mcaret"></span>
+                                            </a>
+                                            <ul class="pcoded-submenu">
+                                                {% if request.user.role == "admin" %}
+                                                    <li class="games-list">
+                                                        <a href="{% url 'admin-panel:casino-management-game-list' %}"
+                                                        class="waves-effect waves-dark">
+                                                            <span class="pcoded-micon"><i class="ti-angle-right"></i></span>
+                                                            <span class="pcoded-mtext">{% trans "Games" %}</span>
+                                                            <span class="pcoded-mcaret"></span>
+                                                        </a>
+                                                    </li>
+                                                    
+                                                    <li class="provider-list">
+                                                        <a href="{% url 'admin-panel:casino-management-provider-list' %}"
+                                                        class="waves-effect waves-dark">
+                                                            <span class="pcoded-micon"><i class="ti-angle-right"></i></span>
+                                                            <span class="pcoded-mtext">{% trans "Providers" %}</span>
+                                                            <span class="pcoded-mcaret"></span>
+                                                        </a>
+                                                    </li>
+                                                {% endif %}
+                                                <li class="games-category">
+                                                    <a href="{% url 'admin-panel:casino-management-game-category' %}"
+                                                    class="waves-effect waves-dark">
+                                                        <span class="pcoded-micon"><i class="ti-angle-right"></i></span>
+                                                        <span class="pcoded-mtext">{% trans "Website Header" %}</span>
+                                                        <span class="pcoded-mcaret"></span>
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </li>
+                                    </ul>
+                                {% endif %}
+
+                                {% if request.user.role == "admin" %}
+                                    <ul class="pcoded-item pcoded-left-item" style="padding-bottom: 0.1em;">
+                                        <li id="casino-management" class="pcoded-hasmenu offmarket-games">
+                                            <a href="javascript:void(0)" class="waves-effect waves-dark">                                
+                                                <span class="pcoded-micon"><i class="ti-layout-list-thumb"></i><b></b></span>
+                                                <span class="pcoded-mtext">{% trans "OffMarket Games" %}</span>
+                                                <span class="pcoded-mcaret"></span>
+                                            </a>
+                                            <ul class="pcoded-submenu">
+                                                <li class="offmarket-gamelist">
+                                                    <a href="{% url 'admin-panel:offmarket-games' %}"
+                                                    class="waves-effect waves-dark">
+                                                        <span class="pcoded-micon"><i class="ti-angle-right"></i></span>
+                                                        <span class="pcoded-mtext">{% trans "Games" %}</span>
+                                                        <span class="pcoded-mcaret"></span>
+                                                    </a>
+                                                </li>
+                                                <li class="">
+                                                    <a href="{% url 'admin-panel:fortunepandas-management-game-list' %}" class="waves-effect waves-dark">
+                                                        <span class="pcoded-micon">
+                                                            <img  src="{% static '/images/time.svg' %}" class="non-hover-ico">
+                                                            <img src="{% static '/images/time_1.svg' %}" class="hover-ico">
+                                                        </span>
+                                                        <span class="pcoded-mtext">{% trans "Fortunepanda Games" %}</span>
+                                                        <span class="pcoded-mcaret"></span>
+                                                    </a>
+                                                </li>
+                                                <li class="">
+                                                    <a href="{% url 'admin-panel:offmarket-pending-withdrawals' %}" class="waves-effect waves-dark">
+                                                        <span class="pcoded-micon">
+                                                            <img  src="{% static '/images/time.svg' %}" class="non-hover-ico">
+                                                            <img src="{% static '/images/time_1.svg' %}" class="hover-ico">
+                                                        </span>
+                                                        <span class="pcoded-mtext">{% trans "Withdrawal Requests" %}</span>
+                                                        <span class="pcoded-mcaret"></span>
+                                                    </a>
+                                                </li>
+                                            
+                                            </ul>
+                                        </li>
+                                    </ul>
+
+                                    <ul class="pcoded-item pcoded-left-item " style="padding-bottom: 0.1em;">
+                                        <li class="">
+                                            <a href="{% url 'admin-panel:pending-withdrawals' %}" class="waves-effect waves-dark">
+                                                <span class="pcoded-micon">
+                                                    <img  src="{% static '/images/time.svg' %}" class="non-hover-ico">
+                                                    <img src="{% static '/images/time_1.svg' %}" class="hover-ico">
+                                                </span>
+                                                <span class="pcoded-mtext">{% trans "Withdrawal Requests" %}</span>
+                                                <span class="pcoded-mcaret"></span>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                    <ul class="pcoded-item pcoded-left-item " style="padding-bottom: 0.1em;">
+                                        <li class="">
+                                            <a href="{% url 'admin-panel:withdrawal-currencies-list' %}" class="waves-effect waves-dark">
+                                                
+                                                <span class="pcoded-micon"><i class="fa fa-btc"></i></span>
+                    
+                                                <span class="pcoded-mtext">{% trans "Withdrawal Currencies" %}</span>
+                                                <span class="pcoded-mcaret"></span>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                {% endif %}
+
+                                {% if request.user.role == "admin" %}
+                                    {% if request.user.is_welcome_bonus_enabled or request.user.is_deposit_bonus_enabled %}
+                                        <ul class="pcoded-item pcoded-left-item" style="padding-bottom: 0.1em;">
+                                            <li class="pcoded-hasmenu">
+                                                <a href="javascript:void(0)" class="waves-effect waves-dark">
+                                                    <span class="pcoded-micon">
+                                                        <img  src="{% static 'Desktop_static/images/bonus_black.svg' %}" class="non-hover-ico">
+                                                        <img src="{% static 'Desktop_static/images/bonus_white.svg' %}" class="hover-ico">
+                                                        <b></b></span>
+                                                    <span class="pcoded-mtext">{% trans 'Bonuses' %}</span>
+                                                    <span class="pcoded-mcaret"></span>
+                                                </a>
+                                                <ul class="pcoded-submenu">
+                                                
+                                                    <li class="">
+                                                        <a href="{% url 'admin-panel:bet-bonus' %}" class="waves-effect waves-dark" >
+                                                            <span class="pcoded-micon"><i class="ti-angle-right"></i></span>
+                                                            <span class="pcoded-mtext">{% trans 'Bet Bonus' %}</span>
+                                                            <span class="pcoded-mcaret"></span>
+                                                        </a>
+                                                    </li>
+                                                
+                                            
+                                                    {% comment %} <li class="">
+                                                        <a href="{% url 'admin-panel:referral-bonus' %}" class="waves-effect waves-dark" >
+                                                            <span class="pcoded-micon"><i class="ti-angle-right"></i></span>
+                                                            <span class="pcoded-mtext">{% trans 'Refer-A-Friend Bonus' %}</span>
+                                                            <span class="pcoded-mcaret"></span>
+                                                        </a>
+                                                    </li>
+                                                
+                                                    <li class="">
+                                                        <a href="{% url 'admin-panel:losing-bonus' %}" class="waves-effect waves-dark" >
+                                                            <span class="pcoded-micon"><i class="ti-angle-right"></i></span>
+                                                            <span class="pcoded-mtext">{% trans 'Losing Bonus' %}</span>
+                                                            <span class="pcoded-mcaret"></span>
+                                                        </a>
+                                                    </li> {% endcomment %}
+
+                                                    {% if request.user.is_welcome_bonus_enabled %}
+                                                    <li class="">
+                                                        <a href="{% url 'admin-panel:sign-up-bonus' %}" class="waves-effect waves-dark" >
+                                                            <span class="pcoded-micon"><i class="ti-angle-right"></i></span>
+                                                            <span class="pcoded-mtext">{% trans 'Sign Up Bonus' %}</span>
+                                                            <span class="pcoded-mcaret"></span>
+                                                        </a>
+                                                    </li>
+                                                    {% endif %}
+                                                
+                                                    {% if request.user.is_deposit_bonus_enabled %}
+                                                    <li class="">
+                                                        <a href="{% url 'admin-panel:deposit-bonus' %}" class="waves-effect waves-dark" >
+                                                            <span class="pcoded-micon"><i class="ti-angle-right"></i></span>
+                                                            <span class="pcoded-mtext">{% trans 'Deposit Bonus' %}</span>
+                                                            <span class="pcoded-mcaret"></span>
+                                                        </a>
+                                                    </li>
+                                                    {% endif %}
+                                                    
+                                                </ul>
+                                            </li>
+                                            
+                                        </ul>
+                                    {% endif %}   
+                                {% endif %}
+
+                                {% comment %} {% if request.user.role == "admin" %}
+                                    <ul class="pcoded-item pcoded-left-item " style="padding-bottom: 0.1em;">
+                                        <li class="">
+                                            <a href="{% url 'admin-panel:admin-ads' %}" class="waves-effect waves-dark">
+                                                <span class="pcoded-micon"><i class="far fa-id-card"></i></span>
+                                                <span class="pcoded-mtext">{% trans "Ads/Sponser" %}</span>
+                                                <span class="pcoded-mcaret"></span>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                {%  endif %} {% endcomment %}
+
+                                {% comment %} {% if request.user.role == "admin" %}
+                                    <ul class="pcoded-item pcoded" style="padding-bottom: 0.1em;">
+                                        <li>
+                                            <a href="{% url 'admin-panel:cashapp-detail'%}" class="waves-effect waves">
+                                                <span class="pcoded-micon">
+                                                    <img  src="{% static '/images/chat_history.svg' %}" class="non-hover-ico">
+                                                    <img src="{% static '/images/chat_historyH.svg' %}" class="hover-ico">
+                                                </span>
+                                                <span class="pcoded-mtext">{% trans "CA Reg" %}</span>
+                                                <span class="pcoded-mcaret"></span>
+                                            </a>
+                                        </li>
+                                    </ul> 
+                                {%  endif %} {% endcomment %}
+                    
+                        
+                                <!-- CMS Start  -->
+                                {% if request.user.role == 'admin' or request.user|has_permission:"can_view_banner" or request.user|has_permission:"can_view_pages" or request.user|has_permission:"can_view_promotions" %}
+                                    <ul class="pcoded-item pcoded-left-item" style="padding-bottom: 0.1em;">
+                                        <li class="pcoded-hasmenu">
+                                            <a href="javascript:void(0)" class="waves-effect waves-dark">
+                                                <span class="pcoded-micon"><i class="far fa-newspaper"></i><b></b></span>
+                                                <span class="pcoded-mtext">{% trans 'CMS' %}</span>
+                                                <span class="pcoded-mcaret"></span>
+                                            </a>
+                                            <ul class="pcoded-submenu">
+        <!--                                        <li class="">-->
+        <!--                                            <a href="{% url 'admin-panel:cms-about' %}" class="waves-effect waves-dark" >-->
+        <!--                                                <span class="pcoded-micon"><i class="ti-angle-right"></i></span>-->
+        <!--                                                <span class="pcoded-mtext">{% trans 'About' %}</span>-->
+        <!--                                                <span class="pcoded-mcaret"></span>-->
+        <!--                                            </a>-->
+        <!--                                        </li>-->
+        <!--                                        <li class="upload-banner">-->
+        <!--                                            <a href="{% url 'admin-panel:cms-privacy-policy' %}" class="waves-effect waves-dark">-->
+        <!--                                                <span class="pcoded-micon"><i class="ti-image"></i></span>-->
+        <!--                                                <span class="pcoded-mtext">{% trans 'Privacy Policy' %}</span>-->
+        <!--                                                <span class="pcoded-mcaret"></span>-->
+        <!--                                            </a>-->
+        <!--                                        </li>-->
+        <!--                                        <li class="upload-banner">-->
+        <!--                                            <a href="{% url 'admin-panel:cms-faq' %}" class="waves-effect waves-dark">-->
+        <!--                                                <span class="pcoded-micon"><i class="ti-image"></i></span>-->
+        <!--                                                <span class="pcoded-mtext">{% trans 'FAQ' %}</span>-->
+        <!--                                                <span class="pcoded-mcaret"></span>-->
+        <!--                                            </a>-->
+        <!--                                        </li>-->
+        <!--                                        <li class="upload-banner">-->
+        <!--                                            <a href="{% url 'admin-panel:cms-terms-conditinos' %}" class="waves-effect waves-dark">-->
+        <!--                                                <span class="pcoded-micon"><i class="ti-image"></i></span>-->
+        <!--                                                <span class="pcoded-mtext">{% trans 'Terms&Condition' %}</span>-->
+        <!--                                                <span class="pcoded-mcaret"></span>-->
+        <!--                                            </a>-->
+        <!--                                        </li>-->
+        <!--                                        <li class="upload-banner">-->
+        <!--                                            <a href="{% url 'admin-panel:cms-cookie-policy' %}" class="waves-effect waves-dark">-->
+        <!--                                                <span class="pcoded-micon"><i class="ti-image"></i></span>-->
+        <!--                                                <span class="pcoded-mtext">{% trans 'Cookie Policy' %}</span>-->
+        <!--                                                <span class="pcoded-mcaret"></span>-->
+        <!--                                            </a>-->
+        <!--                                        </li>-->
+        <!--                                        <li class="upload-banner">-->
+        <!--                                            <a href="{% url 'admin-panel:cms-introduction' %}" class="waves-effect waves-dark">-->
+        <!--                                                <span class="pcoded-micon"><i class="ti-image"></i></span>-->
+        <!--                                                <span class="pcoded-mtext">{% trans 'Introduction' %}</span>-->
+        <!--                                                <span class="pcoded-mcaret"></span>-->
+        <!--                                            </a>-->
+        <!--                                        </li>-->
+        <!--                                        <li class="upload-banner">-->
+        <!--                                            <a href="{% url 'admin-panel:cms-settings-limits' %}" class="waves-effect waves-dark">-->
+        <!--                                                <span class="pcoded-micon"><i class="ti-image"></i></span>-->
+        <!--                                                <span class="pcoded-mtext">{% trans 'Settings Limits' %}</span>-->
+        <!--                                                <span class="pcoded-mcaret"></span>-->
+        <!--                                            </a>-->
+        <!--                                        </li>-->
+
+                                                {% if request.user.role == 'admin' or request.user|has_permission:"can_view_banner" %}
+                                                <li class="upload-banner">
+                                                    <a href="{% url 'admin-panel:admin-banner' %}" class="waves-effect waves-dark">
+                                                        <span class="pcoded-micon"><i class="ti-image"></i></span>
+                                                        <span class="pcoded-mtext">{% trans 'Banners' %}</span>
+                                                        <span class="pcoded-mcaret"></span>
+                                                    </a>
+                                                </li>
+                                                {% endif %}
+
+                                                {% if request.user.role == 'admin' or request.user|has_permission:"can_view_pages" %}
+                                                <li class="upload-banner">
+                                                    <a href="{% url 'admin-panel:pages' %}" class="waves-effect waves-dark">
+                                                        <span class="pcoded-micon"><i class="ti-image"></i></span>
+                                                        <span class="pcoded-mtext">{% trans 'Pages' %}</span>
+                                                        <span class="pcoded-mcaret"></span>
+                                                    </a>
+                                                </li>
+                                                {% endif %}
+                                                
+                                                {% if request.user.role == 'admin' or request.user|has_permission:"can_view_promotions" %}
+                                                <li class="upload-banner">
+                                                    <a href="{% url 'admin-panel:promotion-page' %}" class="waves-effect waves-dark" >
+                                                        <span class="pcoded-micon"><i class="ti-angle-right"></i></span>
+                                                        <span class="pcoded-mtext">{% trans 'Promotion' %}</span>
+                                                        <span class="pcoded-mcaret"></span>
+                                                    </a>
+                                                </li>
+                                                {% endif %}
+
+                                                {% if request.user.role == 'admin' %}
+                                                <li class="social-links">
+                                                    <a href="{% url 'admin-panel:social-link' %}" class="waves-effect waves-dark" >
+                                                        <span class="pcoded-micon"><i class="ti-angle-right"></i></span>
+                                                        <span class="pcoded-mtext">{% trans 'Social Links' %}</span>
+                                                        <span class="pcoded-mcaret"></span>
+                                                    </a>
+                                                </li>
+
+                                                <li class="bonus-details">
+                                                    <a href="{% url 'admin-panel:bonus-details' %}" class="waves-effect waves-dark">
+                                                        <span class="pcoded-micon"><i class="ti-image"></i></span>
+                                                        <span class="pcoded-mtext">{% trans 'Bonus Details' %}</span>
+                                                        <span class="pcoded-mcaret"></span>
+                                                    </a>
+                                                </li>
+
+                                                <li class="upload-banner">
+                                                    <a href="{% url 'admin-panel:spin-the-wheel' %}" class="waves-effect waves-dark">
+                                                        <span class="pcoded-micon"><i class="ti-image"></i></span>
+                                                        <span class="pcoded-mtext">{% trans 'Spin the Wheel' %}</span>
+                                                        <span class="pcoded-mcaret"></span>
+                                                    </a>
+                                                </li>
+
+                                                <li class="">
+                                                    <a href="{% url 'admin-panel:email-templates' %}" class="waves-effect waves-dark" >
+                                                        <span class="pcoded-micon"><i class="ti-angle-right"></i></span>
+                                                        <span class="pcoded-mtext">{% trans 'Email Templates' %}</span>
+                                                        <span class="pcoded-mcaret"></span>
+                                                    </a>
+                                                </li>
+                                                <li class="comming-soon-page">
+                                                    <a href="{% url 'admin-panel:coming_soon_page' %}" class="waves-effect waves-dark">
+                                                        <span class="pcoded-micon"><i class="ti-image"></i></span>
+                                                        <span class="pcoded-mtext">{% trans 'Operational Status' %}</span>
+                                                        <span class="pcoded-mcaret"></span>
+                                                    </a>
+                                                </li>
+                                                {% endif %}
+
+                                                <!-- <li class="pcoded-hasmenu">
+                                                    <a href="javascript:void(0)" class="waves-effect waves-dark">
+                                                        <span class="pcoded-micon"><i class="ti-write"></i><b></b></span>
+                                                        <span class="pcoded-mtext">{% trans 'Footer' %}</span>
+                                                        <span class="pcoded-mcaret"></span>
+                                                    </a>
+                                                    <ul class="pcoded-submenu">
+                                                        <li class="upload-banner">
+                                                            <a href="{% url 'admin-panel:category' %}" class="waves-effect waves-dark">
+                                                                <span class="pcoded-micon"><i class="ti-image"></i></span>
+                                                                <span class="pcoded-mtext">{% trans 'Link Categories' %}</span>
+                                                                <span class="pcoded-mcaret"></span>
+                                                            </a>
+                                                        </li>
+                                                        <li class="social-links">
+                                                            <a href="{% url 'admin-panel:footer-page' %}" class="waves-effect waves-dark">
+                                                                <span class="pcoded-micon"><i class="ti-image"></i></span>
+                                                                <span class="pcoded-mtext">{% trans 'Link' %}</span>
+                                                                <span class="pcoded-mcaret"></span>
+                                                            </a>
+                                                        </li>
+                                                    </ul>
+                                                </li> -->
+                                                <!-- <li class="contact-queries">
+                                                    <a href="{% url 'admin-panel:cms-contact' %}" class="waves-effect waves-dark" >
+                                                        <span class="pcoded-micon"><i class="ti-angle-right"></i></span>
+                                                        <span class="pcoded-mtext">{% trans 'Contact Queries' %}</span>
+                                                    </a>
+                                                </li> -->
+                                            </ul>
+                                        </li>
+                                    </ul>
+                                {%  endif %}
+                                <!-- CMS End -->
+                                <!-- CRM Start  -->
+                                {% if request.user.role == 'admin' or request.user|has_permission:"can_view_email_notification" %}
+                                    <ul class="pcoded-item pcoded-left-item" style="padding-bottom: 0.1em;">
+                                        <li class="pcoded-hasmenu">
+                                            <a href="javascript:void(0)" class="waves-effect waves-dark">
+                                                <span class="pcoded-micon"><i class="ti-write"></i><b></b></span>
+                                                <span class="pcoded-mtext">{% trans 'CRM' %}</span>
+                                                <span class="pcoded-mcaret"></span>
+                                            </a>
+                                            <ul class="pcoded-submenu">
+
+                                                <li class="">
+                                                    <a href="{% url 'admin-panel:crm' %}" class="waves-effect waves-dark" >
+                                                        <span class="pcoded-micon"><i class="ti-angle-right"></i></span>
+                                                        <span class="pcoded-mtext">{% trans 'Email Notifications' %}</span>
+                                                        <span class="pcoded-mcaret"></span>
+                                                    </a>
+                                                </li>
+                                                <!-- <li class="upload-banner">
+                                                    <a href="{% url 'admin-panel:sms' %}" class="waves-effect waves-dark">
+                                                        <span class="pcoded-micon"><i class="ti-image"></i></span>
+                                                        <span class="pcoded-mtext">{% trans 'SMS Notifications' %}</span>
+                                                        <span class="pcoded-mcaret"></span>
+                                                    </a>
+                                                </li> -->
+                                                <!-- <li class="">
+                                                    <a href="{% url 'admin-panel:notification' %}" class="waves-effect waves-dark">
+                                                        <span class="pcoded-micon"><i class="ti-image"></i></span>
+                                                        <span class="pcoded-mtext">{% trans 'WebSite Notifications' %}</span>
+                                                        <span class="pcoded-mcaret"></span>
+                                                    </a>
+                                                </li> -->
+                                            </ul> 
+                                        </li>
+                                    </ul>
+                                {% endif %} 
+                                <!-- {% if request.user.role == 'admin' or request.user.role == 'superadmin' %}
+                                <ul class="pcoded-item pcoded-left-item" style="padding-bottom: 0.1em;">
+                                    <li class="">
+                                        <a href="{% url 'admin-panel:crm' %}" type="button" class="waves-effect waves-dark ">
+                                            <span class="pcoded-micon">
+                                                <i class="ti-email"></i><b></b>
+                                            </span>
+                                            <span>{% trans "CRM" %}</span>
+                                            <span class="pcoded-mcaret"></span>
+                                        </a>
+                                    </li>
+                                </ul>
+                                {%  endif %} -->
+                                <!-- CRM End -->
+
+                                {% if request.user.role == 'admin' %}
+                                    <ul class="pcoded-item pcoded-left-item" style="padding-bottom: 0.1em;">
+                                        <li class="pcoded-hasmenu">
+                                            <a href="javascript:void(0)" class="waves-effect waves-dark">
+                                                <span class="pcoded-micon"><i class="fas fa-user-plus"></i><b></b></span>
+                                                <span class="pcoded-mtext">{% trans 'Affiliate' %}</span>
+                                                <span class="pcoded-mcaret"></span>
+                                            </a>
+                                            <ul class="pcoded-submenu">
+                                                <li class="">
+                                                    <a href="{% url 'admin-panel:default-settings' %}" class="waves-effect waves-dark">
+                                                        <span class="pcoded-micon">
+                                                        <img  src="{% static '/images/playersB.svg' %}" class="non-hover-ico">
+                                                        <img src="{% static '/images/playersW.svg' %}" class="hover-ico">
+                                                        </span>
+                                                        <span class="pcoded-mtext">{% trans "Default Settings" %}</span>
+                                                        <span class="pcoded-mcaret"></span>
+                                                    </a>
+                                                </li>
+
+                                                <li class="">
+                                                    <a href="{% url 'admin-panel:create-affiliates' %}" class="waves-effect waves-dark">
+                                                        <span class="pcoded-micon">
+                                                        <img  src="{% static '/images/playersB.svg' %}" class="non-hover-ico">
+                                                        <img src="{% static '/images/playersW.svg' %}" class="hover-ico">
+                                                        </span>
+                                                        <span class="pcoded-mtext">{% trans "Affiliate Link" %}</span>
+                                                        <span class="pcoded-mcaret"></span>
+                                                    </a>
+                                                </li>
+                                                <li class="">
+                                                    <a href="{% url 'admin-panel:pending-affiliates' %}" class="waves-effect waves-dark">
+                                                        <span class="pcoded-micon">
+                                                        <img  src="{% static '/images/playersB.svg' %}" class="non-hover-ico">
+                                                        <img src="{% static '/images/playersW.svg' %}" class="hover-ico">
+                                                        </span>
+                                                        <span class="pcoded-mtext">{% trans "Affiliate Requests" %}</span>
+                                                        <span class="pcoded-mcaret"></span>
+                                                    </a>
+                                                </li>
+                                    </ul> 
+                                    </ul>
+
+                                    
+                                    {% comment %} 
+                                    <!-- NOTE: Not needed because now we have inbox chat feature -->
+                                    <ul class="pcoded-item pcoded-left-item " style="padding-bottom: 0.1em;">
+                                        <li class="">
+                                            <a href="{% url 'admin-panel:csrquery' %}" class="waves-effect waves-dark">
+                                                <span class="pcoded-micon">
+                                                    <img  src="{% static '/images/chat_history.svg' %}" class="non-hover-ico">
+                                                    <img src="{% static '/images/chat_historyH.svg' %}" class="hover-ico">
+                                                </span>
+                                                <span class="pcoded-mtext">{% trans "Unresolved Queries" %}</span>
+                                                <span class="pcoded-mcaret"></span>
+                                            </a>
+                                        </li>
+                                    </ul> {% endcomment %}
+                                {%  endif %}
+
+                                {% if request.user.role == "agent" %}
+                                    <ul class="pcoded-item pcoded-left-item" style="padding-bottom: 0.1em;">
+                                        <li id="casino-management" class="pcoded-hasmenu offmarket-games">
+                                            <a href="javascript:void(0)" class="waves-effect waves-dark">                                
+                                                <span class="pcoded-micon"><i class="ti-layout-list-thumb"></i><b></b></span>
+                                                <span class="pcoded-mtext">{% trans "OffMarket Games" %}</span>
+                                                <span class="pcoded-mcaret"></span>
+                                            </a>
+                                            <ul class="pcoded-submenu">
+                                                <li class="">
+                                                    <a href="{% url 'admin-panel:offmarket-pending-withdrawals' %}" class="waves-effect waves-dark">
+                                                        <span class="pcoded-micon">
+                                                            <img  src="{% static '/images/time.svg' %}" class="non-hover-ico">
+                                                            <img src="{% static '/images/time_1.svg' %}" class="hover-ico">
+                                                        </span>
+                                                        <span class="pcoded-mtext">{% trans "Withdrawal Requests" %}</span>
+                                                        <span class="pcoded-mcaret"></span>
+                                                    </a>
+                                                </li>
+                                            
+                                            </ul>
+                                        </li>
+                                    </ul>
+                                {% endif %}
+                            
+                                {% if request.user.role == 'staff'%}
+                                    <ul class="pcoded-item pcoded-left-item " style="padding-bottom: 0.1em;">
+                                        <li class="">
+                                            <a href="{% url 'admin-panel:staff_wallet_and_transactions' %}" class="waves-effect waves-dark">
+                                                <span class="pcoded-micon">
+                                                    <img  src="{% static '/images/wallet_and_transactions.svg' %}" class="non-hover-ico">
+                                                    <img src="{% static '/images/wallet_and_transactionsH.svg' %}" class="hover-ico">
+                                                </span>
+                                                <span class="pcoded-mtext">{% trans "Wallet & Transactions" %}</span>
+                                                <span class="pcoded-mcaret"></span>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                    {% endif %}
+
+                                    {% if request.user.role == 'staff' or request.user.role == "agent" or request.user.role == "dealer" or request.user.role == "admin" %}
+                                    <ul class="pcoded-item pcoded-left-item " style="padding-bottom: 0.1em;">
+                                        <li class="">
+                                            <a href="{% url 'admin-panel:inbox' %}" class="waves-effect waves-dark">
+                                                <span class="pcoded-micon">
+                                                    <img  src="{% static '/images/chat.svg' %}" class="non-hover-ico">
+                                                    <img src="{% static '/images/chatH.svg' %}" class="hover-ico">
+                                                </span>
+                                                <span class="pcoded-mtext">{% trans "Chat" %}</span>
+                                                <span class="pcoded-mcaret"></span>
+                                                <div style='padding-right:40px;' class="queue-bubble" id='players_count_in_queue'>0</div>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                    <ul class="pcoded-item pcoded-left-item " style="padding-bottom: 0.1em;">
+                                        <li class="">
+                                            <a href="{% url 'admin-panel:inbox-history-list' %}" class="waves-effect waves-dark">
+                                                <span class="pcoded-micon">
+                                                    <img  src="{% static '/images/chat_history.svg' %}" class="non-hover-ico">
+                                                    <img src="{% static '/images/chat_historyH.svg' %}" class="hover-ico">
+                                                </span>
+                                                <span class="pcoded-mtext">{% trans "Chat History" %}</span>
+                                                <span class="pcoded-mcaret"></span>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                {%  endif %} 
+
+                                {% if request.user.role == 'agent' or request.user.role == 'staff' %}
+                                    <ul class="pcoded-item pcoded-left-item " style="padding-bottom: 0.1em;">
+                                        <li class="">
+                                            <a href="{% url 'admin-panel:cashapp' %}" class="waves-effect waves-dark">
+                                                <span class="pcoded-micon">
+                                                    {% comment %} <img  src="{% static '/images/chat_history.svg' %}" class="non-hover-ico">
+                                                    <img src="{% static '/images/chat_historyH.svg' %}" class="hover-ico"> {% endcomment %}
+                                                    <i class="fas fa-dollar-sign fa-lg"></i>
+                                                </span>
+                                                <span class="pcoded-mtext">{% trans "CashApp" %}</span>
+                                                <span class="pcoded-mcaret"></span>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                {%  endif %}
+
+
+                                {% comment %} {% if request.user.role == "admin" %}
+                                    <ul class="pcoded-item pcoded" style="padding-bottom: 0.1em;">
+                                        <li>
+                                            <a href="{% url 'admin-panel:cashapp-detail'%}" class="waves-effect waves">
+                                                <span class="pcoded-micon">
+                                                    <img  src="{% static '/images/chat_history.svg' %}" class="non-hover-ico">
+                                                    <img src="{% static '/images/chat_historyH.svg' %}" class="hover-ico">
+                                                </span>
+                                                <span class="pcoded-mtext">{% trans "CA Reg" %}</span>
+                                                <span class="pcoded-mcaret"></span>
+                                            </a>
+                                        </li>
+                                    </ul> 
+                                {%  endif %}  {% endcomment %}
+                            </div>
+                        </nav>
+                    </div>
+                </div>
+            {% endif  %}
+        </div>
+
+        {% if request.user.is_authenticated %}
+            <!-- Modal: modalPoll -->
+            <div class="modal fade right" id="modalPoll-1" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+            aria-hidden="true" data-backdrop="false">
+                <div class="modal-dialog modal-full-height modal-right modal-notify modal-info" role="document">
+                    <div class="modal-content">
+                    <!--Header-->
+                    <div class="modal-header">
+                        <p class="heading lead">Betting Limits
+                        </p>
+
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true" class="white-text">×</span>
+                        </button>
+                    </div>
+
+                    <!--Body-->
+                    <div class="modal-body">
+                        <div class="limits-wrap px-4">
+                            <div class="container p-0">
+                                <div class="row">
+                                    <!-- Max Bet -->
+                                    <div class="col form-group" style="min-width: 180px;">
+                                        <label class="label-sm" for="limit-1">{% trans "Max Single Bet" %}</label>
+
+                                        <input type="hidden" name="dealer_id" value="">
+                                        <input id="limit-1" 
+                                            type="text"
+                                            class="form-control"
+                                            name="max_single_bet"
+                                            readonly
+                                            value="">
+                                    </div>
+                                </div> 
+
+                                <div class="row">
+                                    <!-- Max Bet -->
+                                    <div class="col form-group" style="min-width: 180px;">
+                                        <label class="label-sm" for="limit-1">{% trans "Max Single Bet Other Sports" %}</label>
+
+                                        <input type="hidden" name="dealer_id" value="">
+                                        <input id="limit-1" 
+                                            type="text"
+                                            class="form-control"
+                                            name="max_single_bet_other_sports"
+                                            readonly
+                                            value="">
+                                    </div>
+                                </div> 
+
+                                <div class="row">
+                                    <!-- Max Bet -->
+                                    <div class="col form-group" style="min-width: 180px;">
+                                        <label class="label-sm" for="limit-1">{% trans "Max Multiple Bet" %}</label>
+
+                                        <input type="hidden" name="dealer_id" value="">
+                                        <input id="limit-1" 
+                                            type="text"
+                                            class="form-control"
+                                            name="max_multiple_bet"
+                                            readonly
+                                            value="">
+                                    </div>
+                                </div> 
+
+                                <div class="row">
+                                    <!-- Min Bet -->
+                                    <div class="col form-group" style="min-width: 180px;">
+                                        <label class="label-sm" for="limit-2">{% trans "Min Bet" %}</label>
+                                        <input id="limit-2" 
+                                            type="text"
+                                            class="form-control"
+                                            name="min_bet"
+                                            readonly
+                                            value="">
+                                    </div>
+                                </div> 
+
+                                <!-- <div class="row">
+                                    Max Live Casino Amount
+                                    <div class="col form-group" style="min-width: 180px;">
+                                        <label class="label-sm" for="limit-live-casino">{% trans "Max Live Casino Amount" %}</label>
+                                        <input id="limit-live-casino" 
+                                            type="text"
+                                            class="form-control"
+                                            name="max_live_casino_amount"
+                                            readonly
+                                            value="">
+                                    </div>
+                                </div> -->
+
+                            
+
+                                <div class="row align-items-end flex-sm-nowrap flex-wrap">
+                                    <!-- Max Win Amount -->
+                                    <div class="col form-group" style="min-width: 180px;">
+                                        <label class="label-sm" for="limit-3">{% trans "Max Win Amount" %}</label>
+                                        <input id="limit-3" 
+                                            type="text"
+                                            class="form-control"
+                                            name="max_win_amount"
+                                            readonly
+                                            value="">
+                                    </div>
+
+                                    <!-- Max Odd -->
+                                    <div class="col form-group" style="min-width: 180px;">
+                                        <label class="label-sm" for="limit-4">{% trans "Max Odd" %}</label>
+                                        <input id="limit-4" 
+                                            type="text"
+                                            class="form-control"
+                                            name="max_odd"
+                                            readonly
+                                            value="">
+                                    </div>
+                                </div>
+
+                                <div class="row align-items-end flex-sm-nowrap flex-wrap">
+                                    <!-- Max Bet Amount Per Match -->
+                                    <div class="col form-group" style="min-width: 120px;">
+                                        <label class="label-sm" for="limit-5"> {% trans "Max Bet Amount Per Match" %}</label>
+                                        <input id="limit-5" 
+                                            type="text"
+                                            class="form-control"
+                                            name="max_bet_amount_per_match"
+                                            readonly
+                                            value="">
+                                    </div>
+
+                                    <!-- Max Same Bet Count Amount -->
+                                    <div class="col form-group" style="min-width: 120px;">
+                                        <label class="label-sm" for="limit-6">{% trans "Max Same Bet Count Amount" %}</label>
+                                        <input id="limit-6" 
+                                            type="text"
+                                            class="form-control"
+                                            name="max_same_bet_count"
+                                            readonly
+                                            value="">
+                                    </div>
+                                </div>
+
+                                <div class="row align-items-end flex-sm-nowrap flex-wrap">
+                                    <!-- Max Multi Two Events Amount Combine -->
+                                    <div class="col form-group" style="min-width: 180px;">
+                                        <label class="label-sm" for="limit-7">{% trans "Max Multi Two Events Amount Combine" %}</label>
+                                        <input id="limit-7" 
+                                            type="text"
+                                            class="form-control"
+                                            name="max_multi_two_events_amount"
+                                            readonly
+                                            value="">
+                                    </div>
+
+                                    <!-- Max Multi Three Events Amount Combine -->
+                                    <div class="col form-group" style="min-width: 180px;">
+                                        <label class="label-sm" for="limit-8">{% trans "Max Multi Three Events Amount Combine" %}</label>
+                                        <input id="limit-8" 
+                                            type="text"
+                                            class="form-control"
+                                            name="max_multi_three_events_amount"
+                                            readonly
+                                            value="">
+                                    </div>
+                                </div>
+
+                                <div class="row align-items-end flex-sm-nowrap flex-wrap">
+                                    <!-- Max Multi Three Events -->
+                                    <div class="col form-group" style="min-width: 180px;">
+                                        <label class="label-sm" for="limit-9">{% trans "Max Multi Three Events" %}</label>
+                                        <input id="limit-9" 
+                                            type="text"
+                                            class="form-control"
+                                            name="max_multi_four_events_amount"
+                                            readonly
+                                            value="">
+                                    </div>
+
+                                    <div class="col form-group" style="min-width: 180px;">
+                                        <label class="label-sm" for="limit-10">{% trans "Cashout Commission Percentage" %}</label>
+                                        <input id="limit-10" 
+                                            type="text"
+                                            class="form-control"
+                                            name="cashout_percentage"
+                                            readonly
+                                            value="">
+                                    </div>
+                                </div>
+                                
+                                {% if request.user.role == 'agent' %}
+                                <div class="row align-items-end flex-sm-nowrap flex-wrap">
+                                    <div class="col form-group" style="min-width: 180px;">
+                                        <label class="label-sm" for="limit-10">{% trans "Cashback Time Limit(in hours)" %}</label>
+                                        <input id="limit-10" 
+                                            type="text"
+                                            class="form-control"
+                                            name="cashback_time_limit"
+                                            readonly
+                                            value="">
+                                    </div>                            
+
+                                    <div class="col form-group" style="min-width: 180px;">
+                                        <label class="label-sm" for="limit-10">{% trans "Cashback Percentage" %}</label>
+                                        <input id="limit-10" 
+                                            type="text"
+                                            class="form-control"
+                                            name="cashback_percentage"
+                                            readonly
+                                            value="">
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+
+                        </div>
+                    
+                        
+
+                        {% if request.user.role == 'admin' or request.user.role == 'superadmin' or request.user.role == 'dealer' %}
+                            <hr>
+
+                            <!-- Permissions -->
+                            <!-- <div class="permissions-wrap px-4">
+                                <p class="font-weight-semibold text-center mb-4">{% trans "Permissions " %}</p>
+
+
+
+                                
+                                <div class="row form-group align-items-center">
+                                    <div class="col-8">
+                                        <label class="form-control-label mb-0">{% trans "Max Agent" %}</label>
+                                    </div>
+                                    <div class="col-4">
+                                        <input type="text"
+                                            name="input-small"
+                                            placeholder="0"
+                                            class="input-sm form-control-sm form-control">
+                                    </div>
+                                </div>
+
+                                <div class="row form-group align-items-center">
+                                    <div class="col-8">
+                                        <label class="form-control-label mb-0">{% trans "Max Player per Agent" %}</label>
+                                    </div>
+                                    <div class="col-4">
+                                        <input type="text"
+                                            name="input-small"
+                                            placeholder="0"
+                                            class="input-sm form-control-sm form-control">
+                                    </div>
+                                </div>
+                            </div> -->
+                        {% endif %}
+
+
+                    </div>
+
+                    <!--Footer-->
+                    
+                    </div>
+                </div>
+            </div>
+            <!-- Modal: modalPoll -->
+        {% endif  %}
+    </div>
+
+</header>
+
+<script>
+    var intervalId = null
+
+    $(document).ready(function() {
+        {% if request.user.is_authenticated and request.user.is_staff_active %}
+            {% comment %} if("{{request.user.role}}" == "staff"){
+                setInterval(getcount, 2000); 
+            } {% endcomment %}
+            active_chat_count_socket = activeChatCount()
+            intervalId = setInterval(function() {
+                active_chat_count_socket.send(JSON.stringify({"user": {{request.user.id}} }));
+            }, 5000);
+        {% endif %}
+    });
+
+    
+
+$("#select-language").change(function () {
+            $("#select-language-form").submit();
+            return false;
+        })
+//         $("#select-language2").change(function () {
+//             $("#select-language-form2").submit();
+//             return false;
+//         })
+
+
+$('#mobile-collapse').click(function () {
+    $("#nw1").toggleClass('left-spacer');
+});
+
+function getcount(){
+  $.ajax("{% url 'admin-panel:inbox' %}",{
+        
+        type: 'GET',
+        data: {
+            'staff_id' : "{{ request.user.id }}",
+            'request_type':'chat_count',
+            'csrfmiddlewaretoken': '{{ csrf_token }}'
+        },
+        dataType: 'json',
+        success: function (data) {
+            var isStaff = data['is_staff_active']
+            $("#players_count_in_queue").text(data['chat_count']);
+            if (isStaff) {
+                $(".queue-bubble").css("background-color", "green");
+              } else {
+                $(".queue-bubble").css("background-color", "red");
+              }
+          },
+        });
+    }
+function paymentsUpdate(){
+    $.ajax("{% url 'admin-panel:reload_cash_app' %}",{
+        type: 'GET',
+        data: {
+            'csrfmiddlewaretoken': '{{ csrf_token }}'
+        },
+        dataType: 'json',
+        success: function (response) {
+            Swal.fire({
+                    icon: response["status"],
+                    title: response["status"][0].toUpperCase() + response["status"].substring(1),
+                    text: response['message']
+                })
+        },
+        error: function(){
+                console.log("disconnected!!!, please reload");
+        }
+    });
+    
+}
+
+    function activeChatCount() {
+        user_id="{{request.user.id}}"
+        ws_protocol = window.location.protocol == 'https:' ? 'wss' : 'ws';
+        socket = new WebSocket(`${ws_protocol}://${window.location.host}/ws/active_chat_count/?user_id=${user_id}`);
+                    
+        socket.onopen = function(event) {
+            console.log('WebSocket connection opened:', event);
+        };
+
+        socket.onmessage = function(event) {
+            $("#players_count_in_queue").text(JSON.parse(event.data).count);
+            $(".queue-bubble").css("background-color", "green");
+        };
+
+        socket.onclose = function(event) {
+            clearInterval(intervalId);
+            console.log('WebSocket connection closed:', event);
+        };
+
+        socket.onerror = function(event) {
+            console.error('WebSocket error:', event);
+        };
+
+        return socket;
+    }
+
+   
+</script>

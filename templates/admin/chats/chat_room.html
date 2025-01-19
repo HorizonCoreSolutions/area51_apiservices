@@ -1,0 +1,2486 @@
+{% extends 'index.html' %}
+{% load static %}
+{% load i18n %}
+{% load math %}
+{% load date_utils %}
+
+
+{% block title %}
+    {% trans "Chat" %}
+{% endblock title %}
+{% block content %}
+
+<style>
+
+{% comment %} .video-container {
+   height:10px;
+   width:10px;
+  }
+   {% endcomment %}
+
+.body {
+    background-color: #f1f0f0;
+    font-family: 'Roboto', sans-serif;
+    overflow: hidden;
+}
+
+.message {
+    display: flex;
+    margin: 10px;
+}
+
+.sent .message-bubble {
+    background-color:  #f0f0f6;
+    color: #000;
+    border-radius: 20px 20px 20px 0;
+    margin-left: auto; /* update margin-left instead of margin-right */
+    max-width: 70%;
+    padding: 15px 20px;
+    word-break: break-all;
+}
+
+.received .message-bubble {
+    background-color: #545456;
+    color: #fff;
+    border-radius: 20px 20px 0 20px;
+    max-width: 70%;
+    padding: 15px 20px;
+    word-break: break-all;
+}
+
+.received .message-bubble::after {
+    content: "";
+    position: absolute;
+    bottom: -10px;
+    border-style: solid;
+    border-width: 10px 10px 0 0; /* update border-width for the arrow */
+    transform: rotate(45deg); /* update rotation angle */
+    left: -10px; /* update left instead of right */
+    border-color: #f1f0f0 transparent transparent transparent;
+}
+
+.message-text {
+    font-size: 14px;
+    line-height: 1.4;
+    margin-bottom: 5px;
+}
+
+.message-time {
+    font-size: 10px;
+    color: #f7f1f1;
+}
+
+.message-time-send {
+    font-size: 10px;
+    color: #605c5c;
+}
+#chat-container {
+    overflow-y: scroll;
+    height: calc(94vh - 280px);
+    padding: 0 40px;
+   
+}
+
+#chat-form {
+  padding: 10px 10px 0;
+}
+
+#chat-form input {
+  border-radius: 30px;
+  padding:20px 20px 20px 20px;
+  height:50px;
+
+}
+#chat-form .btn {
+  border-radius: 100%;
+  height: 40px;
+  width: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 5px;
+}
+
+.file-link {
+  /* display: inline-block;
+  padding: 8px 12px;
+  background-color: #3e74d8;
+  color: white;
+  text-decoration: none;
+  border-radius: 5px; */
+  height: 300px;
+  width: 300px;
+  border-radius: 5px;
+  overflow: hidden;
+
+}
+.file-link img {
+
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+
+}
+
+.file-link a {
+
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+
+}
+.file-link video {
+
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+
+}
+
+.chat-header {
+ padding:10px 20px;
+ background-color: #000000;
+ border-radius: 5px;
+ display: flex;
+ align-items: center;
+ justify-content: space-between;
+
+}
+.chat-header h4 {
+  font-size: 16px;
+  font-weight: bold;
+  margin: 0px;
+  line-height: 16px;
+  color: #fff;
+
+
+}
+.chat-header span {
+  font-size: 12px;
+  color: #fff;
+  
+}
+.chat-wrapper {
+  /* max-width: 1000px;
+  margin: 0 auto; */
+  background-color: #007bff14;
+  padding-bottom: 10px;
+  border-bottom-left-radius: 15px;
+  border-bottom-right-radius: 15px;
+}
+.input-wrap {
+  position: relative;
+  width: 100%;
+
+}
+.input-button {
+  display: flex;
+  align-items: center;
+  position: absolute;
+  top:5px;
+  right:0;
+}
+
+.content-header{
+  display:none;
+}
+
+.admin-card{
+        background-color: #ffffff;
+        box-shadow: 0px 0px 6px 6px rgb(204 204 204 / 0.25);
+        padding: 30px 10px;
+    }
+.chat-header-right a {
+
+  height: 30px;
+  width: 30px;
+  border-radius: 100%;
+  border:1px solid #fff;
+  display:flex;
+  align-items: center;
+  justify-content: center;
+  padding:5px;
+  
+}
+.chat-header-right a:hover{
+
+
+background-color: #fff;
+color:#000;
+
+}
+.pcode.left-spacer {
+	margin-left: 0px;
+}
+.pcode{
+margin-left: 250px;
+  }
+@media(max-width:767px){
+      .pcode{
+    margin-left: 0px;
+    }
+    }
+    .verify_switch{
+        height: 0;
+        width: 0;
+        visibility: hidden;
+    }
+
+    #verify-toogle {
+        cursor: pointer;
+        text-indent: -9999px;
+        width: 80px;
+        height: 30px;
+        background: grey;
+        display: block;
+        border-radius: 100px;
+        position: relative;
+    }
+
+    #verify-toogle:after {
+        content: '';
+        position: absolute;
+        top: 5px;
+        left: 5px;
+        width: 20px;
+        height: 20px;
+        background: #fff;
+        border-radius: 90px;
+        transition: 0.3s;
+    }
+
+    .verify_switch:checked + #verify-toogle {
+        background: green;
+    }
+
+    .verify_switch:checked + #verify-toogle:after {
+        left: calc(100% - 5px);
+        transform: translateX(-100%);
+    }
+
+    #verify-toogle:active:after {
+        width: 80px;
+    }
+
+    .lb-closeContainer{
+        display: none;
+    }
+    .switch {
+  display: inline-block;
+  height: 34px;
+  position: relative;
+  width: 60px;
+}
+
+.switch input {
+  display: none;
+}
+
+.slider {
+  background-color: #ccc;
+  bottom: 0;
+  cursor: pointer;
+  left: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
+  transition: 0.4s;
+}
+
+.slider:before {
+  background-color: #fff;
+  bottom: 4px;
+  content: "";
+  height: 26px;
+  left: 4px;
+  position: absolute;
+  transition: 0.4s;
+  width: 26px;
+}
+
+input:checked + .slider {
+  background-color: #66bb6a;
+}
+
+input:checked + .slider:before {
+  transform: translateX(26px);
+}
+
+.slider.round {
+  border-radius: 34px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}
+.icon-toggle-container {
+  display: flex;
+  align-items: center;
+}
+
+.icon-toggle-container .btn {
+  margin-right: 10px;
+}
+.message.join-message {
+    background-color: #4287f5;
+    color: #fff;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    border-radius: 20px;
+    
+  }
+
+  .message.end-message {
+    background-color: #FF0000;
+    color: #fff;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    border-radius: 20px;
+    
+  }
+.player-count-container {
+  display: flex;
+  align-items: center;
+}
+
+.player-count-text {
+  margin-left: 5px;
+  font-weight: bold;
+}
+/* CSS for typing indicator */
+.form-row {
+  display: flex;
+  align-items: flex-start;
+  position: relative;
+}
+
+#typing-indicator {
+  position: absolute;
+  top: -40px; /* Adjust this value to position the indicator above the input field */
+  left: 10px;
+  padding: 5px 10px;
+  background-color: #f1f1f1;
+  border-radius: 10px;
+  font-size: 12px;
+  color: #333;
+}
+
+/* Add padding between table rows */
+.table tr td {
+  padding: 22px; /* Adjust the value as needed */
+}
+
+/* Style for the loader */
+.loader {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100px; /* Set the desired height to center vertically */
+}
+
+/* Style for the loader image */
+.loader img {
+  width: 50px;
+  height: 50px;
+}
+
+
+/* Style for the table rows */
+.table tr {
+  border-bottom: 1px solid #ddd; /* Adjust the color and size as needed */
+}
+
+/* Style for odd rows */
+.table tr:nth-child(odd) {
+  background-color: #f9f9f9; /* Adjust the background color as needed */
+}
+
+/* Style for even rows */
+.table tr:nth-child(even) {
+  background-color: #f1f1f1; /* Adjust the background color as needed */
+}
+/* Hide the default checkbox */
+.switch-input {
+  display: none;
+}
+
+/* Style for the switch label */
+.switch-label {
+  display: inline-block;
+  width: 100px;
+  height: 40px;
+  background-color: #FF0000;
+  border: 2px solid #FF0000;
+  border-radius: 20px;
+  position: relative;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+/* Style for the slider (the part that moves) */
+.slider {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 46%;
+  height: 36px;
+  background-color: #008000; /* Green color for the active state */
+  border-radius: 20px;
+  transition: 0.4s;
+}
+
+/* Style for the login and logout labels */
+.login-label,
+.logout-label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  font-size: 14px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Set the color for login and logout labels */
+.login-label {
+  color: #333; /* White color for the active state */
+}
+
+.logout-label {
+  color: #333; /* Adjust the color for the inactive state */
+}
+
+/* Style for the checked (active) state */
+{% comment %} .switch-input:checked + .switch-label {
+  background-color: #008000; /* Green color for the active state */
+  border-color: #008000; /* Green color for the active state */
+} {% endcomment %}
+
+.switch-input:checked + .switch-label .slider {
+  left: 52%;
+}
+
+{% comment %} .switch-input:checked + .switch-label .login-label {
+  color: #f2f2f2; /* Green color for the active state */
+} {% endcomment %}
+
+{% comment %} .switch-input:checked + .switch-label .logout-label {
+  color: #f2f2f2; /* White color for the active state */
+} {% endcomment %}
+
+.btn.disabled {
+  opacity: 0.7; 
+  cursor: not-allowed;
+  background-color: #b0b0b0;
+}
+
+.active-tab {
+  background-color: white;
+  color: green;
+}
+.input-container {
+  display: flex;
+  align-items: center;
+  border: 1px solid #ccc;
+  border-radius: 20px;
+  padding: 5px;
+  background-color: #fff;
+}
+
+#chat-input {
+  flex: 1;
+  border: none;
+  outline: none;
+}
+
+#back-btn {
+  margin-left: 10px; /* Adjust as needed for spacing */
+}
+
+
+/* Add the 'cursor: not-allowed' style for disabled .switch-input elements */
+.switch-input:disabled {
+  cursor: not-allowed;
+}
+
+/* Add the 'cursor: not-allowed' style for disabled labels */
+.switch-input:disabled + .switch-label {
+  cursor: not-allowed;
+}
+
+
+
+
+</style>
+{% comment %} {% include "./cashapp.html" %} {% endcomment %}
+<div id="add_player_form" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title">{% trans "Enter Details" %}</h4>
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="update-form" autocomplete="off">
+          <div class="form-group">
+            <label for="username">{% trans "Username" %}</label>
+            <input type="text" class="form-control" id="username" value="" placeholder="{% trans 'Enter Username' %}" maxlength="15" required>
+          </div>
+        
+          <div class="form-group">
+            <label for="code">{% trans "Game Code" %}</label>
+            <select id="code" class="form-control" readonly>
+              <option selected="selected" disabled>{% trans "Select Game" %}</option>
+              {% for code, name in game_data %}
+                <option value="{{ code }}">{{ code }} ({{ name }})</option>
+              {% endfor %}
+
+          </select>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" id="add-player">{% trans "Create Account" %}</button>
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">{% trans "Close" %}</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- {% block content_header %}
+    {% trans "Chat" %}
+{% endblock content_header %} -->
+
+<div class="pcode" id='nw1' >
+  <div>
+     <div class="container-fluid pt-4" >
+         <div class="admin-card">
+         <div class="row">
+          
+             <div class="col-xs-12 col-lg-12 ">
+                 <div class="page-content" >
+                  <!-- <div class="main-heading-wrap">
+                    <h5>{% trans 'Chat' %}</h5>
+                </div> -->
+                
+        <div class="container-fluid">
+          <div class="chat-header">
+            <div class="user-detail">
+              <div class="status-indicator-container" style="display: flex;">
+                <div class="status-indicator" style="display: flex; align-items: center; margin-right: 10px;">
+                  <h4>{{request.user.username | capfirst }}</h4>
+                </div>
+                <div class="status-indicator" style="display: flex; align-items: center; margin-right: 10px;">
+                  <span class="status-dot" id="status_dot" style="width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; background-color: {% if request.user.is_staff_active %}green{% else %}red{% endif %};"></span>
+                  <h4 class="status-text" id="status_text" style="color: #888;">{% if request.user.is_staff_active %}Online{% else %}Offline{% endif %}</h4>
+                </div>
+               
+                
+               {% comment %} <div class="status-indicator" style="display: flex; align-items: center;">
+                  <span class="status-dot" id="status_socket_dot" style="width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; background-color:red"></span>
+                  <span class="status-text" id="status_socket_text" style="color: #888;">Disconnected</span>
+                </div> {% endcomment %}
+              </div>
+              
+              
+              
+              {% comment %} {% if timezone %}
+              <span>{% trans 'Last Login' %}{% if player_last_login %} {{ player_last_login|local_date:timezone  }} {% else %} {% trans 'unavailable' %} {% endif %}</span>
+              {% else %}
+              <span>{% trans 'Last Login' %}{% if player_last_login %} {{player_last_login | local_date:request.user.timezone }} {% else %} {% trans 'unavailable' %} {% endif %}</span>
+              {% endif %} {% endcomment %}
+             
+            </div>
+            
+            
+            
+                                
+            <div class="chat-header-right">
+             
+              <div class="icon-toggle-container">
+                <div class="player-count-container" id='player-queue-count-block'>
+                  &nbsp;&nbsp;
+                  <button type="button" class="btn btn-primary" style="background-color: #008000; color: white; margin-top:-10px;">
+                   <i class="fas fa-users fa-1x" id="player-queue-count"> : {{players_count_in_queue}}</i>
+                   <input type="number" id="player-queue-count-data" hidden="true">
+                  </button>                      
+               </div>
+                <!-- <a href="/player-summary-info/?player_id={{player_id}}" class="btn btn-primary"><i class="fa fa-info"></i></a> -->
+                <div class="button-switch">
+                  <input id="staff-status" type="checkbox" class="switch-input player_switch" onchange="toggleStaffStatus(this)" {% if request.user.is_staff_active %} checked {% endif %}>
+                  <label for="staff-status" class="switch-label">
+                    <span id="staff-status-label" data-is-staff-active="{{ request.user.is_staff_active }}" class="{% if request.user.is_staff_active %}login-label{% else %}logout-label {% endif %}">{% if request.user.is_staff_active %}Login{% else %}Logout{% endif %}</span>
+                  </label>
+                </div>
+                
+              </div>
+            </div>
+
+          </div>
+          <div class="row">
+            <div class="col-md-2" style="padding-right: 0px;">
+              <div class="card table-card">
+                <div class="card-header">
+                  <center><button id="player-queue-btn" class="btn btn-primary" style="background-color: ;">Queue</button></center>
+                </div>
+                <div class="card-block">
+                  <div class="table-responsive">
+                    <table class="table table-hover m-b-0 without-header">
+                      <tbody id='betsliptablebody' >
+                       
+                        {% if players_in_queue %}
+                      {% for player in players_in_queue %}
+                        <tr onclick="reconnectWebSocket({{player.id}}); Queue_update({{player.queue_id}}); updateQueueBubble({{player.id}}, true);" id="playerRow{{player.id}}" style="cursor: pointer;">
+                          <td data-player = {{player.id}}>{{ player.name }}
+						  <span class="chat-queue-bubble" id="queueBubble${player.id}" style="display: none;" > 0 </span>
+						  </td>
+                        </tr>
+                      {% endfor %}
+                    {% else %}
+                      <tr>
+                        <td colspan="1" style="font-style: italic; color: #999;">No player in queue</td>
+                      </tr>
+                    {% endif %}
+                                        
+                      </tbody>
+                    </table>
+                  </div>
+                  <div id="queue-loader" class="loader">
+                    <img class = 'hide' src="{% static '/images/queue_loading.gif' %}"  alt="Loading..." style="display: none;" >
+                  </div>
+
+                </div>
+              </div>
+              
+        
+
+            </div>
+            <div class="col-md-10">
+                      <div class="chat-wrapper">
+                        
+                     
+                      <div id="chat-container">
+                      
+                       </div>
+                    
+                    <form id="chat-form">
+                      {% csrf_token %}
+                      <div class="form-row">
+                        <div id="loader" style="display:none;">
+                          <i class="fa fa-spinner fa-spin"></i> Uploading...
+                        </div>
+                        <div id="typing-indicator" style="padding-left:15px">
+                        </div>
+                        
+                        <div class="input-wrap">
+							<div class="input-container">
+
+								<input type="text" name="message" id="chat-input" class="form-control" placeholder="{% trans 'Type your message here' %}"  autocomplete="off" >
+								
+                          	</div>	
+                        </div>
+                        <div class="row ml-auto" style="padding-right:10px; padding-top: 5px;">
+                            {% comment %} <a href="#add_cash_app_form" data-effect="mfp-zoom-in" class="add-edit-cash-app-popup waves-effect waves-light text-center m-b-20">
+                                <button id="add-cashapp-btn" type="button" style='border-radius: 20px;width: 115px;background-color: #0083639e; border: #ff537a6b;' class="btn btn-success" title="Add CashApp"><i class="fas "></i>Add CashApp</button>
+                            </a> {% endcomment %}
+                          <!-- <button id="add_cashapp" type="button" style='border-radius: 20px;width: 115px;background-color: #53ffd69e;border: #ff537a6b;' class="app-cash-popup btn btn-success" title="Add CashApp" alt="Open Modal" data-toggle="modal" data-target="#add_cash_app_form"><i class="fas "></i>Add CashApp</button> -->
+                          <button type="button"  onclick="resolve_Button()" class="btn btn-success" style="border-radius: 20px;width: 115px;background-color: #FFA500;border: #FFA500;" id="back-btn">Resolve Chat</button>
+                          <button id="add_player" type="button" style='border-radius: 20px;width: 115px;background-color: #FF8353;border: #FF8353;' class="btn btn-success" title="Add Player" alt="Open Modal" data-toggle="modal" data-target="#add_player_form"><i class="fas "></i>Add Player</button>
+                          <div class="">
+                           <label for="file-input" class="btn btn-primary btn-block" id="file-input-label">
+                               <i class="fas fa-file"></i>
+                           </label>
+                           <input type="file" id="file-input" style="display: none">
+                        </div> 
+                          <div class="">	
+                            <button type="submit" class="btn btn-primary btn-block" id="submit-btn" >
+                              <i class="fa fa-paper-plane" aria-hidden="true"></i>
+                            </button>
+                          </div>
+                      </div>
+                         
+                     
+                    <button id="start-chat-btn" type="button" hidden="true"   style='border-radius: 20px; width: 40px;' class="btn btn-success" title="Start Chat" onclick="startChat()"><i class="fas fa-comment"></i></button>
+                    <button id="stop-chat-btn" type="button" hidden="true" class="btn btn-danger" style='border-radius: 20px; width: 40px;' title="End Chat" disabled><i class="fas fa-sign-out-alt"></i></button> 
+                     
+                    </div>
+                        </div>
+                        
+                        </div>
+                        </form>
+                      </div>
+                      </div>
+                        </div>
+                        
+                        </div>
+                        </div>
+                        </div>
+                        </div>
+                        </div>
+                        </div>
+                        </div>
+                        </div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.js"></script>
+<script type="text/javascript">
+  function formatTime(timestamp) {
+    const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const utcDate = new Date(timestamp);
+    const localDate = new Date(utcDate.toLocaleString("en-US", {
+        timeZone: userTimezone
+    }));
+    const hours = localDate.getHours().toString().padStart(2, '0'); // Get hours (24-hour format) and pad with leading zero if needed
+    const minutes = localDate.getMinutes().toString().padStart(2, '0'); // Get minutes and pad with leading zero if needed
+    const timeString = `${hours}:${minutes}`;
+    return timeString;
+  }
+
+
+
+  $(document).ready(function() {
+      $('#username').on('input', function() {
+          var inputLength = $(this).val().length;
+          $('#character-count').text(inputLength + ' / 15 characters');
+      });
+
+      $('#add_player').prop('disabled', true);
+      $('#back-btn').prop('disabled', true);
+      {% comment %} $('#add-cashapp-btn').prop('disabled', true); {% endcomment %}
+      {% comment %} $('#file-input').prop('disabled', true); {% endcomment %}
+
+      if (chatSocket !== null && chatSocket.readyState === WebSocket.OPEN) {
+          console.log('if block')
+          $('#add_player').prop('disabled', false);
+          $('#back-btn').prop('disabled', false);
+          {% comment %} $('#add-cashapp-btn').prop('disabled', false); {% endcomment %}
+          $('#file-input').prop('disabled', false);
+      }
+      var isStaffActive = $("#staff-status-label").data("is-staff-active");
+      if (isStaffActive === 'True') {
+          $('#staff-status-label').text('Logout');
+          $('#player-queue-btn').prop('class', 'btn btn-success').css('background-color', '#008000');
+          if (chatSocket !== null && chatSocket.readyState === WebSocket.OPEN) {
+              $('#staff-status').prop('disabled', true);
+              $('#staff-status').addClass('disabled');
+          }
+
+      } else {
+          $('#chat-container').hide()
+          $('#betsliptablebody').hide()
+          $('#queue-loader').hide()
+          $('#player-queue-btn').prop('class', 'btn btn-danger', ).css('background-color', '#FF0000');
+          $('#player-queue-count-block').hide()
+          $('#chat-form').hide()
+          $('#staff-status-label').text('Login')
+      }
+      var chatContainer = document.getElementById("chat-container");
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+
+      $('#betsliptablebody').on('click', 'tr', function() {
+          $('#betsliptablebody tr').removeClass('active-tab');
+          $(this).addClass('active-tab');
+      });
+
+      $('#add_player').on('click', function() {
+        const activeTabRowActivate = $('#betsliptablebody tr.active-tab');
+        console.log(activeTabRowActivate)
+        const player_id = activeTabRowActivate.find('td[data-player]').data('player');
+        const username_val = 'username-' + player_id;
+        const game_code_val = 'game_code-' + player_id;
+
+        // Check if the items exist in localStorage
+        if (localStorage.getItem(username_val) && localStorage.getItem(game_code_val)) {
+            $('#username').val(localStorage.getItem(username_val));
+            $('#code').val(localStorage.getItem(game_code_val));
+        } else {
+            $('#username').val('');
+            $('#code').val('');
+        }
+      });
+
+    //    $('.app-cash-popup').magnificPopup({
+    //         type:'inline',
+    //         midClick: true,
+    //         fixedContentPos: true,
+    //         closeOnBgClick: true,
+    //         {% comment %} closeBtnInside: false,
+    //         showCloseBtn: false,  {% endcomment %}
+    //         callbacks: {
+    //             beforeOpen: function() {
+    //                  getCashApps();
+    //                  addCashText();
+
+    //                 },
+    //             close: function(){
+    //             }
+    //         },
+    //     });
+  });
+
+
+  {% comment %} $('.add-edit-cash-app-popup').magnificPopup({
+    type:'inline',
+    midClick: true,
+    fixedContentPos: true,
+    callbacks: {
+        beforeOpen: function() {
+            getCashApps();
+            addCashText();
+        },
+        close: function(){
+            isEditing=false;
+            $("#edit-cash-app").hide()
+            $("#add-cash-app").show()
+            $("#cash-app-table-body").empty()
+            $("#cash-app-table-body").append("<tr><td colspan='2'>No Data</td></tr>")
+        }
+    },
+});  {% endcomment %}
+
+
+$('.popup-closebutton').click(function() {
+    $.magnificPopup.close();
+})
+
+  var isFunctionExecuted = false;
+  var Websocket_list = {}
+  var isInitialChat = true;
+  let chatSocket = null;
+  let hasSentJoinMessage = [];
+  let hasSentEndMessage = false;
+  let previousPlayerIds = [];
+  var isEditing = false;
+  var connected_sockets_user_id = []
+
+  function removeElementFromArray(array, elementToRemove) {
+    var index = array.indexOf(elementToRemove);
+    if (index !== -1) {
+      array.splice(index, 1);
+    }
+  }
+
+  function reconnectWebSocket(users_id = null) {
+      if (users_id) {
+          if(!connected_sockets_user_id.includes(Number(users_id))){
+            connected_sockets_user_id.push(Number(users_id))
+            startChat('P' + users_id + "Chat", true);
+          }
+          $('#staff-status-label').text('Logout');
+          localStorage.setItem('{request.user.id}', 'P' + users_id + 'Chat');
+          reload_messages('P' + users_id + "Chat");
+      }
+  }
+  {% comment %} signupdata();
+
+  function signupdata() {
+    const activeTabRowActivate = $('#betsliptablebody tr.active-tab');
+    console.log(activeTabRowActivate)
+    const player_id = activeTabRowActivate.find('td[data-player]').data('player');
+    const username_val = 'username-' + player_id;
+    const game_code_val = 'game_code-' + player_id;
+
+    // Check if the items exist in localStorage
+    if (localStorage.getItem(username_val) && localStorage.getItem(game_code_val)) {
+        $('#username').val(localStorage.getItem(username_val));
+        $('#code').val(localStorage.getItem(game_code_val));
+    } else {
+        $('#username').val('');
+        $('#code').val('');
+    }
+  } {% endcomment %}
+
+
+
+  function getFilePreview(fileUrl) {
+      const fileExtension = getFileExtension(fileUrl);
+      if (isImageFile(fileExtension)) {
+          return `<a href="${fileUrl}"data-lightbox="image-preview" data-title="Image Preview"><div class="file-link"><img src="${fileUrl}" alt="Image Preview" class="image-preview"></a></div>`;
+      } else if (isVideoFile(fileExtension)) {
+          return `<div class="file-link"><video controls controlsList="download" class="file-preview"><source src="${fileUrl}"></video></div>`;
+      } else {
+          return `<a href="${fileUrl}" target="_blank" rel="noopener noreferrer">${getFileTypeIcon(fileExtension)} Download ${fileExtension.toUpperCase()} File</a>`;
+      }
+  }
+
+  function getFileExtension(filename) {
+      return filename.split('.').pop().toLowerCase();
+  }
+
+  function isImageFile(fileExtension) {
+      return ['png', 'svg', 'jpg', 'jpeg'].includes(fileExtension);
+  }
+
+  function isVideoFile(fileExtension) {
+      return ['mp4', 'webm', 'ogg', 'mkv'].includes(fileExtension);
+  }
+
+  function getFileTypeIcon(fileExtension) {
+      // Provide appropriate icons or styling based on file type
+      switch (fileExtension) {
+          case 'pdf':
+              return `<i class="fa fa-file-pdf-o"></i>`;
+          case 'doc':
+          case 'docx':
+              return `<i class="fa fa-file-word-o"></i>`;
+          case 'xls':
+          case 'xlsx':
+              return `<i class="fa fa-file-excel-o"></i>`;
+          case 'txt':
+              return `<i class="fa fa-file-text-o"></i>`;
+          default:
+              return `<i class="fa fa-file-o"></i>`;
+      }
+  }
+
+  function reload_messages(room) {
+      $.ajax("{% url 'admin-panel:chatroom'  %}", {
+          type: 'POST',
+          data: {
+              'chatroom_name': room,
+              'type': 'recent_messages',
+              'csrfmiddlewaretoken': '{{ csrf_token }}'
+          },
+          dataType: 'json',
+          success: function(data) {
+              $('#chat-container').empty();
+              for (let message of data.messages) {
+                  var html = `
+            <div class="message ${message.sender === message.staff ? 'sent justify-content-start' : 'received'}">
+              <div class="message-bubble">
+                ${message.is_file === 'True' ? getFilePreview(message.message) : `<div class="message-text">${message.message}</div>`}
+                <div class="message-time${message.sender === message.staff ? '-send' : ''}">
+                  ${formatTime(message.sent_time)}
+                </div>
+              </div>
+            </div>
+          `;
+
+                  // Append the HTML to the target HTML block
+                  $('#chat-container').append(html);
+              }
+              var chatContainer = $('#chat-container');
+              if (chatContainer.length > 0) {
+                  chatContainer.scrollTop(chatContainer[0].scrollHeight);
+              } else {
+                  console.log('Chat container not found.');
+              }
+
+          }
+      });
+  }
+
+
+  function disconnectAndRemoveWebSocket(closs_all_sockets=false,removedPlayerIds=[]) {
+    if(closs_all_sockets){
+        $.each(Websocket_list, function (key, websocket) {
+            hasSentJoinMessage.pop(key)
+            if (websocket != null && websocket.readyState === WebSocket.OPEN) {
+                websocket.close();
+            }
+            delete Websocket_list[key];
+        });
+    }else{
+        removedPlayerIds.forEach(playerId => {
+            key = `P${playerId}Chat`;
+            hasSentJoinMessage.pop(key)
+            if (Websocket_list.hasOwnProperty(key)) {
+                websocket = Websocket_list[key].close()
+                if (websocket != null && websocket.readyState === WebSocket.OPEN) {
+                    websocket.close();
+                }
+                delete Websocket_list[key];
+            }
+        });
+    }
+  }
+
+
+  function local_set_variable_change(user_id) {
+      localStorage.setItem('{request.user.id}', 'P' + user_id + 'Chat');
+  }
+
+  async function startChat(room_name, is_reconnect) {
+      console.log(room_name, "staring room")
+
+      if (room_name != 0) {
+          var playerId = room_name.replace(/P|Chat/g, '');
+          const greenBgPlayerIds = [];
+          greenBgPlayerIds.push(playerId);
+          if (chatSocket !== null && chatSocket.readyState === WebSocket.OPEN) {
+              $('#staff-status').prop('disabled', true);
+              $('#staff-status').addClass('disabled');
+          }
+          console.log(greenBgPlayerIds, "greenBgPlayerIdsgreenBgPlayerIdsgreenBgPlayerIdsgreenBgPlayerIdsgreenBgPlayerIdsgreenBgPlayerIds")
+          $('#betsliptablebody tr').each(function() {
+              const playerId = $(this).find('td[data-player]').data('player');
+              if (greenBgPlayerIds.includes(playerId.toString())) {
+                  $(this).addClass('active-tab');
+              } else {
+                  $(this).removeClass('active-tab');
+              }
+          });
+      }
+      if (Websocket_list.hasOwnProperty(room_name)) {
+          return;
+      }
+      type = ''
+      if (is_reconnect) {
+          type = 'reconnect';
+      }
+      await $.ajax("{% url 'admin-panel:chatroom'  %}", {
+          type: 'POST',
+          data: {
+              'staff_id': "{request.user.id}",
+              'type': type,
+              'csrfmiddlewaretoken': '{{ csrf_token }}'
+          },
+          dataType: 'json',
+          success: function(data) {
+              console.log("socket is connected on ", room_name)
+              const chatContainer = document.querySelector('#chat-container');
+              const chatForm = document.querySelector('#chat-form');
+              const chatInput = document.querySelector('#chat-input');
+              const startChatButton = document.querySelector('#start-chat-btn');
+              const stopChatButton = document.querySelector('#stop-chat-btn'); // Add stop chat button element
+              ws_protocol = window.location.protocol == 'https:' ? 'wss' : 'ws';
+              roomName = data['room_name']
+              if (is_reconnect) {
+                  roomName = room_name
+              }
+              //console.log("ROOM NAME----------->" ,roomName)
+              //console.log("WEBSOCKET", `${ws_protocol}://${window.location.host}/ws/cschat/${roomName}/?player_id=${roomName.replace(/P|Chat/g, '')}`);
+              chatSocket = new WebSocket(`${ws_protocol}://${window.location.host}/ws/cschat/${roomName}/?player_id=${roomName.replace(/P|Chat/g, '')}`);
+              $('#add_player').prop('disabled', false);
+              $('#chat-input').prop('disabled', false);
+              $('#submit-btn').prop('disabled', false);
+              $('#back-btn').prop('disabled', false);
+              {% comment %} $('#add-cashapp-btn').prop('disabled', false); {% endcomment %}
+              $('#file-input-label').prop('disabled', false);
+
+              chatSocket.onopen = function(event) {
+                  console.log(roomName, "socket is opned")
+                  console.log('chatSocket--------------', chatSocket)
+                  Websocket_list[roomName] = chatSocket
+                  console.log(Websocket_list, "------------------------------")
+
+                  // WebSocket connection is established
+                  chatContainer.innerHTML = ''; // remove previous user chat
+                  var playerId = roomName.replace(/P|Chat/g, '');
+                  reconnectWebSocket(playerId);
+                  startChatButton.disabled = true;
+                  stopChatButton.disabled = false
+
+                  $('#status_socket_dot').css('background-color', 'green');
+                  $('#status_socket_text').text('Connected');
+
+                  let typingTimeout = null;
+
+                  chatInput.addEventListener('focus', function(event) {
+                      if (event.key !== 'Enter') {
+                          // Clear the previous timeout
+                          clearTimeout(typingTimeout);
+
+                          // Start a new timeout to send the typing message after a delay
+                          typingTimeout = setTimeout(function() {
+                              if (chatSocket && chatSocket.readyState === WebSocket.OPEN) {
+                                  console.log(Websocket_list, "Websocket_list")
+                                  chatSocket = Websocket_list[localStorage.getItem('{request.user.id}')]
+                                  console.log(chatSocket)
+                                  chatSocket.send(JSON.stringify({
+                                      "type": "typing",
+                                      'sender_id': '{{request.user.id}}',
+                                      'message': '{{request.user.username}}' + ' is typing',
+                                      'is_player_sender': false,
+                                  }));
+                              }
+                          }, 0); // Adjust the delay time as needed (e.g., 1000 milliseconds)
+                      }
+                  });
+
+              };
+
+
+              stopChatButton.addEventListener('click', function() {
+                  if (chatSocket && chatSocket.readyState === WebSocket.OPEN) {
+                      $('#staff-status').prop('disabled', true);
+                      // Show a confirmation popup using Swal.fire
+                      Swal.fire({
+                          title: 'Confirmation',
+                          text: 'Are you sure you want to end the chat?',
+                          icon: 'question',
+                          showCancelButton: true,
+                          confirmButtonColor: '#3085d6',
+                          cancelButtonColor: '#d33',
+                          confirmButtonText: 'Yes, end chat'
+                      }).then((result) => {
+                          if (result.isConfirmed) {
+                              // User confirmed to end the chat
+                              // Close the WebSocket connection and send the "is_end_message" to the server
+                              if (hasSentEndMessage == false) {
+                                  chatSocket = Websocket_list[localStorage.getItem('{request.user.id}')]
+                                  chatSocket.send(JSON.stringify({
+                                      "type": "end_message",
+                                      'sender_id': '{{request.user.id}}',
+                                      'message': '{{request.user.username}}' + ' has left the chat.',
+                                      'is_player_sender': false,
+                                  }));
+                                  hasSentEndMessage = true
+                              }
+
+                              // Perform additional actions after chat is ended
+                              // ...
+
+                              // chatSocket.close();
+                              startChatButton.disabled = false;
+                              stopChatButton.disabled = true;
+                              {% comment %} location.reload(); {% endcomment %}
+                          }
+                      });
+                  }
+              });
+
+              chatSocket.onclose = function(event) {
+                  //console.log('WebSocket disconnected', event);
+                  if (localStorage.getItem('username')) {
+                      localStorage.removeItem('username');
+                      localStorage.removeItem('game_code');
+                  }
+                  //console.log(localStorage.getItem('{request.user.id}'),"TEST1")
+
+                  if (event.wasClean) {
+                      //console.log('WebSocket connection closed cleanly');
+                  } else {
+                      //console.log('WebSocket connection closed with error code: ' + event.code);
+                      //console.log('Reason: ' + event.reason);
+                  }
+
+                  startChatButton.disabled = false;
+                  $('#status_socket_dot').css('background-color', 'red');
+                  $('#status_socket_text').text('Disconnected');
+                  chatSocket = null;
+                  removeElementFromArray(connected_sockets_user_id, Number(roomName.replace(/P|Chat/g, '')));
+
+
+              };
+
+
+              chatSocket.onmessage = function(event) {
+                  const data = JSON.parse(event.data);
+                  const messageEl = document.createElement('div');
+                  messageEl.classList.add('message');
+                  console.log(data, "data")
+                  var currentTabPlayerId = null;
+                  const activeTabRow = $('#betsliptablebody tr.active-tab');
+                  if (activeTabRow.length > 0) {
+                      currentTabPlayerId = activeTabRow.find('td[data-player]').data('player');
+                  }
+                  console.log(data)
+
+                  if ('player_id' in data) {
+                      console.log('current tab passing the count funcation .......................................')
+                      if (currentTabPlayerId.toString() !== data['player_id']) {
+                          if (data['type'] != 'typing' && data['type'] != 'offmarket_signup' && data['is_player_sender']) {
+                              console.log('passing the count funcation .......................................')
+                              setTimeout(function() {
+                                  updateQueueBubble(parseInt(data['player_id']));
+                              }, 350);
+                          }
+                          if (data['type'] == 'offmarket_signup') {
+                              is_player_sender = data['is_player_sender']
+                              if (is_player_sender) {
+                                  const game_code = data['game_code'];
+                                  const username = data['username'];
+                                  {% comment %} $('#username').val(username);
+                                  $('#code').val(game_code); {% endcomment %}
+                                  const username_val = `username-${data['player_id']}`;
+                                  const game_code_val = `game_code-${data['player_id']}`;
+                                  localStorage.setItem(username_val, username);
+                                  localStorage.setItem(game_code_val, game_code);
+                              }
+                          }
+                          {% comment %} else if (data['type']  == 'cashapp_signup') {
+                              is_player_sender = data['is_player_sender']
+                              if (is_player_sender) {
+                                //   const cash_app = data['cash_app'];
+                                  const cash_app = JSON.stringify({"type":"add", "cash_app": data['cash_app']});
+                                  const cashapp_val = `cashapp-${data['player_id']}`;
+                                  localStorage.setItem(cashapp_val, cash_app);
+                              }
+                          }else if (data['type']  == 'cashapp_edit') {
+                              is_player_sender = data['is_player_sender']
+                              if (is_player_sender) {
+                                  const cash_app = JSON.stringify({"type":"edit", "cash_app": data['cash_app'], "cashapp_id": data['cashapp_id'] });
+                                  const cashapp_val = `cashapp-${data['player_id']}`;
+                                  localStorage.setItem(cashapp_val, cash_app);
+                              }
+                          }
+                          else if (data['type']  == 'cashapp_delete') {
+                              is_player_sender = data['is_player_sender']
+                              if (is_player_sender) {
+                                //   const cash_app = data['cashapp_id'];
+                                  const cash_app = JSON.stringify({"type":"delete", "cashapp_id": data['cashapp_id']});
+                                  const cashapp_val = `cashapp-${data['player_id']}`;
+                                  localStorage.setItem(cashapp_val, cash_app);
+                              }
+                          } {% endcomment %}
+                          else if (data['type'] == 'join_message' && !hasSentJoinMessage.includes(data['player_id'])) {
+                                is_player_sender = data['is_player_sender']
+                                if (is_player_sender) {
+                                    room = `P${data['player_id']}Chat`
+                                    chatSocket = Websocket_list[room]
+                                    chatSocket.send(JSON.stringify({
+                                        "type": 'join_message',
+                                        'sender_id': '{{request.user.id}}',
+                                        'message': '{{request.user.username}}' + ' has joined the chat.',
+                                        'is_player_sender': false,
+                                    }));
+                                    hasSentJoinMessage.push(data['player_id']);
+                                }
+                            }
+
+                          return;
+                      } else {
+                        setTimeout(function() {
+                          updateQueueBubble(parseInt(data['player_id'], 0), true);
+                        }, 350);
+                      }
+                  }
+
+
+
+                  type = data['type']
+                  //console.log("IS PLAYER SENDER",data['is_player_sender'])
+                  //console.log("TYPE ",type)
+
+                  if (type == 'join_message' && !hasSentJoinMessage.includes(data['player_id'])) {
+                      is_player_sender = data['is_player_sender']
+                      if (is_player_sender) {
+                          const joinMessageText = data['message'];
+
+                          //console.log("JOIN MESSAGE ", joinMessageText);
+
+                          const joinMessageHTML = `
+                            <div class="message join-message">${joinMessageText}</div>
+                            `;
+
+                          chatContainer.insertAdjacentHTML('beforeend', joinMessageHTML);
+                          chatContainer.scrollTop = chatContainer.scrollHeight;
+
+                          room = `P${data['player_id']}Chat`
+                          chatSocket = Websocket_list[room]
+                          chatSocket.send(JSON.stringify({
+                              "type": 'join_message',
+                              'sender_id': '{{request.user.id}}',
+                              'message': '{{request.user.username}}' + ' has joined the chat.',
+                              'is_player_sender': false,
+                          }));
+                          hasSentJoinMessage.push(data['player_id']);
+                          {% comment %} hasSentJoinMessage = true; {% endcomment %}
+                      }
+                  } else if (type == 'offmarket_signup') {
+                      is_player_sender = data['is_player_sender']
+                      if (is_player_sender) {
+                          const game_code = data['game_code'];
+                          const username = data['username'];
+                          {% comment %} $('#username').val(username);
+                          $('#code').val(game_code); {% endcomment %}
+                          const username_val = `username-${data['player_id']}`;
+                          const game_code_val = `game_code-${data['player_id']}`;
+                          localStorage.setItem(username_val, username);
+                          localStorage.setItem(game_code_val, game_code);
+                      }
+                  }
+                  {% comment %} else if (type == 'cashapp_signup') {
+                      is_player_sender = data['is_player_sender']
+                      if (is_player_sender) {
+                        //   const cash_app = data['cash_app'];
+                          const cash_app = JSON.stringify({"type":"add", "cash_app": data['cash_app']});
+                          const cashapp_val = `cashapp-${data['player_id']}`;
+                          localStorage.setItem(cashapp_val, cash_app);
+                      }
+                  }else if (data['type']  == 'cashapp_edit') {
+                        is_player_sender = data['is_player_sender']
+                        if (is_player_sender) {
+                            // const cash_app = { "cash_app": data['cash_app'], "cashapp_id": data['cashapp_id'] };
+                            const cash_app = JSON.stringify({"type":"edit", "cash_app": data['cash_app'], "cashapp_id": data['cashapp_id'] });
+                            const cashapp_val = `cashapp-${data['player_id']}`;
+                            localStorage.setItem(cashapp_val, cash_app);
+                        }
+                    }
+                    else if (data['type']  == 'cashapp_delete') {
+                        is_player_sender = data['is_player_sender']
+                        if (is_player_sender) {
+                            // const cash_app = data['cashapp_id'];
+                            const cash_app = JSON.stringify({"type":"delete", "cashapp_id": data['cashapp_id']});
+                            const cashapp_val = `cashapp-${data['player_id']}`;
+                            localStorage.setItem(cashapp_val, cash_app);
+                        }
+                    } {% endcomment %}
+                    else if (type == 'end_message' && !hasSentEndMessage) {
+                      is_player_sender = data['is_player_sender']
+                      if (is_player_sender) {
+                          const endMessageText = data['message'];
+
+                          //console.log("End MESSAGE ", endMessageText);
+
+                          const endMessageHTML = `
+                            <div class="message end-message">${endMessageText}</div>
+                            `;
+
+                          chatContainer.insertAdjacentHTML('beforeend', endMessageHTML);
+                          chatContainer.scrollTop = chatContainer.scrollHeight;
+
+
+                          hasSentEndMessage = true;
+                      }
+
+                      // Disconnect the chatSocket (WebSocket) by closing it
+                      {% comment %} chatSocket.close(); {% endcomment %}
+                      disconnectAndRemoveWebSocket(closs_all_sockets=false,[data["player_id"],])
+                      $('#add_player').prop('disabled', true);
+                      {% comment %} $('#add-cashapp-btn').prop('disabled', true); {% endcomment %}
+                      $('#chat-input').prop('disabled', true);
+                      $('#submit-btn').prop('disabled', true);
+                      $('#file-input-label').prop('disabled', true);
+
+                      chatSocket = null
+
+                      // Disable clicks outside the modal while it is open
+                      removeElementFromArray(hasSentJoinMessage, data["player_id"]);
+                      removePlayerFromQueue(data["player_id"]);
+
+                      Swal.fire({
+                          title: "Connecting",
+                          html: `
+                            <div class="row">
+                                <div class="col-md-6">
+                                You will be redirected in: <b><span id="timer">5</span></b> seconds
+                                </div>
+                                <div class="col-md-6">
+                                <button id="leaveBtn" hidden='true' class="btn btn-danger">Go Offline</button>
+                                <button id="continueBtn" hidden='true' class='btn btn-success'>Continue</button>
+                                </div>
+                            </div>
+                            `,
+                          showConfirmButton: false,
+                          allowOutsideClick: false,
+                          timer: 5000, // 5 seconds
+                          timerProgressBar: true,
+                          onBeforeOpen: () => {
+                              const timerSpan = Swal.getHtmlContainer().querySelector('#timer');
+                              const leaveBtn = Swal.getHtmlContainer().querySelector('#leaveBtn');
+                              const continueBtn = Swal.getHtmlContainer().querySelector('#continueBtn');
+
+                              // Update the timer countdown every second
+                              let countdown = 3;
+                              const timerInterval = setInterval(() => {
+                                  countdown -= 1;
+                                  timerSpan.textContent = countdown;
+
+                                  if (countdown <= 0) {
+                                      clearInterval(timerInterval);
+                                      Swal.close();
+                                      var player_in_queue_count = parseInt($('#player-queue-count-data').val())
+                                      if (player_in_queue_count > 0) {
+                                          activeTopRow = $('#betsliptablebody tr');
+                                          if (activeTopRow.length > 0) {
+                                            activeTopRow[0].click()
+                                          }
+                                          {% comment %} startChat(0, false); {% endcomment %}
+                                          $('#staff-status').prop('disabled', true);
+                                          $('#chat-input').prop('disabled', false);
+                                          $('#submit-btn').prop('disabled', false);
+                                          $('#file-input-label').prop('disabled', false);
+
+                                      } else {
+                                          $('#staff-status').prop('disabled', false);
+                                          $('#chat-container').empty();
+                                          isInitialChat = true;
+                                      }
+                                      removeElementFromArray(hasSentJoinMessage, data["player_id"]);
+                                      hasSentEndMessage = false;
+                                      {% comment %} location.reload() {% endcomment %}
+                                  }
+                              }, 1000);
+
+                              // Add a click event listener to the Leave button
+                              leaveBtn.addEventListener('click', () => {
+                                  Gooffline(false);
+                                  clearInterval(timerInterval);
+                                  Swal.close();
+
+                                  // Redirect to another page
+                                  window.location.href = `{% url 'admin-panel:home'  %}`;
+                              });
+
+                              // Add a click event listener to the Continue button
+                              continueBtn.addEventListener('click', () => {
+                                  clearInterval(timerInterval);
+                                  Swal.close();
+
+                                  // Connect to the newChat using startChat
+                                  var player_in_queue_count = parseInt($('#player-queue-count-data').val())
+                                  if (player_in_queue_count > 0) {
+                                      startChat(0, false);
+                                      $('#staff-status').prop('disabled', true);
+                                      $('#chat-input').prop('disabled', false);
+                                      $('#submit-btn').prop('disabled', false);
+                                      $('#file-input-label').prop('disabled', false);
+                                  } else {
+                                      $('#staff-status').prop('disabled', false);
+                                      $('#chat-container').empty();
+
+                                      isInitialChat = true;
+                                      chatSocket = null;
+                                  }
+                                  removeElementFromArray(hasSentJoinMessage, data["player_id"]);
+                                  let hasSentEndMessage = false;
+                              });
+                          },
+                      });
+                  } else if (type == 'offmarket_signup') {
+                      is_player_sender = data['is_player_sender']
+                      if (is_player_sender) {
+                          const game_code = data['game_code'];
+                          const username = data['username'];
+                          {% comment %} $('#username').val(username);
+                          $('#code').val(game_code); {% endcomment %}
+                          localStorage.setItem('username', username);
+                          localStorage.setItem('game_code', game_code);
+                      }
+                  } else if (type == 'message') {
+                      document.getElementById('typing-indicator').style.display = 'none';
+
+                      message_text = data['message']
+                      message_sender = data['sender_id']
+                      message_sent_time = data['sent_time']
+                      //console.log("SENDER ID",message_sender)
+                      is_file = data['is_file']
+                      request_user_username = "{{request.user.id}}"
+                      is_staff_sent = message_sender == request_user_username
+                      let file_name = message_text.split('/').pop();
+
+                      ///////////////////////////   Message Append   ///////////////////////
+                      if (is_file) {
+                          const submitButton = document.querySelector('#submit-btn');
+                          const loader = document.querySelector('#loader');
+                          const fileInputLabel = document.getElementById('file-input-label');
+                          const messageInput = document.getElementById('chat-input');
+
+                          loader.style.display = 'none';
+                          submitButton.disabled = false;
+                          fileInputLabel.classList.remove('disabled');
+                          messageInput.disabled = false;
+                      }
+
+                      let messageHTML = `
+              <div class="message ${is_staff_sent ? 'sent justify-content-start' : 'received'}">
+                <div class="message-bubble ${is_staff_sent ? 'sent justify-content-start' : 'received'}">
+                  <div class="${is_file ? 'message-file' : 'message-text'}">
+                    ${is_file ? getFilePreview(message_text) : message_text}
+                  </div>
+                  <div class=" ${is_staff_sent ? 'message-time-send' : 'message-time'}">${formatTime(message_sent_time)}</div>
+                </div>
+              </div>
+            `;
+
+                      function getFilePreview(fileUrl) {
+                          const fileExtension = getFileExtension(fileUrl);
+                          if (isImageFile(fileExtension)) {
+                              return `<a href="${fileUrl}"data-lightbox="image-preview" data-title="Image Preview"><div class="file-link"><img src="${fileUrl}" alt="Image Preview" class="image-preview"></a></div>`;
+                          } else if (isVideoFile(fileExtension)) {
+                              return `<div class="file-link"><video controls controlsList="download" class="file-preview"><source src="${fileUrl}"></video></div>`;
+                          } else {
+                              return `<a href="${fileUrl}" target="_blank" rel="noopener noreferrer">${getFileTypeIcon(fileExtension)} Download ${fileExtension.toUpperCase()} File</a>`;
+                          }
+                      }
+
+                      function getFileExtension(filename) {
+                          return filename.split('.').pop().toLowerCase();
+                      }
+
+                      function isImageFile(fileExtension) {
+                          return ['png', 'svg', 'jpg', 'jpeg'].includes(fileExtension);
+                      }
+
+                      function isVideoFile(fileExtension) {
+                          return ['mp4', 'webm', 'ogg', 'mkv'].includes(fileExtension);
+                      }
+
+                      function getFileTypeIcon(fileExtension) {
+                          // Provide appropriate icons or styling based on file type
+                          switch (fileExtension) {
+                              case 'pdf':
+                                  return `<i class="fa fa-file-pdf-o"></i>`;
+                              case 'doc':
+                              case 'docx':
+                                  return `<i class="fa fa-file-word-o"></i>`;
+                              case 'xls':
+                              case 'xlsx':
+                                  return `<i class="fa fa-file-excel-o"></i>`;
+                              case 'txt':
+                                  return `<i class="fa fa-file-text-o"></i>`;
+                              default:
+                                  return `<i class="fa fa-file-o"></i>`;
+                          }
+                      }
+
+
+                      chatContainer.insertAdjacentHTML('beforeend', messageHTML);
+                      chatContainer.scrollTop = chatContainer.scrollHeight;
+                      ///////////////////////////   Message Append   ///////////////////////
+                  } else if (type == 'typing') {
+                      message_text = data['message']
+                      is_player_sender = data['is_player_sender']
+                      if (is_player_sender === true) {
+                          // Display the typing indicator with the message text
+                          const typingIndicator = document.getElementById('typing-indicator');
+                          // typingIndicator.textContent = message_text;
+                          typingIndicator.innerHTML = `${message_text} <img src="{% static '/images/typing.gif' %}"  style='margin-top:-5px' />`;
+                          typingIndicator.style.display = 'block';
+                          // Schedule hiding the typing indicator after 2 seconds (adjust as needed)
+                          setTimeout(function() {
+                              typingIndicator.style.display = 'none';
+                          }, 2000);
+                      } else {
+                          // Hide the typing indicator
+                          document.getElementById('typing-indicator').style.display = 'none';
+                      }
+                  }
+              };
+
+              /////////////////////////  Message Sending //////////////////////////
+              chatForm.addEventListener('submit', function(event) {
+                  event.preventDefault();
+                  const message = chatInput.value.trim();
+                  if (message) {
+                      try {
+                          chatSocket = Websocket_list[localStorage.getItem('{request.user.id}')]
+                          chatSocket.send(JSON.stringify({
+                              'type': 'message',
+                              'message': message,
+                              'is_player_sender': false,
+                              'sender_id': '{{request.user.id}}'
+                          }));
+                          chatInput.value = '';
+                      } catch (error) {
+                          console.error("An error occurred while sending the message:", error);
+                          location.reload()
+                      }
+
+                  }
+              });
+              /////////////////////////  Message Sending ////////////////////////////
+
+
+
+
+              ////////////////////////// File Sending ///////////////////////////////
+              const fileInput = document.querySelector('#file-input');
+              const submitButton = document.querySelector('#submit-btn');
+              const loader = document.querySelector('#loader');
+              const fileInputLabel = document.getElementById('file-input-label');
+              const messageInput = document.getElementById('chat-input');
+
+              fileInput.addEventListener('change', (event) => {
+                  const file = event.target.files[0];
+                  const reader = new FileReader();
+                  reader.readAsDataURL(file);
+
+                  // Show the loader and disable the button
+                  loader.style.display = 'block';
+                  submitButton.disabled = true;
+                  fileInputLabel.classList.add('disabled');
+                  messageInput.disabled = true;
+
+                  // Define a flag to keep track of whether the function has already been executed
+
+
+                  reader.onload = () => {
+                      // Check if the function has already been executed, and return if it has
+                      if (isFunctionExecuted) {
+                          return;
+                      }
+
+                      isFunctionExecuted = true;
+
+                      const fileData = reader.result.split(',')[1];
+                      //console.log("FILE", file)
+                      chatSocket = Websocket_list[localStorage.getItem('{request.user.id}')]
+                      chatSocket.send(JSON.stringify({
+                          'file': {
+                              'name': file.name,
+                              'type': file.type,
+                              'content': fileData,
+                              'is_player_sender': false,
+                              'sender_id': '{{request.user.id}}'
+                          },
+                          'type': 'message'
+                      }));
+                  };
+
+                  ////////////////////////// File Sending ///////////////////////////////
+                  isFunctionExecuted = false;
+
+              });
+
+
+
+
+          },
+          error: function(data) {
+              //console.log("DATA",data)
+              const DATA = JSON.parse(data['responseText']);
+
+              // Swal.fire({
+              //     title: 'Error',
+              //     text: DATA.message,
+              //     icon: 'error',
+              // });
+          },
+      });
+
+
+
+  }
+
+  function Gooffline(event) {
+      const fileInput = document.querySelector('#file-input');
+      const submitButton = document.querySelector('#submit-btn');
+      const loader = document.querySelector('#loader');
+      const fileInputLabel = document.getElementById('file-input-label');
+      const messageInput = document.getElementById('chat-input');
+      const startChatButton = document.querySelector('#start-chat-btn');
+      const stopChatButton = document.querySelector('#stop-chat-btn'); // Add stop chat button element
+
+      if (event == false) {
+
+          // Show the loader and disable the button
+          // Disconnect the WebSocket if it is connected
+          //console.log("SOCKET DETAIL :- ",chatSocket)
+          disconnectAndRemoveWebSocket(closs_all_sockets=true)
+          {% comment %} if (chatSocket != null && chatSocket.readyState === WebSocket.OPEN) {
+              chatSocket.close();
+          } {% endcomment %}
+          submitButton.disabled = true;
+          fileInputLabel.classList.add('disabled');
+          messageInput.disabled = true;
+          startChatButton.disabled = true;
+          stopChatButton.disabled = true
+          $('#chat-container').hide()
+          $('#betsliptablebody').hide()
+
+          $('#queue-loader').hide()
+
+          $('#player-queue-btn').prop('class', 'btn btn-danger', ).css('background-color', '#FF0000');
+          $('#player-queue-count-block').hide()
+
+          $('#chat-form').hide()
+          $('#staff-status-label').text('Login')
+
+
+      } else {
+          // Show the loader and disable the button
+          submitButton.disabled = false;
+          fileInputLabel.classList.remove('disabled');
+          messageInput.disabled = false;
+          startChatButton.disabled = false;
+          stopChatButton.disabled = false;
+          $('#chat-container').show()
+          $('#betsliptablebody').show()
+          $('#queue-loader').show()
+
+          $('#player-queue-btn').prop('class', 'btn btn-success').css('background-color', '#008000');
+          $('#player-queue-count-block').show()
+          $('#chat-form').show()
+          $('#chat-input').prop('disabled', false);
+          $('#submit-btn').prop('disabled', false);
+          $('#file-input-label').prop('disabled', false);
+          $('#staff-status-label').text('Logout')
+
+      }
+
+      $.ajax("{% url 'admin-panel:chatroom'  %}", {
+          type: 'POST',
+          data: {
+              'staff_id': "{{request.user.id}}",
+              'staff_status': 'false',
+              'type': 'toggle_status',
+              'csrfmiddlewaretoken': '{{ csrf_token }}'
+          },
+          dataType: 'json',
+          success: function(data) {
+              // Update the color and text based on the response
+              if (event === true) {
+                  $('#status_dot').css('background-color', 'green');
+                  $('#status_text').text('Online');
+              } else {
+                  $('#status_dot').css('background-color', 'red');
+                  $('#status_text').text('Offline');
+              }
+          },
+
+          error: function(data) {
+              Swal.fire({
+                  title: 'Error',
+                  text: data['statusText'],
+                  icon: 'error',
+              });
+          },
+      });
+  }
+
+
+  async function toggleStaffStatus(event) {
+      const isStaffActive = document.getElementById("staff-status-label").innerText
+      console.log(isStaffActive, "isStaffActive")
+      let shouldContinue = true;
+      if (isStaffActive === "Logout") {
+          console.log(Websocket_list)
+          const result = await Swal.fire({
+              title: 'Confirmation',
+              text: 'Are you sure you want to logout?',
+              icon: 'question',
+              showCancelButton: true,
+              confirmButtonColor: '#3085d6',
+              cancelButtonColor: '#d33',
+              confirmButtonText: 'Yes'
+          })
+          if (result.isConfirmed) {
+              const le = await $.ajax({
+                  url: "{% url 'admin-panel:check_staff'  %}",
+                  type: 'POST',
+                  data: {
+                      'csrfmiddlewaretoken': '{{ csrf_token }}'
+                  },
+                  dataType: 'json'
+              }).done(function(data) {
+                  console.log(data, "data");
+                  if (data.length > 0) {
+                      const usernamesString = data.map(user => user['user__username']).join(', ');
+                      Swal.fire({
+                          icon: 'warning',
+                          title: 'Warning',
+                          text: 'Please complete chat: ' + usernamesString,
+                      });
+                      shouldContinue = false;
+                  }
+              }).fail(function(data) {
+                  Swal.fire({
+                      title: 'Error',
+                      text: data['statusText'],
+                      icon: 'error',
+                  });
+              });
+              if (!shouldContinue) {
+                  return false;
+              }
+
+              const fileInput = document.querySelector('#file-input');
+              const submitButton = document.querySelector('#submit-btn');
+              const loader = document.querySelector('#loader');
+              const fileInputLabel = document.getElementById('file-input-label');
+              const messageInput = document.getElementById('chat-input');
+              const startChatButton = document.querySelector('#start-chat-btn');
+              const stopChatButton = document.querySelector('#stop-chat-btn'); // Add stop chat button element
+              var staffstatus = document.querySelector('#staff-status').checked;
+              disconnectAndRemoveWebSocket(closs_all_sockets=true)
+              {% comment %} if (chatSocket != null && chatSocket.readyState === WebSocket.OPEN) {
+                  chatSocket.close(); 
+              }{% endcomment %}
+              submitButton.disabled = true;
+              fileInputLabel.classList.add('disabled');
+              messageInput.disabled = true;
+              startChatButton.disabled = true;
+              stopChatButton.disabled = true
+              $('#chat-container').hide()
+              $('#betsliptablebody').hide()
+              $('#queue-loader').hide()
+              $('#player-queue-btn').prop('class', 'btn btn-danger', ).css('background-color', '#FF0000');
+              $('#player-queue-count-block').hide()
+              $('#chat-form').hide()
+              $('#staff-status-label').text('Login')
+              const de = await $.ajax("{% url 'admin-panel:chatroom'  %}", {
+                  type: 'POST',
+                  data: {
+                      'staff_id': "{{request.user.id}}",
+                      'staff_status': staffstatus,
+                      'type': 'toggle_status',
+                      'csrfmiddlewaretoken': '{{ csrf_token }}'
+                  },
+                  dataType: 'json',
+                  success: function(data) {
+                      if (staffstatus === true) {
+                          $('#status_dot').css('background-color', 'green');
+                          $('#status_text').text('Online');
+                      } else {
+                          $('#status_dot').css('background-color', 'red');
+                          $('#status_text').text('Offline');
+                          connected_sockets_user_id = [];
+                      }
+
+                  },
+                  error: function(data) {
+                      Swal.fire({
+                          title: 'Error',
+                          text: data['statusText'],
+                          icon: 'error',
+                      });
+                  },
+              });
+              return true
+          }
+      } else {
+          const fileInput = document.querySelector('#file-input');
+          const submitButton = document.querySelector('#submit-btn');
+          const loader = document.querySelector('#loader');
+          const fileInputLabel = document.getElementById('file-input-label');
+          const messageInput = document.getElementById('chat-input');
+          const startChatButton = document.querySelector('#start-chat-btn');
+          const stopChatButton = document.querySelector('#stop-chat-btn'); // Add stop chat button element
+          var staffstatus = document.querySelector('#staff-status').checked;
+          if (staffstatus == false) {
+              disconnectAndRemoveWebSocket(closs_all_sockets=true)
+              connected_sockets_user_id = [];
+              {% comment %} if (chatSocket != null && chatSocket.readyState === WebSocket.OPEN) {
+                  chatSocket.close();
+              } {% endcomment %}
+              submitButton.disabled = true;
+              fileInputLabel.classList.add('disabled');
+              messageInput.disabled = true;
+              startChatButton.disabled = true;
+              stopChatButton.disabled = true
+              $('#chat-container').hide()
+              $('#betsliptablebody').hide()
+
+              $('#queue-loader').hide()
+
+              $('#player-queue-btn').prop('class', 'btn btn-danger', ).css('background-color', '#FF0000');
+              $('#player-queue-count-block').hide()
+              $('#chat-form').hide()
+              $('#staff-status-label').text('Login')
+          } else {
+              // Show the loader and disable the button
+              submitButton.disabled = false;
+              fileInputLabel.classList.remove('disabled');
+              messageInput.disabled = false;
+              startChatButton.disabled = false;
+              stopChatButton.disabled = false;
+              $('#chat-container').show()
+              $('#betsliptablebody').show()
+              $('#queue-loader').show()
+              $('#player-queue-btn').prop('class', 'btn btn-success').css('background-color', '#008000');
+              $('#player-queue-count-block').show()
+              $('#chat-form').show()
+              $('#chat-input').prop('disabled', false);
+              $('#submit-btn').prop('disabled', false);
+              $('#file-input-label').prop('disabled', false);
+              $('#staff-status-label').text('Logout')
+          }
+          const me = await $.ajax("{% url 'admin-panel:chatroom'  %}", {
+              type: 'POST',
+              data: {
+                  'staff_id': "{{request.user.id}}",
+                  'staff_status': staffstatus,
+                  'type': 'toggle_status',
+                  'csrfmiddlewaretoken': '{{ csrf_token }}'
+              },
+              dataType: 'json',
+              success: function(data) {
+                  if (staffstatus === true) {
+                      $('#status_dot').css('background-color', 'green');
+                      $('#status_text').text('Online');
+                  } else {
+                      $('#status_dot').css('background-color', 'red');
+                      $('#status_text').text('Offline');
+                      connected_sockets_user_id = [];
+                  }
+              },
+              error: function(data) {
+                  Swal.fire({
+                      title: 'Error',
+                      text: data['statusText'],
+                      icon: 'error',
+                  });
+              },
+          });
+          return true
+      }
+  }
+
+
+
+
+  function img_inlarge(img_url) {
+      var src = img_url;
+      var modal;
+      //console.log("SRC", src)
+
+      function removeModal() {
+          modal.remove();
+          $('body').off('keyup.modal-close');
+      }
+      modal = $('<div>').css({
+          background: 'RGBA(255 255 255 / 0%) url(' + src + ') no-repeat center',
+          width: "50%",
+          height: "100%",
+          margin: "0 auto",
+          position: "fixed",
+          zIndex: "10000",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          top: "0px",
+          left: "0px",
+          right: "0px",
+          cursor: "zoom-out"
+
+
+      }).click(function() {
+          removeModal();
+      }).appendTo('body');
+      //handling ESC
+      $('body').on('keyup.modal-close', function(e) {
+          if (e.key === 'Escape') {
+              removeModal();
+          }
+      });
+  }
+
+  tes = setInterval(function() {
+      var staffstatus = document.querySelector('#staff-status').checked;
+      if (staffstatus == true) {
+          const greenBgPlayerIds = [];
+          $('#betsliptablebody tr.active-tab').each(function() {
+              const playerId = $(this).find('td[data-player]').data('player');
+              greenBgPlayerIds.push(playerId);
+          });
+          var player_count = {};
+          const $spanElements = $('#betsliptablebody span.chat-queue-bubble');
+          $spanElements.each(function() {
+              const count = parseInt($(this).text().trim(), 0); // Parse the count as an integer
+              const id = $(this).attr('id').replace('queueBubble', '');
+              player_count[id] = count;
+          });
+          $.ajax({
+              url: "{% url 'admin-panel:chatroom'  %}",
+              method: 'POST',
+              dataType: 'json',
+              data: {
+                  'staff_id': "{{request.user.id}}",
+                  'type': 'players_count_in_queue',
+                  'csrfmiddlewaretoken': '{{ csrf_token }}'
+              },
+              success: function(response) {
+                  console.log("response", response)
+                  $('#betsliptablebody').empty();
+
+                  // Assuming response.players_in_queue is an array of player objects
+                  if (response.players_in_queue.length > 0) {
+                      // Iterate through the players and add rows to the tbody using template literals
+                      response.players_in_queue.forEach(function(player) {
+                          var playerName = player.name;
+                          var newRow;
+                          if (player_count[player.id] > 0) {
+                              newRow = `
+                                <tr onclick="reconnectWebSocket(${player.id});Queue_update(${player.queue_id}); updateQueueBubble(${player.id}, true);" id="playerRow${player.id}" style="cursor: pointer;">
+                                    <td data-player="${player.id}" >${playerName}				  
+                                        <span class="chat-queue-bubble" id="queueBubble${player.id}" style="display: line;"> ${player_count[player.id]} </span>
+                                    </td>
+                                </tr>
+                              `;
+
+                          } else {
+                              newRow = `
+                                <tr onclick="reconnectWebSocket(${player.id});Queue_update(${player.queue_id}); updateQueueBubble(${player.id}, true);" id="playerRow${player.id}" style="cursor: pointer;">
+                                    <td data-player="${player.id}" >${playerName}				  
+                                        <span class="chat-queue-bubble" id="queueBubble${player.id}" style="display: none;"> 0 </span>
+                                    </td>
+                                </tr>
+                              `;
+                          }
+
+                          $('#betsliptablebody').append(newRow);
+                          $('#betsliptablebody tr').each(function() {
+                              const playerId = $(this).find('td[data-player]').data('player');
+                              if (greenBgPlayerIds.includes(playerId)) {
+                                  $(this).addClass('active-tab');
+                              } else {
+                                  $(this).removeClass('active-tab');
+                              }
+                          });
+                      });
+
+                      currentIds = response.players_in_queue.map(player => player.id);
+                      removedPlayerIds = previousPlayerIds.filter(id => !currentIds.includes(id));
+                      previousPlayerIds = response.players_in_queue.map(player => player.id);
+                      disconnectAndRemoveWebSocket(closs_all_sockets=false, removedPlayerIds)
+
+                      $('#staff-status').prop('disabled', false);
+
+                      setTimeout(function() {
+                          const activeTabRow = $('#betsliptablebody tr');
+                          const activeTabRowActivate = $('#betsliptablebody tr.active-tab');
+                          if (activeTabRow.length === 1 && activeTabRowActivate.length === 0) {
+                              console.log('click funcation once on inner dynamic')
+                              activeTabRow.click()
+                          }
+                      }, 1500);
+                  } else {
+                      // If no players in queue, add a single row with the message
+                      const messageRow = `
+                        <tr>
+                            <td colspan="1" style="font-style: italic; color: #999;">No player in queue</td>
+                        </tr>
+                      `;
+                      // Append the message row to the table body
+                      $('#betsliptablebody').append(messageRow);
+                      $('#chat-container').empty();
+                      disconnectAndRemoveWebSocket(closs_all_sockets=true)
+                  }
+
+                  //console.log('Player count:', response.players_count_in_queue);
+                  $('#player-queue-count').text(" : " + response.players_count_in_queue);
+                  $('#player-queue-count-data').val(response.players_count_in_queue);
+                  //console.log('VAL ',   $('#player-queue-count-data').val())
+                  var player_in_queue_count = parseInt($('#player-queue-count-data').val())
+
+                  if (isInitialChat == true && chatSocket == null && player_in_queue_count > 0) {
+                      //console.log("Initial Chat Connect")
+                      $('#chat-input').prop('disabled', false);
+                      $('#submit-btn').prop('disabled', false);
+                      $('#file-input-label').prop('disabled', false);
+                      activeTopRow = $('#betsliptablebody tr');
+                      if (activeTopRow.length > 0) {
+                        activeTopRow[0].click()
+                      }
+                      {% comment %} startChat(0, false); {% endcomment %}
+                      isInitialChat = false
+                  }
+
+              },
+              error: function(xhr, status, error) {
+                  // Handle any error that occurs during the AJAX request
+                  //console.log('AJAX request error:', error);
+              }
+          });
+      }
+  }, 5000); // 5000 milliseconds = 5 seconds
+
+  // Attach the event listener to the 'beforeunload' event
+  $('#add-player').click(function() {
+      //console.log("click")
+      var username = $('#username').val();
+      var password = $('#password').val();
+      var code = $('#code').val();
+      var user = localStorage.getItem('{request.user.id}')
+
+
+      $.ajax({
+          url: "{% url 'admin-panel:chatroom'  %}",
+          type: "POST",
+          dataType: "json",
+          data: {
+              type: 'add_player',
+              username: username,
+              password: password,
+              code: code,
+              user: user,
+              csrfmiddlewaretoken: '{{ csrf_token }}'
+          },
+          success: function(data) {
+              //console.log(data);
+              if (data.status === 'Failed') {
+                  Swal.fire({
+                      title: data['message'],
+                      icon: 'error',
+                  }).then((result) => {
+                      $.magnificPopup.close();
+
+                  });
+              } else {
+                  //console.log(data);
+                  $('#add_player_form').modal('hide');
+                  Swal.fire({
+                      title: data['message'],
+                      icon: 'success',
+                  }).then((result) => {
+                      $.magnificPopup.close();
+                  });
+              }
+          },
+      });
+
+
+      // Close the modal
+
+  });
+
+  {% comment %} $('#add-cash-app').click(function() {
+    addCashApp();
+    const activeTabRowActivate = $('#betsliptablebody tr.active-tab');
+    const player_id = activeTabRowActivate.find('td[data-player]').data('player');
+    const username_val = 'cashapp-' + player_id;
+
+    if (localStorage.getItem(username_val)) {
+      localStorage.removeItem(username_val);  // Use the variable here
+    }
+
+    
+  });
+
+
+  $('#edit-cash-app').click(function() {
+    editCashApp()
+    const activeTabRowActivate = $('#betsliptablebody tr.active-tab');
+    const player_id = activeTabRowActivate.find('td[data-player]').data('player');
+    const username_val = 'cashapp-' + player_id;
+
+    if (localStorage.getItem(username_val)) {
+        localStorage.removeItem(username_val);  // Use the variable here
+    }
+  }); {% endcomment %}
+
+  // JavaScript to toggle password visibility
+  $('#toggle-password').on('click', function() {
+      const passwordInput = $('#password');
+      const passwordFieldType = passwordInput.attr('type');
+
+      if (passwordFieldType === 'password') {
+          passwordInput.attr('type', 'text');
+      } else {
+          passwordInput.attr('type', 'password');
+      }
+  });
+
+  function Queue_update(queue_id) {
+      $.ajax("{% url 'admin-panel:chatroom'  %}", {
+          type: 'POST',
+          data: {
+              'queue_id': queue_id,
+              'staff_id': "{{request.user.id}}",
+              'staff_status': false,
+              'type': 'update_queue_status',
+              'csrfmiddlewaretoken': '{{ csrf_token }}'
+          },
+          dataType: 'json',
+          success: function(data) {
+
+          },
+
+          error: function(data) {
+              Swal.fire({
+                  title: 'Error',
+                  text: data['statusText'],
+                  icon: 'error',
+              });
+          },
+      });
+  }
+
+  function resolve_Button() {
+      const startChatButton = document.querySelector('#start-chat-btn');
+      const stopChatButton = document.querySelector('#stop-chat-btn'); // Add stop chat button element
+
+      try {
+          chatSocket = Websocket_list[localStorage.getItem('{request.user.id}')];
+          if (chatSocket && chatSocket.readyState === WebSocket.OPEN) {
+              $('#staff-status').prop('disabled', true);
+
+              // Show a confirmation popup using Swal.fire
+              Swal.fire({
+                  title: 'Confirmation',
+                  text: 'Are you sure you want to end the chat?',
+                  icon: 'question',
+                  showCancelButton: true,
+                  confirmButtonColor: '#3085d6',
+                  cancelButtonColor: '#d33',
+                  confirmButtonText: 'Yes, end chat'
+              }).then((result) => {
+                  if (result.isConfirmed) {
+                      chatSocket.send(JSON.stringify({
+                          'type': 'end_message',
+                          "message": "Issue is resolved closing the ticket.",
+                          'is_player_sender': false,
+                          'sender_id': '{{request.user.id}}'
+                      }));
+                      {% comment %} chatSocket.close(); {% endcomment %}
+                      var playerId = localStorage.getItem('{request.user.id}').replace(/P|Chat/g, '');
+                      disconnectAndRemoveWebSocket(closs_all_sockets=false,[playerId,])
+                      {% comment %} if (Websocket_list.hasOwnProperty(localStorage.getItem('{request.user.id}'))) {
+                          delete Websocket_list[localStorage.getItem('{request.user.id}')];
+                      } {% endcomment %}
+                      $.ajax({
+                          url: "{% url 'admin-panel:leave-room'  %}",
+                          type: "POST",
+                          dataType: "json",
+                          data: {
+                              user_id: playerId,
+                              csrfmiddlewaretoken: '{{ csrf_token }}'
+                          }
+                      }).done(function(data) {
+                          // Handle success here
+                          startChatButton.disabled = false;
+                          stopChatButton.disabled = true;
+                          {% comment %} location.reload(); {% endcomment %}
+                      });
+                  }
+              });
+          }
+      } catch (error) {
+          // Handle any errors here
+          console.error('An error occurred:', error);
+          // Reload the page
+          location.reload();
+      }
+
+  }
+
+  function removePlayerFromQueue(playerId) {
+    $.ajax({
+        url: "{% url 'admin-panel:leave-room'  %}",
+        type: "POST",
+        dataType: "json",
+        data: {
+            user_id: playerId,
+            csrfmiddlewaretoken: '{{ csrf_token }}'
+        }
+    })
+  }
+
+  function updateQueueBubble(playerId, display_column = null) {
+      const queueBubble = document.getElementById(`queueBubble${playerId}`);
+      if (queueBubble) {
+          const existingCount = parseInt(queueBubble.innerText);
+          if (display_column) {
+              queueBubble.style.display = 'none'; // Hide the element
+              queueBubble.innerText = 0
+          } else {
+              queueBubble.innerText = existingCount + 1;
+              queueBubble.style.display = 'inline'; // Show the element
+              console.log(existingCount, 'existingCountexistingCountexistingCountexistingCountexistingCountexistingCountexistingCount')
+          }
+      }
+  }
+
+  setTimeout(function() {
+      const activeTabRow = $('#betsliptablebody tr');
+      if (activeTabRow.length === 1) {
+          activeTabRow.click()
+      }
+  }, 1000);
+
+  
+
+  {% comment %} function addCashApp() {
+    var cashAppName = $("#cashapp_name").val();
+    const activeTabRowActivate = $('#betsliptablebody tr.active-tab');
+    const player_id = getPlayerId(activeTabRowActivate);
+
+    $.ajax("{% url 'admin-panel:cash-deatils'  %}", {
+      type: 'POST',
+      data: {
+        'player_id': player_id,
+        'cash_name': cashAppName,
+        'csrfmiddlewaretoken': '{{ csrf_token }}'
+      },
+      dataType: 'json',
+      success: function (response) {
+        $('#cashapp_name').val('');
+            Swal.fire({
+                    icon: response["status"],
+                    title: response["status"][0].toUpperCase() + response["status"].substring(1),
+                    text: response['message']
+                }).then(() => {
+                    getCashApps();
+                    chatSocket.send(JSON.stringify({
+                        'type': 'message',
+                        'message': "CashApp Added Successfully!",
+                        'is_player_sender': false,
+                        'sender_id': '{{request.user.id}}'
+                    }));
+                });
+      },
+      error: function (error) {
+        console.error("Error adding cashapp:", error);
+      }
+    });
+  }
+
+  // Function to get Cash Apps and populate the table
+  function getCashApps() {
+    const activeTabRowActivate = $('#betsliptablebody tr.active-tab');
+    const player_id = getPlayerId(activeTabRowActivate);
+
+    $.ajax("{% url 'admin-panel:cash-deatils'  %}", {
+      type: 'GET',
+      data: {
+        'player_id': player_id,
+        'csrfmiddlewaretoken': '{{ csrf_token }}'
+      },
+      dataType: 'json',
+      success: function (data) {
+        console.log(data)
+        populateTableWithData(data);
+      },
+      error: function (error) {
+        console.error("Error getting cashapp:", error);
+      }
+    });
+  }
+
+  // Function to get Player ID
+  function getPlayerId(activeTabRowActivate) {
+    return activeTabRowActivate.find('td[data-player]').data('player');
+  }
+
+  // Function to append Cash App to the table
+  function appendCashAppToTable(cashAppName) {
+    $("#cash-app-table tbody").append("<tr><td cashapp_id="+ cashApp.id +">"+  cashApp.name + "</td><td><button class='btn btn-info btn-sm edit-btn'  onclick = cashappedit("+'this,'+cashApp.id+") >Edit</button> <button class='btn btn-danger btn-sm delete-btn' onclick = deleteCashapp("+cashApp.id+")>Delete</button></td></tr>");
+  }
+
+  // Function to populate the table with Cash Apps
+  function populateTableWithData(data) {
+    if (data.length>0) {
+        var tableRows = "";
+        data.forEach(function (cashApp) {
+            tableRows += "<tr><td cashapp_id="+ cashApp.id +">"+  cashApp.name + "</td><td><button class='btn btn-info btn-sm edit-btn'  onclick = cashappedit("+'this,'+cashApp.id+") >Edit</button> <button class='btn btn-danger btn-sm delete-btn' onclick = deleteCashapp("+cashApp.id+")>Delete</button></td></tr>";
+        });
+    }else{
+        var tableRows = "<tr><td colspan='2'>No Data</td></tr>";
+    }
+    $("#cash-app-table tbody").html(tableRows);
+  }
+
+    function cashappedit(element, cashAppId) {
+        if(element.innerText == "Edit"){
+            var cashAppName = $('td[cashapp_id="' + cashAppId + '"]').text();
+            isEditing = true;
+            $("#edit-cash-app").show()
+            $("#add-cash-app").hide()
+            $('#cashapp_name').val(cashAppName);
+            // $('#add-cash-app').text('Update');
+            $('#cashapp_id').val(cashAppId)
+            element.innerText = "Cancel"
+        }else{
+            isEditing = false;
+            $("#edit-cash-app").hide()
+            $("#add-cash-app").show()
+            $('#cashapp_name').val("");
+            $('#cashapp_id').val("")
+            element.innerText = "Edit"
+        }
+
+    }
+
+   function editCashApp(){
+        var cashAppName = $("#cashapp_name").val();
+        var cashAppId = $('#cashapp_id').val();
+        $.ajax("{% url 'admin-panel:cash-deatils'  %}", {
+            type: 'PUT',
+            data: JSON.stringify({
+              'cash_name': cashAppName,
+              'cashapp_id': cashAppId,
+              'csrfmiddlewaretoken': '{{ csrf_token }}'
+          }),
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            dataType: 'json',
+            success: function(response) {
+              console.log('Edit success:', response);
+              isEditing = false;
+              $('#cashapp_name').val('');
+            //   $('#add-cash-app').text('Add CashApp Id');
+              $("#edit-cash-app").hide()
+              $("#add-cash-app").show()
+              $('#cashapp_id').val('')
+              
+              Swal.fire({
+                    icon: response["status"],
+                    title: response["status"][0].toUpperCase() + response["status"].substring(1),
+                    text: response['message']
+                }).then(() => {
+                    getCashApps();
+                    chatSocket.send(JSON.stringify({
+                        'type': 'message',
+                        'message': "CashApp Edited Successfully!",
+                        'is_player_sender': false,
+                        'sender_id': '{{request.user.id}}'
+                    }));
+                });
+            },
+            error: function(error) {
+              // Handle error
+              console.error('Edit error:', error);
+            }
+        });
+    }
+
+    function deleteCashapp(cashapp_id){
+      $.ajax("{% url 'admin-panel:cash-deatils'  %}", {
+          type: 'DELETE',
+          data: JSON.stringify({
+              'cashapp_id': cashapp_id,
+              'csrfmiddlewaretoken': '{{ csrf_token }}'
+          }),
+          headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+          dataType: 'json',
+          success: function(response) {
+            Swal.fire({
+                    icon: response["status"],
+                    title: response["status"][0].toUpperCase() + response["status"].substring(1),
+                    text: response['message']
+                }).then(() => {
+                    getCashApps();
+                });
+          },
+          error: function(error) {
+          console.error('Delete error:', error);
+          }
+      });
+    }
+
+    function addCashText(){
+        const activeTabRowActivate = $('#betsliptablebody tr.active-tab');
+        const player_id = activeTabRowActivate.find('td[data-player]').data('player');
+        const username_val = 'cashapp-' + player_id;
+        console.log(username_val)
+        console.log(localStorage.getItem(username_val))
+        if (localStorage.getItem(username_val)) {
+            request = JSON.parse(localStorage.getItem(username_val))
+            console.log(request)
+            if(request.type == "add"){
+                $('#cashapp_name').val(request.cash_app);
+            }else if(request.type == "edit"){
+                $('#cashapp_id').val(request.cashapp_id);
+                $('#cashapp_name').val(request.cash_app);
+                $("#edit-cash-app").show()
+                $("#add-cash-app").hide()
+            }
+        } else {
+            $('#cashapp_name').val('');
+        }
+    } {% endcomment %}
+
+
+        
+  {% comment %}window.addEventListener("beforeunload", onPageUnload);{% endcomment %}
+</script>
+{% endblock content %}

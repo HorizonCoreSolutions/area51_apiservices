@@ -1,0 +1,365 @@
+{% extends "index.html" %}
+{% load static %}
+{% load i18n %}
+{% load date_utils %}
+{% load permissions %}
+
+{% block title %}
+Tournaments
+{% endblock title %}
+
+{% block content %}
+
+<style>
+    .admin-card{
+        background-color: #ffffff;
+        box-shadow: 0px 0px 6px 6px rgb(204 204 204 / 0.25);
+    }
+
+    .pcode.left-spacer {
+        margin-left: 0px;
+    }
+    .pcode{
+        margin-left: 250px;
+    }
+
+    @media(max-width:991px){
+        .setting-page .card-title h3{
+            font-size: 18px;
+        }
+        .pcode{
+            margin-left: 0px;
+        }
+    }
+
+    .setting-page .card-title h3{
+        font-size: 18px;
+    }
+
+    .close-btn {
+            position: absolute;
+            top: 0%;
+            right: 0%;
+            color: red;
+            font-size: 35px;
+            cursor: pointer;
+            background-color: black;
+            width: 25px;
+            height: 25px;
+            text-align: center;
+            line-height: 0.6;
+    }
+
+
+    .image_block_inner{
+        position: relative;
+        border: 1px solid rgb(0, 0, 0);
+        overflow: hidden;rgb(0, 0, 0);
+        width: 100%;
+    }
+
+    .modal-dialog {
+        width: auto;
+        max-width: 50%;
+        overflow-y: auto;
+    }
+
+    body {
+        background-color: #f9f9f9;
+        font-family: 'Arial', sans-serif;
+    }
+        
+    .card {
+        background-color: white;
+        color: #333;
+        border-radius: 10px;
+        box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.3);
+        }
+        
+    h1 {
+        text-align: center;
+        margin-bottom: 20px;
+        }
+    thead{
+            border-radius: 20px;
+        }
+        
+        table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+    }
+        
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 60px;
+        height: 34px;
+        vertical-align: middle;
+    }
+        
+    .switch input {
+        display: none;
+    }
+        
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        -webkit-transition: .4s;
+        transition: .4s;
+        border-radius: 34px;
+    }
+    
+    .pcode{
+            padding-right: 20px;
+    }
+        
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 26px;
+        width: 26px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        -webkit-transition: .4s;
+        transition: .4s;
+        border-radius: 50%;
+    }
+        
+    input:checked + .slider {
+        background-color: #54ca30;
+    }
+        
+    input:focus + .slider {
+        box-shadow: 0 0 1px #333333;
+    }
+        
+    input:checked + .slider:before {
+        -webkit-transform: translateX(26px);
+        -ms-transform: translateX(26px);
+        transform: translateX(26px);
+    }
+
+    .edit-link {
+        background: none;
+        border: none;
+        padding: 0;
+        font: inherit;
+        cursor: pointer;
+    }
+
+    .edit-link:not([disabled]):focus,
+    .edit-link:not([disabled]):active,
+    .edit-link:not([disabled]):hover {
+        outline: none;
+        color: blue;
+    }
+      
+</style>
+
+
+<script type="text/javascript">
+    $('#mobile-collapse').click(function () {
+        $("#nw1").toggleClass('left-spacer');
+    });
+</script>
+
+
+
+<div class="pcode" id='nw1'>
+    <div class="container-fluid pt-4">
+        <div class="card">
+            <div class="row">
+                <div class="col-12">
+                    <div class="ml-4 mt-4 main-heading-wrap">
+                        <h5>{% trans "Tournaments" %}</h5>
+                    </div>
+                </div>
+            </div>
+
+            <form action="" method="get">
+                <div class="row ml-2 mr-2 mb-2">
+                    <!-- Search by tournament name -->
+                    <div class="col-md-4">
+                        <div class="mb-2 rs-select2--light rs-select2--md" style="min-width: 200px;" multiple="multiple">
+                            <label for="select-tournament">Search by Tournament Name</label>
+                            <select id="select-tournament" name="selected_tournaments" class="js-example-basic-multiple tokenize-open form-control text-truncate" style="min-width: 210px;" multiple="multiple" >
+                                {% if selected_tournaments %}
+                                    {% for tournament in selected_tournaments %}
+                                        <option selected="selected" value="{{tournament.id}}">{{ tournament.name }}</option>
+                                    {% endfor %}
+                                {% endif %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="col-md-2">
+                        <label for="tournament-start-date">Start Date</label>
+                        <input type="date" onChange="validateDateTimeRange(this)" {% if selected_start_date %}value="{{selected_start_date}}"{% endif %} class="form-control" name="tournament_start_date" id="tournament-start-date" placeholder="Enter Tournament Start Date">
+                    </div>
+
+                    <div class="col-md-2">
+                        <label for="tournament-end-date">End Date</label>
+                        <input type="date" onChange="validateDateTimeRange(this)" {% if selected_end_date %}value="{{selected_end_date}}"{% endif %} class="form-control" name="tournament_end_date" id="tournament-end-date" placeholder="Enter Tournament End Date">
+                    </div>
+                                
+                    <div class="col-md-2">
+                        <div class="form-group">
+                            <label for="status">Status</label>
+                            <select id="status" class="form-control" id="status" name="status" >
+                                <option {% if not selected_status %} selected="selected" {% endif %} value="all">All</option>
+                                <option {% if selected_status == "active" %}selected="selected"{% endif %} value="active">Active</option>
+                                <option {% if selected_status == "inactive" %}selected="selected"{% endif %} value="inactive">Inactive</option>
+                            </select>
+                        </div>
+                    </div>
+                
+                    <div class="col-md-2 mt-4">
+                        <button id="button-search" class="btn btn-primary btn-block" type="submit">Search</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    
+        <div class="card">
+            <div class="text-right m-2">
+                {% if request.user.role == "admin" or request.user|has_permission:'can_add_tournament' %}
+                    <a class="btn btn-primary" href="{% url 'admin-panel:create-tournament' %}">{% trans 'Create Tournament' %}</a>
+                {% endif %}
+            </div>
+
+            <div class="text-center w-50 mx-auto">
+                {% include "includes/messages.html" %}
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th class="text-center">{% trans "Serial No." %}</th>
+                            <th class="text-center">{% trans "Tournament Name" %} </th>
+                            <th class="text-center">{% trans "Jackpot" %}</th>
+                            <th class="text-center">{% trans "Start Date" %}</th>
+                            <th class="text-center">{% trans "End Date" %}</th>
+                            <th class="text-center">{% trans "Registration End Date" %}</th>
+                            <th class="text-center">{% trans "Is Active" %}</th>
+                            <th class="text-center">{% trans "Action" %}</th>
+                        </tr>
+                    </thead>
+                    
+                    <tbody>
+                        {% for tournament in tournaments %}
+                            <tr>
+                                <td class="text-center">{{ forloop.counter }}</td>
+                                <td class="text-center">{{ tournament.name }}</td>
+                                <td class="text-center">{{ tournament.jackpot_amount }}</td>
+                                <td class="text-center">{{ tournament.start_date }}</td>
+                                <td class="text-center">{{ tournament.end_date }}</td>
+                                <td class="text-center">{{ tournament.registration_end_date }}</td>
+                                <td class="text-center">{% if tournament.is_active %}<i class="far fa-check-circle fa-lg" style="color: #4dff00;"></i>{% else %}<i class="far fa-times-circle fa-lg" style="color: #ff0000;"></i>{% endif %}</td>
+
+                                <td class="text-center">
+                                    <a type="button" class="" href="/admin/tournament-detail/?id={{ tournament.id }}" title="View">
+                                        <i class="fas fa-eye fa-lg">&nbsp&nbsp</i>
+                                    </a>
+                                    
+                                    {% if request.user.role == "admin" or request.user|has_permission:'can_edit_tournament' %}
+                                        <button type="button" onclick="window.location.href='/admin/edit-tournament?id={{ tournament.id }}'" class="edit-link" {% if tournament.is_prize_distributed %}title="Tournament End" disabled{% else %} title="Edit" {% endif %}>
+                                            <i class="fa fa-edit fa-lg" style=""></i>
+                                        </button>
+                                    {% endif %}
+                                </td>
+                            
+                            </tr>
+                        {% empty %}
+                            <tr><td colspan="8" class="text-center">No Tournaments Available</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% include '../../includes/pagination.html' %}
+                
+    </div>
+</div>
+
+
+
+  <script type="text/javascript">
+    $(document).ready(function() {
+        setTimeout(function(){
+        $('#notification_messages').remove();
+        }, 5000);
+
+        
+        $('#scheduled_at').datetimepicker({
+                format: 'd/m/Y H:i',
+                timepicker: true,
+            }
+        );
+    });
+
+    $('#select-tournament').tokenize2({
+        dropdownMaxItems:"10",
+        multiple: true,
+        placeholder: '{% trans "Search by Tournament Name" %}',
+        searchMinLength:2,
+        dataSource: function(term, object){
+            $.ajax("{% url 'admin-panel:tournaments' %}", {
+                type: "POST",
+                data: {
+                    search: term,
+                    start: 0,
+                    csrfmiddlewaretoken: '{{ csrf_token }}'
+                },
+                global: false, 
+                dataType: 'json',
+                success: function(data){
+                    var $items = [];
+                    $.each(data, function(k, v){
+                        $items.push(v);
+                    });
+                    object.trigger('tokenize:dropdown:fill', [$items]);
+                }
+            });
+        }
+    });
+
+
+    $('.img-enlargeable').click(function(){
+        var src = $(this).attr('src');
+        var modal;
+        function removeModal(){ modal.remove(); $('body').off('keyup.modal-close'); }
+        modal = $('<div>').css({
+            background: 'RGBA(255 255 255 / 0%) url('+src+') no-repeat center',
+            width: "50%",
+            height: "100%",
+            margin: "0 auto",
+            position: "fixed",
+            zIndex: "10000",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            top: "0px",
+            left: "0px",
+            right: "0px",
+            cursor: "zoom-out"
+
+
+        }).click(function(){
+            removeModal();
+        }).appendTo('body');
+        //handling ESC
+        $('body').on('keyup.modal-close', function(e){
+        if(e.key==='Escape'){ removeModal(); } 
+        });
+    });
+</script>
+{% endblock content %}
+

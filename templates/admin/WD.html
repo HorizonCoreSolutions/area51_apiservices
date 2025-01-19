@@ -1,0 +1,530 @@
+@extends('layouts.app')
+
+
+
+@section('pagename')
+{{__('Agents')}}
+@endsection
+
+@section('content')
+<!-- DATA TABLE -->
+
+<div class="table-data__tool">
+    <div class="container" style="padding: 0;">
+
+    <div class="row">
+        <div class="col">
+            <input type="text" class="au-input au-input--full form-control" id="search-date-created-from" name="from" style="height: 40px;margin-bottom: 10px;">
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <input type="text" class="au-input au-input--full form-control" id="search-date-created-to" name="to" style="height: 40px;margin-bottom: 10px;">
+        </div>
+    </div>
+
+    @if(Auth::user()->hasRole("Administrator"))
+    <div class="row">
+            <div class="col">
+                <div class="rs-select2--light rs-select2--md">
+                    <select id="select-dealer"  name="dealers[]" multiple class="form-control" style="height: 40px;margin-bottom: 10px; width:100%;">
+                    </select>
+                </div>
+            </div>
+        </div>
+        @endif
+
+            <div class="row">
+                <div class="col">
+                    <div class="rs-select2--light rs-select2--md">
+                        <select id="select-sort" class="js-select2" name="property" >
+                            <option selected="selected" value="1">{{__('Recent Login')}} </option>
+                            <option value="2">{{__('Credit Ascending')}} </option>
+                            <option value="3">{{__('Credit Descending')}} </option>
+                            <option value="4">{{__('Profit Ascending')}} </option>
+                            <option value="5">{{__('Profit Descending')}} </option>
+                        </select>
+                        <div class="dropDownSelect2"></div>
+                    </div>
+                </div>
+
+                <div class="col" style="padding-left: 4px;">
+                    <button id="button-add" class="au-btn au-btn-icon au-btn--green au-btn--small" style="width:100%; margin-bottom: 10px;">
+                    <i class="zmdi zmdi-plus"></i>{{__('Add Agent')}} </button>
+                </div>
+
+            </div>
+
+            <div class="row">
+                <div class="col">
+                    <div class="input-group">
+                        <input type="text" id="input-search" name="input1-group2" placeholder="Username" class="form-control">
+                        <div class="input-group-btn">
+                            <button class="btn btn-primary" id="button-search">
+                                <i class="fa fa-search"></i>{{__('Search')}}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+    </div>
+</div>
+
+
+
+<div class="table-responsive table-responsive-data2">
+    <table class="table table-data2">
+        <thead>
+            <tr>
+                <th style="padding: 10px; ">{{__('Agent')}} </th>
+                <th style="padding: 10px; padding-left: 0;">{{__('Credit')}} </th>
+                <th style="padding: 10px; padding-left: 0;">{{__('Profit')}} </th>
+                <th style="padding: 10px; "></th>
+            </tr>
+        </thead>
+        <tbody id="table-user">
+
+        </tbody>
+    </table>
+    
+    <!-- {{-- <button class="au-btn au-btn-load js-load-btn">load more</button> --}}
+    <button type="button" class="btn btn-secondary btn-lg btn-block" id="load-more">
+        Load more
+    </button> -->
+
+</div>
+<!-- END DATA TABLE -->
+
+@php
+
+    $currentDate = new DateTime();
+    $currentDate->setTime(0, 0);
+    $dtStart = firstDayOf('month', $currentDate)->format('d/m/Y H:i');
+    $currentDate->setTime(23, 59);
+    $dtEnd = lastDayOf('month', $currentDate)->format('d/m/Y H:i');
+
+    $isAdministrator = Auth::user()->hasRole("Administrator");
+    $isDealer = Auth::user()->hasRole("Dealer");
+    $isAgent = Auth::user()->hasRole("Agent");
+
+    $statusEnabled = false;
+
+    $editEnabled = $isAdministrator || $isDealer;
+
+@endphp
+
+@endsection
+
+@section('scripts')
+<script>
+
+function isNumberKey(evt)
+      {
+         var charCode = (evt.which) ? evt.which : event.keyCode
+         if (charCode > 31 && (charCode < 48 || charCode > 57))
+            return false;
+
+         return true;
+      }
+
+$( document ).ready(function() {
+
+
+var pageScroller = new MG.PageScroller({
+    tableId:'#table-user',
+    search:{
+        ajax:{
+            getSettings:function(){
+                //console.log($('#select-role').val().split(","));
+                //
+                return {
+                    type: "POST",
+                    url: "{{URL::to('/agents/search')}}",
+                    dataType: "json",
+                    beforeSend: function (xhr) {
+                        var token = $('meta[name="csrf_token"]').attr('content');
+                        if (token) {
+                            return xhr.setRequestHeader('X-CSRF-TOKEN', token);
+                        }
+                    },
+                    data: {
+                        inputSearch: $('#input-search').val(),
+                        dealers: $('#select-dealer').val(),
+                        sort: $('#select-sort').val(),
+                        dateFrom: $('#search-date-created-from').val(),
+                        dateTo: $('#search-date-created-to').val(),
+                        skip:$('#table-user .table-row').length,
+                        take:10,
+                    }
+                }
+            }
+        }
+    },
+
+    delete:{
+        ajax:{
+            getSettings:function(id){
+                return {
+                    url: "{{URL::to('agents')}}" +"/"+ id,
+                    type: 'post',
+                    data: {_method: 'delete', _token: "{{ csrf_token() }}"},
+                    success: function (result)
+                    {
+                        $( "#tr-"+id ).remove();
+                    }
+                }
+            },
+        }
+    },
+
+    edit:{
+        geUrl: function (id){
+            return "{{URL::to('agents')}}" +"/"+ id+"/edit";
+        },
+    },
+});
+
+pageScroller.events.on('search_start',function(){
+    pageScroller.row.html('');
+    //pageScroller.ul.loadingShow();
+});
+pageScroller.events.on('search_response',function(response){
+    console.log(response);
+    var html = '';
+    for (var key in response) {
+
+        var item = response[key];
+        //console.log(item);
+
+        html += pageScroller.row.getItemTemplate(responseItemToTemplateData(item));
+    }
+
+    pageScroller.row.html(html);
+});
+
+responseItemToTemplateData = function(item){
+
+    var more = '';
+    var balance = MG.currencyFormatEuro(item.balance);
+    var balanceColor = item.balance>0?"green":"red";
+
+    return {
+            id:item.id,
+            field1:item.username,
+            field2: '<span class="user-credit" style="color: '+balanceColor+';font-weight: 600;">'+balance+'</span>',
+            field3: '<span style="color: red;font-weight: 600;" >-€12</span>',
+            status:item.status,
+            more:item.template,
+            settings:{
+                statusEnabled:"{{$statusEnabled}}",
+                editEnabled:"{{$editEnabled}}",
+                role:item.role.toLowerCase(),
+            },
+        }
+};
+
+pageScroller.events.on('load',function(e){
+
+
+    $("#load-more").on("click", function(e){
+        pageScroller.addMore();
+    });
+
+    pageScroller.events.on('scroll_bottom',function(){
+        pageScroller.addMore();
+    });
+
+    $("#button-search").on("click", function(e){
+        pageScroller.search();
+    });
+
+
+    $( "#select-sort" ).change(function() {
+        pageScroller.search();
+    });
+
+    $( "#button-add" ).on("click", function(e){
+        window.location = "{{ url('agents/create') }}";
+    });
+
+    pageScroller.events.on('afterAddListItems',function(e){
+        $( 'body').off( "click", ".switch-input");
+        $( 'body').on( "click", ".switch-input", onSwitchInputClick );
+
+        $( 'body').off( "click", ".row-button-edit");
+        $( 'body').on( "click", ".row-button-edit", onRowButtonEditClick );
+
+        $( 'body').off( "click", ".tr-collapse");
+        $( 'body').on( "click", ".tr-collapse", onCollapsClick );
+
+        $( 'body').off( "click", ".tr-collapse .ignore-collapse");
+        $( 'body').on( "click", ".tr-collapse .ignore-collapse", onIgnoreCollapsClick );
+
+        $( 'body').off( "click", ".transaction-pay-button");
+        $( 'body').on( "click", ".transaction-pay-button", onTransactionPayButtonClick);
+
+        $( 'body').off( "click", ".transaction-charge-button");
+        $( 'body').on( "click", ".transaction-charge-button", onTransactionChargeButtonClick );
+
+        $( 'body').off( "click", ".save-limit-button");
+        $( 'body').on( "click", ".save-limit-button", onSaveLimitClick );
+
+    });
+
+    onSaveLimitClick = function(e){
+        e.stopPropagation();
+        var id = $(this).data("id");
+
+        console.log($('#form-betting-limit-'+id).serialize());
+
+        $.ajax({
+            type: "PUT",
+            url: "{{URL::to('/userbettinglimit/updateAll')}}/"+id,
+            dataType: "json",
+            beforeSend: function (xhr) {
+                var token = $('meta[name="csrf_token"]').attr('content');
+                if (token) {
+                    return xhr.setRequestHeader('X-CSRF-TOKEN', token);
+                }
+            },
+            data: $('#form-betting-limit-'+id).serialize()
+            })
+            .then( function ( response ) {
+                console.log(response);
+            });
+    };
+
+
+
+    onTransactionPayButtonClick= function(e){
+        e.stopPropagation();
+
+
+
+        var id = $(this).data("id");
+        var amount = $('#transaction-input-'+id).val();
+
+        var balanceElement = $("tr[data-id='" + id + "']").find('.user-credit');
+        var collapseBalanceElement = $("#collapse-balance-"+ id);
+
+        if(amount == '' || isNaN(amount)){
+            Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: amount + " is not a number!!"
+                        });
+            return;
+        }
+
+        if(amount <= 0 ){
+            Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: "Amount must be greater than zero!!"
+                        });
+
+            return;
+        }
+
+
+        Swal.fire({
+            title: 'Are you sure?',
+            text: 'Pay '+MG.currencyFormatEuro(amount),
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Yes!',
+            cancelButtonText: 'No'
+            }).then((result) => {
+            if (result.value) {
+                $.ajax({
+                    type: "POST",
+                    url: "{{URL::to('/transactions/pay_by_id')}}",
+                    dataType: "json",
+                    beforeSend: function (xhr) {
+                        var token = $('meta[name="csrf_token"]').attr('content');
+                        if (token) {
+                            return xhr.setRequestHeader('X-CSRF-TOKEN', token);
+                        }
+                    },
+                    data: {
+                        id: id,
+                        amount: amount,
+                    }})
+                    .then( function ( response ) {
+
+                        console.log(response);
+
+                        if(response.statusCode === 200){
+                            balanceElement.html(MG.currencyFormatEuro(response.new_balance));
+                            var color = response.new_balance>0?"green":"red";
+                            balanceElement.css("color", color);
+                            collapseBalanceElement.html(MG.currencyFormatEuro(response.new_balance));
+                            refreshUserBalance();
+                        }else{
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Oops...',
+                                text: response.message
+                                });
+                        }
+
+
+                    });
+
+            } else if (result.dismiss === Swal.DismissReason.cancel) {
+               //to do
+            }
+            })
+
+
+
+
+    };
+
+    refreshUserBalance= function(){
+        $.ajax({
+            url: "{{URL::to('user')}}",
+                type: 'get',
+                data: {_token: "{{ csrf_token() }}"},
+            })
+            .then( function ( response ) {
+                $('#user-balance').html(MG.currencyFormatEuro(response.balance).replace(',00', ''));
+            });
+    };
+
+    onTransactionChargeButtonClick= function(e){
+        e.stopPropagation();
+        var id = $(this).data("id");
+        var amount = $('#transaction-input-'+id).val();
+        var balanceElement = $("tr[data-id='" + id + "']").find('.user-credit');
+        var collapseBalanceElement = $("#collapse-balance-"+ id);
+
+        if(amount == '' || isNaN(amount)){
+            alert(amount + " is not a number!!");
+            return;
+        }
+
+        if(amount <= 0 ){
+            alert("Amount must be greater than zero!!");
+            return;
+        }
+
+        Swal.fire({
+            title: 'Are you sure?',
+            text: 'Charge '+MG.currencyFormatEuro(amount),
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Yes!',
+            cancelButtonText: 'No'
+            }).then((result) => {
+            if (result.value) {
+                $.ajax({
+                    type: "POST",
+                    url: "{{URL::to('/transactions/charge_by_id')}}",
+                    dataType: "json",
+                    beforeSend: function (xhr) {
+                        var token = $('meta[name="csrf_token"]').attr('content');
+                        if (token) {
+                            return xhr.setRequestHeader('X-CSRF-TOKEN', token);
+                        }
+                    },
+                    data: {
+                        id: id,
+                        amount: amount,
+                    }})
+                    .then( function ( response ) {
+                        balanceElement.html(MG.currencyFormatEuro(response.new_balance));
+                        var color = response.new_balance>0?"green":"red";
+                        balanceElement.css("color", color);
+                        collapseBalanceElement.html(MG.currencyFormatEuro(response.new_balance));
+                        console.log(response);
+                        refreshUserBalance();
+
+
+                    });
+
+            } else if (result.dismiss === Swal.DismissReason.cancel) {
+               //to do
+            }
+            })
+
+
+
+    };
+
+    onSwitchInputClick= function(e){
+        e.stopPropagation();
+        var id = $(this).data("id");
+        var status = $(this).data("status");
+
+        status = status == 1?0:1;
+        $(this).data("status",status);
+        $.ajax({
+            url: "{{URL::to('agents')}}" +"/update_status/"+ id +"/"+status,
+                type: 'post',
+                data: {_token: "{{ csrf_token() }}"},
+            })
+            .then( function ( response ) {
+
+               // console.log('status');
+            });
+
+    };
+
+    onRowButtonEditClick= function(e){
+
+        var id = $(this).data("id");
+        window.location = pageScroller.settings.edit.geUrl(id);
+
+    };
+
+    onCollapsClick= function(e){
+        $('.collapse').collapse('hide');
+
+    };
+
+    onIgnoreCollapsClick= function(e){
+        e.stopPropagation();
+    };
+});
+
+
+var dealers = new MG.MultipleAutocomplete ({
+    id:"#select-dealer",
+    ajaxSettings:{
+        url: "{{URL::to('dealers')}}" +"/lookup",
+            type: 'get',
+            data: {_token: "{{ csrf_token() }}"},
+        },
+        ajaxOnAwake:true,
+        selectedItems:'',
+        placeholder: 'Dealers...',
+    });
+
+    $( "#back-button" ).click(function() {
+        window.location =  "{{ url('home') }}";
+    });
+
+    pageScroller.init();
+
+    var dateUpdateRangePicker = new  MG.DateRangePicker({
+        from:{
+            id:'#search-date-created-from',
+            format:"d/m/Y H:i",
+            value:'{{$dtStart}}',
+        },
+        to:{
+            id:'#search-date-created-to',
+            format:"d/m/Y H:i",
+            value:'{{$dtEnd}}',
+
+        }
+    });
+
+});
+
+
+
+</script>
+
+@endsection

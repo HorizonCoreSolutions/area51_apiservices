@@ -1,0 +1,430 @@
+{% extends "../index.html" %}
+{% load i18n %}
+{% load static %}
+{% load math %}
+{% load permissions %}
+{% block title %}
+Website Headers
+{% endblock %}
+{% block content %}
+<!-- <link rel="stylesheet" href="style.css"> -->
+<!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script> -->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js" integrity="sha512-Eezs+g9Lq4TCCq0wae01s9PuNWzHYoCMkE97e2qdkYthpI0pzC3UGB03lgEHn2XM85hDOUF6qgqqszs+iXU4UA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+<style>
+    body {
+        background-color: #f9f9f9;
+        font-family: 'Arial', sans-serif;
+    }
+
+    .card {
+        background-color: white;
+        color: #333;
+        border-radius: 10px;
+        box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.3);
+    }
+
+    h1 {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    thead{
+        border-radius: 20px;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+    }
+
+    th,
+    td {
+        padding-inline: 20px;
+        padding-top: 12px;
+        padding-bottom: 12px;
+        text-align: left;
+        /* border-bottom: 1px solid #ddd; */
+    }
+
+    th {
+        background-color: #333333;
+        color: white;
+        padding: 20px;
+    }
+
+    tr:hover {
+        background-color: #f5f5f5;
+    }
+
+    .pcode{
+        padding-right: 20px;
+    }
+
+    .pcode.left-spacer {
+        margin-left: 0px;
+    }
+
+    .pcode{
+        margin-left: 250px;
+    }
+
+    @media(max-width:767px){
+        .pcode{
+            margin-left: 0px;
+        }
+    }
+
+    .ui-sortable-helper {
+        display: table;
+    }
+
+    .row-select {
+        appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        width: 16px;
+        height: 16px;
+        border: 1px solid #999999;
+        border-radius: 3px;
+        outline: none;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+
+    .row-select:checked {
+        background-color: #999999;
+    }
+
+	.categories-table table thead th {
+		position: sticky;
+		top: 0;
+		background-color: #343a40;
+		z-index: 100;
+	}
+
+	.table tbody tr {
+		height: 100px;
+	}
+
+    
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 60px;
+        height: 34px;
+        vertical-align: middle;
+    }
+    
+    .switch input {
+        display: none;
+    }
+    
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        -webkit-transition: .4s;
+        transition: .4s;
+        border-radius: 34px;
+    }
+
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 26px;
+        width: 26px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        -webkit-transition: .4s;
+        transition: .4s;
+        border-radius: 50%;
+    }
+    
+    input:checked + .slider {
+        background-color: #54ca30;
+    }
+    
+    input:focus + .slider {
+        box-shadow: 0 0 1px #333333;
+    }
+    
+    input:checked + .slider:before {
+        -webkit-transform: translateX(26px);
+        -ms-transform: translateX(26px);
+        transform: translateX(26px);
+    }
+    
+</style>
+
+<div class="pcode" id='nw1'>
+    <div class="pcoded-inner-content container-fluid pt-4">
+        <div class="card">
+            <div class="card-header">
+				<div class="row">
+					<div class=" col-md-6">
+						<h5>{% trans "Website Headers" %} <font style="font-weight: normal; font-size: smaller;">(Casino Categories)</font></h5>
+						<p class="mb-0">Note: Only top 3 or 4 headers will be visible on the player interface based on device type.</p>
+					</div>
+					<div class="col-md-6 text-right">
+                        {% if request.user.role == "admin" or request.user|has_permission:"can_edit_website_header" %}
+                            <select name="order-position-default" id="order-position-default" class="custom-select col-5 ml-auto text-center">
+                                <option disabled selected value="">Order Categories By Total Games</option>
+                                <option value="ascending">Total Games | Ascending</option>
+                                <option value="descending">Total Games | Descending</option>
+                            </select>
+                        {% endif %}
+					</div>
+				</div>
+				
+            </div>
+            <div class="card-body">
+                <div class="table-responsive categories-table" style="max-height: 624px;">
+                    <table class="table table-striped text-center">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th class="text-center">Order</th>
+                                <th class="text-center">Name</th>
+                                <th class="text-center">Image (Light)</th>
+                                <th class="text-center">Image (Dark)</th>
+                                <th class="text-center">Total games</th>
+                                <th class="text-center">Mobile supported games</th>
+                                <th class="text-center">Desktop supported games</th>
+								{% if request.user.role == "admin" or request.user|has_permission:"can_view_casino_games" %}<th class="text-center">View Games</th>{% endif %}
+								<th class="text-center">Status</th>
+                            </tr>
+                        </thead>
+                        
+                        <tbody id="categoryList">
+                            {% for category in casinocategories %}
+                                <tr class="casino_category {% if not category.is_active %}disabled{% endif %}" id="{{ category.id }}-row" category-id="{{ category.id }}">
+                                    <td class="text-center align-middle">{{ category.position }}</td>
+                                    <td class="text-center align-middle">{{ category.name }}</td>
+                                    <td class="text-center align-middle">
+                                        <div class="category-image position-relative">
+											<img height="90" width="90" id="image-light-{{category.id}}" src="{% if category.image %}{{category.image.url}}{% endif %}" alt="category image" srcset="">
+											{% if request.user.role == "admin" or request.user|has_permission:"can_edit_website_header" %}<i class="far fa-edit category-image-change position-absolute ml-2" title="Change category image" id="{{ category.id }}" onclick="image_input(this.id)"></i>{% endif %}
+											<input type="file" class="category-image-input d-none" name="category-image" onchange="handle_category_image_upload(this, 'light')" id="{{ category.id }}-light-image-input" accept="image/*">
+										</div>
+                                    </td>
+                                    <td class="text-center align-middle">
+                                        <div class="category-image position-relative">
+											<img height="90" width="90" id="image-dark-{{category.id}}" src="{% if category.image_dark %}{{category.image_dark.url}}{% endif %}" alt="category image" srcset="">
+											{% if request.user.role == "admin" or request.user|has_permission:"can_edit_website_header" %}<i class="far fa-edit category-image-change position-absolute ml-2" title="Change category image" id="{{ category.id }}" onclick="image_input(this.id, 'dark')"></i>{% endif %}
+											<input type="file" class="category-image-input d-none" name="category-image" onchange="handle_category_image_upload(this, 'dark')" id="{{ category.id }}-dark-image-input" accept="image/*">
+										</div>
+                                    </td>
+                                    <td class="text-center align-middle">{{ category.name|supported_device }}</td>
+                                    <td class="text-center align-middle">{{ category.name|supported_device:"mobile" }}</td>
+                                    <td class="text-center align-middle">{{ category.name|supported_device:"desktop" }}</td>
+                                    {% if request.user.role == "admin" or request.user|has_permission:"can_view_casino_games" %}<td class="text-center align-middle"><a href="/admin/casino-management-game-list/?category={{category.name}}&device_type=all"><i class="fas fa-eye fa-lg" title="View All"></i></a></td>{% endif %}
+                                    <td class="text-center align-middle">
+                                        <label class="switch">
+                                            <input type="checkbox" category-id='{{ category.id }}' {% if category.is_active %}checked{% endif %} {% if request.user.role != "admin" and not request.user|has_permission:"can_edit_website_header" %}disabled{% endif %}>
+                                            <span title="{% if category.is_active %}Disable Category {% else %} Enable Category {% endif %}" {% if request.user.role == "admin" or request.user|has_permission:"can_edit_website_header" %}onclick="switchToggle(this, {{category.id}})"{% endif %} class="slider"></span>
+                                        </label>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="9" class="text-center align-middle">Categories not available</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var shouldCancelSorting = false;
+
+    $('#mobile-collapse').click(function () { 
+        $("#nw1").toggleClass('left-spacer');
+    });
+
+    $(document).ready(function() {
+        {% if request.user.role == "admin" or request.user|has_permission:"can_edit_website_header" %}
+        $("#categoryList").sortable({
+            distance: 25,
+            cancel: ".disabled",
+            change: function(event, ui) {
+                var disabledIndex = $(this).find("tr.disabled").first().index();
+                var draggedIndex = ui.placeholder.index();
+
+                if (draggedIndex > disabledIndex && disabledIndex != -1) {
+                    shouldCancelSorting = true;
+                    $(this).sortable("cancel");
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Sorting Restriction',
+                        text: "Sorting is allowed only with enabled categories.",
+                    });
+                }else{
+                    shouldCancelSorting = false;
+                }
+            },
+			update: function(event, ui) {
+                var newIndex = ui.item.index();
+                if(shouldCancelSorting == false){
+                    change_category_position(newIndex+1, ui.item.attr("category-id"));
+                }
+            }
+        }).disableSelection();
+        {% endif %}
+
+		$("#order-position-default").change(function(){
+			change_category_position(this.value, "all")
+		});
+
+    });
+
+
+	function image_input(categoryId, type="light"){
+		$(`#${categoryId}-${type}-image-input`).click()
+	}
+
+
+    function handle_category_image_upload(element, type="light"){
+		var fileName = $(element).val().split('\\').pop();
+		$(element).next('.custom-file-label').html(fileName);
+
+		var fileInput = element;
+		var file = element.files[0];
+		var categoryId = element.id.replace(`-${type}-image-input`,"")
+		if (file) {
+			var formData = new FormData();
+			formData.append('image', file);
+			formData.append('image_type', type);
+			formData.append('category_id', categoryId);
+			formData.append('csrfmiddlewaretoken', "{{ csrf_token }}");
+			// AJAX call
+			$.ajax({
+				url: "{% url 'admin-panel:casino-management-game-category' %}",
+				type: 'POST',
+				data: formData,
+				processData: false,
+				contentType: false,
+				success: function(response){
+					// Handle success response
+					if(response.status == "success"){
+						$(`#image-${type}-${categoryId}`).attr("src", response.url)
+						$(fileInput).next('.custom-file-label').html("Choose file");
+						Swal.fire({
+							icon: 'success',
+							title: 'Image Added',
+							text: "Image added successfully",
+						});
+					}else{
+						Swal.fire({
+							icon: 'error',
+							title: 'Error',
+							text: response.message,
+						})
+					}
+				},
+				error: function(xhr, status, error){
+					// Handle error
+					console.error(xhr.responseText);
+				}
+			});
+		}
+	};
+
+
+    function change_category_position(new_position, category_id, show_mesasge=true) {
+        $.ajax({
+            url: "{% url 'admin-panel:casino-management-game-category' %}",
+            type: "PUT",
+            dataType: "json",
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            },        
+            data: {
+                category_id: category_id,
+                position: new_position,
+                csrfmiddlewaretoken: '{{ csrf_token }}',
+            },
+            success: function(result){
+                if (result.status == "success") {
+                    if(show_mesasge){
+                        Swal.fire({
+                            icon: 'success',
+                            title: result.title,
+                            text: result.message,
+                        }).then(() => {
+                            if(isNaN(new_position)){
+                                location.reload();
+                            }	
+                        })
+                    }
+
+					$('.casino_category').each(function(index) {
+						$(this).find('td:first-child').text(index + 1);
+					});
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: result.message,
+                    })
+                }
+            },
+        });
+    };
+
+    function switchToggle(element, categoryId) {
+        $(`#${ categoryId }-row`).toggleClass("disabled");
+
+        $.ajax({
+            url: "{% url 'admin-panel:casino-management-categories-status' %}",
+            type: "POST",
+            dataType: "json",
+            data: {
+                category_id: categoryId,
+                csrfmiddlewaretoken: '{{ csrf_token }}'
+            },
+            success: function(data){
+                element.parentNode.classList.toggle('active');
+                if(data.status == "Success"){
+                    if (data['message']=="Category Disabled") {
+                        element.checked = false
+                        row = $(`#${ categoryId }-row`).detach();
+                        $("#categoryList").append(row)
+                        change_category_position("last", categoryId, show_mesasge=false)
+                        message = "Category disabled, moved to the end of the list."
+                    } else if (data['message']=="Category Enabled") {
+                        element.checked = true
+                        $(`#${ categoryId }-row`).closest("tr").insertBefore($(".disabled").first());
+                        message = "Category enabled, moved to the end of active categories."
+                        change_category_position("active_last", categoryId, show_mesasge=false)
+                    }
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success',
+                        text: message,
+                    })
+                }else{
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data['message'],
+                    });
+                }
+                
+            },
+        });
+    };
+
+</script>
+{% endblock content %}

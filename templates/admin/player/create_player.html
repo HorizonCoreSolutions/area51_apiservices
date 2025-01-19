@@ -1,0 +1,186 @@
+{% load i18n %}
+{% load static %}
+
+<style>
+    .create-form-margin{
+        margin-bottom: -5px;
+    }
+</style>
+
+<div id="add-player" class="popup mfp-with-anim mfp-hide" style='background-color: white; width:100%;max-width: 550px; margin-left: auto; margin-right: auto; vertical-align:center; '>
+    <div class="popup-body "  style="margin-left: 3em; margin-right: 3em; padding-bottom: 0.3rem; padding-top: 0.3rem;">
+        <div class="modal-header mb-2">
+            <div class="justify-content-center">
+                <h5 class="modal-title ">Create Player</h5>
+            </div>
+            <button type="button" style="font-size: 25px;" class="close" data-dismiss="modal" aria-label="Close" id="closebutton">
+                <span aria-hidden="true">&times;</span>
+              </button>   
+        </div>
+
+            <div class="login-form">
+                <form id="create-player-form" enctype="multipart/form-data">
+                    <input type="hidden" name="redirect_url" value="{{ request.build_absolute_uri }}">
+                    {% csrf_token %}
+
+                    <div class="form-group create-form-margin">
+                        <span class="font-weight-bold ml-1">{% trans "Username" %}</span>
+                        <div class="input-group input-group-rounded" id="username-input">
+                            {{ form.username }}
+                            <p class="error-msg"></p>
+                        </div>
+                    </div>
+                    <div class="form-group create-form-margin">
+                        <span class="font-weight-bold ml-1">{% trans "Full Name" %}</span>
+                        <div class="input-group input-group-rounded" id="full_name-input">
+                            {{ form.full_name }}
+                            <p class="error-msg"></p>
+                        </div>
+                    </div>
+                    <div class="form-group create-form-margin">
+                        <span class="font-weight-bold ml-1">{% trans "DOB" %}</span>
+                        <div class="input-group input-group-rounded" id="dob-input">
+                            {{ form.dob }}
+                            <p class="error-msg"></p>
+                        </div>
+                    </div>
+                    <!-- <div class="form-group create-form-margin">
+                        <span class="font-weight-bold ml-1">{% trans "State" %}</span>
+                        <div class="input-group input-group-rounded" id="state-input">
+                            {{ form.state }}
+                            <p class="error-msg"></p>
+                        </div>
+                    </div> -->
+                    <div class="form-group create-form-margin">
+                        <span class="font-weight-bold ml-1">{% trans "Email" %}</span>
+                        <div class="input-group input-group-rounded" id="email-input">
+                            {{ form.email }}
+                            <p class="error-msg"></p>
+                        </div>
+                    </div>
+                    <!-- <div class="form-group create-form-margin">
+                        <span class="font-weight-bold ml-1">{% trans "Country Code" %}</span>
+                        <div class="input-group input-group-rounded" id="country_code-input">
+                            {{ form.country_code }}
+                            <p class="error-msg"></p>
+                        </div>
+                    </div> -->
+                    <!-- <div class="form-group create-form-margin">
+                        <span class="font-weight-bold ml-1">{% trans "Phone Number" %}</span>
+                        <div class="input-group input-group-rounded" id="phone_number-input">
+                            {{ form.phone_number }}
+                            <p class="error-msg"></p>
+                        </div>
+                    </div> -->
+                    <!-- <div class="form-group create-form-margin">
+                        <span class="font-weight-bold ml-1">{% trans "ZIPCODE" %}</span>
+                        <div class="input-group input-group-rounded" id="zip_code-input">
+                            {{ form.zip_code }}
+                            <p class="error-msg"></p>
+                        </div>
+                    </div> -->
+                    <!-- <div class="form-group create-form-margin">
+                        <span class="font-weight-bold ml-1">{% trans "Address" %}</span>
+                        <div class="input-group input-group-rounded" id="complete_address-input">
+                            {{ form.complete_address }}
+                            <p class="error-msg"></p>
+                        </div>
+                    </div> -->
+                    <!-- <div class="form-group create-form-margin">
+                        <span class="font-weight-bold ml-1">{% trans "Profile Picture" %}</span>
+                        <div class="input-group input-group-rounded" id="profile_pic-input">
+                            {{ form.profile_pic }}
+                            <img src=""  id="profile_pic_img" width="60px" height="50px" style="display: none;">
+                            <p class="error-msg"></p>
+                        </div>
+                    </div> -->
+                    <!-- <div class="form-group create-form-margin">
+                        <span class="font-weight-bold ml-1">{% trans "ID Proof" %}</span>
+                        <div class="input-group input-group-rounded" id="user_id_proof-input">
+                            {{ form.user_id_proof }}
+                            <p class="error-msg"></p>
+                        </div>
+                    </div> -->
+                    <div class="form-group create-form-margin">
+                        <span class="font-weight-bold ml-1">{% trans "Password" %}</span>
+                        <div class="input-group input-group-rounded" id="password-input">
+                            {{ form.password }}
+                            <span class="input-group-text" id="password-toggle">
+                                <i class="fa fa-eye toggle-icon" title="View/Hide Password" style="cursor:pointer;"></i>
+                            </span>
+                            <p class="error-msg"></p>
+                        </div>
+                    </div> 
+                    <div class="form-group create-form-margin">
+                        <span class="font-weight-bold ml-1">{% trans "Confirm Password" %}</span>
+                        <div class="input-group input-group-rounded" id="confirm-password-input">
+                            {{ form.confirm_password }}
+                            <span class="input-group-text" id="password-toggle-cnf">
+                                <i class="fa fa-eye toggle-icon" title="View/Hide Password" style="cursor:pointer;"></i>
+                            </span>
+                            <p class="error-msg"></p>
+                        </div>
+                    </div>
+                    <div class="pt-2">
+                        <button type="submit" class="btn btn-primary btn-md btn-block waves-effect waves-light text-center m-b-20" id="create-player-button">
+                            {% trans "Create player" %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+function closefunc(){
+        $.magnificPopup.close();
+    } 
+    document.addEventListener('DOMContentLoaded', function() {
+        const passwordInput = document.getElementById('id_password');
+        const toggleButton = document.getElementById('password-toggle');
+        const passwordInputcnf = document.getElementById('id_cnf_password');
+        const toggleButtoncnf= document.getElementById('password-toggle-cnf');
+
+        toggleButton.addEventListener('click', function() {
+
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleButton.querySelector('i').classList.remove('fa-eye');
+                toggleButton.querySelector('i').classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                toggleButton.querySelector('i').classList.remove('fa-eye-slash');
+                toggleButton.querySelector('i').classList.add('fa-eye');
+               
+            }
+        });
+        toggleButtoncnf.addEventListener('click', function() {
+
+      if (passwordInputcnf.type === 'password') {
+        passwordInputcnf.type = 'text';
+        toggleButtoncnf.querySelector('i').classList.remove('fa-eye');
+        toggleButtoncnf.querySelector('i').classList.add('fa-eye-slash');
+      } else {
+        passwordInputcnf.type = 'password';
+        toggleButtoncnf.querySelector('i').classList.remove('fa-eye-slash');
+        toggleButtoncnf.querySelector('i').classList.add('fa-eye');
+        
+      }
+      });
+    });
+        $('#closebutton').on( "click", function() {
+                    $.magnificPopup.close();
+                });
+                function show_profile_pic(input) {
+                    $('#create-player-form #profile_pic_img').show();
+                    if (input.files && input.files[0]) {
+                        var reader = new FileReader();
+                        reader.onload = function (e) {
+                            $('#profile_pic_img').attr('src', e.target.result);
+                        };
+                        reader.readAsDataURL(input.files[0]);
+                    }
+                }
+        
+    </script>
+    

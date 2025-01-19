@@ -1,0 +1,851 @@
+{% extends "../index.html" %}
+{% load i18n %}
+{% load static %}
+{% load math %}
+{% block title %}
+Casino Games
+{% endblock title %}
+{% block content %}
+	<!-- <link rel="stylesheet" href="style.css"> -->
+	<!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script> -->
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js" integrity="sha512-Eezs+g9Lq4TCCq0wae01s9PuNWzHYoCMkE97e2qdkYthpI0pzC3UGB03lgEHn2XM85hDOUF6qgqqszs+iXU4UA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+	<style>
+		body {
+  background-color: #f9f9f9;
+  font-family: 'Arial', sans-serif;
+}
+
+.card {
+  background-color: white;
+  color: #333;
+  border-radius: 10px;
+  box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.3);
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+thead{
+    border-radius: 20px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+}
+
+th,
+td {
+  padding-inline: 20px;
+  padding-top: 12px;
+  padding-bottom: 12px;
+  text-align: left;
+  /* border-bottom: 1px solid #ddd; */
+}
+
+th {
+  background-color: #333333;
+  color: white;
+  padding: 20px;
+}
+
+tr:hover {
+  background-color: #f5f5f5;
+}
+
+.tag {
+  display: inline-block;
+  margin: 4px;
+  padding: 4px 8px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.tag.red {
+  background-color: #b3423c;
+  color: white;
+}
+
+.tag.green {
+  background-color: #3b8a3b;
+  color: white;
+}
+
+.tag.blue {
+  background-color: #4268a7;
+  color: white;
+}
+
+.tag.orange {
+  background-color: #af7201;
+  color: white;
+}
+
+.tag.purple {
+  background-color: #8e7caf;
+  color: white;
+}
+
+.tag.yellow {
+  background-color: #b89c00;
+  color: white;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 34px;
+  vertical-align: middle;
+}
+
+.switch input {
+  display: none;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  -webkit-transition: .4s;
+  transition: .4s;
+  border-radius: 34px;
+}
+.pcode{
+    padding-right: 20px;
+}
+
+.pcode.left-spacer {
+        margin-left: 0px;
+    }
+    .pcode{
+        margin-left: 250px;
+    }
+    @media(max-width:767px){
+        .pcode{
+            margin-left: 0px;
+        }
+    }
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 26px;
+  width: 26px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  -webkit-transition: .4s;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: #54ca30;
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px #333333;
+}
+
+input:checked + .slider:before {
+  -webkit-transform: translateX(26px);
+  -ms-transform: translateX(26px);
+  transform: translateX(26px);
+}
+
+/* Search bar styles */
+.search-container {
+  padding-left: 0px;
+  display: flex;
+  justify-content: left;
+  margin-bottom: 20px;
+}
+
+.search-container input[type=text] {
+  padding: 10px;
+  margin-right: 5px;
+  border: none;
+  border-radius: 3px;
+  font-size: 17px;
+  background-color: #f1f1f1;
+}
+
+.search-container input[type=text]:focus {
+  background-color: #ddd;
+  outline: none;
+}
+
+.search-container button {
+  background-color: #363636;
+  color: white;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.search-container button:hover {
+  background-color: #505050;
+}
+
+.ui-sortable-helper {
+    display: table;
+}
+
+.gameTable tr:nth-child(even) {
+  background: #e9e4e4;
+}
+
+
+.row-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  width: 16px;
+  height: 16px;
+  border: 1px solid #999999;
+  border-radius: 3px;
+  outline: none;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.row-select:checked {
+  background-color: #999999;
+}
+
+.slider-red {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  -webkit-transition: .4s;
+  transition: .4s;
+  border-radius: 34px;
+}
+.slider-red:before {
+  position: absolute;
+  content: "";
+  height: 26px;
+  width: 26px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  -webkit-transition: .4s;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+input:checked + .slider-red {
+  background-image: linear-gradient(to right, red , yellow);
+}
+
+input:focus + .slider-red {
+  box-shadow: 0 0 1px #333333;
+}
+
+input:checked + .slider-red:before {
+  -webkit-transform: translateX(26px);
+  -ms-transform: translateX(26px);
+  transform: translateX(26px);
+}
+	</style>
+
+
+<div class="pcode" id='nw1' style="">
+    <div class="pcoded-inner-content container-fluid pt-4">
+        <!-- Search and filters -->
+        <div class="card">
+            <div class="ml-3 mt-3 main-heading-wrap">
+                <h5>{% trans "Casino Games" %}</h5>
+            </div>
+            
+            <div class="row ml-2 mr-2 mb-2">
+                <!-- Search by provider -->
+                <div class="col-md-4">
+					<div class="mt-2 mb-2 rs-select2--light rs-select2--md" style="min-width: 200px;" multiple="multiple">
+						<select id="select-game" name="casinogames" class="js-example-basic-multiple tokenize-open form-control text-truncate" style="min-width: 210px;"
+						multiple="multiple" >
+							{% if selected_games %}
+								{% for game in selected_games %}
+									<option selected="selected" value="{{game.id}}">{{ game.game_name }}</option>
+								{% endfor %}
+							{% endif %}
+						</select>
+					</div>
+                </div>
+
+                <div class="col-md-4">
+					<div class="mt-2 mb-2 rs-select2--light rs-select2--md" style="min-width: 200px;" multiple="multiple">
+						<select id="select-search-category" name="casinocategory" class="js-example-basic-multiple tokenize-open form-control text-truncate" style="min-width: 210px;"
+						multiple="multiple" >
+							{% if selected_categories %}
+								{% for category in selected_categories %}
+									<option selected="selected" value="{{ category }}">{{ category }}</option>
+								{% endfor %}
+							{% endif %}
+						</select>
+					</div>
+                </div>
+
+                <div class="col-md-2">
+                    <div class="form-group">
+                        <!-- <span style="font-weight: bold; color: black;">{% trans "Role" %}</span> -->
+                        <select id="select-device-type" style="margin-top: 8px;" class="form-control" id="role-id" name="role" >
+                            <option {% if not selected_device_type %} selected="selected" {% endif %} value="all">All</option>
+                            <option {% if selected_device_type == "mobile" %}selected="selected"{% endif %} value="mobile">Mobile</option>
+                            <option {% if selected_device_type == "desktop" %}selected="selected"{% endif %} value="desktop">Desktop</option>
+                        </select>
+                    </div>
+                </div>
+
+                {% comment %} <div class="mt-2 mb-2 rs-select2--light rs-select2--md col-3" style="min-width: 200px;" multiple="multiple">
+                <select id="select-provider" name="casinoprovider" class="js-example-basic-multiple tokenize-open form-control text-truncate" style="min-width: 210px;"
+                multiple="multiple">
+                    {% if selected_brands %}
+                    {% for brand in brands %}
+                        <option selected="selected" value="{brand_name}">{{ brand.brand_name }}</option>
+                    {% endfor %}
+                    {% endif %}
+                </select>
+                </div> {% endcomment %}
+                <!-- Search by page -->
+                {% comment %} <div class="col-md-3">
+                    <div class="form-group">
+                        <!-- <span style="font-weight: bold; color: black;">{% trans "Role" %}</span> -->
+                        <select id="select-per-page" style="margin-top: 8px;" class="form-control" id="role-id" name="role" >
+                            <option selected="selected"  value="20">20</option>
+                            <option value="30">30</option>
+                            <option value="40">40</option>
+                            <option value="50">50</option>
+                            <option value="60">60</option>
+                            <option value="70">70</option>
+                            <option value="80">80</option>
+                            <option value="90">90</option>
+                            <option value="100">100</option>
+                        </select>
+                    </div>
+                </div>{% endcomment %}
+
+                <div class="col-md-2">
+                    <button id="button-search" style="margin-top: 8px;" class="btn btn-primary btn-block" type="submit">Search</button>
+                </div> 
+            </div>
+        </div>
+
+        <div id="bulk-select-casino-category" style="display: none;">
+          <div class="row">
+              <div class="col-md-9"></div>
+              <div class="col-md-3">
+              <div class="card">
+                  <div class="row mt-3 ml-2">
+                  <div class="col-9">
+                      <select management-game-id='{{ game.id }}' data-category="{{ game.game.game_category }}" onchange="bulk_change_game_category(this.value)" class="form-control select-input" id="select-bulk-category" name="bulk-category" >
+                      <option value="default" disabled selected style="display:none;">Select Category</option>
+                      {% for category in casino_categories  %}
+                          <option {% if game.game.game_category == category %}selected="selected" {% endif %} value="{{ category }}">{{ category }}</option>
+                      {% endfor %}
+                      </select>
+                  </div>
+                  <div class="col-3">
+                      <a href="#add_casino_category_form" data-effect="mfp-zoom-in" class="add-game-category-popup waves-effect waves-light text-center m-b-20">
+                      <i title="Add/Edit Category" id="add-category-{{ game.id }}" style="margin: 11px 0px 0px 0px;" class="fa fa-edit fa-lg btn-set-position" aria-hidden="true"></i>
+                      </a>
+                  </div>
+                  </div>
+              </div>  
+              </div>
+          </div>
+      </div>
+
+        <div class="card">
+            <div class="table-responsive">
+                <table class="gameTable">
+                    <thead>
+                        <tr>
+                            <th style="text-align: center;"></th>
+                            <th style="text-align: center;">Game ID</th>
+                            <th style="text-align: center;">Game Name</th>
+                            <th style="text-align: center;">Game Category</th>
+                            <th style="text-align: center;">Device Supported</th>
+                            {% comment %} <th style="text-align: center; width: 15%;">Provider</th> {% endcomment %}
+                            <!-- <th>Tags</th> -->
+                            <th style="text-align: center;">Status</th>
+                            <th style="text-align: center;">Top Pick</th>
+                            {% comment %} <th style="text-align: center; width: 14%;">Order</th>
+                            <th style="text-align: center; width: 13%;">Tile</th> {% endcomment %}
+                        </tr>
+                    </thead>
+                    
+                    <tbody id="gameList">
+						{% for game in casinogames %}
+							<tr class="casino_game" game_id="{{ game.game.game_id }}">
+								<td style="text-align: center;" game_id="{{ game.game.game_id }}" onclick="select_row({{game.id}})">
+									<input type="checkbox" class="select-checkbox-category row-select" name="selected-game" id="{{game.id}}" disabled>
+								</td>
+								<td style="text-align: center;">{{ game.game.game_id }}</td>
+								<td style="text-align: center;" >{{ game.game.game_name }}</td>
+								<td>
+									<div class="row">
+									<div class="col-sm-9">
+										<select management-game-id='{{ game.id }}' data-category="{{ game.game.game_category }}" onchange="change_game_category(this)" class="form-control col-sm-9 select-input ml-auto" id="select-category-{{game.id}}" name="category" >
+										{% for category in casino_categories  %}
+											<option {% if game.game.game_category == category %}selected="selected" {% endif %} value="{{ category }}">{{ category }}</option>
+										{% endfor %}
+										</select>
+									</div>
+									<div class="col-sm-3">
+										<a href="#add_casino_category_form" data-management-game-id='{{ game.id }}' data-effect="mfp-zoom-in" class="add-game-category-popup waves-effect waves-light text-center m-b-20">
+										<i title="Add/Edit Category" id="add-category-{{ game.id }}" style="margin: 11px 0px 0px 0px;" class="fa fa-edit fa-lg btn-set-position" aria-hidden="true"></i>
+										</a>
+									</div>
+									</div>
+								</td>
+                
+								<td style="text-align: center;" >{% if game.game.is_mobile_supported and game.game.is_desktop_supported  %}Mobile, Desktop{% elif game.game.is_desktop_supported %}Desktop{% else %}Mobile{% endif %}</td>
+								{% comment %} <td style="text-align: center; width: 15%;">{{ game.game.vendor_name }}</td> {% endcomment %}
+								<!-- <td>A fast-paced shooter game that tests your reflexes and accuracy.</td>  -->
+								<!-- <td><div class="tag red">Action</div><div class="tag blue">Shooter</div></td> -->          
+								<td style="text-align: center;"><label class="switch"><input type="checkbox" game-id='{{ game.game.game_id }}'
+									{% if game.game_enabled %}checked{% endif %}><span title="{% if game.game_enabled %}Disable Game {% else %} Enable Game {% endif %}" onclick="switchToggle(this)" class="slider"></span></label>
+								</td>
+                <td style="text-align: center;"><label class="switch"><input type="checkbox" game-id='{{ game.game.game_id }}'
+									{% if game.is_top_pick %}checked{% endif %}><span title="{% if game.is_top_pick %}Remove top pick {% else %} Add as top pick {% endif %}" onclick="switchToggle(this, 'top_pick')" class="slider-red"></span></label>
+								</td>
+								{% comment %} <td style="width: 14%;">
+									<input style="text-align: center; float:left; display:inline; width: 80%; margin-left: 22%;" class="form-control form-control-sm position col-sm-6" onkeydown="changePosition(event)" management-game-id='{{ game.id }}' data-position-value="{{ game.position }}" type="number" min="1" value="{{ game.position }}">
+									<i title="Set Order" id="set-position-{{ game.id }}" style="float:left; visibility: visible; display:inline; width: 10%; margin: 11px 0px 0px 10px;" class="fa fa-check-circle-o fa-lg btn-set-position" aria-hidden="true"></i>
+								</td>
+								<td style="width: 13%;">
+									<select style="margin-left: 26%;" management-game-id='{{ game.id }}' onchange="change_size(this)" class="form-control col-sm-6 select-input" id="select-size" name="size" >
+									<option {% if game.size == "1x1" %}selected="selected" {% endif %} value="1x1">1x1</option>
+									<option {% if game.size == "1x2" %}selected="selected" {% endif %} value="1x2">1x2</option>
+									<option {% if game.size == "2x1" %}selected="selected" {% endif %} value="2x1">2x1</option>
+									<option {% if game.size == "2x2" %}selected="selected" {% endif %} value="2x2">2x2</option>
+									</select>
+								</td> {% endcomment %}
+							</tr>
+						{% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    {% include './add_casino_categories.html' %}
+    {% include '../includes/pagination.html' %}
+        
+</div>
+<script>
+    $('#mobile-collapse').click(function () { 
+                
+        $("#nw1").toggleClass('left-spacer');
+
+        
+        
+    });
+  // select-per-page
+  $('#button-search').click(function (){
+    var conceptName = $('#input-search').find(":selected").text();
+    conceptName = conceptName.split("(")[0];
+    game = $('#select-game').val();
+    category = $('#select-search-category').val();
+    device_type = $('#select-device-type').val();
+    window.location = window.location.pathname + "?game_id=" + game + "&category=" + category + "&device_type=" + device_type;
+    return false;
+  });
+
+    $('#select-provider').tokenize2({
+        dropdownMaxItems:"10",
+        multiple: true,
+        placeholder: '{% trans "Search by Casino Provider" %}',
+        searchMinLength:2,
+        dataSource: function(term, object){
+            $.ajax("{% url 'admin-panel:casino-provider-ajax' %}", {
+                type: "POST",
+                data: { search: term, start: 0 },
+                global: false, 
+                dataType: 'json',
+                success: function(data){
+                    var $items = [];
+                    $.each(data, function(k, v){
+                        $items.push(v);
+                    });
+                    object.trigger('tokenize:dropdown:fill', [$items]);
+                }
+            });
+        }
+    });
+
+    $('#select-game').tokenize2({
+        dropdownMaxItems:"10",
+        multiple: true,
+        placeholder: '{% trans "Search by Casino Game" %}',
+        searchMinLength:2,
+        dataSource: function(term, object){
+            $.ajax("{% url 'admin-panel:casino-game-ajax' %}", {
+                type: "POST",
+                data: { search: term, start: 0 },
+                global: false, 
+                dataType: 'json',
+                success: function(data){
+                    var $items = [];
+                    $.each(data, function(k, v){
+                        $items.push(v);
+                    });
+                    object.trigger('tokenize:dropdown:fill', [$items]);
+                }
+            });
+        }
+    });
+
+    $('#select-search-category').tokenize2({
+      dropdownMaxItems:"10",
+      multiple: true,
+      placeholder: '{% trans "Search by Casino Category" %}',
+      searchMinLength:2,
+      dataSource: function(term, object){
+          $.ajax("{% url 'admin-panel:casino-categories' %}", {
+              type: "Get",
+              data: { search: term, start: 0 },
+              global: false, 
+              dataType: 'json',
+              success: function(data){
+                  var $items = [];
+                  $.each(data, function(k, v){
+                      $items.push(v);
+                  });
+                  object.trigger('tokenize:dropdown:fill', [$items]);
+              }
+          });
+      }
+    });
+
+
+
+    $(document).ready(function() {
+
+      
+    });
+
+    $('#mobile-collapse').click(function(){ 
+        $("#nw1").toggleClass('left-spacer');  
+    });
+
+    $('.add-game-category-popup').magnificPopup({
+      type:'inline',
+      midClick: true,
+      fixedContentPos: true,
+      callbacks: {
+          beforeOpen: function() {
+            game_id = this.st.el.attr('data-management-game-id');
+            $("#casino_game_id").val(game_id)
+            add_categories_in_table(game_id)
+          },
+          close: function(){
+            $("#casino_game_id").val("")
+          }
+      },
+    });
+
+    $('.popup-closebutton').click(function() {
+      $.magnificPopup.close();
+    });
+
+    $('#add-game-category-btn').click(function() {
+      casinoCategoryName = $("#casino_category_name").val()
+      gameId = $("#casino_game_id").val()
+      if (gameId) {
+        status = set_game_category(gameId, casinoCategoryName)
+        if(status==true){
+          location.reload()
+        }
+      }else{
+        bulk_change_game_category(casinoCategoryName)
+      }
+      
+    });
+
+    $('#edit-game-category-btn').click(function() {
+      casinoCategoryName = $("#casino_category_name").val()
+      existingCasinoCategoryName = $("#existing_casino_category_name").val()
+      status = set_game_category(existingCasinoCategoryName, casinoCategoryName, editExsitingCategory=true)
+      if(status==true){
+        location.reload()
+      }
+    });
+
+    function select_row(img_id) {
+      if($(`#${img_id}`).prop("checked")){
+        $(`#${img_id}`).prop("checked",false);
+      }else{
+        $(`#${img_id}`).prop("checked",true);
+      }
+
+      if ($(".select-checkbox-category:checked").length>1) {
+        $("#bulk-select-casino-category").slideDown(500);
+      }else{
+        $("#bulk-select-casino-category").stop().slideUp(500);
+      }
+    }
+
+    function set_game_category(gameId, casinoCategoryName, editExsitingCategory=false){
+      if(casinoCategoryName==null || casinoCategoryName==""){
+        Swal.fire({
+          icon: 'info',
+          title: 'Invalid Category',
+          text: "Invalid category name",
+        });
+        return
+      }
+      Swal.fire({
+        title: "Are you sure?",
+        text: `Set game category to ${casinoCategoryName}`,
+        icon: "warning",
+        showCancelButton: true,
+        cancelButtonColor: "#343a40",
+        showConfirmButton: true,
+      }).then(function (result) {
+        if(result.isConfirmed){
+          $.ajax({
+            url: "{% url 'admin-panel:casino-categories' %}",
+            type: "POST",
+            dataType: "json",
+            data: {
+                game_id: gameId,
+                category_name: casinoCategoryName,
+                is_edit: editExsitingCategory,
+                csrfmiddlewaretoken: '{{ csrf_token }}'
+            },
+            success: function(result){
+              if (result.success == true) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success',
+                    text: result.message,
+                }).then(() => {
+                  location.reload();
+                });
+              } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: result.message,
+                }).then(() => {
+                  location.reload();
+                });
+              }
+            },
+          });
+        }else{
+          return false
+        }
+      });
+    }
+
+
+    function change_game_category(element) {
+      Swal.fire({
+        title: "Are you sure?",
+        text: `Change game category to ${element.value}`,
+        icon: "warning",
+        showCancelButton: true,
+        cancelButtonColor: "#343a40",
+        showConfirmButton: true,
+      }).then(function (result) {
+        if(result.isConfirmed){
+          const gameId = element.getAttribute('management-game-id');
+
+          $.ajax({
+            url: "{% url 'admin-panel:casino-categories' %}",
+            type: "POST",
+            dataType: "json",
+            data: {
+                game_id: gameId,
+                category_name: element.value,
+                is_edit: false,
+                csrfmiddlewaretoken: '{{ csrf_token }}'
+            },
+            success: function(result){
+              if (result.success == true) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success',
+                    text: result.message,
+                }).then(() => {
+                  element.setAttribute('data-category', element.value);
+                });
+              } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: result.message,
+                }).then(() => {
+                  element.value = element.dataset.category;
+                });
+              }
+            },
+          });
+        }else{
+          element.value = element.dataset.category
+        }
+      });
+    };
+
+
+    function bulk_change_game_category(newCategoryName) {
+      Swal.fire({
+        title: "Are you sure?",
+        text: `Change game category to ${newCategoryName}`,
+        icon: "warning",
+        showCancelButton: true,
+        cancelButtonColor: "#343a40",
+        showConfirmButton: true,
+      }).then(function (result) {
+        if(result.isConfirmed){
+          checkedIds = $(".select-checkbox-category:checked").map(function() {
+            return this.id;
+          }).get();
+
+          $.ajax({
+            url: "{% url 'admin-panel:casino-categories' %}",
+            type: "POST",
+            dataType: "json",
+            data: {
+              game_id: checkedIds,
+              category_name: newCategoryName,
+              is_bulk_change: true,
+              csrfmiddlewaretoken: '{{ csrf_token }}'
+            },
+            success: function(result){
+              if (result.success == true) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success',
+                    text: result.message,
+                }).then(() => {
+                  location.reload();
+                });
+              } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: result.message,
+                }).then(() => {
+                  location.reload();
+                });
+              }
+            },
+            error: function(response){
+              Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: response.responseJSON.message,
+              }).then(() => {
+                location.reload();
+              });
+            }
+          });
+        }else{
+          $("#bulk-select-casino-category").val("")
+		  $("#select-bulk-category > option:selected").removeAttr("selected");
+		  $("#select-bulk-category > option:default").prop("selected", true);
+        }
+      });
+    };
+
+    function switch_add_edit_button(element, gameId, existingCategoryName){
+      if(element.innerText == "Edit"){
+          $("#edit-game-category-btn").show()
+          $("#add-game-category-btn").hide()
+          $('#casino_category_name').val(existingCategoryName);
+          $('#casino_game_id').val(gameId)
+          $('#existing_casino_category_name').val(existingCategoryName)
+          element.innerText = "Cancel"
+      }else{
+          $("#edit-game-category-btn").hide()
+          $("#add-game-category-btn").show()
+          $('#casino_category_name').val("");
+          $('#casino_game_id').val("")
+          $('#existing_casino_category_name').val("")
+          element.innerText = "Edit"
+      }
+    }
+
+    function add_categories_in_table(game_id){
+      $.ajax({
+        url: "{% url 'admin-panel:casino-categories' %}",
+        type: "GET",
+        dataType: "json",
+        data: {
+            csrfmiddlewaretoken: '{{ csrf_token }}'
+        },
+        success: function(data){
+          if (data.length>0) {
+            var tableRows = "";
+            var count = 1;
+            data.forEach(function (data) {
+              tableRows += `
+                  <tr>
+                      <td class="text-center">${data.text}</td>
+                      <td class="text-center">
+                        <button class='btn btn-secondary data-game-id btn-sm edit-btn' onclick = "switch_add_edit_button(this, '${game_id}', '${data.value}')" >Edit</button>
+                      </td>
+                  </tr>
+              `
+              count++;
+            });
+          }else{
+              var tableRows = "<tr><td colspan='2'>No Data</td></tr>";
+          }
+          $("#casino-categories-table-body").html(tableRows);
+        },
+      });
+    }
+   
+    function switchToggle(element, switch_type="status") {
+        element = element.previousElementSibling
+        const gameId = element.getAttribute('game-id');
+        console.log(gameId);
+        $.ajax({
+            url: "{% url 'admin-panel:manage-spin-to-win-game-status' %}",
+            type: "POST",
+            dataType: "json",
+            data: {
+                game_id: gameId,
+                switch: switch_type,
+                csrfmiddlewaretoken: '{{ csrf_token }}'
+            },
+            success: function(data){
+                element.parentNode.classList.toggle('active');
+                if (data['message']=="Game disabled") {
+                  element.checked = false
+                } else if (data['message']=="Game enabled") {
+                  element.checked = true
+                }
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success',
+                    text: data['message'],
+                });
+            },
+        });
+      }
+    
+</script>
+{% endblock content %}

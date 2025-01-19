@@ -1,0 +1,357 @@
+{% extends "index.html" %}
+{% load static %}
+{% load i18n %}
+{% block title %}
+Create Template
+{% endblock title %}
+{% block javascript %}
+    <script src="{% static 'tinymce/tinymce.min.js' %}"></script>
+    <script>
+        tinymce.init({
+            selector: '#editor',
+            cleanup_on_startup: true,
+            custom_undo_redo_levels: 20,
+            theme: 'silver',
+            plugins: [
+                'textcolor save link image media preview codesample contextmenu',
+                'table code lists fullscreen insertdatetime nonbreaking',
+                'contextmenu directionality searchreplace wordcount visualblocks',
+                'visualchars code fullscreen autolink lists charmap print hr',
+                'anchor pagebreak'
+            ],
+            toolbar1: `
+                fullscreen preview bold italic underline | fontselect fontsizeselect |
+                forecolor backcolor | alignleft alignright aligncenter alignjustify |
+                indent outdent | numlist table | link image media | codesample
+            `,
+            toolbar2: `
+                visualblocks visualchars | charmap hr pagebreak nonbreaking anchor | code
+            `,
+            contextmenu: 'formats | link image',
+            menubar: true,
+            statusbar: true,
+            file_picker_callback: tinymce_custom_file_picker,
+            content_style: "body {line-height:1 }",
+            skin: "oxide-dark",
+    	    content_css: "dark",
+            fontsize_formats: '8pt 9pt 10pt 11pt 12pt 13pt 14pt 15pt 16pt 17pt 18pt 19pt 20pt 21pt 22pt 23pt 24pt 25pt 26pt 27pt 28pt 29pt 30pt 31pt 32pt 33pt 34pt 35pt 36pt',
+            lineheight_formats: '0.50 0.75 1 1.25 1.50 1.75 2',
+        });
+    </script>
+{% endblock javascript %}
+
+{% block content %}
+<style>
+    .cke_button__about_icon{
+        visibility: hidden;
+    }
+    .admin-card{
+        background-color: #ffffff;
+        box-shadow: 0px 0px 6px 6px rgb(204 204 204 / 0.25);
+        padding: 30px 10px;
+    }
+    .pcode.left-spacer {
+	    margin-left: 0px;
+    }
+    .pcode{
+	    margin-left: 250px;
+    }
+    @media(max-width:767px){
+        .pcode{
+	        margin-left: 0px;
+        }
+    }
+
+</style>
+<div class="pcode" id='nw1' >
+    <div>
+        <div class="container-fluid pt-4" >
+            <div class="admin-card">
+                <div class="row">
+                    <div class="col-xs-12 col-lg-12 ">
+                        <div class="page-content"  >
+                            <div class="main-heading-wrap">
+                                <h5>{% trans 'Create Template' %}</h5>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row flex-sm-nowrap flex-wrap">  
+                    <div class="col" style="min-width: 210px;">
+                        <div>
+                            <div style="margin-bottom: 7px;">
+                                <span style="font-weight: bold;">{% trans "Subject" %} 
+                                    <span class="text-danger">*</span> 
+                                </span>
+                            </div>
+                            <input type="text" id="subject" maxlength="250" placeholder="Enter Subject" name="subject" class="form-control">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-3" style="margin-top:10px;">
+                    <div class="search-row col-md-3 mb-3 mb-md-0" >
+                        <div style="margin-bottom: 7px;">
+                            <span style="font-weight: bold;">{% trans "Category" %} 
+                                <span class="text-danger">*</span> 
+                            </span>
+                        </div>
+                        <div class="">
+                            <select id="select-sort" class="form-control select-input" name="property">
+                                <option selected="selected" disabled>{% trans "Notification Category" %}</option>
+                                <option {% if order == '1' %}selected="selected" {% endif %} value="Upcoming Event Notification">{% trans "Upcoming Event Notification" %}</option>
+                                <option {% if order == '2' %}selected="selected" {% endif %} value="Promotional Notification">{% trans "Promotional Notification" %}</option>
+                                <option {% if order == '3' %}selected="selected" {% endif %} value="Site Maintenance Notification">{% trans "Site Maintenance Notification" %}</option>
+                                <option {% if order == '4' %}selected="selected" {% endif %} value="Active User Notification">{% trans "Active User Notification" %}</option>
+                                <option {% if order == '5' %}selected="selected" {% endif %} value="Inactive User Notification">{% trans "Inactive User Notification" %}</option>
+                            </select>
+                            <div class="dropDownSelect2" ></div>
+                        </div>
+                    </div>
+
+                    <div class="search-row col-md-7 mb-3 mb-md-0" >
+                        <div style="margin-bottom: 7px;">
+                            <span style="font-weight: bold;">{% trans "Emails" %} </span>
+                            <span class="text-danger">*</span> 
+
+                        </div>
+                        <div class="rs-select2--light rs-select2--md" multiple="multiple">
+                            <input type="email" id="emails-input" class="form-control" placeholder="Comma separated emails" multiple>
+                        </div>
+                    </div>
+
+                    <div class="search-row col-md-2 mb-3 mb-md-0" >
+                        <div style="margin-bottom: 7px;">
+                            <span style="font-weight: bold;">{% trans "Scheduled at (UTC)" %}</span>
+                            <span class="text-danger">*</span> 
+                        </div>
+                        <div class="">
+                            <input placeholder="Select Date" type="text" class="form-control" id="scheduled_at" onchange="validateDate()" name="to" autocomplete="off" readonly="true" style="background-color:transparent">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-3" style="margin-top:10px;">
+                    <div class="search-row col-md-12 mb-3 mb-md-0" >
+                        <div style="margin-bottom: 7px;">
+                            <span style="font-weight: bold;">{% trans "Content" %} 
+                                <span class="text-danger">*</span> 
+                            </span>
+                        </div>
+                        <textarea name="editor" id="editor" rows="20" cols="80"></textarea>
+                    </div>
+                </div>
+
+                <!-- <div class="row mb-3" style="margin-top:10px;">
+                    <div class="search-row col-md-6 mb-3 mb-md-0" >
+                        <div style="margin-bottom: 7px;">
+                            <span style="font-weight: bold;">{% trans "Below listed variables can be used in the above text area::" %} </span>
+                        </div>
+                    </div>
+                </div> -->
+
+                <div class="row mb-3" style="margin-top:10px;">
+                    <div class="search-row col-md-6 mb-3 mb-md-0" >
+                        <div style="margin-bottom: 7px;">
+                            <button class="btn btn-primary" id="button-search" onclick="saveTemplate(this)">{% trans "Submit" %}</button>
+                            <a href="/admin/crm" class="btn btn-primary" id="button-search">{% trans "Cancel" %}</a>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    $('#scheduled_at').datetimepicker({
+            format: 'd/m/Y H:i',
+            timepicker: true,
+            minDate : 0,
+            step :15
+        }
+    );
+
+    function validateEmails(emails){
+        var emails = emails.split(',');
+        var valid = true;
+        var regex = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+
+        for (var i = 0; i < emails.length; i++) {
+            if( emails[i] === "" || !regex.test(emails[i].replace(/\s/g, ""))){
+                valid = false;
+            }
+        }
+        return valid;
+    }
+    
+    
+    function validateDate(){ 
+                    
+                    var date = $("#scheduled_at").val()            
+                    hour = date.split(" ")[1].split(":")[0];
+                    minute = date.split(" ")[1].split(":")[1];
+                    console.log(date)
+                    if (date != "Select Date") {
+                    selected_day = parseInt(date.split("/")[0]);
+                    selected_month = parseInt(date.split("/")[1]);
+                    selected_year = date.split("/")[2];
+                    selected_year = selected_year.split(" ")[0];
+                    current_day = new Date().getUTCDate();
+                    
+                    current_month = new Date().getUTCMonth() + 1;
+                    current_year = new Date().getUTCFullYear();
+                    current_minute = new Date().getUTCMinutes();
+                    console.log("Cuurent minute",current_minute);
+
+                    if(selected_year == current_year && selected_month == current_month && selected_day == current_day){
+
+                        if(hour > new Date().getUTCHours()){
+                            return true;
+                        }else if(hour == new Date().getUTCHours()){
+                            if(minute > new Date().getUTCMinutes()){
+                                return true;
+                            }else{
+                                Swal.fire({
+                            icon: 'error',
+                            title: 'Oops...',
+                            text: 'You cannot select a time in the past!',
+                            });
+                            $("#scheduled_at").val("Select Date");
+                            return false;
+   
+                            }
+                        }else{
+                            Swal.fire({
+                            icon: 'error',
+                            title: 'Oops...',
+                            text: 'You cannot select a time in the past!',
+                            });
+                            $("#scheduled_at").val("Select Date");
+                            return false;
+                        }
+                    }
+                    else if (selected_year < current_year) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Oops...',
+                            text: 'You cannot select a time in the past!',
+                        });
+                        $("#scheduled_at").val("Select Date");
+                        return false;
+                    }
+                    else if (selected_year == current_year && selected_month < current_month) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Oops...',
+                            text: 'You cannot select a time in the past!',
+                        });
+                        $("#scheduled_at").val("Select Date");
+                        return false;
+                    }
+                    else if (selected_year == current_year && selected_month == current_month && selected_day < current_day) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Oops...',
+                            text: 'You cannot select a time in the past!',
+                        });
+                        $("#scheduled_at").val("Select Date");
+                        return false;
+                    }
+                    else{
+                        return true;
+                    }
+                    
+                }
+            }
+
+    function saveTemplate(element) {
+        var subject = $('#subject').val();
+        var scheduled_at  = $('#scheduled_at').val();
+        if (validateEmails($("#emails-input").val()) == false && $("#emails-input").val() != ""){
+            Swal.fire({
+                icon : 'error',
+                title : "Error",
+                text : 'Invalid Email Input'
+            })
+        }
+        else if(subject.replaceAll(' ','').match(/^[0-9]+$/)) {
+            Swal.fire({
+                icon : 'error',
+                title : "Error",
+                text : 'Invalid subject value' 
+
+            })
+        }
+        else if(tinymce.get('editor').getContent().length > 2000){
+            Swal.fire({
+                icon : 'error',
+                title : "Error",
+                text : 'Content cannot be more than 2000 characters' 
+
+            })
+        }
+        else{
+        
+        $.ajax({
+            url: "{% url 'admin-panel:create-crm-template' %}",
+            type: "POST",
+            dataType: "json",
+            data: {
+                subject: $("#subject").val(),
+                category: $("#select-sort").val(),
+                emails: $("#emails-input").val(),
+                scheduled_at: $("#scheduled_at").val(),
+                content: tinymce.get('editor').getContent(),
+                csrfmiddlewaretoken: '{{ csrf_token }}'
+            },
+            success: function (data) {
+                if(data.status === 'error'){
+                    Swal.fire({
+                        icon: "error",
+                        title: data["status"],
+                        text: data["message"]
+                    });
+                }
+                else if(data.status === 'Success'){
+                    Swal.fire({
+                        icon: "success",
+                        title: data["status"],
+                        text: data["message"]
+                    }).then(() => {
+                        window.location = "{% url 'admin-panel:crm' %}";
+                    });
+                }
+            }
+        });
+    }
+    }
+    
+    $('#select-user').tokenize2({
+        multiple: true,
+        placeholder: "{% trans 'Select Users' %}",
+        searchMinLength:0,
+        search: true,
+        dataSource: function(term, object){
+            $.ajax("{% url 'admin-panel:user-email-ajax' %}", {
+                type: "POST",
+                data: { search: term, start: 0 },
+                global: false, 
+                dataType: 'json',
+                success: function(data){
+                    var $items = [];
+                    $.each(data, function(k, v){
+                        $items.push(v);
+                        console.log(v)
+                    });
+                    object.trigger('tokenize:dropdown:fill', [$items]);
+                }
+            });
+        }
+    });
+
+</script>
+{% endblock content %}

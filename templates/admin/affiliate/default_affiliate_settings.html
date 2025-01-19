@@ -1,0 +1,201 @@
+{% extends "index.html" %}
+{% load static %}
+{% load i18n %}
+{% load math %}
+{% load date_utils %}
+{% load i18n %}
+
+{% block title %}
+Default Affiliate Settings
+{% endblock title %}
+{% block content %}
+<style>
+    .admin-card{
+        background-color: #ffffff;
+        box-shadow: 0px 0px 6px 6px rgb(204 204 204 / 0.25);
+        padding: 30px 10px;
+    }
+
+    .pcode.left-spacer {
+    margin-left: 0px;
+    }
+    .pcode{
+    margin-left: 250px;
+    }
+
+    @media(max-width:991px){
+        .setting-page .card-title h3{
+        font-size: 18px;
+        }
+        .pcode{
+        margin-left: 0px;
+        }
+    }
+    .setting-page .card-title h3{
+    font-size: 18px;
+    }
+ 
+</style>
+<div class="pcode" id='nw1' >
+<div>
+    <div class="container-fluid ">
+        <div class="pt-3 mx-auto" style="max-width: 540px;">
+            {% include "includes/messages.html" %}
+        </div>
+        <div class="row">
+            <div class="col-xs-12 col-lg-12 ">
+                <div class="page-content pt-4 setting-page">
+                    <div class='container-fluid pt-2'>
+                        <!-- Bonus Section -->
+                            <div class="row mb-4">
+                                <!-- Referral Bonus -->
+                                
+                                        <div class="page-content col mb-3 mb-md-0">
+                                            <div class="admin-card">
+                                                <div class="main-heading-wrap">
+                                                    <h5>{% trans "Affiliate Settings" %}</h5>
+                                                </div>
+                                                <div class="container-fluid " style="padding-top: 10px">
+                                                    <form>
+                                                        <div class="row" style="margin-bottom: -20px;">
+                                                        <div class="col-xs-12 col-md-4 form-group" style="min-width: 210px;">
+                                                            <div style="font-weight: bold; color:black;">
+                                                                <span style="font-weight: bold;">{% trans "Percentage" %}</span>
+                                                                <input type="number" id="input-bonus-percentage" name="input1-group2"
+                                                                    placeholder="{% trans 'Enter Default Bonus Percentage.' %}" class="form-control"
+                                                                    required="required" autocomplete='off' value="{{ percentage }}"
+                                                                    onkeypress='return event.charCode >= 48 && event.charCode <= 57 ||
+                                                                    event.charCode == 46'
+                                                                    onkeypress='return event.charCode >= 48 && event.charCode <= 57'
+                                                                    min="1" max="100"
+                                                                    onchange=checkBonusPercentage(this)>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <div class="col-xs-12 col-md-4 form-group" style="min-width: 210px;">
+                                                            <div style="font-weight: bold; color:black;">
+                                                                <span style="font-weight: bold;">{% trans "Deposit Count" %}</span>
+                                                                <input type="text" id="input-bonus-limit" name="input1-group2"
+                                                                    placeholder="{% trans 'Enter maximum bonus limit.' %}" class="form-control"
+                                                                    required="required" autocomplete='off' value="{{deposit_count}}"
+                                                                    onkeypress='return event.charCode >= 48 && event.charCode <= 57' maxlength="6">
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="col-xs-12 col-md-4 form-group" style="min-width: 210px;">
+                                                            <div style="font-weight: bold; color:black;">
+                                                                <span style="font-weight: bold;">{% trans "No of Days" %}</span>
+                                                                <input type="text" id="usage-limit" name="usage-limit"
+                                                                    placeholder="{% trans 'Per day usage' %}" class="form-control"
+                                                                    required="required" autocomplete='off' value="{{no_of_days}}"
+                                                                    onkeypress='return event.charCode >= 48 && event.charCode <= 57' maxlength="6">
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="text-center col-xs-12 col-md-1 d-md-inline-block" >
+                                                            <span style='padding:0.5em;'></span>
+                                                            <button class="btn btn-primary" id="bonus-button-add">
+                                                                {% trans "Submit" %}
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                         
+                                <!-- Referral Bonus Ends -->
+                            </div>
+                        <!-- Bonus Section Ends -->
+
+                       
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+</div>
+</div>
+<script>
+    $('#mobile-collapse').click(function () {
+        $("#nw1").toggleClass('left-spacer');
+    });
+    $("#bonus-button-add").click(function (e) {
+        var percentage = $("#input-bonus-percentage").val()
+        var deposit_count = $("#input-bonus-limit").val()
+        var no_of_days = $("#usage-limit").val()
+
+       
+        if (percentage > 100)  {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Percentage must be less then 100',
+            })
+            return false
+        }
+       
+        else {
+            e.preventDefault()
+            Swal.fire({
+                html:
+                    '<div class="swal-custom-content">' +
+                    '<p class="swal-custom-icon"><i class="cp-icon">&#xe815;</i></p>' +
+                    '<p class="swal-custom-title">{% trans "Are you sure" %} ?</p>' +
+                    '</div>',
+                customClass: {
+                    actions: 'swal-custom-actions',
+                    confirmButton: 'swal-custom-btn swal-custom-confirm-btn',
+                    cancelButton: 'swal-custom-btn swal-custom-cancel-btn',
+                },
+                showCancelButton: true,
+                confirmButtonText: '{% trans "Yes" %}',
+                cancelButtonText: '{% trans "No" %}'
+            }).then((result) => {
+                if (result.value) {
+                    $.ajax({
+                        url: "{% url 'admin-panel:default-affiliate-settings' %}",
+                        type: "POST",
+                        dataType: "json",
+                        data: {
+                            percentage: percentage,
+                            no_of_days: no_of_days,
+                            deposit_count : deposit_count,
+                            csrfmiddlewaretoken: '{{ csrf_token }}'
+                        },
+                        success: function (data) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success',
+                                text: data['message'],
+                            })
+                            location.reload();
+                        },
+                    });
+                } else if (result.dismiss === "cancel") {
+                    // show message ?
+                }
+            })
+        }
+    })
+    $('.form-control').bind('copy paste cut',function(e) {
+      e.preventDefault();
+      Swal.fire('cut,copy & paste options are disabled !!');
+});
+
+function checkBonusPercentage(input) {
+    const value = parseFloat(input.value);
+    if (isNaN(value) || value > 100) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Invalid Bonus Percentage',
+            text: 'Please enter a percentage between 1 and 100.',
+        });
+        input.value = '';
+    }
+}
+
+</script>
+
+{% endblock content %}

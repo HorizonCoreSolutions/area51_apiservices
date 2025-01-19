@@ -1,0 +1,250 @@
+{% load static  %}
+{% load i18n %}
+<!DOCTYPE html>
+<html >
+
+<link>
+    
+    <!-- HTML5 Shim and Respond.js IE10 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 10]>
+      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+      <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+      <![endif]-->
+    <!-- Meta -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimal-ui">
+    {#    <meta name="csrf-token" content="{{ csrf_token() }}">#}
+
+    <title>
+        {% block title %}
+        {% endblock %}
+    </title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+    <meta name="keywords" content="bootstrap, bootstrap admin template, admin theme, admin dashboard, dashboard template, admin template, responsive" />
+    <meta name="author" content="Codedthemes" />
+    <!-- Favicon icon -->
+    <link rel="icon" href="{% static '/images/favicon.ico' %}" type="image/x-icon">
+    
+    <!-- Google font-->
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,600,700" rel="stylesheet">
+    <!-- waves.css -->
+    <link rel="stylesheet" href="{% static '/pages/waves/css/waves.min.css' %}" type="text/css" media="all">
+    <!-- Required Fremwork -->
+    <link rel="stylesheet" type="text/css" href="{% static '/css/bootstrap/css/bootstrap.min.css' %}">
+    <!-- waves.css -->
+    <link rel="stylesheet" href="{% static '/pages/waves/css/waves.min.css' %}" type="text/css" media="all">
+    <!-- themify icon -->
+    <link rel="stylesheet" type="text/css" href="{% static '/icon/themify-icons/themify-icons.css' %}">
+    <!-- font-awesome-n -->
+    <link rel="stylesheet" type="text/css" href="{% static '/css/font-awesome-n.min.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static '/css/font-awesome.min.css' %}">
+    <!-- scrollbar.css -->
+    <link rel="stylesheet" type="text/css" href="{% static '/css/jquery.mCustomScrollbar.css' %}">
+    <!-- Style.css -->
+    <link rel="stylesheet" type="text/css" href="{% static '/css/style.css' %}">
+   
+    <script type="text/javascript" src="{% static '/js/jquery/jquery.min.js' %} "></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@9"></script>
+    <script src="{% static 'js/jquery-dateformat.min.js' %}" ></script>
+    <script src="{% static 'datetimepicker/build/jquery.datetimepicker.full.min.js' %}" ></script>
+    <script src="{% static '/select2/select2.min.js' %}"></script>
+    <link href="{% static '/select2/select2.min.css' %}" rel="stylesheet" media="all">
+    <script type="text/javascript" src="{% static '/js/jquery-ui/jquery-ui.min.js' %} "></script>
+    <script type="text/javascript" src="{% static '/js/popper.js/popper.min.js' %}"></script>
+    <script type="text/javascript" src="{% static '/js/bootstrap/js/bootstrap.min.js' %} "></script>
+    <!-- waves js -->
+    <script src="{% static '/pages/waves/js/waves.min.js' %}"></script>
+    <!-- jquery slimscroll js -->
+    <script type="text/javascript" src="{% static '/js/jquery-slimscroll/jquery.slimscroll.js' %}"></script>
+
+    <!-- slimscroll js -->
+    <script src="{% static '/js/jquery.mCustomScrollbar.concat.min.js' %} "></script>
+
+    <!-- menu js -->
+    <script src="{% static '/js/pcoded.min.js' %}"></script>
+    <script src="{% static '/js/vertical/vertical-layout.min.js' %} "></script>
+
+    <script type="text/javascript" src="{% static '/js/script.js' %} "></script>
+    <script src="{% static '/Tokenize2/tokenize2.js' %}" ></script>
+    <link href="{% static '/Tokenize2/tokenize2.css' %}" rel="stylesheet">
+    
+    <script src="{% static '/magnific-popup/jquery.magnific-popup.min.js' %}"></script>
+    <link href="{% static 'datetimepicker/build/jquery.datetimepicker.min.css' %}" rel="stylesheet">
+    
+    <link href="{% static '/magnific-popup/magnific-popup.css' %}" rel="stylesheet" media="all">
+
+	<!-- Data Table -->
+	<link href="https://cdn.datatables.net/1.10.24/css/jquery.dataTables.min.css" rel="stylesheet">
+	<link href="https://cdn.datatables.net/buttons/1.7.0/css/buttons.dataTables.min.css" rel="stylesheet">
+	
+	<script src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
+	<script src="https://cdn.datatables.net/buttons/1.7.0/js/dataTables.buttons.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+	<script src="https://cdn.datatables.net/buttons/1.7.0/js/buttons.html5.min.js"></script>
+	<script src="https://cdn.datatables.net/buttons/1.7.0/js/buttons.print.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.3/js/lightbox.min.js" integrity="sha512-k2GFCTbp9rQU412BStrcD/rlwv1PYec9SNrkbQlo6RZCf75l6KcC3UwDY8H5n5hl4v77IDtIPwOk9Dqjs/mMBQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.3/js/lightbox.js" integrity="sha512-UHlZzRsMRK/ENyZqAJSmp/EwG8K/1X/SzErVgPc0c9pFyhUwUQmoKeEvv9X0uNw8x46FxgIJqlD2opSoH5fjug==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.3/css/lightbox.css" integrity="sha512-Woz+DqWYJ51bpVk5Fv0yES/edIMXjj3Ynda+KWTIkGoynAMHrqTcDUQltbipuiaD5ymEo9520lyoVOo9jCQOCA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+	
+
+    <script>
+        function tinymce_custom_file_picker(cb, value, meta) {
+            var input = document.createElement("input");
+            input.setAttribute("type", "file");
+            input.setAttribute("accept", "image/*");
+        
+            input.onchange = function () {
+                var file = this.files[0];
+                var formData = new FormData();
+                formData.append('file', file);
+                formData.append('csrfmiddlewaretoken', "{{ csrf_token }}");
+
+        
+                $.ajax({
+                    url: "{% url 'admin-panel:upload-cms-file' %}",
+                    type: 'POST',
+                    dataType: 'json',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function (data) {
+                        if (data.status === 'error') {
+                            console.error('Upload failed:', data.message);
+                        } else if (data.status === 'Success') {
+                            cb(data.url, { title: file.name });
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Error uploading file:', error);
+                    }
+                });
+            };
+        
+            input.click();
+        }
+    </script>
+
+
+
+    {% block javascript %}
+    {% endblock %}
+</head>
+<body>
+    {% include "./header.html" %}
+    
+    {% block content %}
+    {% endblock content %}
+    <div class="modal"></div>
+    
+    <script type="text/javascript">
+        $(document).ready(function () {
+            {% if not 'user_timezone' in request.session %}
+                let timezone_name = -new Date().getTimezoneOffset();
+                $.ajax({
+                    url : "{% url 'admin-panel:set-timezone' %}",
+                    type: "POST",
+                    data : {
+                        user_timezone: getUserTimezone(),
+                        timezone : timezone_name
+                    },
+                    success : function(data){
+    
+                    },
+                    error : function(data){
+    
+                    }
+                 })
+            {% endif %}
+
+            $(document).ajaxComplete(function(event, xhr, settings) {
+                if(xhr.status === 403){
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Permission Denied',
+                        text: "You do not have permission to access this resource.",
+                        confirmButtonText: "Okay"
+                    }).then(()=>{
+                        location.reload()
+                    });
+                }
+                else if ((xhr.status >= 300 && xhr.status < 400)||(xhr.responseText.includes("Sign In") && xhr.responseText.includes("login-form"))) {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Session Expired',
+                        text: "Please login to continue.",
+                        confirmButtonText: "Login"
+                    }).then(()=>{
+                        location.reload()
+                    });
+                }
+            });
+        });
+
+        window.onload = function() {
+            $('button[title="Insert/edit media"]').on('click', function() {
+                setTimeout(function() {
+                    var popupTitleElement = $('.tox-dialog__title');
+                    if (popupTitleElement.length > 0 && popupTitleElement.text().trim() === "Insert/Edit Media") {
+                        var uploadButton = $('.tox-browse-url');
+                        if (uploadButton.length > 0) {
+                            uploadButton.remove();
+                        }
+                    } else {
+                        console.log("Popup title is not 'Insert/Edit Media'");
+                    }
+                }, 100);
+            });
+        };
+        
+        
+        $.ajaxSetup({
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            }
+        });
+    
+        $body = $("body");
+    
+        $(document).on({
+            ajaxStart: function () {
+                $body.addClass("loading");
+            },
+            ajaxStop: function () {
+                $body.removeClass("loading");
+            }
+        });
+    
+    
+        function showMessage(message, status) {
+            let http_class_name = ""
+            if (status == "error") {
+                http_class_name = "alert-danger";
+            } else {
+                http_class_name = "alert-success";
+            }
+                let html =
+                    '<div class="alert ' + http_class_name + ' alert-block">' +
+                    '<button type="button" class="close" data-dismiss="alert">×</button>' +
+                    '<strong>' + message + '</strong>' +
+                    '</div>';
+                $('#notification_messages').html(html);
+        };
+
+        function getUserTimezone() {
+            if (Intl.DateTimeFormat && typeof Intl.DateTimeFormat().resolvedOptions === 'function') {
+                return Intl.DateTimeFormat().resolvedOptions().timeZone;
+            } else {
+                return 'UTC';
+            }
+        };
+    
+    </script>
+    </body>
+    </html>
+    

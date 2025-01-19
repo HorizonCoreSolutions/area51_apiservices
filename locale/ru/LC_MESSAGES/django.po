@@ -1,0 +1,764 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2020-07-31 14:02+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: apps/admin_panel/forms.py:14 apps/admin_panel/forms.py:59
+#: apps/admin_panel/forms.py:98 templates/login.html:13
+msgid "Username"
+msgstr "Имя пользователя"
+
+#: apps/admin_panel/forms.py:24 apps/admin_panel/forms.py:70
+#: apps/admin_panel/forms.py:109 templates/login.html:19
+#, fuzzy
+#| msgid "New Password"
+msgid "Password"
+msgstr "Пароль"
+
+#: apps/admin_panel/validators.py:12
+msgid ""
+"Enter a valid username. This value may contain only English letters, numbers."
+msgstr ""
+
+#: apps/bets/filters.py:8
+msgid "Withdraw"
+msgstr ""
+
+#: apps/bets/filters.py:9
+msgid "Deposit"
+msgstr ""
+
+#: apps/bets/models.py:29
+msgid "Pending Charge"
+msgstr ""
+
+#: apps/bets/models.py:30
+msgid "Failed Charge"
+msgstr ""
+
+#: apps/bets/models.py:31
+msgid "Charged"
+msgstr "Начислённый"
+
+#: apps/bets/models.py:32
+msgid "Pending Pay"
+msgstr ""
+
+#: apps/bets/models.py:33
+msgid "Failed Reject"
+msgstr ""
+
+#: apps/bets/models.py:40
+msgid "Single"
+msgstr "Одиночная"
+
+#: apps/bets/models.py:41
+msgid "Multiple"
+msgstr "Экспресс"
+
+#: apps/bets/models.py:48
+msgid "amount"
+msgstr ""
+
+#: apps/bets/models.py:50
+msgid "journal_entry"
+msgstr ""
+
+#: apps/bets/models.py:53
+msgid "Status"
+msgstr "Состояние"
+
+#: apps/bets/models.py:56
+msgid "previous_balance"
+msgstr ""
+
+#: apps/bets/models.py:59
+msgid "new_balance"
+msgstr ""
+
+#: apps/bets/models.py:62
+msgid "reference"
+msgstr ""
+
+#: apps/bets/models.py:65
+msgid "Description"
+msgstr "Описание"
+
+#: apps/bets/models.py:174
+msgid "multi stake"
+msgstr ""
+
+#: apps/bets/models.py:177
+msgid "multi price"
+msgstr ""
+
+#: apps/bets/models.py:242
+msgid "bet id"
+msgstr ""
+
+#: apps/bets/models.py:245 apps/pulls/models.py:127
+msgid "fixture id"
+msgstr ""
+
+#: apps/bets/models.py:246 apps/pulls/models.py:38
+msgid "market id"
+msgstr ""
+
+#: apps/bets/models.py:247
+msgid "provider id"
+msgstr ""
+
+#: apps/bets/models.py:249
+msgid "champ"
+msgstr ""
+
+#: apps/bets/models.py:252
+msgid "Мatch"
+msgstr "Матч"
+
+#: apps/bets/models.py:255
+msgid "market"
+msgstr ""
+
+#: apps/bets/models.py:258 apps/pulls/models.py:39 apps/pulls/models.py:40
+#: apps/pulls/models.py:41 apps/pulls/models.py:42 apps/pulls/models.py:43
+#: apps/pulls/models.py:48 apps/pulls/models.py:49 apps/pulls/models.py:50
+#: apps/pulls/models.py:51 apps/pulls/models.py:52 apps/pulls/models.py:57
+#: apps/pulls/models.py:58 apps/pulls/models.py:59 apps/pulls/models.py:60
+#: apps/pulls/models.py:61 apps/pulls/models.py:66 apps/pulls/models.py:67
+#: apps/pulls/models.py:68 apps/pulls/models.py:69 apps/pulls/models.py:70
+#: apps/pulls/models.py:80 apps/pulls/models.py:81 apps/pulls/models.py:82
+#: apps/pulls/models.py:83 apps/pulls/models.py:84 apps/pulls/models.py:129
+#: apps/pulls/models.py:130 apps/pulls/models.py:131 apps/pulls/models.py:132
+#: apps/pulls/models.py:133 apps/pulls/models.py:135 apps/pulls/models.py:136
+#: apps/pulls/models.py:137 apps/pulls/models.py:138 apps/pulls/models.py:139
+#: apps/pulls/models.py:141 apps/pulls/models.py:142 apps/pulls/models.py:143
+#: apps/pulls/models.py:144 apps/pulls/models.py:145
+msgid "name"
+msgstr ""
+
+#: apps/bets/models.py:262
+msgid "price"
+msgstr ""
+
+#: apps/bets/models.py:264
+msgid "start_date"
+msgstr ""
+
+#: apps/bets/serializers.py:97 apps/bets/serializers.py:103
+#: apps/bets/serializers.py:115 apps/bets/serializers.py:129
+msgid "Fixture id "
+msgstr ""
+
+#: apps/bets/serializers.py:135
+msgid "Insufficient balance!"
+msgstr ""
+
+#: apps/bets/serializers.py:139
+msgid "Stake can't be empty."
+msgstr ""
+
+#: apps/bets/serializers.py:166
+msgid "Bet stake must be less or equal to "
+msgstr ""
+
+#: apps/bets/serializers.py:170
+msgid "Bet stake must be great then "
+msgstr ""
+
+#: apps/bets/serializers.py:174
+msgid "Max odd must be "
+msgstr ""
+
+#: apps/bets/serializers.py:178
+msgid "Max win amount can be "
+msgstr ""
+
+#: apps/bets/serializers.py:196
+msgid "Same bet count must be "
+msgstr ""
+
+#: apps/bets/serializers.py:209
+msgid "For one bet max amount is "
+msgstr ""
+
+#: apps/bets/serializers.py:217
+msgid "For multiple bet with count 2 and price lower than 2.2 max bet is "
+msgstr ""
+
+#: apps/bets/serializers.py:223
+msgid "For multiple bet with count 3 and price lower than 3.2 max bet is "
+msgstr ""
+
+#: apps/bets/serializers.py:229
+msgid "For multiple bet with count 4 and price lower than 4.2 max bet is "
+msgstr ""
+
+#: apps/bets/views.py:40
+msgid "Bet created"
+msgstr ""
+
+#: apps/pulls/models.py:25
+msgid "NOT_STARTED"
+msgstr ""
+
+#: apps/pulls/models.py:26
+msgid "IN_PROGRESS"
+msgstr ""
+
+#: apps/pulls/models.py:27
+msgid "FINISHED"
+msgstr ""
+
+#: apps/pulls/models.py:28
+msgid "CANCELLED"
+msgstr ""
+
+#: apps/pulls/models.py:29
+msgid "POSTPONED"
+msgstr ""
+
+#: apps/pulls/models.py:30
+msgid "INTERRUPTED"
+msgstr ""
+
+#: apps/pulls/models.py:31
+msgid "ABANDONED"
+msgstr ""
+
+#: apps/pulls/models.py:32
+msgid "COVERAGE_LOST"
+msgstr ""
+
+#: apps/pulls/models.py:33
+msgid "ABOUT_TO_START"
+msgstr ""
+
+#: apps/pulls/models.py:47
+msgid "sport id"
+msgstr ""
+
+#: apps/pulls/models.py:56
+msgid "location id"
+msgstr ""
+
+#: apps/pulls/models.py:65
+msgid "league id"
+msgstr ""
+
+#: apps/pulls/models.py:74
+msgid "season"
+msgstr ""
+
+#: apps/pulls/models.py:79
+msgid "participant id"
+msgstr ""
+
+#: apps/pulls/models.py:148
+msgid "Start date"
+msgstr ""
+
+#: apps/pulls/models.py:151
+msgid "Last update"
+msgstr ""
+
+#: apps/pulls/models.py:267
+msgid "Participant position"
+msgstr ""
+
+#: apps/pulls/models.py:269
+msgid "Participant rotation id"
+msgstr ""
+
+#: apps/pulls/models.py:270
+msgid "Participant active status"
+msgstr ""
+
+#: apps/pulls/serializers.py:601
+msgid "Event is already in favorites."
+msgstr ""
+
+#: apps/pulls/views.py:532
+msgid "Favorite added"
+msgstr ""
+
+#: apps/pulls/views.py:605
+msgid "You don't have permission to delete this favorite event."
+msgstr ""
+
+#: apps/users/filters.py:7 templates/admin/agent/agents.html:47
+#: templates/admin/dealer/dealers.html:22
+#: templates/admin/player/players.html:55
+msgid "Recent Login"
+msgstr "Недавний вход"
+
+#: apps/users/filters.py:8 templates/admin/agent/agents.html:48
+#: templates/admin/dealer/dealers.html:23
+#: templates/admin/player/players.html:56
+msgid "Credit Ascending"
+msgstr "Кредит по возрастанию"
+
+#: apps/users/filters.py:9 templates/admin/agent/agents.html:49
+#: templates/admin/dealer/dealers.html:24
+#: templates/admin/player/players.html:57
+msgid "Credit Descending"
+msgstr "Кредит по убыванию"
+
+#: apps/users/filters.py:10 templates/admin/agent/agents.html:50
+#: templates/admin/dealer/dealers.html:25
+#: templates/admin/player/players.html:58
+msgid "Profit Ascending"
+msgstr "Прибыль по возрастанию"
+
+#: apps/users/filters.py:11 templates/admin/agent/agents.html:51
+#: templates/admin/dealer/dealers.html:26
+#: templates/admin/player/players.html:59
+msgid "Profit Descending"
+msgstr "Прибыль по убыванию"
+
+#: apps/users/models.py:14 templates/bets/betslips.html:144
+msgid "Player"
+msgstr "Игрок"
+
+#: apps/users/models.py:15 templates/admin/agent/agents.html:99
+#: templates/home.html:34
+msgid "Agent"
+msgstr "Агент"
+
+#: apps/users/models.py:16 templates/admin/agent/agents.html:33
+#: templates/admin/dealer/dealers.html:78
+msgid "Dealer"
+msgstr "Дилер"
+
+#: apps/users/models.py:17
+msgid "Manager"
+msgstr "Менеджер"
+
+#: apps/users/models.py:18 templates/home.html:48
+msgid "Admin"
+msgstr "Администратор"
+
+#: apps/users/models.py:19
+msgid "Super Admin"
+msgstr ""
+
+#: apps/users/models.py:23
+msgid "Europe/Berlin"
+msgstr ""
+
+#: apps/users/models.py:24
+msgid "Europe/Amsterdam"
+msgstr ""
+
+#: apps/users/models.py:25
+msgid "Europe/Istanbul"
+msgstr ""
+
+#: apps/users/models.py:26
+msgid "UTC"
+msgstr ""
+
+#: apps/users/models.py:30
+msgid "transaction delay"
+msgstr ""
+
+#: apps/users/models.py:60
+msgid "password"
+msgstr ""
+
+#: apps/users/models.py:63
+msgid "user type"
+msgstr ""
+
+#: apps/users/models.py:66
+msgid "active"
+msgstr ""
+
+#: apps/users/models.py:69
+msgid ""
+"Designates whether this user should be treated as active. Unselect this "
+"instead of deleting accounts."
+msgstr ""
+
+#: apps/users/models.py:74
+msgid "username"
+msgstr ""
+
+#: apps/users/models.py:76
+msgid "balance"
+msgstr ""
+
+#: apps/users/models.py:77
+msgid "pending"
+msgstr ""
+
+#: apps/users/models.py:78
+msgid "locked"
+msgstr ""
+
+#: apps/users/models.py:80
+msgid "Timezone"
+msgstr "Часовой пояс"
+
+#: apps/users/models.py:101
+msgid "Мax single bet"
+msgstr "Максимальная одиночная ставка"
+
+#: apps/users/models.py:102
+msgid "Min single bet"
+msgstr "Минимальная одиночная ставка"
+
+#: apps/users/models.py:103
+msgid "Max win amount"
+msgstr "Максимальная сумма выигрыша"
+
+#: apps/users/models.py:104
+msgid "Max odd"
+msgstr "Максимальный коэффициент"
+
+#: apps/users/models.py:105
+msgid "Max bet amount per match"
+msgstr "Максимальная сумма ставки за матч"
+
+#: apps/users/models.py:106
+msgid "max same bet count"
+msgstr ""
+
+#: apps/users/models.py:108
+msgid "max multi two events amount"
+msgstr ""
+
+#: apps/users/models.py:111
+msgid "max multi three events amount"
+msgstr ""
+
+#: apps/users/models.py:114
+msgid "max multi four events amount"
+msgstr ""
+
+#: apps/users/models.py:196
+msgid "config name"
+msgstr ""
+
+#: apps/users/models.py:197
+msgid "config value"
+msgstr ""
+
+#: apps/users/serializers.py:70
+msgid "You can not change your role."
+msgstr ""
+
+#: apps/users/serializers.py:76 apps/users/serializers.py:81
+msgid "Username already exists."
+msgstr ""
+
+#: apps/users/serializers.py:106
+msgid "Invalid username or password"
+msgstr ""
+
+#: apps/users/serializers.py:109
+msgid "Please activate your account"
+msgstr ""
+
+#: apps/users/serializers.py:112
+msgid "Your account is deactivated"
+msgstr ""
+
+#: apps/users/serializers.py:115
+#, python-brace-format
+msgid "Must include \"{username_field}\" and \"password\"."
+msgstr ""
+
+#: apps/users/views.py:129
+msgid "Invalid current password"
+msgstr ""
+
+#: templates/admin/agent/agents.html:11
+msgid "Agents"
+msgstr "Агенты"
+
+#: templates/admin/agent/agents.html:61 templates/admin/dealer/dealers.html:36
+#: templates/admin/player/players.html:70 templates/bets/betslips.html:111
+#: templates/profit/profit.html:65 templates/transactions/transactions.html:46
+msgid "Search"
+msgstr "Поиск"
+
+#: templates/admin/agent/agents.html:100 templates/admin/agent/agents.html:254
+#: templates/admin/dealer/dealers.html:79
+msgid "Credit"
+msgstr "Кредит"
+
+#: templates/admin/agent/agents.html:101 templates/admin/agent/agents.html:205
+#: templates/admin/agent/agents.html:228
+#: templates/admin/dealer/dealers.html:185
+#: templates/admin/player/players.html:220
+#: templates/admin/player/players.html:240 templates/home.html:90
+#: templates/profit/profit.html:15 templates/profit/profit.html:93
+#: templates/profit/profit.html:120
+msgid "Profit"
+msgstr "Прибыль"
+
+#: templates/admin/agent/agents.html:209
+msgid "Sport"
+msgstr "Спорт"
+
+#: templates/admin/agent/agents.html:215
+#: templates/admin/dealer/dealers.html:193
+#: templates/admin/player/players.html:228 templates/profit/profit.html:108
+msgid "In"
+msgstr "В"
+
+#: templates/admin/agent/agents.html:221
+#: templates/admin/dealer/dealers.html:199
+#: templates/admin/player/players.html:234 templates/profit/profit.html:114
+msgid "Out"
+msgstr "Вне"
+
+#: templates/admin/agent/agents.html:294
+#: templates/admin/dealer/dealers.html:269
+msgid "Betting limits"
+msgstr "Лимит ставок"
+
+#: templates/admin/agent/agents.html:308
+#: templates/admin/dealer/dealers.html:282
+#: templates/admin/player/players.html:351
+#: templates/includes/betting_limits_popup.html:19
+msgid "Max Bet"
+msgstr "Максимальная сумма ставки"
+
+#: templates/admin/agent/agents.html:328
+#: templates/admin/dealer/dealers.html:299
+#: templates/admin/player/players.html:373
+#: templates/includes/betting_limits_popup.html:31
+msgid "Min Bet"
+msgstr "Минимальная сумма ставки"
+
+#: templates/admin/agent/agents.html:348
+#: templates/admin/dealer/dealers.html:315
+#: templates/admin/player/players.html:392
+#: templates/includes/betting_limits_popup.html:44
+msgid "Max Win Amount"
+msgstr "Максимальная сумма выигрыша"
+
+#: templates/admin/agent/agents.html:369
+#: templates/admin/dealer/dealers.html:333
+#: templates/admin/player/players.html:412
+#: templates/includes/betting_limits_popup.html:55
+msgid "Max Odd"
+msgstr "Максимальный коэффициент"
+
+#: templates/admin/agent/agents.html:391
+#: templates/admin/dealer/dealers.html:349
+#: templates/admin/player/players.html:433
+#: templates/includes/betting_limits_popup.html:68
+msgid "Max Bet Amount Per Match"
+msgstr "Максимальная сумма ставки за матч"
+
+#: templates/admin/agent/agents.html:410
+#: templates/admin/dealer/dealers.html:365
+#: templates/admin/player/players.html:452
+#: templates/includes/betting_limits_popup.html:79
+msgid "Max Same Bet Count Amount"
+msgstr "Макс. Количество ставок"
+
+#: templates/admin/agent/agents.html:430
+#: templates/admin/dealer/dealers.html:381
+#: templates/admin/player/players.html:470
+#: templates/includes/betting_limits_popup.html:92
+msgid "Max Multi Two Events Amount Combine"
+msgstr "Макс. Мульти-сумма на два события"
+
+#: templates/admin/agent/agents.html:449
+#: templates/admin/dealer/dealers.html:397
+#: templates/admin/player/players.html:488
+#: templates/includes/betting_limits_popup.html:103
+msgid "Max Multi Three Events Amount Combine"
+msgstr "Комбинация Макс Мульти Три События Сумма"
+
+#: templates/admin/agent/agents.html:471
+#: templates/admin/dealer/dealers.html:416
+#: templates/admin/player/players.html:509
+#: templates/includes/betting_limits_popup.html:116
+msgid "Max Multi Three Events"
+msgstr "Макс Мульти Три События"
+
+#: templates/admin/agent/update_agent.html:30
+#: templates/admin/dealer/dealers.html:429
+#: templates/admin/dealer/update_dealer.html:43
+#: templates/admin/player/update_player.html:30
+#: templates/includes/betting_limits_popup.html:194
+msgid "Save"
+msgstr "Сохранить"
+
+#: templates/admin/dealer/create_dealer.html:6
+#: templates/admin/dealer/dealers.html:65
+msgid "Add Dealer"
+msgstr "Добавить Дилера"
+
+#: templates/admin/dealer/dealers.html:11 templates/home.html:58
+msgid "Dealers"
+msgstr "Дилеры"
+
+#: templates/admin/player/create_player.html:6
+#: templates/admin/player/players.html:99
+msgid "Add Player"
+msgstr "Добавить Игрока"
+
+#: templates/admin/player/players.html:10 templates/home.html:22
+msgid "Players"
+msgstr "Игроки"
+
+#: templates/admin/player/players.html:337 templates/home.html:140
+#: templates/includes/betting_limits_popup.html:6
+msgid "Betting Limits"
+msgstr "Лимит ставок"
+
+#: templates/bets/betslips.html:15 templates/home.html:127
+msgid "Coupons"
+msgstr "Купоны"
+
+#: templates/bets/betslips.html:106 templates/profit/profit.html:61
+#, fuzzy
+#| msgid "Player"
+msgid "Search Player"
+msgstr "Поиск Игрока"
+
+msgid "Bet Amount"
+msgstr "Сумма ставки"
+
+#: templates/bets/betslips.html:146
+msgid "Possible Win"
+msgstr "Возможная победа"
+
+#: templates/bets/betslips.html:147
+msgid "Win Amount"
+msgstr "Сумма выигрыша"
+
+#: templates/bets/betslips.html:148 templates/transactions/transactions.html:64
+msgid "Date"
+msgstr "Дата"
+
+#: templates/header.html:70
+msgid "Log Out"
+msgstr "Выйти"
+
+#: templates/home.html:9
+msgid "Dashboard :"
+msgstr ""
+
+#: templates/home.html:103
+msgid "Transaction"
+msgstr "Транзакция"
+
+#: templates/limits/limits.html:13
+#, fuzzy
+#| msgid "Betting Limits"
+msgid "Betting Limit2"
+msgstr "Лимит ставок"
+
+#: templates/profit/profit.html:101
+#, fuzzy
+#| msgid "Sport"
+msgid "SportsBook"
+msgstr "Спорт"
+
+#: templates/profit/profit.html:102
+msgid "Casino"
+msgstr ""
+
+#: templates/profit/profit.html:103
+msgid "All"
+msgstr ""
+
+msgid "Search User"
+msgstr "Поиск"
+
+#: templates/transactions/transactions.html:61
+msgid "Paid"
+msgstr "Oплаченный"
+
+#: templates/transactions/transactions.html:62
+msgid "Received"
+msgstr "Полученные"
+
+#: templates/transactions/transactions.html:63
+msgid "Amount"
+msgstr "Количество"
+
+msgid "Terminals"
+msgstr "Терминалы"
+
+msgid "Voucher"
+msgstr "Ваучер"
+
+msgid "Logs"
+msgstr "Журнал"
+
+msgid "Confirm password"
+msgstr "Подтвердите Пароль"
+
+msgid "Create player"
+msgstr "Создать игрока"
+
+msgid "All status"
+msgstr "Весь статус"
+
+msgid "Is not a number"
+msgstr "Не число"
+
+msgid "Are you sure"
+msgstr "Ты уверен"
+
+msgid "Yes"
+msgstr "Да"
+
+msgid "No"
+msgstr "Нет"
+
+msgid "Charge"
+msgstr "Начислить"
+
+msgid "Data"
+msgstr "Данные"
+
+msgid "Transaction data"
+msgstr "Данные транзакции"
+
+msgid "Merchant"
+msgstr "Коммерсант"
+
+msgid "Journal entry"
+msgstr "Запись в журнале"
+
+msgid "Provider"
+msgstr "Поставщик"
+
+msgid "Bet"
+msgstr "Ставка"
+
+msgid "Current"
+msgstr "Текущий"
+
+msgid "Won"
+msgstr "Выиграл"
+
+msgid "Lost"
+msgstr "Проиграл"
+
+msgid "Min bet amount"
+msgstr "Минимальная сумма ставки"
+
+msgid "Max bet amount"
+msgstr "Максимальная сумма ставки"
+
+msgid "Login"
+msgstr "Войти"

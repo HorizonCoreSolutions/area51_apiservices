@@ -1,0 +1,2536 @@
+{% extends "index.html" %}
+{% load static %}
+{% load i18n %}
+{% load date_utils %}
+{% load tz %}
+{% load mathfilters %}
+{% load math %}
+{% block title %}
+Players
+{% endblock title %}
+{% block content %}
+    <style>
+     #pop-loader {
+       display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100%;
+        background: rgba(0,0,0,0.75) url(../../../static/Desktop_static/images/GammaBet_Loader.gif) no-repeat center center;
+        z-index: 10000;
+    }
+    .admin-card{
+        background-color: #ffffff;
+        box-shadow: 0px 0px 6px 6px rgb(204 204 204 / 0.25);
+        padding: 30px 10px;
+    }
+    .pcode.left-spacer {
+	margin-left: 0px;
+    }
+    .pcode{
+	margin-left: 250px;
+    }
+    @media(max-width:767px){
+        .pcode{
+	    margin-left: 0px;
+    }
+    }
+    .verify_switch{
+        height: 0;
+        width: 0;
+        visibility: hidden;
+    }
+
+    #verify-toogle {
+        cursor: pointer;
+        text-indent: -9999px;
+        width: 80px;
+        height: 30px;
+        background: grey;
+        display: block;
+        border-radius: 100px;
+        position: relative;
+    }
+
+    #verify-toogle:after {
+        content: '';
+        position: absolute;
+        top: 5px;
+        left: 5px;
+        width: 20px;
+        height: 20px;
+        background: #fff;
+        border-radius: 90px;
+        transition: 0.3s;
+    }
+
+    .verify_switch:checked + #verify-toogle {
+        background: green;
+    }
+
+    .verify_switch:checked + #verify-toogle:after {
+        left: calc(100% - 5px);
+        transform: translateX(-100%);
+    }
+    
+    #verify-toogle:active:after {
+        width: 80px;
+        
+    }
+
+    .lb-closeContainer{
+        display: none;
+    }
+
+    /* Custom styling for the modal*/
+    #exampleModal, #exampleModal2 {
+        margin-top: 10%;
+    }
+
+    #exampleModal .modal-title, #exampleModal2 .modal-title {
+    font-size: 20px;
+    font-weight: 500;
+    color: #455a64;
+}
+
+    /* Styling for the note paragraph */
+    #exampleModal .modal-body p.note,  #exampleModal2 .modal-body p.note{
+        font-size: 14px;
+        color: #777; /* Adjust color as needed */
+        margin-bottom: 20px; /* Adjust margin as needed */
+    }
+
+    /* Styling for form controls using Bootstrap classes */
+    #exampleModal .modal-body .form-group label,  #exampleModal2 .modal-body .form-group label{
+        font-weight: bold;
+        font-size: 15px;
+        margin-left: 0.25rem!important;
+    }
+
+    #exampleModal .modal-body .form-group input,
+    #exampleModal .modal-body .form-group select {
+        width: 100%; /* Make inputs take full width */
+        padding: 4px;
+        font-size: 15px;
+        margin-bottom: 0px;
+    }
+
+    #exampleModal2 .modal-body .form-group input {
+        width: 100%; /* Make inputs take full width */
+        padding: 4px;
+        font-size: 15px;
+        margin-bottom: 0px;
+    }
+
+    #exampleModal .modal-footer .btn-primary,  #exampleModal2 .modal-footer .btn-primary{
+        font-size: 18px;
+        font-weight: bold;
+    }
+    #id_game_edit[disabled] {
+        color: #333;  /* Change this to the desired font color */
+    }
+    
+
+    .user-credit-wrap {
+        margin-bottom: 20px;
+    }
+    
+    .input-group {
+        display: flex;
+        align-items: center;
+    }
+    
+    .form-control {
+        flex: 1;
+        margin-right: 10px;
+    }
+    
+    .game-selector {
+        width: 50%; /* Adjust width as needed */
+    }
+    
+    .transaction-input {
+        width: 30%; /* Adjust width as needed */
+    }
+    
+    .game-selector-wrapper {
+        display: flex;
+        justify-content: space-between; /* Change to space-between */
+    }
+    
+    .transaction-pay-button {
+        background-color: lightblue;
+        font-size: 15px;
+        padding: 10px 20px;
+        border: none;
+        cursor: pointer;
+    }
+    
+    .transaction-pay-button:hover {
+        background-color: #6eb5ff;
+    }
+    
+    
+
+    </style>
+    <div class="pcode" id='nw1' >
+    <div>
+    <div class="container-fluid pt-4" >
+        <div class="admin-card">
+        <div class="row">
+            <div class="col-xs-12 col-lg-12 ">
+                <div class="page-content"  >
+                    <div class="main-heading-wrap">
+                        <h5>{% trans 'Players' %}</h5>
+                    </div>
+                    <div class="container-fluid" >
+                        
+                        
+                        {% include "includes/messages.html" %}
+            
+                        <div class="table-data__tool" >
+                            <form action="" method="get">
+                                <div class="container-fluid" style="padding: 0;">
+                                    <div class="row flex-sm-nowrap flex-wrap mb-3" style="">
+            
+                                        <!-- Dealer select -->
+                                        {% if request.user.role == 'admin' or request.user.role == 'superadmin' %}
+                                            <div class="col" style="min-width: 210px;">
+                                                <div class="rs-select2--light rs-select2--md" multiple="multiple">
+                                                    <select id="select-dealer" name="dealers" class="js-example-basic-multiple tokenize-open"
+                                                            multiple="multiple">
+                                                        {% if selected_dealers %}
+                                                            {% for dealer in selected_dealers %}
+                                                                <option selected="selected"
+                                                                        value="{{ dealer.id }}">{{ dealer.username }}</option>
+                                                            {% endfor %}
+                                                        {% endif %}
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                
+                                        <!-- Agent select -->
+                                        {% if request.user.role == 'admin' or request.user.role == 'dealer' or request.user.role == 'superadmin' %}
+                                            <div class="col" style="min-width: 210px;">
+                                                <div class="rs-select2--light rs-select2--md" multiple="multiple">
+                                                    <select id="select-agent" name="agents" class="js-example-basic-multiple tokenize-open" multiple="multiple">
+                                                        {% if selected_agents %}
+                                                            {% for agent in selected_agents %}
+                                                                <option selected="selected" value="{{ agent.id }}">{{ agent.username }}</option>
+                                                            {% endfor %}
+                                                        {% endif %}
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                                        <div class="col" style="min-width: 210px;">
+                                            <div class="rs-select2--light rs-select2--md" multiple="multiple">
+                                                <select id="input-search" name="user_name" class="js-example-basic-multiple tokenize-open" multiple="multiple">
+                                                    {% if selected_players %}
+                                                        {% for player in selected_players %}
+                                                            <option  selected="selected"
+                                                                    value="{{ player.id }}">{{ player.username }}</option>
+                                                        {% endfor %}
+                                                    {% endif %}
+                                                </select>
+                                            </div>
+                                        </div>
+                                        {% comment %} <div class="col form-group" style="min-width: 210px;">
+                                            <select class="form-control select-input" id="is-verified" name="is-verified" >
+                                                <option value="" disabled selected>Filter by Verification</option>
+                                                <option {% if is_verified == '3' %}selected="selected" {% endif %} value="3">{% trans "All" %}</option>
+                                                <option {% if is_verified == '1' %}selected="selected" {% endif %} value="1">{% trans "Verified" %}</option>
+                                                <option {% if is_verified == '2' %}selected="selected" {% endif %} value="2">{% trans "Unverified" %}</option>
+                                            </select>
+                                            <div class="dropDownSelect2" ></div>
+                                        </div> {% endcomment %}
+                                    </div>
+                                    
+                                
+                                    <!-- Order by and search -->
+                                    <span style="font-weight: bold; color: black;">{% trans "Ability to Play" %}</span>
+                                    <div class="row flex-sm-nowrap flex-wrap">
+                                        <div class="col form-group" style="min-width: 210px;">
+                                            <select class="form-control select-input" id="ability-to-play" name="ability-to-play" >
+                                                <option {% if ability_to_play == '' %}selected="selected" {% endif %} value="">{% trans "--All--" %}</option>
+                                                <option {% if ability_to_play == '1' %}selected="selected" {% endif %} value="1">{% trans "Yes" %}</option>
+                                                <option {% if ability_to_play == '2' %}selected="selected" {% endif %} value="2">{% trans "No" %}</option>
+                                            </select>
+                                            <div class="dropDownSelect2" ></div>
+                                        </div> 
+                                        <div class="col form-group" style="min-width: 210px;">
+                                            <select id="select-sort" class="form-control select-input font-weight-bold" name="order">
+                                                <option {% if order == '1' %}selected="selected" {% endif %} value="1">{% trans "Recent Login" %}</option>
+                                                <option {% if order == '2' %}selected="selected" {% endif %} value="2">{% trans "Credit Ascending" %}</option>
+                                                <option {% if order == '3' %}selected="selected" {% endif %} value="3">{% trans "Credit Descending" %}</option>
+                                                <option {% if order == '4' %}selected="selected" {% endif %} value="4">{% trans "Profit Ascending" %}</option>
+                                                <option {% if order == '5' %}selected="selected" {% endif %} value="5">{% trans "Profit Descending" %}</option>
+                                                <option {% if order == '6' %}selected="selected" {% endif %} value="6">{% trans "Created Ascending" %}</option>
+                                                <option {% if order == '7' %}selected="selected" {% endif %} value="7">{% trans "Created Descending" %}</option>
+                                            </select>
+                                            <div class="dropDownSelect2" ></div>
+                                        </div>
+                                        <div class="col form-group" style="min-width: 210px;">
+                                            <div >
+                                                <input type="text" class="form-control" id="search-location" value="{{location}}" name="location" placeholder= '{% trans "Search by Location" %}'/>
+                                            </div>
+                                        </div>
+                                        <div class="col form-group" style="min-width: 210px;">
+                                            <div >
+                                                <input type="text" class="form-control" id="search-zip_code" value="{{zip_code}}" name="zip_code" placeholder= '{% trans "Search by Zipcode" %}' onkeypress="return isNumberKey(event)">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Date filters -->
+                                    {% if request.user.role == 'admin' or request.user.role == 'superadmin' %}
+                                        <div class="row flex-sm-nowrap flex-wrap">
+                                            <div class="col form-group" style="min-width: 210px;">
+                                                <div class="date-input">
+                                                    <span>{% trans "From date" %}</span>
+                                                    <input type="text" class="form-control" id="search-date-created-from" name="from" value="" onChange="validateDateRange(this)" readonly="true" style="background-color:transparent" placeholder='{% trans "Select from date" %}'>
+                                                </div>
+                                            </div>
+                    
+                                            <div class="col form-group" style="min-width: 210px;">
+                                                <div class="date-input">
+                                                    <span>{% trans "To date" %}</span>
+                                                    <input type="text" class="form-control" id="search-date-created-to" name="to" value=""  onChange="validateDateRange(this)" readonly="true" style="background-color:transparent" placeholder='{% trans "Select to date" %}'>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+
+                                    <div class="row flex-sm-nowrap flex-wrap mb-3" style="padding-bottom: 10px;">
+                                        <div class="col-2 ml-auto form-group">
+                                            <button type="submit" class="btn btn-primary w-100" id="button-search">
+                                                {% trans "Search" %}
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </form>
+                                
+                            <!-- Add player button -->
+                            {% if request.user.role == 'agent' %}
+                                <div class="pcoded-item text-center mb-3">
+                                    <a href="#add-player" data-effect="mfp-zoom-in" class="open-player-popup btn btn-primary btn-md btn-block waves-effect waves-light text-center m-b-20">
+                                        <i class="fa fa-plus-circle"></i>{% trans "Add Player" %}
+                                    </a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                        <div class="modal" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                            <div class="modal-dialog" role="document">
+                                <div class="modal-content pl-4 pr-4">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="exampleModalLabel">Create UserGame</h5>
+                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                    </div>
+
+                                    <div class="modal-body">
+                                        <form id="create-usergame-form">
+                                            {% csrf_token %}
+                                        
+                                            <div class="row"> <!-- Added mb-3 for spacing -->
+                                                <div class="col-md-12">
+                                                    <div class="form-group">
+                                                        <label for="{{ form.username.id_for_label }}">Username</label>
+                                                        {{ form2.username }}
+                                                    </div>
+                                                </div>
+                                            </div>
+                
+                                            <div class="row">
+                                                <div class="col-md-12">
+                                                    <div class="form-group">
+                                                        <label for="{{ form.game.id_for_label }}">Game</label>
+                                                        {{ form2.game }}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <p class="note"> Note: Please also create the username on the refuj back-office.</p>
+                                            <input type="hidden" name="user" id="modalPlayerId" value="">                   
+
+                                            <div class="pt-2">
+                                                <button type="submit" class="btn btn-primary btn-md btn-block waves-effect waves-light text-center m-b-20">
+                                                    Create Usergame
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="modal" id="exampleModal2" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                            <div class="modal-dialog" role="document">
+                                <div class="modal-content pl-4 pr-4">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="exampleModalLabel">Edit UserGame</h5>
+                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <form id="edit-usergame-form">
+                                            {% csrf_token %}
+                                            
+                                            <div class="row"> <!-- Added mb-3 for spacing -->
+                                                <div class="col-md-12">
+                                                    <div class="form-group">
+                                                        <label for="id_username">Username</label>
+                                                        <input type="text" name="username" maxlength="50" id="id_username_edit" value="" class="form-control">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="row">
+                                                <div class="col-md-12">
+                                                    <div class="form-group">
+                                                        <label for="id_game">Game</label>
+                                                        <select name="game_user" id="id_game_edit" class="form-control" disabled>
+                                                            <!-- Options will be dynamically populated using JavaScript -->
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <p class="note">Note: Please also update the username on the refuj back-office.</p>
+                                            <input type="hidden" name="game" id="id_game_edit2" value="">
+                                            <input type="hidden" name="user" id="modalPlayerId2" value="">
+                                            <input type="hidden" name="usergame_id" id="usergame_id" value="">
+                                                            
+                                            <div class="pt-2">
+                                                <button type="submit" class="btn btn-primary btn-md btn-block waves-effect waves-light text-center m-b-20">
+                                                    Update Usergame
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+            
+                        <div class="table-responsive table-responsive-data2 mt-4 player-table">
+                            <table class="table table-data2 users-table text-center">
+                                <thead>
+                                    <tr>
+                                        <th>{% trans 'Name' %}</th>
+                                        <th>{% trans 'State' %}</th>
+                                        <th>{% trans 'Address' %}</th>
+                                        <th>{% trans 'ZIPCODE' %}</th>
+                                        <th>{% trans 'Email' %}</th>
+                                        <th>{% trans 'Phone Number' %}</th>
+                                        {% if request.user.role != 'agent' %}<th>{% trans 'Agent' %}</th>{% endif %}
+                                        <th>{% trans 'Master Agent' %}</th>
+                                        <th>{% trans 'Created Date' %}</th>
+                                        <th>{% trans 'Balance' %}</th>
+                                        <th>{% trans 'Bonus Balance' %}</th>
+                                        {% if request.user.role == 'agent' %}
+                                            <th>Edit</th>
+                                        {% else %}
+                                            <th>&nbsp;</th>
+                                        {% endif %}
+                                    </tr>
+                                </thead>
+            
+                                <tbody id="table-user">
+                                {% for player in players %}
+                                    <!-- Player summary info -->
+                                    <tr class="tr-collapse table-row tr-player bg-light " aria-expanded="false" player_id="{{ player.pk }}"
+                                        aria-controls="collapse-{{ forloop.counter }}" data-toggle="collapse" 
+                                        data-target="#collapse-{{ forloop.counter }}" >
+                                            <td >
+                                                <div class="table-arrow"><i class="fas fa-angle-down"></i></div><span class="user-name pl-3">{{ player.username }}</span>
+                                            </td>
+                                            <td>
+                                                <span class="location">{% if player.state %}{{ player.state }}{% else %}Not Available {% endif %}</span>
+                                            </td>
+                                            <td>
+                                                <span class="address">{% if player.complete_address %}{{ player.complete_address }}{% else %}Not Available {% endif %}</span>
+                                            </td>
+                                            <td>
+                                                <span class="zip_code">{% if player.zip_code %}{{ player.zip_code }}{% else %}Not Available {% endif %}</span>
+                                            </td>
+                                            <td>
+                                                <span class="email">{% if player.email %}{{ player.email }}{% else %}Not Available {% endif %}</span>
+                                            </td>
+                                            <td>
+                                                <span class="phone_number">{% if player.phone_number %}{% if player.country_code|isdigit %}+{{player.country_code}} {% endif %}{{ player.phone_number }}{% else %}Not Available {% endif %}</span>
+                                            </td>
+                                            {% if request.user.role != 'agent' %}
+                                                <td>
+                                                    <span class="agent">{{ player.agent.username }}</span>
+                                                </td>
+                                            {% endif %}
+                                            <td>
+                                                <span class="user-name">{{ player.agent.dealer.username }}</span>
+                                            </td>
+                                            <td>
+                                                <span class="created-date">
+                                                    {{ player.created  | local_date:request.session.user_timezone | date:"d-m-y H:i" }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="text-center text-nowrap">
+                                                    <span id="player-balance-{{ forloop.counter }}" class="user-credit" 
+                                                    style="color: green;">{{ player.balance|floatformat:"2" }}</span>
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="text-center text-nowrap">
+                                                    <span id="player-bonus-balance-{{ forloop.counter }}" 
+                                                    style="color: green;">{{ player.bonus_balance|floatformat:"2" }}</span>
+                                                </span>
+                                            </td>
+                                            
+                                            
+                                            <td>
+                                                {% if request.user.role == 'agent' %}
+                                                    <div class="table-data-feature">
+                                                        <a href="#edit-player" data-username="{{ player.username }}" data-dob="{{ player.dob | dob_date }}" data-phone="{{player.phone_number}}" data-zipcode="{{player.zip_code}}"
+                                                        data-email="{{player.email}}" data-full_name="{{player.full_name}}" data-state="{{player.state}}" data-effect="mfp-zoom-in" data-countrycode="{{player.country_code}}"
+                                                        data-zip_code="{{player.zip_code}}" data-address="{{player.complete_address}}" 
+                                                        data-profile="{% if player.profile_pic %}{{player.profile_pic.url}}{% endif %}" data-id-proof="{% if player.user_id_proof %}{{player.user_id_proof.url}}{% endif %}"
+                                                        class="edit-player-popup item row-button-edit ignore-collapse">
+                                                            <img src="{% static '/icon/edit.png' %}" width="15" height="15" ></img>
+                                                        </a>
+                                                    </div>
+                                                {% endif %}
+                                            </td>
+                                    </tr>
+            
+                                    <!-- Collapsed content -->
+                                    <tr class="tr-collapse-content player_info" player_id="{{ player.pk }}">
+                                        <td colspan="11" style="margin: 0;padding: 0;">
+                                            <div class="collapse" id="collapse-{{ forloop.counter }}" data-parent="#table-user" style="padding: 0;">
+                                                <div class="card card-body m-0 p-0 p-md-3">
+                                                    <div class="default-tab">
+                                                        <nav>
+                                                            <div class="nav nav-tabs" id="nav-tab" role="tablist">
+                                                                <!--  Credit tab start -->
+                                                                {% if request.user.role == 'agent' %}
+                                                                    <a title="Adjust Credit" class="nav-item nav-link active show"
+                                                                       id="nav-credit-{{ forloop.counter }}-tab"
+                                                                       data-toggle="tab"
+                                                                       href="#nav-credit-{{ forloop.counter }}" role="tab"
+                                                                       aria-controls="nav-credit-{{ forloop.counter }}"
+                                                                       aria-selected="false" style="padding: .5rem 0.5rem;">
+                                                                        <div class="noti__item mr-0 pl-2 pr-2">
+                                                                            <img src="{% static '/icon/money.svg' %}" width="20" height="20" ></img>
+                                                                        </div>
+                                                                    </a>
+                                                                {% endif %}
+                                                                <!--  Credit tab end -->
+            
+                                                                <!-- Profit tab start -->
+                                                                {% if request.user.role != 'staff' %}
+                                                                    {% if request.user.role == 'agent' %}
+                                                                    <a title="Profit" class="nav-item nav-link"
+                                                                    id="nav-profit-{{ forloop.counter }}-tab"
+                                                                    data-toggle="tab" href="#nav-profit-{{ forloop.counter }}"
+                                                                    role="tab"
+                                                                    aria-controls="nav-profit-" aria-selected="true"
+                                                                    style="padding: .5rem 0.5rem;">
+                                                                    {% else %}
+                                                                    <a title="Profit" class="nav-item nav-link active show"
+                                                                    id="nav-profit-{{ forloop.counter }}-tab"
+                                                                    data-toggle="tab" href="#nav-profit-{{ forloop.counter }}"
+                                                                    role="tab"
+                                                                    aria-controls="nav-profit-" aria-selected="true"
+                                                                    style="padding: .5rem 0.5rem;">
+                                                                    {% endif %}
+                                                                    
+                                                                        <div class="noti__item mr-0 pl-2 pr-2">
+                                                                            <img src="{% static '/icon/profit.svg' %}" width="20" height="20" ></img>
+                                                                        </div>
+                                                                    </a>
+                                                                {% endif %}
+                                                                <!-- Profit tab end -->
+                                                            
+                                                                 <!--  Permissions tab start -->
+                                                                 {% if request.user.role != 'staff' %}
+                                                                    <a title="Permissions" class="nav-item nav-link"
+                                                                    id="nav-permissions-{{ forloop.counter }}-tab"
+                                                                    data-toggle="tab" href="#nav-permissions-{{ forloop.counter }}" role="tab"
+                                                                    aria-controls="nav-permissions-1" aria-selected="false"
+                                                                    style="padding: .5rem 0.5rem;">
+                                                                    <div class="noti__item mr-0 pl-2 pr-2">
+                                                                        <img src="{% static '/icon/permission.svg' %}" onclick="change_timezone('{{player.id}}')" width="20" height="20" ></img>
+                                                                    </div>
+                                                                    </a>
+                                                                  {% elif request.user.role == 'staff' %}
+                                                                  <a title="Permissions" class="nav-item nav-link active show"
+                                                                  id="nav-permissions-{{ forloop.counter }}-tab"
+                                                                  data-toggle="tab" href="#nav-permissions-{{ forloop.counter }}" role="tab"
+                                                                  aria-controls="nav-permissions-1" aria-selected="false"
+                                                                  style="padding: .5rem 0.5rem;">
+                                                                  <div class="noti__item mr-0 pl-2 pr-2">
+                                                                      <img src="{% static '/icon/permission.svg' %}" onclick="change_timezone('{{player.id}}')" width="20" height="20" ></img>
+                                                                  </div>
+                                                                  </a>
+                                                                  {% endif %}
+
+                                                                
+                                                                <!--  Permissions tab End -->
+                                                          
+        
+                                                                <!--  Transaction Tab Start -->
+                                                                
+                                                                <a title="Transactions" href="#transactions" data-username="{{ player.username }}" 
+                                                                data-effect="mfp-zoom-in" 
+                                                                class="transactions-popup item row-button-edit ignore-collapse"
+                                                                >
+                                                                <div class="noti__item mr-0 pl-2 pr-2">
+                                                                    <i class="fa fa-history" aria-hidden="true"></i>
+                                                                </div>
+                                                                </a>
+                                                               
+                                                                    
+                                                                    {% comment %} <a title="Cashapp" class="nav-item nav-link"
+                                                                    id="nav-cashapp-{{ forloop.counter }}-tab"
+                                                                    data-toggle="tab" href="#nav-cashapp-{{ forloop.counter }}" role="tab"
+                                                                    aria-controls="nav-cashapp-1" aria-selected="false"
+                                                                    style="padding: .5rem 0.5rem;">
+                                                                    <div class="noti__item mr-0 pl-2 pr-2">
+                                                                        <img src="{% static '/icon/cashapp.svg' %}" onclick="change_timezone('{{player.id}}')" width="20" height="20" ></img>
+                                                                    </div>
+                                                                   </a> {% endcomment %}
+                                                                
+                                                                <a title="usergames" class="nav-item nav-link "
+                                                                id="nav-usergames-{{ forloop.counter }}-tab"
+                                                                data-toggle="tab" href="#nav-usergames-{{ forloop.counter }}" role="tab"
+                                                                aria-controls="nav-usergames-1" aria-selected="false" onclick = "usergames('{{player.id}}')"
+                                                                style="padding: .5rem 0.5rem;">
+                                                                <div class="noti__item mr-0 pl-2 pr-2">
+                                                                    <img src="{% static '/icon/dice.svg' %}" width="20" height="20"></img>
+                                                                </div>
+                                                                </a>
+                                                                
+                                                            
+                                                                <!--  Transaction Tab End -->
+                                                               
+                                                                <!--  Verify Tab Start -->
+                                                               
+                                                                <!--  Verify Tab End -->
+
+                                                                <!--  CashApp List Tab Start -->
+                                                                
+                                                                <a title="CashApp List" class="nav-item nav-link"
+                                                                    id="cashapp-list-{{ forloop.counter }}-tab"
+                                                                    data-toggle="tab" href="#cashapp-list-{{ forloop.counter }}" role="tab"
+                                                                    aria-controls="cashapp-list-{{ forloop.counter }}" aria-selected="false"
+                                                                    style="padding: .5rem 0.5rem;">
+                                                                    <div class="noti__item mr-0 pl-2 pr-2">
+                                                                            <i class="fas fa-dollar-sign fa-rotate-by fa-lg"></i>
+                                                                    </div>
+                                                                </a>
+                                                               
+                                                                <!--  CashApp List Tab End -->
+                                                                {% if request.user.role == 'agent' or request.user.role == 'admin' or request.user.role == 'staff' %}
+                                                                    
+                                                                    <a title="Off-Market Credit" class="nav-item nav-link "
+                                                                       id="nav-off-market-credit-{{ forloop.counter }}-tab"
+                                                                       data-toggle="tab"
+                                                                       href="#nav-off-market-credit-{{ forloop.counter }}" role="tab"
+                                                                       aria-controls="nav-off-market-credit-{{ forloop.counter }}"
+                                                                       aria-selected="false" style="padding: .5rem 0.5rem;">
+                                                                        <div class="noti__item mr-0 pl-2 pr-2">
+                                                                            <img src="{% static '/icon/money.svg' %}" width="20" height="20" ></img>
+                                                                        </div>
+                                                                    </a>
+                                                                {% endif %}
+                                                                
+                                                            </div>
+                                                        </nav>
+            
+                                                        <div class="tab-content " id="nav-tabContent">
+                                                            <!-- Credit tab content start -->
+                                                            {% if request.user.role == 'agent' %}
+                                                                <div class="tab-pane fade active show" id="nav-credit-{{ forloop.counter }}"
+                                                                    role="tabpanel"
+                                                                    aria-labelledby="nav-credit-{{ forloop.counter }}-tab">
+                                                                    <div class="card m-0" style="border-top: 0;border-radius: 0;">
+                                                                        <div class="card-body pl-md-3 pr-md-3 pb-2  pl-0 pr-0 ">
+                                                                            <div id="user-credit-" class="user-credit-wrap">
+                                                                                <div class="input-group">
+                                                                                    <div class="input-group-btn">
+                                                                                        <button class="au-btn au-btn-icon transaction-charge-button btn fa fa-minus-circle"
+                                                                                                data-id="1"
+                                                                                                onclick="payment_delay()"
+                                                                                                style="background-color:coral; font-size:25px;"
+                                                                                                id="credit-decrease-{{ forloop.counter }}">
+                                                                                        </button>
+                                                                                    </div>
+                                                                                    <input id="transaction-input-{{ forloop.counter }}"
+                                                                                        name="cc-payment" type="text"
+                                                                                        class="form-control transaction-input" aria-required="true"
+                                                                                        aria-invalid="false" placeholder="0" onkeypress="return isNumberKey(event)">
+                                                                                    <input type="hidden"
+                                                                                        id="player-id-{{ forloop.counter }}"
+                                                                                        value="{{ player.id }}">
+                                                                                    <div class="input-group-btn">
+                                                                                        <button class="au-btn au-btn-icon au-btn--green transaction-pay-button btn fa fa-plus-circle"
+                                                                                                id="credit-increase-{{ forloop.counter }}"
+                                                                                                onclick="credit_adjust()"
+                                                                                                style="background-color:lightblue; font-size:25px;"
+                                                                                                data-id="1">
+                                                                                        </button>
+                                                                                    </div>
+                                                                                </div>
+                                                                                <!-- <div class="balance-options">
+                                                                                    <label class="balance-option custom-checkbox custom-checkbox-gray">
+                                                                                        <input type="radio" name="balance_option" value="10">
+                                                                                        <span>10</span>
+                                                                                    </label>
+                                                                                    <label class="balance-option custom-checkbox custom-checkbox-gray">
+                                                                                        <input type="radio" name="balance_option" value="20">
+                                                                                        <span>20</span>
+                                                                                    </label>
+                                                                                    <label class="balance-option custom-checkbox custom-checkbox-gray">
+                                                                                        <input type="radio" name="balance_option" value="50">
+                                                                                        <span>50</span>
+                                                                                    </label>
+                                                                                    <label class="balance-option custom-checkbox custom-checkbox-gray">
+                                                                                        <input type="radio" name="balance_option" value="100">
+                                                                                        <span>100</span>
+                                                                                    </label>
+                                                                                    <label class="balance-option custom-checkbox custom-checkbox-gray">
+                                                                                        <input type="radio" name="balance_option" value="150">
+                                                                                        <span>150</span>
+                                                                                    </label>
+                                                                                    <label class="balance-option custom-checkbox custom-checkbox-gray">
+                                                                                        <input type="radio" name="balance_option" value="200">
+                                                                                        <span>200</span>
+                                                                                    </label>
+                                                                                    <label class="balance-option custom-checkbox custom-checkbox-gray">
+                                                                                        <input type="radio" name="balance_option" value="500">
+                                                                                        <span>500</span>
+                                                                                    </label>
+                                                                                </div> -->
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            {% endif %}
+                                                            <!-- Credit tab content end -->
+            
+                                                            <!-- Profit tab content start -->
+                                                            {% if request.user.role != 'staff' %}
+                                                                {% if request.user.role == 'agent' %}
+                                                                <div class="tab-pane fade"
+                                                                    id="nav-profit-{{ forloop.counter }}" role="tabpanel"
+                                                                    aria-labelledby="nav-profit-{{ forloop.counter }}-tab">
+                                                                {% else %}
+                                                                <div class="tab-pane fade active show"
+                                                                    id="nav-profit-{{ forloop.counter }}" role="tabpanel"
+                                                                    aria-labelledby="nav-profit-{{ forloop.counter }}-tab">
+                                                                {% endif %}
+                                                                    <div class="card m-0" style="border-top: 0;border-radius: 0;">
+                                                                        <div class="card-body pl-md-3 pr-md-2 pb-2 pl-0 pr-0">
+                                                                            <div id="user-profit-{{ forloop.counter }}">
+                                                                                <section class="card m-0" style="border: 1px solid #ccc;">
+                                                                                    <div class="table-reponsive">
+                                                                                        <table class="user-profit-table w-100" >
+                                                                                            <thead>
+                                                                                                <tr>
+                                                                                                    <th>{% trans "Provider" %}</th>
+                                                                                                    <th>{% trans "In" %}</th>
+                                                                                                    <th>{% trans "Out" %}</th>
+                                                                                                    <th>{% trans "Profit" %}</th>
+                                                                                                </tr>
+                                                                                            </thead>
+                                                                                            <tbody>
+                                                                                                <!-- <tr >
+                                                                                                    <td style=>{% trans "SportsBook" %}</td>
+                                                                                                    <td class="sports_book_in_sum"></td>
+                                                                                                    <td class="sports_book_out_sum"></td>
+                                                                                                    <td class="sports_book_profit"></td>
+                                                                                                </tr> -->
+                                                                                                <!-- <tr>
+                                                                                                    <td>{% trans "Casino" %}</td>
+                                                                                                    <td class="casino_in_sum"></td>
+                                                                                                    <td class="casino_out_sum"></td>
+                                                                                                    <td class="casino_book_profit"></td>
+                                                                                                </tr>
+                                                                                                <tr>
+                                                                                                    <td>{% trans "Live Casino" %}</td>
+                                                                                                    <td class="live_casino_in_sum"></td>
+                                                                                                    <td class="live_casino_out_sum"></td>
+                                                                                                    <td class="live_casino_book_profit"></td>
+                                                                                                </tr> -->
+                                                                                            
+                
+                                                                                                <tr>
+                                                                                                    <td>{% trans "Casino" %}</td>
+                                                                                                    <td id="casino_in_sum-{{player.id}}"></td>
+                                                                                                    <td id="casino_out_sum-{{player.id}}"></td>
+                                                                                                    <td id="casino_profit-{{player.id}}"></td>                                       
+                                                                                                </tr>
+                                                                                                <tr>
+                                                                                                    <td>{% trans "Offmarket" %}</td>
+                                                                                                    <td id="offmarket_in_sum-{{player.id}}"></td>
+                                                                                                    <td id="offmarket_out_sum-{{player.id}}"></td>
+                                                                                                    <td id="offmarket_profit-{{player.id}}" class="text-danger"></td>
+                                                                                                </tr>
+                                                                                                <tr class="font-weight-bold">
+                                                                                                    <td>{% trans "Total" %}</td>
+                                                                                                    <td class="all_in"></td>
+                                                                                                    <td class="all_out"></td>
+                                                                                                    <td class="all_profit"></td>
+                                                                                                </tr>
+                                                                                                <tr class="bg-yellow" style="background-color:coral; color:white;">
+                                                                                                    <td>{% trans "BONUS" %}</td>
+                                                                                                    <td></td>
+                                                                                                    <td></td>
+                                                                                                    <td class="bonus_amount"></td>
+                                                                                                </tr>
+                                                                                                <tr>
+                                                                                                    <td>{% trans "Net Profit" %}</td>
+                                                                                                    <td></td>
+                                                                                                    <td></td>
+                                                                                                    <td class="net_profit"></td>
+                                                                                                </tr>
+                                                                                            </tbody>
+                                                                                        </table>
+                                                                                    </div>
+                                                                                </section>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            {% endif %}
+                                                                
+
+                                                            <!-- Profit tab content end -->
+
+                                                            {% if request.user.role == 'agent' or request.user.role == 'staff' or request.user.role == 'admin'  %}
+                                                                
+                                                                    <div class="tab-pane fade " id="nav-off-market-credit-{{ forloop.counter }}" role="tabpanel" aria-labelledby="nav-off-market-credit-{{ forloop.counter }}-tab">
+                                                                    <div class="card m-0" style="border-top: 0;border-radius: 0;">
+                                                                        <div class="card-body pl-md-3 pr-md-3 pb-2  pl-0 pr-0 ">
+                                                                            <div class="card-title">
+                                                                                <h3 class="text-center title-2">{% trans "OFF-Market Deposit" %}</h3>
+                                                                            </div>
+                                                                            <hr> 
+                                                                            <div id="user-credit-" class="user-credit-wrap">
+                                                                                <div class="input-group">
+                                                                                    <select id="game-selector-{{ player.id }}" class="form-control game-selector">
+                                                                                        <option value="">Select a game</option>
+                                                                                        <!-- Add options dynamically here if needed -->
+                                                                                    </select>
+                                                                            
+                                                                                    <input id="offmarket-transaction-input-{{ forloop.counter }}" name="cc-payment" type="text" class="form-control transaction-input" aria-required="true" aria-invalid="false" placeholder="0" onkeypress="return isNumberKey(event)">
+                                                                                    
+                                                                                    <input type="text" name="payment-id-{{ forloop.counter }}" id="payment-id-{{ forloop.counter }}" class="form-control transaction-input" aria-required="true" aria-invalid="false" placeholder="Enter Unique Payment ID">
+                                                                                    
+                                                                                    <input type="hidden" id="player-id-{{ forloop.counter }}" value="{{ player.id }}">
+                                                                                </div>
+                                                                                <div id="game-selector-wrapper" class="game-selector-wrapper" style="padding-left: 90%;padding-top: 1%;">
+                                                                                    <button class="btn transaction-pay-button" id="credit-increase-offmarket-{{ forloop.counter }}" onclick="credit_adjust_offmarket()">Submit</button>
+                                                                                </div>
+                                                                            </div>
+                                                                            
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            {% endif %}
+
+
+                                                            <div class="tab-pane fade" id="nav-usergames-{{ forloop.counter }}"
+                                                            role="tabpanel"
+                                                            aria-labelledby="nav-usergames-{{ forloop.counter }}-tab">
+                                                        <div class="card m-0" style="border-top: 0;border-radius: 0;">
+                                                            <div class="card-body pl-2 pr-2 pb-2">
+                                                                <div class="card-title">
+                                                                    <h3 class="text-center title-2">{% trans "Usergames" %}</h3>
+                                                                </div>
+                                                                <hr>
+                                                                {% if request.user.role  != 'dealer' and request.user.role  != 'staff' %}
+                                                                    <div class="mb-3">
+                                                                        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal" data-player-id="{{ player.id }}" style="margin-left: 90%;">
+                                                                            {% trans 'Create' %}
+                                                                        </button>
+                                                                    </div>
+                                                                {% endif %}
+
+                                                                
+                                                                <div class="m-2">
+                                                                    <table class="table table-striped table-bordered text-center">
+                                                                        <thead>
+                                                                            <tr>
+                                                                                <th>{% trans "Username" %}</th>
+                                                                                <th>{% trans "Game" %}</th>
+                                                                                <th>{% trans "Action" %}</th>
+                                                                            </tr>
+                                                                        </thead>
+                                                                        <tbody id="usergames-body-{{player.id}}">
+                                                                          {{data}}
+                                                                        </tbody>
+                                                                    </table>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+            
+                                                            <!-- Permissions tab content start -->
+
+                                                            {% if request.user.role == 'staff' %}
+                                                            <div class="tab-pane fade active show" id="nav-permissions-{{ forloop.counter }}"
+                                                                    role="tabpanel"
+                                                                    aria-labelledby="nav-permissions-{{ forloop.counter }}-tab">
+                                                            {% else %}
+                                                            <div class="tab-pane fade " id="nav-permissions-{{ forloop.counter }}"
+                                                                    role="tabpanel"
+                                                                    aria-labelledby="nav-permissions-{{ forloop.counter }}-tab">
+
+                                                            {% endif %}
+                                                                <div class="card m-0" style="border-top: 0;border-radius: 0;">
+                                                                    <div class="card-body pl-2 pr-2 pb-2">
+                                                                        <div class="card-title">
+                                                                            <h3 class="text-center title-2">{% trans "Permissions" %}</h3>
+                                                                        </div>
+                                                                        <h5 class="text-center mt-2 mb-1" style="color:gray">{% trans "Player" %}: {{ player.username }}</h5>
+                                                                        <hr>
+                                                                        <div class="row form-group ">
+                                                                            <div class="col-8">
+                                                                                <label class="form-control-label mb-0 fs-16">{% trans "Ability to play" %}</label>
+                                                                            </div>
+                                                                            <div class="col-4 d-flex justify-content-end">
+                                                                                <label class="switch switch-text switch-success switch-custom">
+                                                                                    <input player_id="{{ player.pk }}" type="checkbox" class="switch-input switch-status-input player_switch" {% if player.is_active %}checked{% endif %}>
+                                                                                    <span class="switch-label"></span>
+                                                                                    <span class="switch-handle"></span>
+                                                                                </label>
+                                                                            </div>
+                                                                        </div>
+
+                                                                        <div class="row form-group " hidden="true">
+                                                                            <div class="col-8">
+                                                                                <label class="form-control-label mb-0 fs-16">{% trans "Cancelled/Close" %}</label>
+                                                                            </div>
+                                                                            <div class="col-4 d-flex justify-content-end">
+                                                                                <label class="switch switch-text switch-success switch-custom">
+                                                                                    <input player_id="{{ player.pk }}" type="checkbox" class="switch-input switch-status-input cancel_switch" {% if player.responsible_gambling.is_account_cancelled %}checked{% endif %}>
+                                                                                    <span class="switch-label"></span>
+                                                                                    <span class="switch-handle"></span>
+                                                                                </label>
+                                                                            </div>
+                                                                        </div>
+
+
+                                                                        <div class="row form-group " hidden="true">
+                                                                            <div class="col-4" style="margin-top: 20px;">
+                                                                                <label class="form-control-label mb-0 fs-16" style="float:left; margin-right: 50px;">{% trans "Blackout Period" %}</label>
+                                                                            </div>
+                                                                            <div class="col-6"  >
+                                                                                <div class="form-group">
+                                                                                <!-- <input type="text" class="form-control" id="black-out-date-time-{{player.id}}" name="black-out-date-time" readonly="readonly" onchange="validateDate({{player.id}})" value={% if player.responsible_gambling.blackout_expire_time %} "{{ player.responsible_gambling.blackout_expire_time|est_to_utc }}" {% else %} "Select Date"  {% endif %} {% if player.responsible_gambling.is_blackout %}disabled{% endif %}/> -->
+                                                                                <select class="form-control select-input"  name="black-out-hours" id="black-out-hours-{{player.id}}" {% if player.responsible_gambling.is_blackout %}disabled{% endif %}>
+                                                                                    <option selected="selected" disabled>{% trans "Select Hours" %}</option>
+                                                                                    <option {% if player.responsible_gambling.blackout_expire_hours == 24 %}selected="selected" {% endif %} value="24">{% trans "24 hours" %}</option>
+                                                                                    <option {% if player.responsible_gambling.blackout_expire_hours == 48 %}selected="selected" {% endif %} value="48">{% trans "48 hours" %}</option>
+                                                                                    <option {% if player.responsible_gambling.blackout_expire_hours == 72 %}selected="selected" {% endif %} value="72">{% trans "72 hours" %}</option>
+                                                                                </select>
+
+                                                                                <div class="dropDownSelect2" ></div>    
+                                                                            </div> 
+                                                                            </div>
+                                                                            <div class="col-2 d-flex justify-content-end"  hidden="true">
+                                                                                <label class="form-control-label mb-0 mr-1 mt-3 fs-11">{% trans "Till Hours" %}</label>
+                                                                                <input player_id="{{ player.pk }}" type="checkbox" id="black-out-check-box"  class="switch-input switch-status-input blackout_switch" {% if player.responsible_gambling.is_blackout %}checked{% endif %}>
+                                                                                <span class="switch-label"></span>
+                                                                                <span class="switch-handle"></span>
+
+                                                                            </div>
+                                                                            
+                                                                        </div>
+                                                     
+                                                                        <div class="row form-group " style="margin-top:-7px" hidden="true">
+                                                                            <div class="col-4" style="margin-top: 20px;">
+                                                                                <label class="form-control-label mb-0 fs-16">{% trans "Betting Limit" %}</label>
+                                                                            </div>
+                                                                            <div class="col-6 d-flex justify-content-end"  >
+                                                                                <input type="number" id="betting-limit-amount-{{player.id}}" min="0" max="4000" name="betting-limit-amount"  onpaste="return false;" ondrop="return false;" autocomplete="off"  placeholder="{% trans "Betting Limit" %}" onkeypress="validateInput(this,{{player.id}})" class="form-control" value="{{player.responsible_gambling.max_spending_limit}}">
+                                                                            </div>
+                                                                            <div class="col-2 d-flex justify-content-end"  >
+                                                                                <button class="btn btn-primary" id="set-betting-limit" onclick="set_player_betting_limit({{player.pk}})">
+                                                                                    {% trans "Set" %}
+                                                                                </button>
+                                                                            </div>
+     
+                                                                             
+                                                                        </div>
+
+                                                    
+                                                                        
+                                                                        <div class="row form-group " hidden="true">
+                                                                            <div class="col-8">
+                                                                                <label class="form-control-label mb-0 fs-16">{% trans "Cashback" %}</label>
+                                                                            </div>
+                                                                            <div class="col-4 d-flex justify-content-end">
+                                                                                <label class="switch switch-text switch-success switch-custom ">
+                                                                                    {% if request.user.cashback_status %}
+                                                                                        {% if request.user.role == "agent" %}
+                                                                                            <input player_id="{{ player.pk }}" type="checkbox" class="switch-input switch-status-input cashback_switch" {% if player.cashback_status %}checked{% endif %} >
+                                                                                        {% else %}
+                                                                                            <input type="checkbox" class="switch-input switch-status-input cashback_switch" {% if player.cashback_status %}checked{% endif %} disabled>
+                                                                                        {% endif %}
+                                                                                    {% else %}
+                                                                                        <input type="checkbox" class="switch-input switch-status-input cashback_switch" {% if player.cashback_status %}checked{% endif %} disabled>
+                                                                                    {% endif %}
+                                                                                    <span class="switch-label"></span>
+                                                                                    <span class="switch-handle"></span>
+                                                                                </label>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                            <div class="tab-pane fade" id="nav-cashapp-{{ forloop.counter }}"
+                                                                    role="tabpanel"
+                                                                    aria-labelledby="nav-cashapp-{{ forloop.counter }}-tab">
+                                                                <div class="card m-0" style="border-top: 0;border-radius: 0;">
+                                                                    <div class="card-body pl-2 pr-2 pb-2">
+                                                                        <div class="card-title"> 
+                                                                            <h3 class="text-center title-2">{% trans "Cashtag" %}</h3>
+                                                                            <hr>
+                                                                            <div class="form-group" style="">
+                                                                                <div class="row form-group">
+                                                                                    {% comment %} <div class="col">
+                                                                                        <label class="mb-0">{% trans  "Cashtag" %}
+                                                                                            <span
+                                                                                            data-toggle="tooltip" data-placement="top" title="{% trans "Cashtag for deposit" %}">
+                                                                                              <i class="fa fa-info-circle" aria-hidden="true"></i>
+                                                                                      </span>
+                                                                                        </label>
+                                                                                    </div> {% endcomment %}
+                                                                                    <div class="col">
+                                                                                        <input type="text" id="cashtag_input-{{player.id}}" class="form-control" style="margin-left:17px;" {% if player.cashtag %}value="{{player.cashtag}}"{% endif %}placeholder="Enter Cashtag Here">
+                                                                                    </div>
+                                                                                <div class="form-group">
+                                                                                    <div class="col">
+
+                                                                                <a  data-placement="top" title="Save" >
+                                                                                    <button class="btn btn-primary" id="button-save" onclick="cashtag({{player.id}})" style="margin-right:40px;">
+                                                                                        {% trans "Save" %}
+                                                                                    </button>
+                                                                                </a>
+                                                                                </div>
+                                                                                </div>
+                                                                            </div>    
+                                                                        </div> 
+                                                                        
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            </div>
+
+                                                   
+                                                   
+
+                                                            
+                                                            <!-- Permissions tab content end -->
+
+                                                            <!-- Verify tab content start -->
+                                                            {% if request.user.role == 'admin' %}
+                                                            <div class="tab-pane fade"
+                                                                 id="nav-verify-{{ forloop.counter }}" role="tabpanel"
+                                                                 aria-labelledby="nav-verify-{{ forloop.counter }}-tab">
+                                                                <div class="card m-0" style="border-top: 0;border-radius: 0;">
+                                                                    <div class="card-body pl-md-3 pr-md-2 pb-2 pl-0 pr-0">
+                                                                        <div id="user-verify-{{ forloop.counter }}">
+                                                                            <section class="card m-0" style="border: 1px solid #ccc;">
+                                                                                <div class="table-reponsive">
+                                                                                    <table class="user-verify-table w-100" >
+                                                                                        <thead>
+                                                                                            <tr>
+                                                                                                <th style="text-align: center;">{% trans "User ID Proof" %}</th>
+                                                                                                <th >{% trans "Verified" %}</th>
+                                                                                            </tr>
+                                                                                        </thead>
+                                                                                        <tbody>
+                                                                                            <tr>
+                                                                                                <td style="text-align: center;"><a href="{% if player.user_id_proof %}{{ player.user_id_proof.url }}{% endif %}" data-lightbox="verify-image-{{player.id}}"><img src="{% if player.user_id_proof %}{{ player.user_id_proof.url }}{% endif %}" id="verify-image-{{player.id}}" height="50px" width="50px" alt="User ID Proof"></a></td>
+                                                                                                <td><input type="checkbox" id="verify-{{player.id}}" class="verify_switch" player_id="{{ player.pk }}" {% if player.is_verified %}checked{% endif %}><label id="verify-toogle" for="verify-{{player.id}}">Toggle</label></td>
+                                                                                            </tr>
+                                                                                        </tbody>
+                                                                                    </table>
+                                                                                </div>
+                                                                            </section>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            {% endif %}
+                                                            <!-- Verify tab content end -->
+
+                                                            
+                                                            <!--  CashApp List Tab Start -->
+                                                            <div class="tab-pane fade" id="cashapp-list-{{ forloop.counter }}" role="tabpanel"
+                                                            aria-labelledby="cashapp-list-{{ forloop.counter }}-tab">
+                                                            <div class="card m-0" style="border-top: 0;border-radius: 0;">
+                                                                <div class="card-body pl-2 pr-2 pb-2">
+                                                                    <div class="card-title">
+                                                                        <h3 class="text-center title-2">{% trans "CashApp Details" %}</h3>
+                                                                    </div>
+                                                                    <hr>                                                            
+                                                                    <div class="m-2">
+                                                                        <table class="table table-striped table-bordered text-center">
+                                                                            <thead>
+                                                                                <tr>
+                                                                                    <th>{% trans "ID" %}</th>
+                                                                                    <th>{% trans "CashApp" %}</th>
+                                                                                    <th>{% trans "Is Deleted" %}</th>
+                                                                                </tr>
+                                                                            </thead>
+                                                                            <tbody id="cashapp-list-body-{{player.id}}">
+                                                                                {% for cash_app_detail in player.cashappdeatils_set.all %}
+                                                                                    <tr>
+                                                                                        <td>{{ cash_app_detail.id }}</td>
+                                                                                        <td>{{ cash_app_detail.name }}</td>
+                                                                                        {% if cash_app_detail.is_active %}
+                                                                                            <td><i class="fas fa-times fa-lg" style="color: #1ce91f;"></i></td>
+                                                                                        {% else %}
+                                                                                            <td><i class="fas fa-check fa-lg" style="color: #d61a05;"></i></td>
+                                                                                        {% endif %}
+                                                                                    </tr>
+                                                                                {% endfor %}
+                                                                            </tbody>
+                                                                        </table>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <!--  CashApp List Tab End -->
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+            
+                                    <tr class="spacer"></tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+            
+                        {% include 'includes/pagination.html' %}
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div>
+    </div>
+</div>
+
+    {% include './create_player.html' %}
+    {% include './update_player.html' %}
+    {% include '../../includes/transactions.html' %}
+    </div>
+    <div id="pop-loader"></div>
+    <script type="text/javascript">
+        const isGreaterThanZero = value => value >= 0;
+            var spinner = $('#pop-loader');
+            $('#mobile-collapse').click(function () { 
+                
+                $("#nw1").toggleClass('left-spacer');
+    
+                console.log("hey");
+                
+            });
+            
+
+            $('#exampleModal').on('show.bs.modal', function (event) {
+            var button = $(event.relatedTarget);
+            var playerId = button.data('player-id');
+            
+            // Update the hidden input value in the modal form
+            $('#modalPlayerId').val(playerId);
+        });
+
+        $('#exampleModal2').on('show.bs.modal', function (event) {
+            var button = $(event.relatedTarget);
+            var playerId = button.data('player-id');
+            var username = button.data('username')
+            var game = button.data('game')
+            var usergame_id = button.data('id')
+            var game_id = button.data('game-id')
+            var code = button.data('code')
+
+            console.log("----username---", username, game, usergame_id, game_id, code)
+
+            var gameValue = game+"-"+code
+
+            // Enable and populate the select field
+            $('#id_game_edit').empty().append($('<option>', {
+                value: game_id,
+                text: gameValue,
+                selected: true
+            })).prop('disabled', true);
+            
+            // Update the hidden input value in the modal form
+            $('#modalPlayerId2').val(playerId);
+            $('#id_username_edit').val(username);
+            {% comment %} $('#id_game_edit').val(game); {% endcomment %}
+            $('#usergame_id').val(usergame_id);
+            $('#id_game_edit2').val(game_id);
+        });
+          
+            
+    function validateDateRange(input){
+        
+        var from_date = $("#search-date-created-from").val();
+        var to_date = $("#search-date-created-to").val();
+        
+        error_msg = "";
+        if(input.id == "search-date-created-from"){
+            error_msg = "From date must be less than To date!!"
+        }
+        else{
+            error_msg = "To date must be greater than From date!!"
+        }
+        from_day = parseInt(from_date.split("/")[0]);
+        from_month = parseInt(from_date.split("/")[1]);
+        from_year = from_date.split("/")[2];
+        from_year = from_year.split(" ")[0];
+
+        to_day = parseInt(to_date.split("/")[0]);
+        to_month = parseInt(to_date.split("/")[1]);
+        to_year = to_date.split("/")[2];
+        // from date should be less than to date
+        if(from_year > to_year){
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: error_msg
+            });
+            $("#search-date-created-from").val("{{from}}");
+            $("#search-date-created-to").val("{{to}}");
+            return false;
+        }else if(from_year == to_year){
+            if(from_month > to_month){
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: error_msg
+                });
+                $("#search-date-created-from").val("{{from}}");
+                $("#search-date-created-to").val("{{to}}");
+                return false;
+            }else if(from_month == to_month){
+                if(from_day > to_day){
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: error_msg
+                    });
+                    $("#search-date-created-from").val("{{from}}");
+                    $("#search-date-created-to").val("{{to}}");
+                    return false;
+                }
+            }
+        }        
+    }       
+       
+
+            function isNumberKey(evt){
+                var charCode = (evt.which) ? evt.which : event.keyCode
+                if (charCode > 31 && (charCode < 48 || charCode > 57))
+                    return false;
+                return true;
+            }
+
+            function payment_delay(){
+
+                var row_id = event.target.id.split("-").pop();
+                var input_id = "#transaction-input-" + row_id;
+                var amount = $(input_id).val();
+                var player_id = "#player-id-" + row_id;
+                
+            
+            
+                    $.ajax({
+                    type: "POST",
+                    url: "{% url 'admin-panel:payment-delay-ajax' %}",
+                    dataType: "json",
+                    data: {
+                        player_id: $(player_id).val(),
+                    },
+                    success: function (data) {
+                        if(data['status'] == 'wait'){
+                    
+                            Swal.fire({
+                            icon: 'info',
+                            title: 'Withdraw not available ',
+                            text: data['message']
+                                });
+                            return false; 
+                            }
+                        else{
+
+                            if(amount == '' || isNaN(amount)){
+                    
+                    Swal.fire({
+                        title: 'Oops...',
+                        text: "Please type in an amount!!",
+                        icon: 'error',
+                    });
+                    return false;
+                }
+
+                if(amount <= 0 ){
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: "Amount must be greater than zero!!"
+                    });
+                    return false;
+                }
+                
+                var player_id = "#player-id-" + row_id;
+                var balance_id = "#player-balance-" + row_id;
+                var bonus_balance_id = "#player-bonus-balance-" + row_id;
+
+                var type, confirmationPopupText;
+
+               
+                    type = "decrease",
+                    confirmationPopupText = '<span class="swal-custom-text text-c-red">Subtract ' + amount + ' </span';
+                
+
+                Swal.fire({
+                    html:
+                        '<div class="swal-custom-content">' + 
+                        '<p class="swal-custom-icon"><i class="cp-icon">&#xe815;</i></p>' +
+                        '<h3 class="swal-custom-title">{% trans "Are you sure" %} ?</h3>' +
+                        confirmationPopupText + 
+                        '</div>',
+                    customClass: {
+                        actions: 'swal-custom-actions',
+                        confirmButton: 'swal-custom-btn swal-custom-confirm-btn',
+                        cancelButton: 'swal-custom-btn swal-custom-cancel-btn',
+                    },
+                    showCancelButton: true,
+                    confirmButtonText: '{% trans "Yes" %}',
+                    cancelButtonText: '{% trans "No" %}'
+                    }).then((result) => {
+                        if (result.value) {
+                            $.ajax({
+                                url: "{% url 'admin-panel:credit-ajax' %}",
+                                type: "POST",
+                                dataType: "json",
+                                data: {
+                                    value: amount,
+                                    player_id: $(player_id).val(),
+                                    type: type
+                                },
+                                success: function (data) {
+                                    if(data.status === 'Wait'){
+                                        Swal.fire({
+                                            title: 'Withdraw not available',
+                                            text: data.message,
+                                            icon: 'info',
+                                        });
+                                        return false;
+                                    }
+
+                                    if(data.status === 'not_verified'){
+                                        Swal.fire({
+                                            title: 'Verification Needed',
+                                            text: data.message,
+                                            icon: 'info',
+                                        });
+                                        return false;
+                                    }
+                                    
+                                    if(data.status === 'Failed'){
+                                        Swal.fire({
+                                            title: 'Oops...',
+                                            text: data.message,
+                                            icon: 'error',
+                                        });
+                                        return false;
+                                    }else{
+                                        $(balance_id).text(data['player_bal']);
+                                        $(bonus_balance_id).text(data['player_bonus_bal']);
+
+                                        $("#user-balance").text(data['agent_bal']);
+                                    }
+                                    $(".balance-options input[type=radio]:checked").prop("checked", false);
+                                    $(".user-credit-wrap .transaction-input").val('');
+                                }
+                            });
+                        } else if (result.dismiss === "cancel") {
+                            // show message ?
+                        }
+                })}}});
+
+                
+            }   
+            
+            function credit_adjust() {
+                var row_id = event.target.id.split("-").pop();
+                var input_id = "#transaction-input-" + row_id;
+                var amount = $(input_id).val();
+                var player_id = "#player-id-" + row_id;
+                
+            
+                if(amount == '' || isNaN(amount)){
+            
+                    Swal.fire({
+                        title: 'Oops...',
+                        text: "Please type in an amount!!",
+                        icon: 'error',
+                    });
+                    return false;
+                }
+
+                if(amount <= 0 ){
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: "Amount must be greater than zero!!"
+                    });
+                    return false;
+                }
+                
+                var player_id = "#player-id-" + row_id;
+                var balance_id = "#player-balance-" + row_id;
+                var bonus_balance_id = "#player-bonus-balance-" + row_id;
+
+                var type, confirmationPopupText;
+
+                if (event.target.id.includes("increase")) {
+                    type = "increase";
+                    confirmationPopupText = '<span class="swal-custom-text text-c-green">Add ' + amount + ' </span>';
+                } else {
+                    type = "decrease",
+                    confirmationPopupText = '<span class="swal-custom-text text-c-red">Subtract ' + amount + ' </span';
+                }
+
+                Swal.fire({
+                    html:
+                        '<div class="swal-custom-content">' + 
+                        '<p class="swal-custom-icon"><i class="cp-icon">&#xe815;</i></p>' +
+                        '<h3 class="swal-custom-title">{% trans "Are you sure" %} ?</h3>' +
+                        confirmationPopupText + 
+                        '</div>',
+                    customClass: {
+                        actions: 'swal-custom-actions',
+                        confirmButton: 'swal-custom-btn swal-custom-confirm-btn',
+                        cancelButton: 'swal-custom-btn swal-custom-cancel-btn',
+                    },
+                    showCancelButton: true,
+                    confirmButtonText: '{% trans "Yes" %}',
+                    cancelButtonText: '{% trans "No" %}'
+                    }).then((result) => {
+                        if (result.value) {
+                            $.ajax({
+                                url: "{% url 'admin-panel:credit-ajax' %}",
+                                type: "POST",
+                                dataType: "json",
+                                data: {
+                                    value: amount,
+                                    player_id: $(player_id).val(),
+                                    type: type
+                                },
+                                success: function (data) {
+                                    if(data.status === 'Wait'){
+                                        Swal.fire({
+                                            title: 'Withdraw not available',
+                                            text: data.message,
+                                            icon: 'info',
+                                        });
+                                        return false;
+                                    }
+                                    
+                                    if(data.status === 'not_verified'){
+                                        Swal.fire({
+                                            title: 'Verification Needed',
+                                            text: data.message,
+                                            icon: 'info',
+                                        });
+                                        return false;
+                                    }
+                                    
+                                    if(data.status === 'Failed'){
+                                        Swal.fire({
+                                            title: 'Oops...',
+                                            text: data.message,
+                                            icon: 'error',
+                                        });
+                                        return false;
+                                    }else{
+                                        $(balance_id).text(data['player_bal']);
+                                        $(bonus_balance_id).text(data['player_bonus_bal']);
+
+                                        $("#user-balance").text(data['agent_bal']);
+                                    }
+                                    $(".balance-options input[type=radio]:checked").prop("checked", false);
+                                    $(".user-credit-wrap .transaction-input").val('');
+                                }
+                            });
+                        } else if (result.dismiss === "cancel") {
+                            // show message ?
+                        }
+                })
+            };
+
+            function credit_adjust_offmarket() {
+                var row_id = event.target.id.split("-").pop();
+                var input_id = "#offmarket-transaction-input-" + row_id;
+                var amount = $(input_id).val();
+                var payment_id = $(`#payment-id-${row_id}`).val()
+                var player_id = "#player-id-" + row_id;
+                var game_id = $('#game-selector-'+$(player_id).val()).val();            
+                if(amount == '' || isNaN(amount)){
+            
+                    Swal.fire({
+                        title: 'Oops...',
+                        text: "Please type in an amount!!",
+                        icon: 'error',
+                    });
+                    return false;
+                }
+                if(game_id == '' || isNaN(game_id)){
+            
+                    Swal.fire({
+                        title: 'Oops...',
+                        text: "Please select the game !!",
+                        icon: 'error',
+                    });
+                    return false;
+                }
+
+                if(amount <= 0 ){
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: "Amount must be greater than zero!!"
+                    });
+                    return false;
+                }
+
+                if(payment_id == '' || payment_id == null ){
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: "Please enter payment ID"
+                    });
+                    return false;
+                }
+
+                if(payment_id.length < 5){
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: "Payment ID should be at least 5 character"
+                    });
+                    return false;
+                }
+                
+                var player_id = "#player-id-" + row_id;
+                var balance_id = "#player-balance-" + row_id;
+                var bonus_balance_id = "#player-bonus-balance-" + row_id;
+
+                var type, confirmationPopupText;
+
+                if (event.target.id.includes("increase")) {
+                    type = "increase";
+                    confirmationPopupText = '<span class="swal-custom-text text-c-green">Add ' + amount + ' </span>';
+                } else {
+                    type = "decrease",
+                    confirmationPopupText = '<span class="swal-custom-text text-c-red">Subtract ' + amount + ' </span';
+                }
+
+                Swal.fire({
+                    icon: "question",
+                    html:
+                        '<div class="swal-custom-content">' + 
+                        {% comment %} '<p class="swal-custom-icon"><i class="cp-icon">&#xe815;</i></p>' + {% endcomment %}
+                        '<h3 class="swal-custom-title">{% trans "Are you sure" %}?</h3>' +
+                        confirmationPopupText + 
+                        '</div>',
+                    customClass: {
+                        actions: 'swal-custom-actions',
+                        confirmButton: 'swal-custom-btn swal-custom-confirm-btn',
+                        cancelButton: 'swal-custom-btn swal-custom-cancel-btn',
+                    },
+                    showCancelButton: true,
+                    confirmButtonText: '{% trans "Yes" %}',
+                    cancelButtonText: '{% trans "No" %}'
+                    }).then((result) => {
+                        if (result.value) {
+                            $.ajax({
+                                url: "{% url 'admin-panel:off-market-credit' %}",
+                                type: "POST",
+                                dataType: "json",
+                                data: {
+                                    value: amount,
+                                    player_id: $(player_id).val(),
+                                    game_id : game_id,
+                                    type: type,
+                                    payment_id: payment_id,
+                                },
+                                success: function (data) {
+                                    if(data.status === 'Failed'){
+                                        Swal.fire({
+                                            title: 'Failed',
+                                            text: data.message,
+                                        })
+                                        return false;
+                                    }else{
+                                        Swal.fire({
+                                            title: 'Success',
+                                            text: data.message,
+                                        })
+                                        $(".balance-options input[type=radio]:checked").prop("checked", false);
+                                        $(".user-credit-wrap .offmarket-transaction-input").val('');
+                                        $("#game-selector-" + $(player_id).val()).val('');
+                                        return false;
+                                    }
+                                   
+                                },
+                                error: function(response){
+                                    Swal.fire({
+                                        icon: "error",
+                                        title: 'Failed',
+                                        text: response.responseJSON.message,
+                                    })
+                                    return false;
+                                },
+                            });
+                        } else if (result.dismiss === "cancel") {
+                            // show message ?
+                        }
+                })
+            };
+
+            (function ($) {
+                // USE STRICT
+                "use strict";
+
+                // Select 2
+                try {
+
+                    $(".js-select2").each(function () {
+                        $(this).select2({
+                            minimumResultsForSearch: 20,
+                            dropdownParent: $(this).next('.dropDownSelect2')
+                        });
+                    });
+
+                } catch (error) {
+                    console.log(error);
+                }
+
+
+            })(jQuery);
+
+               
+function usergames(player_id) {
+    player_id = player_id
+    var data = {
+        player_id: player_id,
+    }
+    $.ajax({
+        url: "{% url 'admin-panel:user-games' %}",
+        type: "GET",
+        dataType: "json",
+        data: data,
+        success: function (res) {
+            data = res.player_games
+            $('#usergames-body-'+player_id).html('');
+            if (data.length === 0) {
+              $('#usergames-body-'+player_id).html('<tr><td colspan="3" align="center">No data found</td></tr>');
+            } else {
+              let tbody = '';
+              for (let i = 0; i < data.length; i++) {
+                tbody += `<tr>
+                            <td>${data[i].username}</td>
+                            <td>${data[i].game__title}</td>
+                            <td>       
+                                <button type="button" class="btn btn-warning " data-toggle="modal" data-target="#exampleModal2" data-player-id="${player_id}" data-username="${data[i].username}" data-game="${data[i].game__title}" data-id="${data[i].id}" data-game-id="${data[i].game__id}" data-code="${data[i].game__code}" ${res.role == 'dealer' ? 'disabled' : '' }>
+                                    <img src="{% static '/icon/edit.png' %}" width="15" height="15" ></img>
+                                </button>
+                                <button class="btn btn-danger " onclick="deletegame('${data[i].id}','${player_id}')" ${res.role == 'dealer' ? 'disabled' : '' }>
+                                <i class="fa fa-trash-o"></i></button>
+                                </td>
+                          </tr>`;
+              }
+              console.log('#usergames-body-'+player_id);
+              console.log('#usergames-body');
+              $('#usergames-body-'+player_id).html(tbody);
+              console.log(tbody);
+            }
+          }
+          
+    })    
+}
+
+$('.edit-player-dealer-popup').magnificPopup({
+        type:'inline',
+        midClick: true,
+        fixedContentPos: true,
+        callbacks: {
+            beforeOpen: function() {
+                console.log("---data9999---")
+                this.st.mainClass = this.st.el.attr('data-effect');
+
+                var dealer_username = this.st.el.attr('data-username');
+                var player_id = this.st.el.attr('data-player_id');
+                var game = this.st.el.attr('data-game');
+                
+
+                $("#edit-player-game input[name='username']").val(dealer_username).prop('readonly', true);
+                $("#edit-player-game input[name='game']").val(game).prop('readonly', true);
+            },
+            close: function(){
+                $("#edit-player-game input").val(null);
+                $('.error-msg').text('');
+            }
+        },
+    });
+
+function deletegame(game_id, player_id){
+    player_id = player_id
+    var data = {
+        game_id:game_id,
+    }
+    $.ajax({
+        url: "{% url 'admin-panel:user-games' %}",
+        type: "GET",
+        dataType: "json",
+        data: data,
+        success: function (data) {
+            $('#usergames-body-'+player_id).html('');
+            usergames(player_id)
+          }
+          
+    })    
+}
+
+                
+            
+
+            $(document).ready(function () {
+                console.log("happy birthday 1");
+                
+                $("#edit-player input[name='password']").attr("required", false);
+                $("#edit-player input[name='confirm_password']").attr("required", false);
+                // $("#dob-input input").datetimepicker({
+                    //    format: 'd/m/Y',
+                    //        timepicker: false,
+                    //          });
+                
+                    $(".table-row").click(function(){
+                        $(this).find(".table-arrow").toggleClass("arrow-rotate");
+                    });
+                    function show_profile_pic(input) {
+                        
+                        $('#row form-group #profile_pic_img').show();
+                         if (input.files && input.files[0]) {
+                         var reader = new FileReader();
+                          reader.onload = function (e) {
+                          $('#profile_pic_img').attr('src', e.target.result);
+                          $('#profile_pic_img').removeAttr('style');
+                         };
+                         reader.readAsDataURL(input.files[0]);
+                         }
+                         
+                        }
+                    
+                $(".tr-player").click(function () {
+                    if (!$(this).find('.table-arrow').hasClass('arrow-rotate')) {return}
+                    var player_id = $(this).attr("player_id");
+                    var url_mask = "{% url 'admin-panel:user-profit' 12345 %}".replace(/12345/, player_id);
+                    var off_market = "{% url 'admin-panel:user-off-market-deatils' 12345 %}".replace(/12345/, player_id);
+                    var data = {
+                        user_id: player_id,
+                    };
+
+                    {% comment %} if($('#search-date-created-from').val().length > 0){
+                        data.from = $('#search-date-created-from').val()
+                    }
+
+                    if($('#search-date-created-to').val().length > 0){
+                        data.to = $('#search-date-created-to').val()
+                    } {% endcomment %}
+
+                    {% if request.user.role != "staff" %}
+
+                    $.ajax({
+                        url: url_mask,
+                        type: "GET",
+                        dataType: "json",
+                        data: data,
+                        success: function (data) {
+                            $(".user-profit-table td").removeClass("text-c-red");
+                            $(".user-profit-table td").removeClass("text-c-green");
+                            $(".player_info[player_id=" + player_id + "]").find(".sports_book_in_sum").text(data.sports_book_in_sum);
+                            $(".player_info[player_id=" + player_id + "]").find(".sports_book_out_sum").text(data.sports_book_out_sum);
+                            $(".player_info[player_id=" + player_id + "]").find(".sports_book_profit").text(data.sports_book_profit);
+
+                            if(data.sports_book_profit < 0){
+                                $(".player_info[player_id=" + player_id + "]").find(".sports_book_profit").addClass("text-c-red");
+                            }
+                            else {
+                                $(".player_info[player_id=" + player_id + "]").find(".sports_book_profit").addClass("text-c-green");
+                            }
+
+                            $(".player_info[player_id=" + player_id + "]").find(".casino_in_sum").text(data.casino_in_sum);
+                            $(".player_info[player_id=" + player_id + "]").find(".casino_out_sum").text(data.casino_out_sum);
+                            $(".player_info[player_id=" + player_id + "]").find(".casino_book_profit").text(data.casino_book_profit);
+
+                            if(data.casino_book_profit < 0){
+                                $(".player_info[player_id=" + player_id + "]").find(".casino_book_profit").addClass("text-c-red");
+                            }
+                            else {
+                                $(".player_info[player_id=" + player_id + "]").find(".casino_book_profit").addClass("text-c-green");
+                            }
+
+                            $(".player_info[player_id=" + player_id + "]").find(".live_casino_in_sum").text(data.live_casino_in_sum);
+                            $(".player_info[player_id=" + player_id + "]").find(".live_casino_out_sum").text(data.live_casino_out_sum);
+                            $(".player_info[player_id=" + player_id + "]").find(".live_casino_book_profit").text(data.live_casino_book_profit);
+
+                            if(data.live_casino_book_profit < 0){
+                                $(".player_info[player_id=" + player_id + "]").find(".live_casino_book_profit").addClass("text-c-red");
+                            }
+                            else {
+                                $(".player_info[player_id=" + player_id + "]").find(".live_casino_book_profit").addClass("text-c-green");
+                            }
+
+                            $(".player_info[player_id=" + player_id + "]").find(".casino_letplay_in_sum").text(data.casino_letplay_in_sum);
+                            $(".player_info[player_id=" + player_id + "]").find(".casino_letplay_out_sum").text(data.casino_letplay_out_sum);
+                            $(".player_info[player_id=" + player_id + "]").find(".casino_letplay_book_profit").text(data.casino_letplay_book_profit);
+
+
+
+                            if(data.casino_letplay_book_profit < 0){
+                                $(".player_info[player_id=" + player_id + "]").find(".casino_letplay_book_profit").addClass("text-c-red");
+                            }
+                            else {
+                                $(".player_info[player_id=" + player_id + "]").find(".casino_letplay_book_profit").addClass("text-c-green");
+                            }
+                            $(".player_info[player_id=" + player_id + "]").find(".all_in").text(data.all_in);
+                            $(".player_info[player_id=" + player_id + "]").find(".all_out").text(data.all_out);
+                            $(".player_info[player_id=" + player_id + "]").find(".all_profit").text(data.all_profit);
+                            $(".player_info[player_id=" + player_id + "]").find(".bonus_amount").text(data.bonus);
+                            $(".player_info[player_id=" + player_id + "]").find(".net_profit").text(data.net_profit);
+                            $(`#casino_in_sum-${player_id}`).text(data.casino_in_sum);
+                            $(`#casino_out_sum-${player_id}`).text(data.casino_out_sum);
+                            $(`#casino_profit-${player_id}`).text(data.casino_book_profit);
+                            $(`#offmarket_in_sum-${player_id}`).text(data.offmarket_in_sum);
+                            $(`#offmarket_out_sum-${player_id}`).text(data.offmarket_out_sum);
+                            $(`#offmarket_profit-${player_id}`).text(data.offmarket_profit);
+
+                            $(".player_info[player_id=" + player_id + "]").find(".bonus_amount").addClass("text-c-red");
+
+                            if(data.all_profit < 0){
+                                $(".player_info[player_id=" + player_id + "]").find(".all_profit").addClass("text-c-red");
+                            }
+                            else {
+                                $(".player_info[player_id=" + player_id + "]").find(".all_profit").addClass("text-c-green");
+                            }
+
+                            if(data.net_profit < 0){
+                                $(".player_info[player_id=" + player_id + "]").find(".net_profit").addClass("text-c-red");
+                            }
+                            else {
+                                $(".player_info[player_id=" + player_id + "]").find(".net_profit").addClass("text-c-green");
+                            }
+
+                            $(`#casino_profit-${player_id}`).toggleClass('text-success', isGreaterThanZero(data.casino_book_profit)).toggleClass('text-danger', !isGreaterThanZero(data.casino_book_profit));
+                            $(`#offmarket_profit-${player_id}`).toggleClass('text-success', isGreaterThanZero(data.offmarket_profit)).toggleClass('text-danger', !isGreaterThanZero(data.offmarket_profit));
+
+                        },
+                    });
+
+                    {% endif %}
+
+                    $.ajax({
+                        url: off_market,
+                        type: "GET",
+                        dataType: "json",
+                        data: data,
+                        success: function (response) {
+                            console.log(response)
+                            var selectElement = $('#game-selector-'+player_id);
+                            selectElement.empty();
+                            selectElement.append($('<option>', {
+                                value: '',
+                                text: 'Select a game'
+                            }));
+                            $.each(response, function(index, game) {
+                                selectElement.append($('<option>', {
+                                    value: game.game_id,
+                                    text: game.game__title
+                                }));
+                            });
+                        },
+                    });
+                })
+                
+                $(".player_switch").change(function () {
+                    var player_status = $(this).is(':checked')
+                    var player_id = $(this).attr('player_id')
+                    $.ajax({
+                        url: "{% url 'admin-panel:manage-player' %}",
+                        type: "POST",
+                        dataType: "json",
+                        data: {
+                            player_status: player_status,
+                            player_id: player_id,
+                        },
+                        success: function(response) {
+                            Swal.fire({
+                                icon: response["status"].toLowerCase(),
+                                title: response["status"][0].toUpperCase() + response["status"].substring(1),
+                                text: response['message']
+                            });
+                        },
+                    });
+                })
+
+                $(".verify_switch").change(function () {
+                    var player_status = $(this).is(':checked')
+                    var player_id = $(this).attr('player_id')
+                    $.ajax({
+                        url: "{% url 'admin-panel:verify-player' %}",
+                        type: "POST",
+                        dataType: "json",
+                        data: {
+                            player_id: player_id,
+                        },
+                        success: function(response) {
+                            Swal.fire({
+                                icon: response["status"].toLowerCase(),
+                                title: response["status"][0].toUpperCase() + response["status"].substring(1),
+                                text: response['message']
+                            });
+                        },
+                    });
+                })
+            
+                $(".cancel_switch").change(function () {
+                    var cancel_status = $(this).is(':checked')
+                    var player_id = $(this).attr('player_id')
+                    $.ajax({
+                        url: "{% url 'admin-panel:manage-player' %}",
+                        type: "POST",
+                        dataType: "json",
+                        data: {
+                            cancel_status: cancel_status,
+                            player_id: player_id,
+                        },
+                        success: function(response) {
+                            Swal.fire({
+                                icon: response["status"].toLowerCase(),
+                                title: response["status"][0].toUpperCase() + response["status"].substring(1),
+                                text: response['message']
+                            });
+                        },
+                    });
+                })
+
+
+                $(".blackout_switch").change(function () {
+                    var blackout_status = $(this).is(':checked')
+                    var player_id = $(this).attr('player_id')
+                    var blackout_expire_hours = $("#black-out-hours-"+player_id).val()
+                    
+                    if (blackout_expire_hours == null && blackout_status) {
+                        Swal.fire({
+                            title: 'Oops...',
+                            text: "Please select blackout hours!!",
+                            icon: 'error',
+                        });
+                        
+                        $(this).prop('checked', false);
+                        return false;
+                    }
+
+                    else if (blackout_status == true){
+                        $("#black-out-hours-"+player_id).prop('disabled', true);
+
+                    }
+                    else {
+                        $("#black-out-hours-"+player_id).prop('disabled', false);
+                    }
+                    
+                    $.ajax({
+                        url: "{% url 'admin-panel:manage-player' %}",
+                        type: "POST",
+                        dataType: "json",
+                        data: {
+                            blackout_status: blackout_status,
+                            player_id: player_id,
+                            blackout_expire_hours: blackout_expire_hours,
+                        },
+                        success: function(response) {
+                            Swal.fire({
+                                icon: response["status"].toLowerCase(),
+                                title: response["status"][0].toUpperCase() + response["status"].substring(1),
+                                text: response['message']
+                            }).then((result) => {
+                                     $.magnificPopup.close();
+                                     location.reload();
+                                });
+
+                        },
+                    });
+                })
+
+                $('#create-usergame-form').submit(function (event) {
+                    event.preventDefault();
+                    spinner.show();
+
+                    var formdata=new FormData();
+                    formdata.append('username',$("#id_username").val());
+                    formdata.append('game',$("#id_game").val());
+                    formdata.append('user',$("#modalPlayerId").val());
+                    formdata.append('csrfmiddlewaretoken','{{ csrf_token }}');
+                    
+                    $.ajax({
+                        url: "{% url 'admin-panel:create-user-game' %}",
+                        type: "POST",
+                        data:formdata,
+                        cache : false,
+                        processData:false,
+                        contentType: false,
+                        csrfmiddlewaretoken: '{{ csrf_token }}',
+                        success: function (data) {
+                            spinner.hide();
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'UserGame Created Successfully',
+                            }).then((result) => {
+                                location.reload();
+                            });
+                        },
+                        error: function(response){
+                            spinner.hide();
+                            Swal.fire({
+                                icon: "error",
+                                title: "Bad Request",
+                                text: response['responseJSON']['message']
+                            });
+                        },
+                    });
+                });
+
+                $('#edit-usergame-form').submit(function (event) {
+                    event.preventDefault();
+                    spinner.show();
+
+                    var formdata=new FormData();
+                    formdata.append('username',$("#id_username_edit").val());
+                    formdata.append('offmarket_game_id',$("#id_game_edit").val());
+                    formdata.append('usergame_id',$("#usergame_id").val());
+                    formdata.append('csrfmiddlewaretoken','{{ csrf_token }}');
+                    
+                    $.ajax({
+                        url: "{% url 'admin-panel:edit-user-game' %}",
+                        type: "POST",
+                        data:formdata,
+                        cache : false,
+                        processData:false,
+                        contentType: false,
+                        csrfmiddlewaretoken: '{{ csrf_token }}',
+                        success: function (data) {
+                            spinner.hide();
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'UserGame updated Successfully',
+                            }).then((result) => {
+                                location.reload();
+                            });
+                        },
+                        error: function(response){
+                            spinner.hide();
+                            Swal.fire({
+                                icon: "error",
+                                title: "Bad Request",
+                                text: response['responseJSON']['message']
+                            });
+                        },
+                    });
+                });
+
+                $('#create-player-form').submit(function (event) {
+                    event.preventDefault();
+                    spinner.show();
+
+                    var formdata=new FormData();
+                    formdata.append('username',$("#username-input input").val());
+                    formdata.append('full_name',$("#full_name-input input").val());
+                    // formdata.append('state',$("#state-input input").val());
+                    formdata.append('dob',$("#dob-input input").val());
+                    formdata.append('email',$("#email-input input").val());
+                    // formdata.append('country_code',$("#country_code-input input").val());
+                    // formdata.append('phone_number',$("#phone_number-input input").val());
+                    // formdata.append('zip_code',$("#zip_code-input input").val());
+                    // formdata.append('complete_address',$("#complete_address-input input").val());
+                    formdata.append('password',$("#password-input input").val());
+                    formdata.append('confirm_password',$("#confirm-password-input input").val());
+                    // formdata.append('user_id_proof',$("#id_user_id_proof").prop('files')[0]);
+                    // formdata.append('profile_pic',$("#id_profile_pic").prop('files')[0]);
+                    formdata.append('csrfmiddlewaretoken','{{ csrf_token }}');
+                    
+                    $.ajax({
+                        url: "{% url 'admin-panel:create-player' %}",
+                        type: "POST",
+                        enctype: 'multipart/form-data',
+                        data:formdata,
+                        cache : false,
+                        processData:false,
+                        contentType: false,
+                        csrfmiddlewaretoken: '{{ csrf_token }}',
+                        success: function (data) {
+                            spinner.hide();
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'User:  created successfully!',
+                            }).then((result) => {
+                                    $.magnificPopup.close();
+                                    location.reload();
+                            });
+                        },
+                        error: function(response){
+                            spinner.hide();
+                            Swal.fire({
+                                icon: "error",
+                                title: "Bad Request",
+                                text: response['responseJSON']['message']
+                            });
+                        },
+                    });
+                });
+
+                $('.edit-player-popup').magnificPopup({
+                    type:'inline',
+                    midClick: true,
+                    fixedContentPos: true,
+                    callbacks: {
+                        beforeOpen: function() {
+                            this.st.mainClass = this.st.el.attr('data-effect');
+
+                          
+                            var player_username = this.st.el.attr('data-username');
+                            var player_email = this.st.el.attr('data-email');
+                            var player_full_name = this.st.el.attr('data-full_name');
+                            var player_dob = this.st.el.attr('data-dob');
+                            var player_zipcode = this.st.el.attr('data-zipcode');
+                            var country_code = this.st.el.attr('data-countrycode');
+                            var player_phone = this.st.el.attr('data-phone');
+                            var zip_code = this.st.el.attr('data-zip_code');
+                            var state = this.st.el.attr('data-state');
+                            var address = this.st.el.attr('data-address');
+                            // var password = this.st.el.attr('data-password');
+                            var profile = this.st.el.attr('data-profile');
+                            console.log(profile)
+                            var id_proof = this.st.el.attr('data-id-proof');
+                            $("#edit-player input[name='username']").val(player_username).prop('readonly', true);
+                            $("#edit-player input[name='dob']").val(player_dob).prop('readonly', true);
+                            $("#edit-player input[name='full_name']").val(player_full_name);
+                            $("#edit-player input[name='email']").val(player_email);
+                            $("#edit-player input[name='country_code']").val(country_code);
+                            $("#edit-player input[name='phone_number']").val(player_phone);
+                            $("#edit-player input[name='state']").val(state);
+                            $("#edit-player input[name='complete_address']").val(address);
+                            $("#edit-player input[name='zip_code']").val(zip_code);
+                            // $("#edit-player input[name='password']").val(password);
+                            // $("#edit-player input[name='confirm_password']").val(password);
+                            $("#edit-player #id_profile_pic").attr("title",profile);
+                            $("#edit-player #id_profile_pic").attr("value",profile);
+                            $("#edit-player #id_profile_pic").attr("required",false);
+                            // $("#edit-player #id_user_id_proof").attr("title",profile);
+                            // $("#edit-player #id_user_id_proof").attr("value",profile);
+                            // $("#edit-player #id_user_id_proof").attr("required",false);
+                            $("#edit-player #profile_pic_img").attr("src", profile);
+                            // $("#id_proof_img").attr("src", id_proof);
+                        },
+                        close: function(){
+                            $("#edit-player input").val(null);
+                        }
+                    },
+                });
+
+                $('.transactions-popup').magnificPopup({
+                    type:'inline',
+                    midClick: true,
+                    fixedContentPos: true,
+                    callbacks: {
+                        beforeOpen: function() {
+                            console.log("i work");
+                            this.st.mainClass = this.st.el.attr('data-effect');
+
+                            var player_username = this.st.el.attr('data-username');
+                            $("#transactions button").attr('player_id', player_username);
+                            $("#transactions button").click();
+                            
+                        }
+                    },
+                });
+                $('#edit-player-form').submit(function (event) {
+                    event.preventDefault();
+                    spinner.show();
+                    var username = $("#edit-username-input input").val();
+                    var full_name = $("#full_name-input input").val();
+                    // var state = $("#state-input input").val();
+                    // var dob = $("#dob-input input").val();
+                    // var profile_pic = $("#edit-player #id_profile_pic").prop('files')[0];
+                    // {% comment %} var user_id_proof = $("#edit-player #id_user_id_proof").prop('files')[0]; {% endcomment %}
+                    var email = $("#email-input input").val();
+                    // var phone_number = $("#phone_number-input input").val();
+                    // var country_code = $("#country_code-input input").val();
+                    // var zip_code = $("#zip_code-input input").val();
+                    // var complete_address = $("#complete_address-input input").val();
+                    var password = $("#edit-password-input input").val();
+                    var confirm_password = $("#edit-password-input #id_cnf_password").val();
+
+                    console.log("PASsWWRD ",password);
+                    console.log("confirm password ",confirm_password)
+                    var formdata=new FormData();
+                    formdata.append('username',username);
+                    formdata.append('full_name',full_name);
+                    // formdata.append('state',state);
+                    // formdata.append('dob',dob);
+                    formdata.append('email',email);
+                    // formdata.append('phone_number',phone_number);
+                    // formdata.append('country_code',country_code);
+                    // formdata.append('zip_code',zip_code);
+                    // formdata.append('complete_address',complete_address);
+                    formdata.append('password',password);
+                    formdata.append('confirm_password',confirm_password);
+                    // {% comment %} formdata.append('user_id_proof',user_id_proof); {% endcomment %}
+                    // formdata.append('profile_pic',profile_pic);
+                    formdata.append('csrfmiddlewaretoken','{{ csrf_token }}');
+                    $.ajax({
+                        url: "{% url 'admin-panel:update-player' %}",
+                        type: "POST",
+                        dataType: "json",
+                        enctype: 'multipart/form-data',
+                        data:formdata,
+                        cache : false,
+                        processData:false,
+                        contentType: false,
+                        success: function (data) {
+                            spinner.hide();
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success',
+                                text: "Player has updated successfully"
+                            }).then((result) => {
+                                    $.magnificPopup.close();
+                                    location.reload();
+                            });
+                        },
+                        error: function(response){
+                            spinner.hide();
+                            Swal.fire({
+                                icon: "error",
+                                title: "Bad Request",
+                                text: response['responseJSON']['message']
+                            });
+                        },
+                    });
+                });
+
+
+                $(".ignore-collapse").on("click", function(e){
+                    e.stopPropagation();
+                });
+
+            
+
+                 $('.open-player-popup').magnificPopup({
+                    type:'inline',
+                    midClick: true,
+                    fixedContentPos: true,
+                    callbacks: {
+                        beforeOpen: function() {
+                            this.st.mainClass = this.st.el.attr('data-effect');
+                        },
+                        close: function(){
+                            $("#add-player input").val(null);
+                        }
+                    },
+                }); 
+
+                // Change balance input value on radio options check 
+                $(".balance-options input[type=radio]").on("change", function(e){
+                    var radioValue = $(this).val();
+                    $(this).closest(".user-credit-wrap").find(".transaction-input").val(radioValue);
+                });
+
+                // Deselect radio options on balance input value change 
+                $(".user-credit-wrap .transaction-input").on("input", function(e){
+                    $(".balance-options input[type=radio]:checked").prop("checked", false);
+                });
+                
+                
+                $('input[name=black-out-date-time]').datetimepicker({
+                        format: 'd/m/Y',
+                        timepicker: false,
+                        minDate: 0,
+
+                    }
+                );
+               
+               
+                $('#search-date-created-from').datetimepicker({
+                        format: 'd/m/Y',
+                        timepicker: false,
+                    }
+                );
+
+                $('#search-date-created-to').datetimepicker({
+                        format: 'd/m/Y',
+                        timepicker: false,                        
+                    }
+                );
+
+                $('#select-dealer').tokenize2({
+                    multiple: true,
+                    placeholder: "{% trans 'Search by Master Agent' %}",
+                    searchMinLength:3,
+                    dataSource: function(term, object){
+                        $.ajax("{% url 'admin-panel:dealer-ajax' %}", {
+                            type: "POST",
+                            data: { search: term, start: 0 },
+                            global: false, 
+                            dataType: 'json',
+                            success: function(data){
+                                var $items = [];
+                                $.each(data, function(k, v){
+                                    $items.push(v);
+                                });
+                                object.trigger('tokenize:dropdown:fill', [$items]);
+                            }
+                        });
+                    }
+                });
+                $('#input-search').tokenize2({
+                    dropdownMaxItems:"5",
+                    placeholder: "{% trans 'Search by Player' %}",
+                    searchMinLength:3,
+                    multiple: true,
+                    tokensMaxItems:"100",
+                    dataSource: function(term, object){
+                        var dealer = $('#select-dealer').val();
+                        var agent=$('#select-agent').val();
+                        $.ajax("{% url 'admin-panel:player-ajax' %}", {
+                            type: "POST",
+                            data: {
+                                search: term,
+                                start: 0,
+                                dealers: dealer,
+                                agents: agent
+                            },
+                            global: false, 
+                            dataType: 'json',
+                            success: function(data){
+                                var $items = [];
+                                $.each(data, function(k, v){
+                                    $items.push(v);
+                                });
+                                object.trigger('tokenize:dropdown:fill', [$items]);
+                            }
+                        });
+                    }
+                });
+
+                $('#select-agent').tokenize2({
+                    tags: [],
+                    placeholder: "{% trans 'Search by Agent' %}",
+                    searchMinLength:3,
+                    multiple: true,
+                    dataSource: function(term, object){
+                        $.ajax("{% url 'admin-panel:agent-ajax' %}", {
+                            type: "POST",
+                            data: {
+                                search: term,
+                                start: 0,
+                                dealers: $('#select-dealer').val()
+                            },
+                            global: false, 
+                            dataType: 'json',
+                            success: function(data){
+                                var $items = [];
+                                $.each(data, function(k, v){
+                                    $items.push(v);
+                                });
+                                object.trigger('tokenize:dropdown:fill', [$items]);
+                            }
+                        });
+                    }
+                });
+
+                var timer = 0;
+                clearTimeout(timer);
+
+                // $('#input-search').on('change', function () {
+                //     timer = setTimeout(function () {
+                //         var conceptName = $('#input-search').find(":selected").text();
+                //         window.location = window.location.pathname + "?order=" + $('#select-sort option').filter(':selected').val() + "&user_name=" + (conceptName);
+                //         return false;
+                //     }, 500);
+                // });
+            });
+
+            $(".cashback_switch").change(function () {
+                console.log(this)
+                var cashback_status = $(this).is(':checked')
+                var player_id = $(this).attr('player_id')
+                $.ajax({
+                    url: "{% url 'admin-panel:manage-cashback-status' %}",
+                    type: "POST",
+                    dataType: "json",
+                    data: {
+                        cashback_status: cashback_status,
+                        user_id: player_id,
+                    },
+                    success: function (data) {
+                        Swal.fire({
+                            title: 'Success',
+                            text: data.message,
+                            icon: 'success',
+                        }).then(() => {
+                            window.location.reload();
+                        });;
+                    },
+                    error: function(data) {
+                        Swal.fire({
+                            title: 'Error',
+                            text: data['statusText'],
+                            icon: 'error',
+                        }).then(() => {
+                            window.location.reload();
+                        });;
+                    },
+                });
+                
+            })
+            function validateInput(input,player_id) { 
+                console.log(parseInt(input.value))
+
+            if (event.which != 8 && event.which != 0 && event.which < 48 || event.which > 57)
+            {
+                event.preventDefault();
+            }
+            var betting_limit= $("#betting-limit-amount-"+player_id).val() 
+            console.log(betting_limit)
+            if(betting_limit > 400)
+            {
+                swal.fire({
+                    title: 'Error',
+                    text: 'Maximum betting limit is 4000',
+                    icon: 'error',
+                })
+            }
+            
+        }
+            function set_player_betting_limit(player_id){
+                
+                var betting_limit= $("#betting-limit-amount-"+player_id).val()
+                console.log("betting_limit",betting_limit)
+                if(betting_limit==""){
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'Betting limit is required',
+                        icon: 'error',
+                    });
+                    return false;
+                }
+                else if(parseInt(betting_limit) == 0){
+                    Swal.fire({
+
+                        title: 'Error',
+                        text: 'Betting limit should be greater than 0',
+                        icon: 'error',
+                    });
+                    return false;
+                }
+                else {
+                $.ajax({
+                    url: "{% url 'admin-panel:set-player-betting-limit' %}",
+                    type: "POST",
+                    dataType: "json",
+                    data: {
+                        max_spending_limit : betting_limit,
+                        player_id: player_id,
+                        csrfmiddlewaretoken: '{{ csrf_token }}'
+                    },
+                    success: function (data) {
+                        Swal.fire({
+                            title: 'Success',
+                            text: data['message'],
+                            icon: 'success',
+                        }).then(() => {
+                            window.location.reload();
+                        });;
+                    },
+                    error: function(data) {
+                        Swal.fire({
+                            title: 'Error',
+                            text: data['responseJSON']['message'],
+                            icon: 'error',
+                        }).then(() => {
+                            window.location.reload();
+                        });;
+                    },
+                });
+            }
+            }
+        function view_cnf_password(){
+            const passwordInputcnf = document.querySelector('#edit-player-form #id_cnf_password');
+            const toggleButtoncnf= document.getElementById('password-toggle-cnf');
+
+            if (passwordInputcnf.type === 'password') {
+        passwordInputcnf.type = 'text';
+        toggleButtoncnf.querySelector('i').classList.remove('fa-eye');
+        toggleButtoncnf.querySelector('i').classList.add('fa-eye-slash');
+      } else {
+        passwordInputcnf.type = 'password';
+        toggleButtoncnf.querySelector('i').classList.remove('fa-eye-slash');
+        toggleButtoncnf.querySelector('i').classList.add('fa-eye');
+        
+      }
+        }
+        function view_password(){
+        const passwordInput = document.querySelector('#edit-player-form #id_password');
+
+        const toggleButton = document.getElementById('password-toggle');
+
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleButton.querySelector('i').classList.remove('fa-eye');
+                toggleButton.querySelector('i').classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                toggleButton.querySelector('i').classList.remove('fa-eye-slash');
+                toggleButton.querySelector('i').classList.add('fa-eye');
+               
+            }
+
+    
+      
+           }
+        </script>
+
+{% endblock content %}
+eniz

@@ -1,0 +1,634 @@
+{% extends "index.html" %}
+{% load i18n %}
+{% load static %}
+{% load math %}
+{% load permissions %}
+{% block title %}
+Roles
+{% endblock title %}
+
+{% block content %}
+<style>
+    .admin-card{
+        background-color: #ffffff;
+        box-shadow: 0px 0px 6px 6px rgb(204 204 204 / 0.25);
+        padding: 30px 10px;
+    } 
+    .pcode.left-spacer {
+	margin-left: 0px;
+    }
+    .pcode{
+	margin-left: 250px;
+    }
+    @media(max-width:991px){
+        .pcode{
+	    margin-left: 0px;
+    }
+    }
+    .row.form-group.align-items-center {
+        padding: 0 30%;
+    }
+    .btn-dark {
+        color: #000 ;
+        background-color: #fff;
+        border-color: #000 ;
+    }
+    .btn-outline-info:hover {
+        color: #fff;
+        background-color: #000 ;
+        border-color: #ced4da;
+    }
+
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 47px;
+        height: 21px;
+        vertical-align: middle;
+    }
+    
+    .switch input {
+        display: none;
+    }
+
+    .header-switch {
+        position: relative;
+        display: inline-block;
+        width: 47px;
+        height: 26px;
+        vertical-align: middle;
+    }
+    
+    .header-switch input {
+        display: none;
+    }
+    
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        -webkit-transition: .4s;
+        transition: .4s;
+        border-radius: 34px;
+    }
+    
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 15px;
+        width: 15px;
+        left: 3px;
+        bottom: 3px;
+        background-color: white;
+        -webkit-transition: .4s;
+        transition: .4s;
+        border-radius: 50%;
+    }
+    
+    input:checked + .slider {
+        background-color: #54ca30;
+    }
+    
+    input:focus + .slider {
+        box-shadow: 0 0 1px #333333;
+    }
+    
+    input:checked + .slider:before {
+        -webkit-transform: translateX(26px);
+        -ms-transform: translateX(26px);
+        transform: translateX(26px);
+    }
+
+    .card .card-header {
+        background-color: transparent;
+        border-bottom: none;
+        padding: .75rem 1.25rem;
+        position: relative;
+        -webkit-box-shadow: 0px 1px 20px 0px rgba(69, 90, 100, 0.08);
+        box-shadow: 0px 1px 20px 0px rgba(69, 90, 100, 0.08);
+    }
+
+    .card .card-header span {
+        display: block;
+        font-size: 13px;
+        margin-top: unset;
+    }
+
+    .custom-h5 {
+        font-size: 1rem;
+    }
+    
+    .card-shadow {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    }
+</style>
+<div class="pcode" id='nw1' >
+    <div> 
+        <div class="container-fluid pt-4" >
+            <div class="admin-card">
+                <div class="row">
+                    <div class="col-xs-12 col-lg-12">
+                        <div class="page-content"  >
+                            <div class="container-fluid" >
+                    
+                                {% include "includes/messages.html" %}
+                    
+                                <div class="table-data__tool">
+                                    <div class="container-fluid" style="padding: 0;">
+                                        <!-- Order by and search -->
+                                         <form method="get">
+                                            <div class="row mb-3">
+                                                <div class="rs-select2--light rs-select2--md col-md-3 mb-3 mb-md-0">
+                                                    <select id="select-sort" class="form-control">
+                                                        <option {% if order == '1' %}selected="selected" {% endif %} value="1">{% trans "Created Ascending" %}</option>
+                                                        <option {% if order == '2' %}selected="selected" {% endif %} value="2">{% trans "Created Descending" %}</option>
+                                                    </select>
+                                                    <div class="dropDownSelect2"></div>
+                                                </div>
+                                                
+                                                
+                                                <div class="rs-select2--light rs-select2--md col-md-9 mb-3 mb-md-0" multiple="multiple">
+                                                    <select id="input-search" name="role_name" class="js-example-basic-multiple tokenize-open">
+                                                        {% if selected_roles %}
+                                                            {% for role in selected_roles %}
+                                                                <option  selected="selected" value="{{ role.id }}">{{ role.name }}</option>
+                                                            {% endfor %}
+                                                        {% endif %}
+                                                    </select>
+                                                </div>
+                                            </div>
+                        
+                                            <!-- Date filters -->
+                                            <div class="row flex-sm-nowrap flex-wrap">
+                                                <div class="col form-group mt-1" style="min-width: 210px;">
+                                                    <div class="date-input">
+                                                        <span>{% trans "From date" %}</span>
+                                                        <input type="text" class="form-control" id="search-date-created-from" value={{from}}
+                                                        name="from" readonly="true" placeholder='{% trans "Select from date" %}' onChange="validateDateRange(this)" style="background-color:transparent">
+                                                    </div>
+                                                </div>
+                        
+                                                <div class="col form-group mt-1" style="min-width: 210px;">
+                                                    <div class="date-input">
+                                                        <span>{% trans "To date" %}</span>
+                                                        <input type="text" class="form-control" id="search-date-created-to" value={{to}}
+                                                        name="to" readonly="true" placeholder='{% trans "Select to date" %}' onChange="validateDateRange(this)" style="background-color:transparent">
+                                                    </div>
+                                                </div>
+
+                                                <div class='input-group-btn position-relative col-md-2 col-xs-12'>
+                                                    <button class="btn btn-primary btn-block mt-4" id="button-search">
+                                                        {% trans "Search" %}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </form>
+
+                    
+                                        <!-- Add dealer button -->
+                                        {% if request.user.role == 'admin'  %}
+                                            <div class="row">
+                                                <div class="col-12 ml-auto">
+                                                    <div class="text-center mb-3">
+                                                        <a href="{% url "admin-panel:create-role" %}" data-effect="mfp-zoom-in" class="btn btn-primary btn-md btn-block waves-effect waves-light text-center m-b-20">
+                                                            <i class="fa fa-plus-circle"></i> {% trans "Add New Role" %}
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                    
+                                    </div>
+                                </div>
+                    
+                                <div class="table-responsive table-responsive-data2">
+                                    <table class="table table-data2 users-table text-center">
+                                        <thead>
+                                            <tr>
+                                                <tr>
+                                                    <th></th>
+                                                    <th>{% trans "Role" %}</th>
+                                                    <th>{% trans "Created at" %}</th>
+                                                    <th>{% trans "Action" %}</th>
+                                                </tr>
+                                            </tr>
+                                        </thead>
+                    
+                                        <tbody id="table-user">
+                                            {% for role in roles %}
+                                                <!-- Dealer summary info -->
+                                                <tr class="tr-collapse table-row tr-role bg-light" aria-expanded="false" role_id="{{ role.pk }}"
+                                                    aria-controls="collapse-{{ forloop.counter }}" data-toggle="collapse"
+                                                    data-target="#collapse-{{ forloop.counter }}">
+                                                    <td>
+                                                        <div class="table-arrow"><i class="fas fa-angle-down"></i></div>
+                                                    </td>
+                                                    <td>
+                                                        <span class="user-name">{{ role.get_name }}</span>
+                                                    </td>
+                    
+                                                    <td>{{ role.created }}</td>
+                    
+                                                    <td>
+                                                        <div class="table-data-feature">
+                                                            <a href="#edit-role" data-role_id="{{ role.id }}" data-username="{{ role.get_name }}" data-effect="mfp-zoom-in" class="edit-role-popup item row-button-edit ignore-collapse">
+                                                                <img src="{% static '/icon/edit.png' %}" width="15" height="15" ></img>
+                                                            </a>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                        
+                                                <!-- Collapsed content -->
+                                                <tr class="tr-collapse-content role_info" role_id="{{ role.pk }}">
+                                                    <td colspan="4" style="margin: 0;padding: 0;">
+                                                        <div class="collapse" id="collapse-{{ forloop.counter }}" data-parent="#table-user" style="padding: 0;">
+                                                            <div class="card card-body m-0 p-0 p-md-3">
+                                                                <div class="default-tab">
+                                                                    <nav>
+                                                                        <div class="nav nav-tabs" id="nav-tab" role="tablist">
+                                                                            <!--  Notes tab end -->
+                                                                            
+                                                                            <!--  Permissions tab start -->
+                                                                            <a class="nav-item nav-link active show"
+                                                                                id="nav-permissions-{{ forloop.counter }}-tab"
+                                                                                data-toggle="tab" href="#nav-permissions-{{ forloop.counter }}" role="tab"
+                                                                                aria-controls="nav-permissions-{{ forloop.counter }}" aria-selected="false"
+                                                                                style="padding: .5rem 0.5rem;">
+                                                                                <div class="noti__item mr-0 pl-2 pr-2">
+                                                                                    <img src="{% static '/icon/permission.svg' %}" width="20" height="20" ></img>
+                                                                                </div>
+                                                                            </a>
+                                                                            <!--  Permissions tab end -->
+                                                                        
+                                                                        </div>
+                                                                    </nav>
+
+                                                                    <div class="tab-content" id="nav-tabContent">
+                                                                        <!-- Permissions tab content start -->
+                                                                        <div class="tab-pane fade active show" id="nav-permissions-{{ forloop.counter }}"
+                                                                                role="tabpanel"
+                                                                                aria-labelledby="nav-permissions-{{ forloop.counter }}-tab">
+                                                                            <div class="card m-0" style="border-top: 0;border-radius: 0;">
+                                                                                <div class="card-body pl-2 pr-2 pb-2">
+                                                                                    <div class="card-title">
+                                                                                        <h3 class="text-center title-2">{% trans "Permissions" %}</h3>
+                                                                                    </div>
+                                                                                    <hr>
+                                                                                </div>
+                                                                                <div class="m-2">
+                                                                                    <div class="card-columns">
+                                                                                        {% for group, permissions in grouped_permissions.items %}
+                                                                                            <div class="col-12 tournament-permissions mb-2">
+                                                                                                <div class="card card-shadow">
+                                                                                                    <div class="card-header bg-dark text-white text-left">
+                                                                                                        <div class="row">
+                                                                                                            <div class="col-8 text-left mt-1">
+                                                                                                                <font class="ml-2 custom-h5">{{ group|title }} Permissions</font>
+                                                                                                            </div>
+                                                                                                            <div class="col-4 text-center mt-1">
+                                                                                                                <label class="switch">
+                                                                                                                    <input class="form-check-input" id="{{group|replace:' ,_'}}-{{role.id}}" onclick="enableDisableAllPermission(this, {{role.id}}, this.id)" type="checkbox" {% if role|has_group_permission:group %}checked{% endif %}>
+                                                                                                                    <span class="slider"></span>
+                                                                                                                </label>
+                                                                                                            </div>
+                                                                                                        </div>
+                                                                                                    </div>
+                                                                                                    <div class="card-body">
+                                                                                                        {% for permission in permissions %}
+                                                                                                            <div class="row">
+                                                                                                                <div class="col-8 text-left">
+                                                                                                                    <label class="form-check-label h6 ml-3" for="{{permission.code}}-{{role.id}}">{{permission.name}}</label>
+                                                                                                                </div>
+                                                                                                                <div class="col-4 text-center">
+                                                                                                                    <label class="switch">
+                                                                                                                        <input class="form-check-input {{group|replace:' ,_'}}-{{role.id}}" id="{{permission.code}}-{{role.id}}" type="checkbox" {% if role|has_permission:permission.code %}checked{% endif %} onclick="update_permission(this, '{{permission.code}}', {{role.id}}, '{{group|replace:' ,_'}}-{{role.id}}')">
+                                                                                                                        <span class="slider"></span>
+                                                                                                                    </label>
+                                                                                                                </div>
+                                                                                                            </div>
+                                                                                                        {% endfor %}
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        {% endfor %}
+
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                        <!-- Permissions tab content end-->
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                        
+                                                <tr class="spacer"></tr>
+                                            {% empty %}
+                                                <tr>
+                                                    <td colspan="4">
+                                                        No Roles Available
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                    
+                                {% include '../roles/update_role.html' %}
+                                {% include 'includes/pagination.html' %}
+                    
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>  
+</div>
+<script type="text/javascript">
+    const isGreaterThanZero = value => value >= 0;
+
+    $('#mobile-collapse').click(function () { 
+        $("#nw1").toggleClass('left-spacer');        
+    });
+
+    function update_permission(element, permission, role_id, group) {
+        permission = Array.isArray(permission) ? permission : [permission]
+        status = element.checked ? true : false
+        enableDisableGroupPermissionStatus(element,group)
+        $.ajax({
+            url: "{% url 'admin-panel:update-role' %}",
+            type: "PUT",
+            dataType: "json",
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            },        
+            data: {
+                role_id: role_id,
+                permission: permission,
+                status: status,
+                csrfmiddlewaretoken: '{{ csrf_token }}',
+            },
+            success: function(result){
+                Swal.fire({
+                    icon: 'success',
+                    title: result.title,
+                })
+            },
+            error: function(data) {
+                if(data.responseText.includes("login")){
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Session Expired',
+                        text: "Please login to continue.",
+                        confirmButtonText: "Login"
+                    }).then(()=>{
+                        location.reload();
+                    });
+                }
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: data.responseJSON.message,
+                }).then(() => {
+                    window.location.reload();
+                });
+            },
+        });
+    };
+
+    function enableDisableAllPermission(element, role_id, group){
+        if(element.checked){
+            $(`.${group}`).prop("checked", true);
+        }else{
+            $(`.${group}`).prop("checked", false);
+        }
+        permissions = $(`.${group}`).map(function() {return this.id.split("-")[0]}).get();
+        update_permission(element, permissions, role_id, group);
+    }
+
+    function enableDisableGroupPermissionStatus(element, group){
+        var checkboxes = $(`.${group}`);
+        var allChecked = checkboxes.length === checkboxes.filter(':checked').length && element.checked;
+        $(`#${group}`).prop("checked", allChecked);
+    }
+
+    function validateDateRange(input){
+        
+        var from_date = $("#search-date-created-from").val();
+        var to_date = $("#search-date-created-to").val();
+
+        error_msg = "";
+        if(input.id == "search-date-created-from"){
+            error_msg = "From date must be less than To date!!"
+        }
+        else{
+            error_msg = "To date must be greater than From date!!"
+        }
+        from_day = parseInt(from_date.split("/")[0]);
+        from_month = parseInt(from_date.split("/")[1]);
+        from_year = from_date.split("/")[2];
+        from_year = from_year.split(" ")[0];
+        from_hour = parseInt(from_date.split(" ")[1].split(":")[0]);
+        from_minute = parseInt(from_date.split(" ")[1].split(":")[1]);
+
+        to_day = parseInt(to_date.split("/")[0]);
+        to_month = parseInt(to_date.split("/")[1]);
+        to_year = to_date.split("/")[2];
+        to_year = to_year.split(" ")[0];
+        to_hour = parseInt(to_date.split(" ")[1].split(":")[0]);
+        to_minute = parseInt(to_date.split(" ")[1].split(":")[1]);
+        // from date should be less than to date
+        if(from_year > to_year){
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: error_msg
+            });
+            $("#search-date-created-from").val("{{from}}");
+            $("#search-date-created-to").val("{{to}}");
+            return false;
+        }else if(from_year == to_year){
+            if(from_month > to_month){
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: error_msg
+                });
+                $("#search-date-created-from").val("{{from}}");
+                $("#search-date-created-to").val("{{to}}");
+                return false;
+            }else if(from_month == to_month){
+                if(from_day > to_day){
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: error_msg
+                    });
+                    $("#search-date-created-from").val("{{from}}");
+                    $("#search-date-created-to").val("{{to}}");
+                    return false;
+                }else if(from_day == to_day){
+                    if(from_hour > to_hour){
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Oops...',
+                            text: error_msg
+                        });
+                        $("#search-date-created-from").val("{{from}}");
+                        $("#search-date-created-to").val("{{to}}");
+                        return false;
+                    }else if(from_hour == to_hour){
+                        if(from_minute > to_minute){
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Oops...',
+                                text: error_msg
+                            });
+                            $("#search-date-created-from").val("{{from}}");
+                            $("#search-date-created-to").val("{{to}}");
+                            return false;
+                        }
+                    }
+                }
+            }
+        }        
+    }
+    
+
+    $(document).ready(function () {
+
+        $(".table-row").click(function(){
+            $(this).find(".table-arrow").toggleClass("arrow-rotate");
+        });
+        
+        $(".ignore-collapse").on("click", function(e){
+            e.stopPropagation();
+        });
+
+        $('.edit-role-popup').magnificPopup({
+            type:'inline',
+            midClick: true,
+            fixedContentPos: true,
+            callbacks: {
+                beforeOpen: function() {
+                    this.st.mainClass = this.st.el.attr('data-effect');
+                    var role_id = this.st.el.attr('data-role_id');
+                    var role_name = this.st.el.attr('data-username');
+
+                    $("#edit-role input[name='role_id']").val(role_id);
+                    $("#edit-role input[name='role']").val(role_name);
+                },
+                close: function(){
+                    $("#edit-role input").val(null);
+                    $('.error-msg').text('');
+                }
+            },
+        });
+
+        $('#edit-role-form').submit(function (event) {
+            event.preventDefault();
+
+            var id = $("#edit-role-id input").val();
+            var role = $("#edit-role-input input").val();
+
+            $.ajax({
+                url: "{% url 'admin-panel:update-role' %}",
+                type: "POST",
+                dataType: "json",
+                data: {
+                    id: id,
+                    role: role,
+                    csrfmiddlewaretoken: '{{ csrf_token }}'
+                },
+                success: function (data) {
+                    Swal.fire({
+                        title: 'Role updated successfully!',
+                        icon: 'success',
+                    }).then((result) => {
+                        $.magnificPopup.close();
+                        location.reload();
+                    });
+                },
+                error: function(data) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.responseJSON.message,
+                    }).then(() => {
+                        location.reload();
+                    });
+                },
+            });
+        });
+
+
+        $('#search-date-created-from').datetimepicker({
+                format: 'd/m/Y',
+                defaultDate: new Date(),
+                timepicker: false,
+            }
+        );
+
+        $('#search-date-created-to').datetimepicker({
+                format: 'd/m/Y',
+                defaultDate: new Date(),
+                timepicker: false,
+            }
+        );
+        $('#input-search').tokenize2({
+            dropdownMaxItems:"5",
+            placeholder: "{% trans 'Search by Username' %}",
+            searchMinLength:3,
+            dataSource: function(term, object){
+                $.ajax("{% url 'admin-panel:roles' %}", {
+                    type: "POST",
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    data: { search:term,start:0 },
+                    global: false, 
+                    dataType: 'json',
+                    success: function(data){
+                        var $items = [];
+                        $.each(data, function(k, v){
+                            $items.push(v);
+                        });
+                        object.trigger('tokenize:dropdown:fill', [$items]);
+                    }
+                });
+            }
+        });
+
+
+        $('#select-sort').on('change', function () {
+            window.location = window.location.pathname + "?order=" + $('#select-sort option').filter(':selected').val() + "&from=" + $('#search-date-created-from').val() + "&to=" + $('#search-date-created-to').val();
+        });
+
+        $('#role').on('input', function() {
+            var value = $(this).val();
+            var filteredValue = value.replace(/[^A-Za-z]/g, '');
+            $(this).val(filteredValue);
+        });
+    });
+
+</script>
+
+<style>
+    .no-spin::-webkit-inner-spin-button, .no-spin::-webkit-outer-spin-button {
+    -webkit-appearance: none !important;
+    margin: 0 !important;
+    }
+
+    .no-spin {
+    -moz-appearance:textfield !important;
+    }
+</style>
+
+{% endblock content %}

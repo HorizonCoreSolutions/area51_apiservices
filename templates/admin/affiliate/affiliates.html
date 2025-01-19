@@ -1,0 +1,657 @@
+{% extends "index.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}Affiliate Link{% endblock title %}
+{% block content %}
+    <style>
+     
+    .admin-card{
+        background-color: #ffffff;
+        box-shadow: 0px 0px 6px 6px rgb(204 204 204 / 0.25);
+        padding: 30px 10px;
+    }
+    .pcode.left-spacer {
+	margin-left: 0px;
+    }
+    .pcode{
+	margin-left: 250px;
+    }
+    @media(max-width:767px){
+        .pcode{
+	    margin-left: 0px;
+    }
+    }
+
+    .row.form-group.align-items-center {
+        padding: 0 30%;
+    }
+    .switch {
+  display: inline-block;
+  height: 34px;
+  position: relative;
+  width: 60px;
+}
+
+.switch input {
+  display:none;
+}
+
+.slider {
+  background-color: #ccc;
+  bottom: 0;
+  cursor: pointer;
+  left: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
+  transition: .4s;
+}
+
+.slider:before {
+  background-color: #fff;
+  bottom: 4px;
+  content: "";
+  height: 26px;
+  left: 4px;
+  position: absolute;
+  transition: .4s;
+  width: 26px;
+}
+
+input:checked + .slider {
+  background-color: #66bb6a;
+}
+
+input:checked + .slider:before {
+  transform: translateX(26px);
+}
+
+.slider.round {
+  border-radius: 34px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}
+
+
+    </style>
+    <div class="pcode" id='nw1' >
+    <div>
+    <div class="container-fluid pt-4" >
+        <div class="admin-card">
+        <div class="row">
+            <div class="col-xs-12 col-lg-12 ">
+                <div class="page-content"  >
+                    <div class="main-heading-wrap">
+                        <h5>{% trans 'Affiliates' %}</h5>
+                    </div>
+                    <div class="container-fluid" >
+                        
+                        
+                        {% include "includes/messages.html" %}
+            
+                        <div class="table-data__tool" >
+                            <div class="container-fluid" style="padding: 0;">
+                                <div class="row flex-sm-nowrap flex-wrap mb-3">
+        
+                                    <!-- Dealer select -->
+                                    {% if request.user.role == 'admin' %}
+                                        <div class="col col-10">
+                                            <div class="rs-select2--light rs-select2--md " multiple="multiple">
+                                                <select id="select-dealer" name="dealers" class="js-example-basic-multiple tokenize-open"
+                                                        multiple="multiple">
+                                                    {% if selected_dealers %}
+                                                        {% for dealer in selected_dealers %}
+                                                            <option selected="selected"
+                                                                    value="{{ dealer.id }}">{{ dealer.username }}</option>
+                                                        {% endfor %}
+                                                    {% endif %}
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col col-2" style="min-width: 210px;">
+                                            <div class='' style="margin-top:-2px;">
+                                                <button class="btn btn-primary w-100" id="button-search">
+                                                    {% trans "Search" %}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+            
+                                  
+                                </div>
+                            </div>
+                                
+                            <!-- Order by and search -->
+                            <div class="row flex-sm-nowrap flex-wrap" style="flex-flow: row-reverse;">
+                               
+                                <!-- <div class='input-group-btn position-relative col-md-2 col-xs-12' style=>
+                                    <a href="#create-affiliate" data-effect="mfp-zoom-in" class="open-affialiate-popup btn btn-primary w-100">
+                                        <i class="fa fa-plus-circle"></i>{% trans "affiliate link" %}
+                                    </a>
+                                </div> -->
+                            </div>
+                            <!-- Order by and search -->
+                            </div>
+                        </div>
+            
+                        <div class="table-responsive table-responsive-data2 mt-4 affiliate-table container-fluid">
+                            <table class="table table-data2 users-table">
+                                <thead>
+                                    <tr>
+                                        <th>{% trans 'Name' %}</th>
+                                        <th>{% trans 'Email' %}</th>
+                                        <th>{% trans 'Balance' %}</th>
+                                        <th>{% trans 'Affiliate Revenue' %}</th>
+                                    </tr>
+                                </thead>
+            
+                                <tbody id="table-user">
+                                {% for affiliate in affiliates %}
+                                    <!-- Player summary info -->
+                                    
+                                    <tr class="tr-collapse table-row tr-affiliate bg-light " aria-expanded="false" user_id="{{ affiliate.pk }}"
+                                        aria-controls="collapse-{{ forloop.counter }}" data-toggle="collapse" 
+                                        data-target="#collapse-{{ forloop.counter }}" >
+                                            <td >
+                                                <div class="table-arrow"><i class="fas fa-angle-down"></i></div><span class="user-name pl-3">{{ affiliate.username }} {% if affiliate.role == "dealer" %}(affiliate){% elif affiliate.role == "agent" %}(sub-affiliate){%endif%}</span>
+                                            </td>
+                                            <td>
+                                                <span class="user-name">{{ affiliate.email }}</span>
+                                            </td>
+                                            <td>
+                                                <span class="text-center text-nowrap">
+                                                    <span id="affiliate-balance-{{ forloop.counter }}" class="user-credit" 
+                                                    style="color: green;">{{ affiliate.balance|floatformat:"2" }}</span>
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="text-center text-nowrap">
+                                                    <span id="affiliate-revenue-{{ forloop.counter }}" class="affiliate-revenue" 
+                                                    style="color: green;">{{ affiliate.total_earned|floatformat:"2" }}</span>
+                                                </span>
+                                            </td>
+                                    </tr>
+            
+                                    <!-- Collapsed content -->
+                                    <tr class="tr-collapse-content affiliate_info" affiliate_id="{{ affiliate.pk }}">
+                                        <td colspan="5" style="margin: 0;padding: 0;">
+                                            <div class="collapse" id="collapse-{{ forloop.counter }}" data-parent="#table-user" style="padding: 0;">
+                                                <div class="card card-body m-0 p-0 p-md-3">
+                                                    <div class="default-tab">
+                                                        <nav>
+                                                            <div class="nav nav-tabs" id="nav-tab" role="tablist">
+                                                                <!--  Players tab start -->
+                                                                {% comment %} <a class="nav-item nav-link active show"
+                                                                    id="nav-players-{{ forloop.counter }}-tab"
+                                                                    data-toggle="tab"
+                                                                    href="#nav-players-{{ forloop.counter }}" role="tab"
+                                                                    aria-controls="nav-players-{{ forloop.counter }}"
+                                                                    aria-selected="false" style="padding: .5rem 0.5rem;">
+                                                                    <div class="noti__item mr-0 pl-2 pr-2">
+                                                                        <img src="{% static '/images/playersB.svg' %}" width="20" height="20"/>
+                                                                    </div>
+                                                                </a> {% endcomment %}
+                                                                <!--  Players tab end -->
+                                                                <!--  Affiliate Url tab start -->
+                                                                <a class="nav-item nav-link active show"
+                                                                    id="nav-creds-{{ forloop.counter }}-tab"
+                                                                    data-toggle="tab"
+                                                                    href="#nav-creds-{{ forloop.counter }}" role="tab"
+                                                                    aria-controls="nav-creds-{{ forloop.counter }}"
+                                                                    aria-selected="false" style="padding: .5rem 0.5rem;">
+                                                                    <div class="noti__item mr-0 pl-2 pr-2">
+                                                                        <img src="{% static '/images/playersB.svg' %}" width="20" height="20"/>
+                                                                    </div>
+                                                                </a>
+                                                                <a class="nav-item nav-link "
+                                                                    id="nav-perc-{{ forloop.counter }}-tab"
+                                                                    data-toggle="tab"
+                                                                    href="#nav-perc-{{ forloop.counter }}" role="tab"
+                                                                    aria-controls="nav-perc-{{ forloop.counter }}"
+                                                                    aria-selected="false" style="padding: .5rem 0.5rem;">
+                                                                    <div class="noti__item mr-0 pl-2 pr-2">
+                                                                        <img src="{% static '/images/affiliate.svg' %}" width="20" height="20"/>
+                                                                    </div>
+                                                                </a>
+                                                                <!--  Affiliate Url tab end -->
+                                                            </div>
+                                                        </nav>
+            
+                                                        <div class="tab-content " id="nav-tabContent">
+                                                            <!-- Players tab content start -->
+                                                            {% comment %} <div class="tab-pane fade active show" id="nav-players-{{ forloop.counter }}"
+                                                                role="tabpanel"
+                                                                aria-labelledby="nav-players-{{ forloop.counter }}-tab">
+                                                                <div class="card m-0" style="border-top: 0;border-radius: 0;">
+                                                                    <div class="pl-md-3 pr-md-3 pb-2  pl-0 pr-0 ">
+                                                                        <div class="table-responsive table-responsive-data2 mt-4 affiliate-table container-fluid">
+                                                                            <table class="table table-data2 users-table">
+                                                                                <thead>
+                                                                                    <tr>
+                                                                                        <th>{% trans 'Player Name' %}</th>
+                                                                                        <th>{% trans 'Affiliate' %}</th>
+                                                                                        <th>{% trans 'Sub-Affiliate' %}</th>
+                                                                                        <th>{% trans 'Balance' %}</th>
+                                                                                    </tr>
+                                                                                </thead>
+                                                            
+                                                                                <tbody id="table-player-{{affiliate.pk}}">
+
+                                                                                </tbody>
+                                                                            </table>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div> {% endcomment %}
+                                                            <!-- Players tab content end -->
+                                                            <!-- Creds tab content start -->
+                                                            <div class="tab-pane fade active show" id="nav-creds-{{ forloop.counter }}" role="tabpanel" aria-labelledby="nav-creds-{{ forloop.counter }}-tab">
+                                                                <div class="card m-0" style="border-top: 0;border-radius: 0;">
+                                                                    <div class="card-body pl-3 pr-3 pb-2">
+                                                                        <div id="user-limit-1">
+                                                                            <div class="card-title">
+                                                                                <h3 class="text-center title-2">{% trans "Affiliate Link" %}</h3>
+                                                                            </div>
+                                                                            <hr>
+                                                                            <div class="form-group">
+                                                                                <div class="row form-group" style="margin-bottom: 2px;">
+                                                                                    <div class="col col-8">
+                                                                                        <label class="mb-0">{% trans "Affiliate Url" %}</label>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                            <input type="text" id="url_input-{{affiliate.pk}}" class="form-control" style="width: 96%; float: left;" readonly>
+                                                                            <a onclick="myFunction({{affiliate.pk}})" class="clipboard" data-toggle="tooltip" data-placement="top" title="Copy to clipboard" style="float:left; font-size: 26px; margin-left:8px;" >
+                                                                                <i class="fa fa-clipboard" aria-hidden="true"></i>
+                                                                            </a>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        
+                                                            <div class="tab-pane fade" id="nav-perc-{{ forloop.counter }}" role="tabpanel" aria-labelledby="nav-perc-{{ forloop.counter }}-tab">
+                                                                <div class="card m-0" style="border-top: 0;border-radius: 0;">
+                                                                    <div class="card-body pl-3 pr-3 pb-2">
+                                                                        <div id="user-limit-1">
+                                                                            <div class="card-title">
+                                                                                <h3 class="text-center title-2">{% trans "Affiliate Bonus Percentage" %}</h3>
+                                                                            </div>
+                                                                            <hr>
+                                                                            <div class="form-group" style="padding-left: 240px;">
+                                                                                <div class="row form-group">
+                                                                                    <div class="col col-3" style="padding-top: 10px;">
+                                                                                        <label class="mb-0">{% trans  "Affiliate Bonus Percentage" %}
+                                                                                            <span
+                                                                                            data-toggle="tooltip" data-placement="top" title="{% trans "Bonus percentage for which affiliate will get bonus on affiliated player's first deposit" %}">
+                                                                                              <i class="fa fa-info-circle" aria-hidden="true"></i>
+                                                                                      </span>
+                                                                                        </label>
+                                                                                    </div>
+                                                                                    <div class="col">
+                                                                                        <input type="text" id="commision_input-{{affiliate.pk}}" class="form-control" style="width: 100%;">
+                                                                                    </div>
+                                                                                    <div class="col" style="padding-top: 9px;">
+                                                                                        <label class="form-control-label mb-0 fs-16">{% trans "Redeemable" %}
+                                                                                            <span
+                                                                                            data-toggle="tooltip" data-placement="top" title="{% trans "Bonuses will directly added to balance if enabled otherwise added to bonus balance" %}">
+                                                                                              <i class="fa fa-info-circle" aria-hidden="true"></i>
+                                                                                      </span>
+                                                                                        </label>
+                                                                                    </div>
+                                                                                    <div class="col">
+                                                                                        <label class="switch" for="redeemable-{{affiliate.pk}}">
+                                                                                            <input id="redeemable-{{affiliate.pk}}" type="checkbox" class="switch-input switch-status-input player_switch slider" {% if affiliate.is_redeemable_amount %}checked{% endif %}>
+                                                                                            <div class="slider round"></div>
+
+                                                                                        </label>
+                                                                                    </div>
+                                                                                </div>
+                                                                                <div class="row form-group">
+                                                                                    <div class="col col-3" style="padding-top: 9px;">
+                                                                                        <label class="mb-0">{% trans  "Bonus On No. of Deposits" %}
+                                                                                            <span
+                                                                                            data-toggle="tooltip" data-placement="top" title="{% trans "Bonuses on no. of  deposits made by the affilated player" %}">
+                                                                                              <i class="fa fa-info-circle" aria-hidden="true"></i>
+                                                                                      </span>
+                                                                                        </label>
+                                                                                    </div>
+                                                                                    <div class="col">
+                                                                                        <input type="number" id="no_of_deposits-{{affiliate.pk}}" value="{{affiliate.no_of_deposit_counts}}" class="form-control" style="width: 100%;" {% if affiliate.is_bonus_on_all_deposits %}disabled{% endif %}>
+                                                                                    </div>
+                                                                                    <div class="col" style="padding-top: 9px;">
+                                                                                        <label class="form-control-label mb-0 fs-16">{% trans "Bonus On All Deposits" %}
+                                                                                            <span
+                                                                                              data-toggle="tooltip" data-placement="top" title="{% trans "Bonuses on all deposits made by the affilated player" %}">
+                                                                                                <i class="fa fa-info-circle" aria-hidden="true"></i>
+                                                                                        </span>
+                                                                                        </label>
+                                                                                    </div>
+                                                                                    <div class="col">
+                                                                                        <label class="switch" for="all_deposits-{{affiliate.pk}}">
+                                                                                            <input id="all_deposits-{{affiliate.pk}}" onchange="check_selection({{affiliate.pk}})" player_id="{{ player.pk }}" type="checkbox" class="switch-input switch-status-input player_switch" {% if affiliate.is_bonus_on_all_deposits %}checked{% endif %}>
+                                                                                            <div class="slider round"></div>
+                                                                                        </label>
+                                                                                    </div>
+                                                                                </div>
+                                                                                <div class="row form-group">
+                                                                                    <div class="col col-3" style="padding-top: 9px;">
+                                                                                        <label class="mb-0">{% trans  "Affiliate Expire Date" %}
+                                                                                            <span
+                                                                                              data-toggle="tooltip" data-placement="top" title="{% trans "Expiration Date for the Affiliate Link" %}">
+                                                                                                <i class="fa fa-info-circle" aria-hidden="true"></i>
+                                                                                        </span>
+                                                                                        </label>
+                                                                                    </div>
+                                                                                    <div class="col">
+                                                                                        <input placeholder="Select Expire Date" type="text" id="affliate_expire_date-{{affiliate.pk}}" value="{% if affiliate.affliate_expire_date %}{{affiliate.affliate_expire_date |date:'d/m/Y' }}{% endif %}" class="form-control datetimepicker-input" style="width: 100%;" {% if affiliate.is_lifetime_affiliate %}disabled{% endif %}>
+                                                                                    
+                                                                                    </div>
+                                                                                    <div class="col" style="padding-top: 9px;">
+                                                                                        <label class="form-control-label mb-0 fs-16">{% trans "Lifetime Affiliate" %}
+                                                                                        <span
+                                                                                              data-toggle="tooltip" data-placement="top" title="{% trans "No Expiration Date for the Affiliate Link" %}">
+                                                                                                <i class="fa fa-info-circle" aria-hidden="true"></i>
+                                                                                        </span>
+                                                                                        </label>
+                                                                                    </div>
+                                                                                    <div class="col">
+                                                                                        <label class="switch" for="lifetime_affiliate-{{affiliate.pk}}">
+                                                                                            <input id="lifetime_affiliate-{{affiliate.pk}}" type="checkbox"  onchange="check_selection2({{affiliate.pk}})" class="switch-input switch-status-input player_switch uncheck" {% if affiliate.is_lifetime_affiliate %}checked{% endif %}>
+                                                                                            <div class="slider round"></div>
+
+                                                                                        </label>
+                                                                                    </div>
+                                                                                </div>
+                                                                                <div class="row form-group">
+                                                                                    <div class="col col-10" style="margin-left:-10px;">
+
+                                                                                <a  data-placement="top" title="Save" >
+                                                                                    <button class="btn btn-primary w-100" id="button-save" onclick="commision({{affiliate.pk}})">
+                                                                                        {% trans "Save" %}
+                                                                                    </button>
+                                                                                </a>
+                                                                                </div>
+                                                                                </div>
+                                                                            </div>                                                    
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        
+                                                            <!-- Creds tab content end -->
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+            
+                                    <tr class="spacer"></tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+            
+                        {% include 'includes/pagination.html' %}
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div>
+    </div>
+</div>
+
+<!-- {% include './add_affiliate.html' %} -->
+</div>
+<script type="text/javascript">
+    
+    $('#mobile-collapse').click(function () { 
+        $("#nw1").toggleClass('left-spacer');
+    });
+
+    function myFunction(user_id) {
+        $("#url_input-" + user_id)[0].select();
+        document.execCommand("copy");
+    }
+    
+    function commision(affiliate_id){
+        var affiliate_id = affiliate_id;
+        var commision_percentage = $('#commision_input-' + affiliate_id).val();
+        var redeemable = document.querySelector('#redeemable-' + affiliate_id).checked;
+        var no_of_deposits = $('#no_of_deposits-' + affiliate_id).val();
+        var affliate_expire_date = $('#affliate_expire_date-' + affiliate_id).val();
+        var lifetime_affiliate =  document.querySelector('#lifetime_affiliate-' + affiliate_id).checked;
+        var all_deposits = document.querySelector('#all_deposits-' + affiliate_id).checked;
+        console.log('Afflite durations',affliate_expire_date)
+        console.log('lifetime_affiliate',lifetime_affiliate)
+        if (all_deposits === false && no_of_deposits.replace(/\s/g, '') === '') {
+                    Swal.fire({
+                    title: 'Fields Required',
+                    text: 'Please Select No of Deposit',
+                    icon: 'error',
+                    });
+                    return ;
+                }
+		if (lifetime_affiliate === false) {
+			if(affliate_expire_date.replace(/\s/g, '') === ''){
+				Swal.fire({
+					title: 'Fields Required',
+					text: 'Please Select Expire Date',
+					icon: 'error',
+				});
+				return ;
+			}
+
+			const [day, month, year] = affliate_expire_date.split('/').map(Number);
+			const parsed_affliate_expire_date = new Date(year, month - 1, day);
+			const currentDate = new Date();
+			currentDate.setHours(0, 0, 0, 0);
+
+			if (parsed_affliate_expire_date < currentDate) {
+				Swal.fire({
+					icon: 'error',
+					title: 'error',
+					text: 'Affliate expire date can not be less than current date!!',
+				});
+				return ;
+			}			
+		}
+        $.ajax("{% url 'admin-panel:create-affiliates' %}",{
+          
+            type: 'POST',
+            data: {
+                'user_id' : affiliate_id,
+                'affiliate_id': affiliate_id,
+                'commision_percentage': commision_percentage,
+                'redeemable':redeemable,
+                'no_of_deposits' : no_of_deposits,
+                'affliate_expire_date': affliate_expire_date,
+                'lifetime_affiliate':lifetime_affiliate,
+                'all_deposits' :all_deposits,
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+            dataType: 'json',
+            success: function (data) {
+                Swal.fire({
+                    title: 'Success',
+                    text: data['message'],
+                    icon: 'success',
+                }).then((result) => {
+                        $.magnificPopup.close();
+                        location.reload();
+                });
+            },
+        error: function(data) {
+                Swal.fire({
+                    title: 'Error',
+                    text: data['statusText'],
+                    icon: 'error',
+                });
+            },
+        });
+    }
+    $(document).ready(function () {
+        $(".ignore-collapse").on("click", function(e){
+            e.stopPropagation();
+        });
+
+       
+
+
+        $('.open-affialiate-popup').magnificPopup({
+            type:'inline',
+            midClick: true,
+            fixedContentPos: true,
+            callbacks: {
+                beforeOpen: function() {
+                    this.st.mainClass = this.st.el.attr('data-effect');
+                }
+            },
+        });
+
+        $('#select-players').tokenize2({
+            multiple: true,
+            placeholder: "{% trans 'Search by player' %}",
+            searchMinLength:3,
+            dataSource: function(term, object){
+                $.ajax("{% url 'admin-panel:player-ajax' %}", {
+                    type: "POST",
+                    data: { search: term, start: 0 },
+                    global: false, 
+                    dataType: 'json',
+                    success: function(data){
+                        var $items = [];
+                        $.each(data, function(k, v){
+                            $items.push(v);
+                        });
+                        object.trigger('tokenize:dropdown:fill', [$items]);
+                    }
+                });
+            }
+        });
+
+        $('#select-dealer').tokenize2({
+            tags: [],
+            placeholder: "{% trans 'Search by Player' %}",
+            searchMinLength:3,
+            multiple: true,
+            dataSource: function(term, object){
+                $.ajax("{% url 'admin-panel:player-ajax' %}", {
+                    type: "POST",
+                    data: {
+                        search: term,
+                        affiliate:true,
+                        start: 0,
+                        players: $('#select-players').val()
+                    },
+                    global: false, 
+                    dataType: 'json',
+                    success: function(data){
+                        var $items = [];
+                        $.each(data, function(k, v){
+                            $items.push(v);
+                        });
+                        object.trigger('tokenize:dropdown:fill', [$items]);
+                    }
+                });
+            }
+        });
+
+        $(".tr-affiliate").click(function () {
+            var user_id = $(this).attr("user_id");
+            var url_mask = "{% url 'admin-panel:affiliated-players-ajax' %}";
+
+            var data = {
+                user_id: user_id,
+            };
+
+            $.ajax({
+                url: url_mask,
+                type: "GET",
+                dataType: "json",
+                data: data,
+                success: function (data) {
+                    $("#table-player-" + user_id).empty();
+                    
+                    for(i=0; i<data['data'].length; i++) {
+                        $("#url_input-" + user_id).val(data['data'][i]['affiliate_link']);
+                        $("#commision_input-" + user_id).val(data['data'][i]['commision']);
+                        var tr = `
+                            <tr class="table-row" player_id="${data['data'][i]['player_id']}">
+                                <td>
+                                    <span class="user-name pl-3">${data['data'][i]['username']}</span>
+                                </td>
+                                <td>
+                                    <span class="user-name">${data['data'][i]['dealer']}</span>
+                                </td>
+                                <td>
+                                    <span class="user-name pl-3">${data['data'][i]['agent']}</span>
+                                </td>
+                                <td>
+                                    <span class="text-center text-nowrap">
+                                        <span id="affiliate-balance-{{ forloop.counter }}" class="user-credit" 
+                                        style="color: green;">${data['data'][i]['balance']}</span>
+                                    </span>
+                                </td>
+                            </tr>
+                        `
+                        $("#table-player-" + user_id).append(tr);
+                    }
+                },
+            });
+        })
+
+        {% if request.user.role == 'admin'%}
+            $('#button-search').click(function () {
+                var conceptName = $('#input-search').find(":selected").text();
+                console.log(conceptName,"+++++")
+                console.log($("#select-players").val(),"+++++++++++++++++++")
+                window.location = window.location.pathname + "?user_name=" + ($("#select-dealer").val())
+                
+                return false;
+            });
+        {% elif request.user.role == 'dealer' %}
+            $('#button-search').click(function () {
+                var conceptName = $('#input-search').find(":selected").text();
+                window.location = window.location.pathname + "?agents=" + ($("#select-agent").val());
+                return false;
+            });
+        {% endif %}
+
+        var timer = 0;
+        clearTimeout(timer);
+    });
+function check_selection(affiliate_id){
+    if($('#all_deposits-'+affiliate_id).is(':checked')) {
+      // Checkbox is checked, disable the input
+      $('#no_of_deposits-'+affiliate_id).prop('disabled', true);
+      
+    } else {
+      // Checkbox is unchecked, enable the input
+      $('#no_of_deposits-'+affiliate_id).prop('disabled', false);
+    }
+}
+function check_selection2(affiliate_id){
+    console.log("IM HERE")
+if($('#lifetime_affiliate-'+affiliate_id).is(':checked')) {
+      // Checkbox is checked, disable the input
+      $('#affliate_expire_date-'+affiliate_id).prop('disabled', true);
+      
+    } else {
+      // Checkbox is unchecked, enable the input
+      $('#affliate_expire_date-'+affiliate_id).prop('disabled', false);
+    }
+}
+
+$('.datetimepicker-input').datetimepicker({
+    format: 'd/m/Y',
+    timepicker: false,
+    minDate: new Date(Date.UTC(new Date().getFullYear(), new Date().getMonth(), new Date().getDate())) // Set minDate option to the current UTC date
+});
+</script>
+
+{% endblock content %}

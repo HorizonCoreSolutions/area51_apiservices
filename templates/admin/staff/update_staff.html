@@ -1,0 +1,58 @@
+{% load i18n %}
+{% load static %}
+
+<div id="edit-staff" class="popup mfp-with-anim mfp-hide">
+    
+    <div class="popup-body ">
+    
+        <div class="login-form " style=" width: 100%; max-width:550px;margin-left:auto;margin-right: auto; vertical-align:center; background-color: white;" >
+            {# TODO: fix this #}
+            <form id="edit-staff-form" method="POST" style="padding-left: 3rem; padding-right: 3rem; padding-top: 0.3rem; padding-bottom: 1.5rem;">
+                {% csrf_token %}
+                <div class="modal-header mb-2">
+                    <div class="justify-content-center">
+                        <h5 class="modal-title ">Edit Staff</h5>
+                    </div>
+                    <button type="button" style="font-size: 25px;" class="close" data-dismiss="modal" aria-label="Close" id="closebutton"  onclick="closefunc()">
+                        <span aria-hidden="true">&times;</span>
+                    </button>   
+                </div> 
+
+                <div class="form-group create-form-margin ">
+                    <span class="font-weight-bold ml-1">{% trans "Username" %}</span>
+                    <div id="edit-username-input">
+                        <div class="input-group input-group-rounded">
+                        {{ form.username }}
+                        </div>
+                        <p class="error-msg"></p>
+                    </div>
+                </div>
+
+                <div class="form-group create-form-margin">
+                    <span class="font-weight-bold ml-1">{% trans "Password" %}</span>
+                    <div id="edit-password-input">
+                        <div class="input-group input-group-rounded">
+                            {{ form.password }}
+                            <span class="input-group-text" id="password-toggle-update" onclick="view_password()">
+                                <i class="fa fa-eye toggle-icon" title="View/Hide Password" style="cursor:pointer;"></i>
+                            </span>
+                        </div>
+                        <p class="error-msg"></p>
+                    </div>
+                </div>
+
+                <div class="pt-2">
+                    <button type="submit" class="btn btn-primary au-btn au-btn--block au-btn--darkGreen au-btn--lg">
+                        {% trans "Save" %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    
+    </div>
+</div>
+<script>
+    function closefunc(){
+        $.magnificPopup.close();
+    } 
+</script>

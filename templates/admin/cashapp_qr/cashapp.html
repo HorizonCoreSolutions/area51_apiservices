@@ -1,0 +1,358 @@
+{% extends "index.html" %}
+{% load static %}
+{% load i18n %}
+{% block content %}
+<style>
+    #pop-loader {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100%;
+        background: rgba(0,0,0,0.75) url(../../../static/Desktop_static/images/loading2.gif) no-repeat center center;
+        z-index: 10000;
+    }
+    .admin-card{
+        background-color: #ffffff;
+        box-shadow: 0px 0px 6px 6px rgb(204 204 204 / 0.25);
+        padding: 30px 10px;
+    }
+    .pcode.left-spacer {
+	    margin-left: 0px;
+    }
+    .pcode{
+	    margin-left: 250px;
+    }
+    @media(max-width:767px){
+        .pcode{
+	        margin-left: 0px;
+        }
+    }
+    .django-ckeditor-widget{
+        display: block !important;
+    }
+    #cke_1_contents{
+        height: 150px !important;
+    }
+    #banner_img{
+        width: 200px;
+        height: 100px;
+    }
+    input[type=file]{
+    width:98px;
+}
+.noHoverText{
+    color: #000;
+    text-decoration: #ffffff;
+}
+
+.preview_banner{
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-top: 20px;
+    padding-bottom: 20px;
+    border: rgb(0, 0, 0);
+    }
+
+    #banner_img {
+  border-radius: 5px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+#banner_img:hover {opacity: 0.7;}
+
+/* The Modal (background) */
+.modal {
+  display: none; /* Hidden by default */
+  position: fixed; /* Stay in place */
+  z-index: 1; /* Sit on top */
+  padding-top: 100px; /* Location of the box */
+  left: 0;
+  top: 0;
+  width: 100%; /* Full width */
+  height: 100%; /* Full height */
+  overflow: auto; /* Enable scroll if needed */
+  background-color: rgb(0,0,0); /* Fallback color */
+  background-color: rgba(0,0,0,0.9); /* Black w/ opacity */
+}
+
+/* Modal Content (Image) */
+.modal-content {
+  margin: auto;
+  display: block;
+  width: 80%;
+  max-width: 700px;
+}
+ 
+/* Caption of Modal Image (Image Text) - Same Width as the Image */
+#caption {
+  margin: auto;
+  display: block;
+  width: 80%;
+  max-width: 700px;
+  text-align: center;
+  color: #ccc;
+  padding: 10px 0;
+  height: 150px;
+}
+
+/* Add Animation - Zoom in the Modal */
+.modal-content, #caption {
+  animation-name: zoom;
+  animation-duration: 0.6s;
+}
+
+@keyframes zoom {
+  from {transform:scale(0)}
+  to {transform:scale(1)}
+}
+
+
+.close {
+  position: relative;
+  top: -13px;
+  left: -275px;
+  right: 35px;
+  color: #f1f1f1;
+  font-size: 40px;
+  font-weight: bold;
+  transition: 0.3s;
+}
+
+.close:hover,
+.close:focus {
+  color: #bbb;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.jumbotron {
+  
+  height: 100px;
+  margin-top: 0px;
+  margin-bottom: 10px;
+  padding-bottom: 100px;
+  
+}
+input[type=file]{
+    border: transparent;
+    width: 100%;
+}
+
+
+</style>
+<div id="pop-loader"></div>
+<div id="myModal" class="modal">
+    <div class="wrapper">
+        <span  id='close' class="close" onclick="closeImage()">&times;</span>
+        <img class="modal-content" id="banner">
+    </div>
+</div>
+<div class="pcode" id='nw1' >
+    <div>
+        <div class="container-fluid pt-4" >
+            <div class="admin-card">
+                <div class="row">
+                    <div class="col-xs-12 col-lg-12 ">
+                        <div class="page-content"  >
+                            <div class="main-heading-wrap">
+                                {% include "../../includes/messages.html" %}
+                                <h5>{% trans 'CashApp Details' %}</h5>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <form action=""  method="post" id="upload-file"  enctype="multipart/form-data">
+                    {{ form.media }}
+
+                    {% csrf_token %}
+                 
+
+                    <div class="row mb-3 pl-3" style="margin-top:10px;">
+                        <!-- <div class="search-row col-md-12 mb-3 mb-md-0" >
+                            <div style="margin-bottom: 7px;">
+                                <span style="font-weight: bold;">{% trans "Upload CA Reg" %}
+                                </span>
+                            </div>
+                            <img id="page_img" hidden='true' src="" onload="get_image_info()"  alt="page" />
+                            </br><p id="img_info" hidden='true' style="float:left"><strong>Image Info:</strong> </p></br></br>
+                            
+                                {{ form.image }}
+                                <label  for="banner_type" style="color:green; margin-bottom: -150px;">&nbsp;&nbsp;<small id='banner_label'>HomePage Banner should be equal to  (1460px x 350px)</small></label>
+
+                        </div> -->
+                        
+                        <div class="row">
+                              <div class="col-md-5">
+                                  <div class="form-group">
+                                       <label for="banner_image" style="color: #37474f; font-weight: 700;margin-bottom:2rem;">QR Image</label>
+                                       <!-- <label for="banner_image"><strong>QR Image</strong></label> -->
+                              {{ form.image }}
+
+                                  </div>
+                                  
+                              </div>
+                              <div class="col-md-1">
+                                  <div class="form-group">
+                                    <div class="preview_banner">
+                                      <img id="banner_img" width="80px"  onclick="banner_click()" src="{{image.url}}" />
+                                      
+                                    </div>
+
+                                  </div>
+                                  
+                              </div>
+                              
+                              
+                          </div>
+                    </div>
+                    
+                    
+
+                    <div class="row mb-3 pl-3" >
+                        <div class="search-row col-md-6" >
+                            <div>
+                                <input type="submit" class="btn btn-primary" value="Submit" />
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+$('#mobile-collapse').click(function () {
+    $("#nw1").toggleClass('left-spacer');
+});
+
+
+$(document).ready(function() {
+    setTimeout(function(){
+      $('#notification_messages').remove();
+    }, 3000);
+});
+
+function get_image_info(){
+    console.log("VAL",('#cke_1_contents').val());
+    var img = new Image();
+    img.src = $('#page_img').attr('src');
+    $('#img_info strong').text('Image size: ' + img.width + ' x ' + img.height + ' px');
+    $('#img_info').attr('hidden', false);
+}
+
+function read_admin_banner_url(input) {
+        if (input.files && input.files[0]) {
+        var reader = new FileReader();
+
+        reader.onload = function (e) {
+            $('#banner_img').attr('src', e.target.result);
+            $("#banner_img").attr('width', '80px');
+            $("#banner_img").attr('height', '50px');
+            // $("#banner_img").css('display', 'block');
+        };
+
+        reader.readAsDataURL(input.files[0]);
+        }
+}
+
+function banner_click(){
+    
+    var modal = document.getElementById("myModal");
+    
+    var img = document.getElementById("banner_img");
+    
+    var modalImg = document.getElementById("banner");
+      modal.style.display = "block";
+        modalImg.src = img.src;
+}
+    
+function closeImage(){
+    var modal = document.getElementById("myModal");
+    modal.style.display = "none";
+}
+
+function validate_image_res(fileamount,banner_count,banner_type,input, width ,height){
+  text = ""
+//   banner_category = $("input[type='radio'][name='banner_category']:checked").val();
+//   if(banner_category == "DESKTOP"){text = "in Desktop Banners!"}
+//   else if(banner_category == "MOBILE_RESPONSIVE"){text = "in Mobile Responsive Banners"}
+//   else if(banner_category == "MOBILE_APP"){text = "in Mobile App Banners"}
+  if(fileamount+banner_count > 4){
+        Swal.fire({
+                  icon: 'error',
+                  title: 'Oops...',
+                  allowOutsideClick: false,
+                  text: 'You can only have 4 images on '+banner_type+' banner '+text,
+                }).then((result) => {
+                  if (result.value) {
+                    location.reload();
+                  }
+                })
+}
+
+}
+
+$(function() {
+    var imagesPreview = function(input, placeToInsertImagePreview) {
+        $(placeToInsertImagePreview).html('')
+        console.log(input.files.length)
+        // if (input.files) {
+        //     var fileAmount = input.files.length;
+        //     banner_type = $('#banner_type').val();
+        //     banner_category = $("input[type='radio'][name='banner_category']:checked").val();
+            
+        //     if(banner_category == "DESKTOP"){
+        //     homepage_banner_count = parseInt({{ desktop_homepage_banner_count }});
+        //     betslip_banner_count = parseInt({{ desktop_betslip_banner_count }});
+        //     }
+        //     else if(banner_category == "MOBILE_RESPONSIVE"){
+        //       homepage_banner_count = parseInt({{ mobile_homepage_banner_count }});
+        //       betslip_banner_count = parseInt({{ mobile_betslip_banner_count }});
+        //     }
+        //     else if(banner_category == "MOBILE_APP"){
+        //       homepage_banner_count = parseInt({{ mobile_app_homepage_banner_count }});
+        //       betslip_banner_count = parseInt({{ mobile_app_betslip_banner_count }});
+
+        //     }
+                        
+        //     if(banner_type == "HOMEPAGE"){
+        //         validate_image_res(fileAmount,homepage_banner_count,"HomePage", input, 1460, 350);
+        //     }
+        //     else if(banner_type == "BETSLIP"){    
+        //       validate_image_res(fileAmount,betslip_banner_count,"BetSlip", input, 300, 200);
+
+        //     }
+        //     }
+                        
+
+             
+          }
+         
+                                  
+    $('#id_banner').on('change', function() {
+        imagesPreview(this, 'div.gallery');
+    });
+});
+
+function show_profile_pic(input) {
+                        
+    $('#row form-group #profile_pic_img').show();
+        if (input.files && input.files[0]) {
+        var reader = new FileReader();
+        reader.onload = function (e) {
+        $('#profile_pic_img').attr('src', e.target.result);
+        $('#profile_pic_img').removeAttr('style');
+        };
+        reader.readAsDataURL(input.files[0]);
+        }
+        
+    }
+
+</script>
+{% endblock content %}

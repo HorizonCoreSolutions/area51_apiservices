@@ -1,0 +1,175 @@
+{% load static %}
+{% load i18n %}
+{% load math %}
+{% load date_utils %}
+{% load i18n %}
+<style>
+    h3{
+        font-size: 20px;
+    }
+</style>
+<div id="edit-losing-page" class="popup mfp-with-anim mfp-hide">
+    <div class="popup-body">
+        <div class="container-fluid ">
+            <div class="row">
+                <div class="col-xs-12 col-lg-12 ">
+                    <div class="page-content pt-4 setting-page">
+                        <div class='container-fluid pt-2'>
+                            <form id="edit-losing-form" style="padding-left: 3rem; padding-right: 3rem;  padding-bottom: 2rem;" bonus_id="{{ bonus.id }}">
+                                {% csrf_token %}
+                                <div class="row mb-4">
+                                    <div class="page-content col-xs-12 col-md-12 mb-3 mb-md-0">
+                                        <div class="admin-card">
+                                            <div class="main-heading-wrap">
+                                                <h5>{% trans "Edit Losing Bonus" %}</h5>
+                                            </div>
+                                            <div class="container-fluid" style="padding-top: 10px">
+                                                <form autocomplete="off">
+                                                    <div class="setting-select">
+                                                        <div class="row">
+                                                            <div class="col-xs-12 col-md-4 form-group" style="min-width: 210px;">
+                                                                <div style="font-weight: bold; color:black;">
+                                                                    <span style="font-weight: bold;">{% trans "Promo Code" %}</span>
+                                                                    <input type="hidden" id="input-bonus-id" name="bonus-id" value="{{bonus.id}}">
+                                                                    <input type="text" id="input-losing-promo-code" name="losing-promo-code"
+                                                                        placeholder="{% trans 'Enter promo code.' %}" class="form-control"
+                                                                        required="required" autocomplete='off'
+                                                                        onkeypress='return event.charCode >= 65 && event.charCode <= 90 ||
+                                                                        event.charCode >= 97 && event.charCode <= 122 ||
+                                                                        event.charCode >= 48 && event.charCode <= 57 ||
+                                                                        event.charCode == 45' readonly>
+                                                                </div>
+                                                                <span style='padding:0.5em;'></span>
+                                                            </div>
+                                                            <div class="col-xs-12 col-md-4 form-group" style="min-width: 210px;">
+                                                                <div style="font-weight: bold; color:black;">
+                                                                    <span style="font-weight: bold;">{% trans "Percentage" %}</span>
+                                                                    <input type="text" id="input-losing-bonus-percentage" name="losing-bonus-percentage"
+                                                                        placeholder="{% trans 'Enter Losing Bonus Percentage' %}" class="form-control disablepaste"
+                                                                        value="{{losing_bonus}}" required="required" autocomplete='off'
+                                                                        onkeypress='return event.charCode >= 48 && event.charCode <= 57 ||
+                                                                            event.charCode == 46'>
+                                                                </div>
+                                                                <span style='padding:0.5em;'></span>
+                                                            </div>
+                                                            <div class="col-xs-12 col-md-4 form-group" style="min-width: 210px;">
+                                                                <div class="date-input">
+                                                                    <span>{% trans "Promo Code Usage Limit (per player)" %}</span>
+                                                                    <input  value="{{promo_code_usage_limit}}" type="text" class="form-control"
+                                                                        id="input-losing-promo-code-usage-limit" name="losing-promo-code-usage-limit"
+                                                                        onkeypress='return event.charCode >= 48 && event.charCode <= 57'>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="row">
+                                                            <div class="col-xs-12 col-md-6 form-group" style="min-width: 210px;">
+                                                                <div class="date-input">
+                                                                    <span>{% trans "From date" %}</span>
+                                                                    <input  value="{{losing_start_date}}" type="text" onChange="validateDateRange(this)" class="form-control" id="input-start-time-edit-losing" name="losing-start-time" style="background-color:transparent">
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-xs-12 col-md-5 form-group" style="min-width: 210px;">
+                                                                <div class="date-input">
+                                                                    <span>{% trans "To date" %}</span>
+                                                                    <input value="{{losing_end_date}}" type="text" class="form-control" onChange="validateDateRange(this)" id="input-end-time-edit-losing" name="losing-end-time" style="background-color:transparent">
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-xs-12 col-md-1 form-group mt-md-4">
+                                                                <button class="btn btn-primary" id="losing-button-add">
+                                                                    {% trans "Submit" %}
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>    
+                        </div>
+                    </div>
+                </div>
+            </div>            
+        </div>
+    </div>
+</div>
+
+<script>
+    $("#input-start-time-edit-losing").datetimepicker({
+        defaultDate: new Date(),
+        format: 'd/m/Y',
+        value: '{{ from }}',
+        timepicker: false
+    });
+
+    $("#input-end-time-edit-losing").datetimepicker({
+        defaultDate: new Date(),
+        format: 'd/m/Y',
+        value: '{{ to }}',
+        timepicker: false
+    });
+
+
+    function validateDateRange(input){
+        
+        var from_date = $("#input-start-time-edit-losing").val();
+        var to_date = $("#input-end-time-edit-losing").val();
+        error_msg = "";
+        if(input.id == "input-start-time-edit-losing"){
+            error_msg = "From date must be less than To date!!"
+        }
+        else{
+            error_msg = "To date must be greater than From date!!"
+        }
+
+        var from_day = parseInt(from_date.split("/")[0]);
+        var from_month = parseInt(from_date.split("/")[1]);
+        var from_year = from_date.split("/")[2];
+        from_year = from_year.split(" ")[0];
+
+        var to_day = parseInt(to_date.split("/")[0]);
+        var to_month = parseInt(to_date.split("/")[1]);
+        var to_year = to_date.split("/")[2];
+
+        // from date should be less than to date
+        if(from_year > to_year){
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: error_msg
+            });
+            $("#input-start-time-edit-losing").val("{{losing_start_date}}");
+            $("#input-end-time-edit-losing").val("{{losing_end_date}}");
+            return false;
+        }else if(from_year == to_year){
+            if(from_month > to_month){
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: error_msg
+                });
+                
+                $("#input-start-time-edit-losing").val("{{losing_start_date}}");
+                $("#input-end-time-edit-losing").val("{{losing_end_date}}");
+                return false;
+            }else if(from_month == to_month){
+                if(from_day > to_day){
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: error_msg
+                    });
+                
+                    $("#input-start-time-edit-losing").val("{{losing_start_date}}");
+                    $("#input-end-time-edit-losing").val("{{losing_end_date}}");
+                    return false;
+                }
+            }
+        }        
+    }
+    $('.disablepaste').bind('copy paste cut',function(e) {
+      e.preventDefault();
+      Swal.fire('cut,copy & paste options are disabled !!');
+});
+</script>

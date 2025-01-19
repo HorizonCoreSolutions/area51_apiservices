@@ -1,0 +1,98 @@
+{% load i18n %}
+{% load static %}
+
+<style>
+    .create-form-margin{
+        margin-bottom: -5px;
+    }
+</style>
+
+<div id="add_cash_app_form" class="popup mfp-with-anim mfp-hide" style='background-color: white; width:100%;max-width: 650px; margin-left: auto; margin-right: auto; vertical-align:center; '>
+	<div class="popup-body "  style="margin-left: 3em; margin-right: 3em; padding-bottom: 0.3rem; padding-top: 0.3rem;">
+		<div class="modal-header mb-2">
+			<div class="justify-content-center">
+				<h5 class="modal-title ">CashApp Detail</h5>
+			</div>
+			<button type="button" style="font-size: 25px;" class="close popup-closebutton" data-dismiss="modal" aria-label="Close" id="closebutton">
+				<span aria-hidden="true">&times;</span>
+			</button>   
+		</div>
+
+		<div class="modal-body">
+            <form id="cash-app-form" autocomplete="off">
+                <div class="form-group">
+                    <label for="cashapp_name">{% trans "CashApp Id" %}</label>
+                    <input type="text" class="form-control" id="cashapp_name" value="" placeholder="{% trans 'Enter CashApp Id' %}"  maxlength= "500" required>
+                    <input type="text" class="form-control" id="cashapp_id" value="" placeholder="{% trans 'Enter CashApp Id' %}" maxlength="500" hidden>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-primary" id="add-cash-app">{% trans "Add CashApp" %}</button>
+            <button type="button" class="btn btn-primary" id="edit-cash-app" style="display: none;">{% trans "Update CashApp" %}</button>
+            <button type="button" class="btn btn-secondary popup-closebutton" data-dismiss="modal">{% trans "Close" %}</button>
+        </div>
+        <table id="cash-app-table" class="table text-center">
+			<thead>
+				<tr>
+					<th>{% trans "ID" %}</th>
+					<th>{% trans "CashApp ID" %}</th>
+					<th>{% trans "Actions" %}</th>
+				</tr>
+			</thead>
+			<tbody id="cash-app-table-body">
+				<tr><td colspan="2">No Data</td></tr>
+			</tbody>
+        </table>
+	</div>
+</div>
+
+
+
+{% comment %} 
+<script>
+  $(document).ready(function () {
+    $('.edit-btn').on('click', function () {
+      var cashAppId = $(this).data('cash-app-id');
+      var cashAppName = $(this).closest('tr').find('td:first').text();
+
+      $.ajax("{% url 'admin-panel:cash-deatils'  %}", {
+        type: 'PUT',
+        data: {
+            'cash_name': cashAppName,
+            'cashapp_id':cashAppId,
+            'csrfmiddlewaretoken': '{{ csrf_token }}'
+        },
+        dataType: 'json',
+        success: function(response) {
+          // Handle success, e.g., show a modal with editable fields
+          console.log('Edit success:', response);
+        },
+        error: function(error) {
+          // Handle error
+          console.error('Edit error:', error);
+        }
+      });
+    });
+
+    // Delete button click event
+    $('.delete-btn').on('click', function () {
+      var cashAppId = $(this).data('cash-app-id');
+      $.ajax("{% url 'admin-panel:cash-deatils'  %}", {
+        type: 'DELETE',
+        data: {
+            'cashapp_id':cashAppId,
+            'csrfmiddlewaretoken': '{{ csrf_token }}'
+        },
+        dataType: 'json',
+        success: function(response) {
+          row.remove();
+        },
+        error: function(error) {
+          console.error('Delete error:', error);
+        }
+      });
+    });
+  });
+</script> {% endcomment %}
+

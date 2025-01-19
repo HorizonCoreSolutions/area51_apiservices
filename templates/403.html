@@ -1,0 +1,39 @@
+{% extends "index.html" %}
+{% block title %}
+Permission Denied
+{% endblock title %}
+
+{% block content %}
+    <style>
+        .error-page {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        .error-code {
+            font-size: 100px;
+            font-weight: 700;
+            color: #dc3545;
+        }
+        .error-message {
+            font-size: 24px;
+            margin-bottom: 15px;
+        }
+        .error-description {
+            font-size: 18px;
+            margin-bottom: 30px;
+        }
+        .btn-home {
+            font-size: 18px;
+        }
+    </style>
+    <div class="container error-page">
+        <div class="error-code">403</div>
+        <div class="error-message">Forbidden</div>
+        <div class="error-description">You don’t have permission to access this page.</div>
+        <a href="/" class="btn btn-primary btn-home">Go to Homepage</a>
+    </div>
+{% endblock content %}

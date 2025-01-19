@@ -1,0 +1,47 @@
+{% load i18n %}
+{% load static %}
+<style>
+    h3{
+        font-size: 20px;
+    }
+</style>
+<div id="edit-role" class="popup mfp-with-anim mfp-hide">
+    
+    <div class="popup-body" style="position:relative; height: 0px; margin-bottom: 400px;">
+        <div class="login-form" style=" width: 100%; max-width:550px;margin-left: auto;margin-right: auto; vertical-align:center; background-color: white;">
+            <div class="modal-header mb-2">
+                <div class="popup-header text-center ml-auto">
+                    <h3>{% trans "Edit Role" %}</h3> 
+                </div>
+                <button type="button" style="font-size: 25px;" class="close" data-dismiss="modal" aria-label="Close" id="closebutton">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form id="edit-role-form" style="padding-left: 3rem; padding-right: 3rem;  padding-bottom: 2rem;">
+                {% csrf_token %}
+                <div id="edit-role-id">
+                    <input type="hidden" name="role_id">
+                </div>
+                <div class="form-group create-form-margin ">
+                    <span class="font-weight-bold ml-1">{% trans "Role Name" %}</span>
+                    <div class="input-group input-group-rounded" id="edit-role-input">
+                        <input type="text" class="form-control" name="role" id="role" maxlength="30" placeholder="Enter Role" required>
+                        <p class="error-msg"></p>
+                    </div>
+                </div>
+
+                <div class="pt-2 ">
+                    <button type="submit" class="btn btn-primary au-btn au-btn--block au-btn--darkGreen au-btn--lg" style="margin-left:194px">
+                        {% trans "Update" %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    $('#closebutton').on( "click", function() {
+        $.magnificPopup.close();
+    });
+</script>

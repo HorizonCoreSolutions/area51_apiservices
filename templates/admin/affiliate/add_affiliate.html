@@ -1,0 +1,298 @@
+{% load i18n %}
+{% load static %}
+
+<style>
+    .btn-dark {
+        color: #000 ;
+        background-color: #fff;
+        border-color: #000 ;
+    }
+    .btn-outline-info:hover {
+        color: #fff;
+        background-color: #000 ;
+        border-color: #ced4da;
+    }
+</style>    
+
+<div id="create-affiliate" class="popup mfp-with-anim mfp-hide" style='background-color: white; width:100%;max-width: 550px; margin-left: auto; margin-right: auto; vertical-align:center; '>
+    <div class="popup-body "  style="margin-left: 3em; margin-right: 3em; padding-bottom: 0.3rem; padding-top: 0.3rem;">
+        <div class="modal-header mb-2">
+            <div class="justify-content-center">
+                <h5 class="modal-title ">Assign affiliate link</h5>
+            </div>
+            <button type="button" style="font-size: 25px;" class="close" data-dismiss="modal" aria-label="Close" id="closebutton">
+                <span aria-hidden="true">&times;</span>
+              </button>   
+        </div>
+
+            <div class="login-form">
+                <form id="create-affiliate-form">
+                    <input type="hidden" name="redirect_url" value="{{ request.build_absolute_uri }}">
+                    {% csrf_token %}
+                    <span style="font-weight: bold; color: black;">{% trans "Affiliate Bonus Percentage" %}</span>
+                    <div class="row flex-sm-nowrap flex-wrap mb-2">
+                        <div class="col mb-3" style="min-width: 210px;">
+                            <input type="number" class="form-control disablepaste"
+                             id="input-commision" placeholder="Affiliate Bonus Percentage" 
+                             min="1" max="100" onchange="checkBonusPercentage(this)"
+                             autocomplete="off">
+                        </div>
+                        <div class="input-group-append">
+                            <button type="button" 
+                            style="margin-bottom: 17px;
+                                margin-right: 14px;
+                                margin-left: -20px;"
+                             class="btn btn-outline-info btn-dark" data-toggle="tooltip" data-placement="top" title="{% trans "Bonus percentage for which affiliate will get bonus on affiliated player's first deposit" %}">
+                                <i class="fa fa-info-circle"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="row flex-sm-nowrap flex-wrap mb-4" >
+                        <div class="col" style="min-width: 210px;">
+                            <div class="rs-select2--light rs-select2--md">
+                                <span style="font-weight: bold; color: black;">{% trans "Select User" %}</span>
+                                <select id="select-users" name="users[]" class="js-example-basic-multiple tokenize-open">
+                                    {% if selected_users %}
+                                        {% for user in selected_users %}
+                                            <option selected="selected" value="{{ user.id }}">{{ user.username }}</option>
+                                        {% endfor %}
+                                    {% endif %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                   
+                    <div class="form-group">
+                        <div class="row form-group" style="margin-bottom: 2px;">
+                            <div  class="col col-8">
+                                <label  style="font-weight: bold; color: black;" class="mb-0">{% trans  "Affiliate Expire Date" %}</label>
+                            </div>
+                        </div>
+                    <div>
+                    <div class="row form-group">
+                        <input type="text" placeholder="Select Expire Date" id="affiliate_expire_date"  class="form-control datetimepicker-input" style="width: 94%;margin-left: 16px;/* float: left; */">
+                    </div>
+                    <div class="form-group">
+                        <div class="row form-group" style="margin-bottom: 2px;">
+                            <div class="col col-8">
+                                <label  style="font-weight: bold; color: black;" class="mb-0">{% trans  "Bonus On No. of Deposits" %}</label>
+                            </div>
+                        </div>
+                    <div>
+                        <div class="row form-group">
+                            <input type="number" id="no_of_deposits" value=1  class="form-control" style="width: 94%;margin-left: 16px;/* float: left; */">
+                        </div>
+                        <div class="row form-group ">
+                            <div class="col-8" style="padding-top: 9px;">
+                                <label style="font-weight: bold; color: black;" class="form-control-label mb-0 fs-16">{% trans "Bonus On All Deposits" %}</label>
+                            </div>
+                            <div class="col-4 d-flex justify-content-end">
+                                <label class="switch" for="all_deposits">
+                                    <input id="all_deposits" player_id="{{ player.pk }}" type="checkbox" class="switch-input switch-status-input player_switch " {% if player.is_bonus_on_all_deposits %}checked{% endif %}>
+                                    <div class="slider round"></div>
+
+                                </label>
+                            </div>
+                        </div>
+                    <div class="row form-group ">
+                        <div class="col-8" style="padding-top: 9px;">
+                            <label style="font-weight: bold; color: black;" class="form-control-label mb-0 fs-16">{% trans "Redeemable" %}</label>
+                        </div>
+                        <div class="col-4 d-flex justify-content-end">
+                            <label class="switch" for="redeemable">
+                                <input id="redeemable" player_id="{{ player.pk }}" type="checkbox" class="switch-input switch-status-input player_switch uncheck" {% if player.is_redeemable_amount %}checked{% endif %}>
+                                <div class="slider round"></div>
+
+                            </label>
+                        </div>
+                    </div>
+                    <div class="row form-group ">
+                        <div class="col-8" style="padding-top: 9px;">
+                            <label style="font-weight: bold; color: black;" class="form-control-label mb-0 fs-16">{% trans "Lifetime Affliate" %}</label>
+                        </div>
+                        <div class="col-4 d-flex justify-content-end">
+                            <label class="switch" for="lifetime_affiliate">
+                                <input id="lifetime_affiliate" type="checkbox" class="switch-input switch-status-input player_switch lifetime_affiliate" {% if affiliate.is_lifetime_affiliate %}checked{% endif %}>
+                                <div class="slider round"></div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="pt-2">
+                        <button type="submit" class="btn btn-primary btn-md btn-block waves-effect waves-light text-center m-b-20">
+                            {% trans "Assign link" %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        $('input.uncheck').on('change', function() {
+            $('input.uncheck').not(this).prop('checked', false);  
+        });
+        $('#closebutton').on( "click", function() {
+            $.magnificPopup.close();
+        });
+        $(document).ready(function () {
+
+            var url = "{% url 'admin-panel:player-ajax' %}";
+            $('#select-users').tokenize2({
+                multiple: true,
+                placeholder: "{% trans 'Search by Username' %}",
+                searchMinLength:1,
+                dataSource: function(term, object){
+                    if($("#select-sort-activity").val() == "sub-affiliate"){
+                        url = "{% url 'admin-panel:player-ajax' %}";
+                    }
+                    $.ajax(url, {
+                        type: "POST",
+                        data: { search: term, start: 0, affiliate_new: true},
+                        global: false, 
+                        dataType: 'json',
+                        success: function(data){
+                            var $items = [];
+                            $.each(data, function(k, v){
+                                $items.push(v);
+                            });
+                            object.trigger('tokenize:dropdown:fill', [$items]);
+                        }
+                    });
+                }
+            });
+
+            $('#create-affiliate-form').submit(function (event) {
+                event.preventDefault();
+                var redeemable = document.querySelector('#redeemable').checked;
+                var no_of_deposits = $('#no_of_deposits').val();
+                var affliate_expire_date = $('#affiliate_expire_date').val();
+                var lifetime_affiliate =  document.querySelector('#lifetime_affiliate').checked;    
+                var all_deposits =  document.querySelector('#all_deposits').checked;                
+            
+              console.log("affliate_expire_date",affliate_expire_date)
+                var users = ($("#select-users").val());
+                console.log(users,"+++++++")
+                console.log(redeemable,">>>>>>>>>>>>>>>>>>>>>>")
+                var commision = ($("#input-commision").val());
+                console.log(commision,"______________")
+                 // Check the conditions and display error message if necessary
+                if (all_deposits === false && no_of_deposits.replace(/\s/g, '') === '') {
+                    Swal.fire({
+                    title: 'Fields Required',
+                    text: 'Please Select No of Deposit',
+                    icon: 'error',
+                    });
+                }
+                if (lifetime_affiliate === false && affliate_expire_date.replace(/\s/g, '') === '') {
+                    Swal.fire({
+                    title: 'Fields Required',
+                    text: 'Please Select Expire Date',
+                    icon: 'error',
+                    });
+                }
+                if(users == ""){
+                    Swal.fire({
+                        title: 'Fields Required',
+                        text: "Please Select Users",
+                        icon: 'error',
+                    });
+                }
+                if (commision==''){
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Please Enter Bonus Percentage First',
+            })
+            
+            return false
+        }             
+                else{
+                    $.ajax({
+                        url: "{% url 'admin-panel:create-affiliates' %}",
+                        type: "POST",
+                        dataType: "json",
+                        data: {
+                            users: users,
+                            commision:commision,
+                            redeemable:redeemable,
+                            no_of_deposits : no_of_deposits,
+                            affliate_expire_date: affliate_expire_date,
+                            lifetime_affiliate:lifetime_affiliate,
+                            all_deposits : all_deposits,
+                            csrfmiddlewaretoken: '{{ csrf_token }}'
+                        },
+                        success: function (data) {
+                            console.log(data)
+                                Swal.fire({
+                                    title: data['title'],
+                                    text: data['message'],
+                                    icon: data['icon'],
+                                }).then((result) => {
+                                        $.magnificPopup.close();
+                                        location.reload();
+                                });
+                            },
+                        error: function(data) {
+                                console.log(data)
+                                Swal.fire({
+                                    title: 'Error',
+                                    text: "Something Went Wrong",
+                                    icon: 'error',
+                                });
+                            },
+                    });
+                }
+            });
+        });
+
+        $(document).ready(function() {
+  // Bind an event handler to the checkbox change event
+  $('#all_deposits').change(function() {
+    if($(this).is(':checked')) {
+      // Checkbox is checked, disable the input
+      $('#no_of_deposits').prop('disabled', true);
+      
+    } else {
+      // Checkbox is unchecked, enable the input
+      $('#no_of_deposits').prop('disabled', false);
+    }
+  });
+});
+$('#lifetime_affiliate').change(function() {
+    if($(this).is(':checked')) {
+      // Checkbox is checked, disable the input
+      $('#affiliate_expire_date').prop('disabled', true);
+      
+    } else {
+      // Checkbox is unchecked, enable the input
+      $('#affiliate_expire_date').prop('disabled', false);
+    }
+  });
+
+  $('.datetimepicker-input').datetimepicker({
+    format: 'd/m/Y',
+    timepicker: false,
+    minDate: new Date(Date.UTC(new Date().getFullYear(), new Date().getMonth(), new Date().getDate())) // Set minDate option to the current UTC date
+});
+
+        function checkBonusPercentage(input) {
+    const value = parseFloat(input.value);
+    if (isNaN(value) || value > 100) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Invalid Bonus Percentage',
+            text: 'Please enter a percentage between 1 and 100.',
+        });
+        input.value = '';
+    }
+}
+$('.disablepaste').bind('copy paste cut',function(e) {
+      e.preventDefault();
+      Swal.fire('cut,copy & paste options are disabled !!');
+});
+
+
+
+    </script>
+    

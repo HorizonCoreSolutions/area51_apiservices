@@ -1,0 +1,138 @@
+{% extends "index.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block content %}
+<script src="../../../static/js/ckeditor/ckeditor.js"></script>
+<style>
+    .cke_button__about_icon{
+        visibility: hidden;
+    }
+    .admin-card{
+        background-color: #ffffff;
+        box-shadow: 0px 0px 6px 6px rgb(204 204 204 / 0.25);
+        padding: 30px 10px;
+    }
+    .pcode.left-spacer {
+	    margin-left: 0px;
+    }
+    .pcode{
+	    margin-left: 250px;
+    }
+    @media(max-width:767px){
+        .pcode{
+	        margin-left: 0px;
+        }
+    }
+
+</style>
+<div class="pcode" id='nw1' >
+    <div>
+        <div class="container-fluid pt-4" >
+            <div class="admin-card">
+                <div class="row">
+                    <div class="col-xs-12 col-lg-12 ">
+                        <div class="page-content"  >
+                            <div class="main-heading-wrap">
+                                <h5>{% trans 'Create Notification' %}</h5>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row flex-sm-nowrap flex-wrap">  
+                    <div class="col" style="min-width: 210px;">
+                        <div>
+                            <div style="margin-bottom: 7px;">
+                                <span style="font-weight: bold;">{% trans "Title" %} 
+                                    <span class="text-danger">*</span> 
+                                </span>
+                            </div>
+                            <input type="text" id="subject" maxlength="250" placeholder="Enter Title" name="subject" class="form-control">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-3" style="margin-top:10px;">
+                    <div class="search-row col-md-12 mb-3 mb-md-0" >
+                        <div style="margin-bottom: 7px;">
+                            <span style="font-weight: bold;">{% trans "Content" %} 
+                                <span class="text-danger">*</span> 
+                            </span>
+                        </div>
+                        <textarea name="editor" id="editor" rows="10" cols="80"></textarea>
+                        <script>
+                            CKEDITOR.replace("editor")
+                        </script>
+                    </div>
+                </div>
+
+                <div class="row mb-3" style="margin-top:10px;">
+                    <div class="search-row col-md-6 mb-3 mb-md-0" >
+                        <div style="margin-bottom: 7px;">
+                            <button class="btn btn-primary" id="button-search" onclick="sendNotification(this)">{% trans "Send" %}</button>
+                            <!-- <a href="/admin/crm" class="btn btn-primary" id="button-search">{% trans "Cancel" %}</a> -->
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    function sendNotification(element) {
+        var subject = $('#subject').val();
+        if(subject.replaceAll(' ','').match(/^[0-9]+$/)) {
+            Swal.fire({
+                icon : 'error',
+                title : "Error",
+                text : 'Invalid subject value' 
+
+            })
+        }
+        else if(CKEDITOR.instances["editor"].getData().length > 2000){
+            Swal.fire({
+                icon : 'error',
+                title : "Error",
+                text : 'Content cannot be more than 2000 characters' 
+
+            })
+        }
+        else{
+            $.ajax({
+                url: "{% url 'users-api:important-matches-list' %}",
+                type: "POST",
+                dataType: "json",
+                data: {
+                    title: $("#subject").val(),
+                    content: CKEDITOR.instances["editor"].getData(),
+                    csrfmiddlewaretoken: '{{ csrf_token }}'
+                },
+                success: function (data) {
+                    if(data.status === 'error'){
+                        Swal.fire({
+                            icon: "error",
+                            title: data["status"],
+                            text: data["message"]
+                        });
+                    }
+                    else if(data.status === 'Success'){
+                        Swal.fire({
+                            icon: "success",
+                            title: data["status"],
+                            text: data["message"]
+                        }).then(() => {
+                            window.location = "{% url 'admin-panel:notification' %}";
+                        });
+                    }
+                }
+            });
+        }
+    }
+    
+
+</script>
+{% endblock content %}
