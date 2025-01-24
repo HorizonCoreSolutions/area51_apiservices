@@ -911,7 +911,7 @@ class Casino25CallBackAPIView(APIView):
 
 class Casino25GameList(ListAPIView):
     permission_classes = (IsFavCasinoEnabled,)
-    queryset = CasinoGameList.objects.filter(created__lte=datetime.now()-timedelta(hours=48))
+    queryset = CasinoGameList.objects.filter(created__lte=timezone.now()-timedelta(hours=48))
     paginate_by = 20
     pagination_class = PageNumberPagination
     http_method_name = ["get"]
@@ -949,7 +949,7 @@ class Casino25GameList(ListAPIView):
     
 class Casino25GameListAdmin(ListAPIView):
     permission_classes = (IsFavCasinoEnabled, IsPlayer)
-    queryset = CasinoManagement.objects.filter(game__created__lte=datetime.now()-timedelta(hours=48), enabled=True, game_enabled=True)
+    queryset = CasinoManagement.objects.filter(game__created__lte=timezone.now()-timedelta(hours=48), enabled=True, game_enabled=True)
     paginate_by = 20
     pagination_class = PageNumberPagination
     http_method_name = ["get"]
