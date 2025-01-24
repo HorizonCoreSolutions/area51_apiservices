@@ -235,12 +235,15 @@ class Casino25:
     def return_server_error(self, error_message):
         if error_message not in self.available_errors:
             error_message = "ErrInternalErrorCode"
+            code = 7
+        else:
+            code = self.available_errors.index(error_message) + 1
         
         return {
             "jsonrpc": 2.0,
             "id": self.config.get("id"),
             "error": {
-                "code": 1,
+                "code": code,
                 "message": error_message
             }
         }
