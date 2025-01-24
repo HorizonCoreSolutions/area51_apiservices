@@ -121,7 +121,7 @@ class GSoftTransactions(AbstractBaseModel):
 class PlayerFavouriteCasinoGames(AbstractBaseModel):
     user = models.ForeignKey(Users, on_delete=models.CASCADE, blank=False)
     game_list = JSONField(default=None, null=True, blank=True)
-    fortunepandas_game_list = JSONField(default=[], null=True, blank=True)
+    fortunepandas_game_list = JSONField(default=lambda : [], null=True, blank=True)
     
     
 class CasinoManagement(AbstractBaseModel):
