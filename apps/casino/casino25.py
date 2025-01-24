@@ -61,7 +61,7 @@ class Casino25Client:
             print(response.text)
             if "503 service temporarily unavailable" in response.text.lower():
                 return {"message": "Sorry, the service you're trying to access is currently unavailable. Please try again later."}
-            return
+            return {"message": "An unexpected error occurred"}
 
     
     def list_games(self, params):
