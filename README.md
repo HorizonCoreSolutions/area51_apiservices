@@ -1,7 +1,6 @@
 # api_services
 
 
-
 ## Getting started
 
 To make it easy for you to get started with GitLab, here's a list of recommended next steps.
@@ -44,13 +43,6 @@ Use the built-in continuous integration in GitLab.
 
 ***
 
-# Editing this README
-
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thank you to [makeareadme.com](https://www.makeareadme.com/) for this template.
-
-## Suggestions for a good README
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
 ## Name
 Choose a self-explaining name for your project.
 
@@ -64,7 +56,102 @@ On some READMEs, you may see small images that convey metadata, such as whether 
 Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
 
 ## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+
+### Prerequisites
+
+Python: Make sure Python 3.8 is installed.
+- [Download Python](https://www.python.org/downloads/)
+
+**Postgres DB:** 13.10
+
+### 1. Update your OS and install utilities
+
+If you are using Ubuntu we highly recommend using ubuntu 20.0.4 which shows to have better compatibility with the software
+
+```bash
+apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libffi-dev \
+    libssl-dev \
+    libpq-dev \
+    libxml2-dev \
+    libxslt1-dev \
+    zlib1g-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
+    liblcms2-dev \
+    libtiff-dev \
+    libwebp-dev \
+    python3-dev \
+    python3-setuptools \
+    python3-wheel \
+    gettext \
+    libcurl4-openssl-dev \
+    pkg-config \
+    libharfbuzz-dev \
+    libfribidi-dev \
+    libopenjp2-7-dev \
+    libyaml-dev 
+```
+
+### 2. Create a Postgres Instance to host the database.
+
+Example: 
+
+```bash
+docker run --name db_name -p 5433:5432 -e POSTGRES_PASSWORD=db_strong_password postgres:13.10
+```
+
+### 3. Clone the Repository
+```bash
+git clone https://github.com/RevolutionDigital1/area51_apiservices.git
+cd area51_apiservices
+```
+
+### 4. reate a Virtual Environment
+
+```bash
+pip install virtualenv
+virtualenv .env
+source .env/bin/activate  # On Windows, use `env\Scripts\activate`
+```
+
+### 5. Update setuptools (optional)
+
+```bash
+pip install --upgrade setuptools
+```
+
+### 6. Install Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### 7. Set Up the Database
+
+```bash
+Run migrations to initialize the database.
+python manage.py migrate
+```
+
+### 8. Create a Superuser
+
+```bash
+python manage.py createsuperuser
+```
+
+### 9. Run the Development Server
+
+```bash
+python manage.py runserver
+```
+
+Access the app at http://127.0.0.1:8000.
+
+### 10. Environment Variables
+
+Create a .env file in the root directory based on the .env.example:
 
 ## Usage
 Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
