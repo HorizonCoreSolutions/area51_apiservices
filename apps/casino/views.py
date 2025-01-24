@@ -844,9 +844,9 @@ class Casino25APIView(APIView):
                 elif game_id not in list(tournament.games.values_list("game__game_id", flat=True)):
                     return JsonResponse({"success" : False, "message" : f"Game with ID {game_id} not available in the tournament"}, status=status.HTTP_400_BAD_REQUEST)
 
-            casino = Casino25(user=self.request.user, tournament_id=tournament_id, user_tournament=user_tournament, debug=True)
+            casino = Casino25(user=self.request.user, tournament_id=tournament_id, user_tournament=user_tournament, debug=True, request_data=request.data)
             if request_type == "startgame":
-                success, response = casino.start_game(request.data)
+                success, response = casino.start_game()
             else:
                 return JsonResponse({"success" : False, "message" : "Please provide valid request method name"}, status=status.HTTP_400_BAD_REQUEST)
             status_code = status.HTTP_200_OK if success else status.HTTP_400_BAD_REQUEST
@@ -889,11 +889,11 @@ class Casino25CallBackAPIView(APIView):
                     }
                 }, status=200) 
 
-            casino = Casino25(user=user, tournament_id=tournament_id, user_tournament=user_tournament, debug=True)
+            casino = Casino25(user=user, tournament_id=tournament_id, user_tournament=user_tournament, debug=True, request_data=request.data)
             if request_type == "withdrawAndDeposit":
-                success, response = casino.withdraw_and_deposit(request.data)
+                success, response = casino.withdraw_and_deposit()
             elif request_type == "rollbackTransaction":
-                success, response = casino.rollback_transaction(request.data)
+                success, response = casino.rollback_transaction()
             elif request_type == "getBalance":
                 success, response = casino.get_balance()
 

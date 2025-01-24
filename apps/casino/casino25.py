@@ -214,10 +214,11 @@ class Casino25Client:
     
 
 class Casino25:
-    def __init__(self, user: Users, tournament_id=None, user_tournament: UserTournament = None, debug=False):
+    def __init__(self, user: Users, tournament_id=None, user_tournament: UserTournament = None, debug=False, request_data=None):
         self.user = user
         self.tournament_id = tournament_id
         self.user_tournament = user_tournament
+        self.request_data = request_data
         self.config = {
             "debug": debug,
             "id": int(settings.CASINO_25_ID),
@@ -301,7 +302,8 @@ class Casino25:
         return response
     
 
-    def start_game(self, request_param):
+    def start_game(self):
+        request_param = self.request_data
         game_id = request_param.get("game_id")
         lang = request_param.get("lang", self.default_language)
         mode = request_param.get("mode", "demo")
@@ -352,15 +354,16 @@ class Casino25:
         
         return True, {
             "jsonrpc": "2.0",
-            "id": self.config.get("id"),
+            "id": self.request_data.get("id"),
             "result": {
                 "balance": balance,
             }
         }
     
     @db_transaction.atomic
-    def withdraw_and_deposit(self, request):
+    def withdraw_and_deposit(self):
         try:
+            request = self.request_data
             request_param = request.get('params')
             callerId = request_param.get("callerId")
             player_name = request_param.get("playerName")
@@ -395,7 +398,7 @@ class Casino25:
                 if transaction:
                     response = {
                         "jsonrpc": request.get('jsonrpc'),
-                        "id": self.config.get("id"),
+                        "id": self.request_data.get("id"),
                         "result": {
                             "newBalance": int(self.user.balance*100)+int(self.user.bonus_balance*100) if not self.user_tournament else int(self.user_tournament.points*100),
                             "transactionId": transactionref
@@ -550,7 +553,7 @@ class Casino25:
                             update_tournament_scorboard(self.user_tournament.tournament, self.user_tournament)
                 response = {
                     "jsonrpc": request.get('jsonrpc'),
-                    "id": self.config.get("id"),
+                    "id": self.request_data.get("id"),
                     "result": {
                         "newBalance": int(self.user.balance*100)+int(self.user.bonus_balance*100) if not self.user_tournament else int(self.user_tournament.points*100),
                         "transactionId": transactionref
@@ -566,8 +569,9 @@ class Casino25:
     
     
     @db_transaction.atomic
-    def rollback_transaction(self, request):
+    def rollback_transaction(self):
         try:
+            request = self.request_data
             request_param = request.get('params')
             callerid = request_param.get("callerId")
             playername = request_param.get("playerName")
@@ -588,8 +592,8 @@ class Casino25:
                     return False, self.return_server_error("CallerIdDoesNotMatch")
                 
                 response = {
-                            "jsonrpc": request.get('jsonrpc'),
-                            "id": self.config.get("id"),
+                            "jsonrpc": self.request_data.get('jsonrpc'),
+                            "id": self.request_data.get("id"),
                             "result": {
                             }
                         }
@@ -675,7 +679,7 @@ class Casino25:
             if bet_transactions.count()>0:
                 response = {
                             "jsonrpc": request.get('jsonrpc'),
-                            "id": self.config.get("id"),
+                            "id": self.request_data.get("id"),
                             "result": {
                             }
                         }
@@ -683,7 +687,7 @@ class Casino25:
             
             response = {
                             "jsonrpc": request.get('jsonrpc'),
-                            "id": self.config.get("id"),
+                            "id": self.request_data.get("id"),
                             "result": {
                             }
                         }
