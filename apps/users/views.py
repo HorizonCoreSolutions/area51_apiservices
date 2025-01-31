@@ -483,6 +483,13 @@ class GetOTPView(APIViewContext):
 
     def post(self, request):
         try:
+            if not request.data.get("username"):
+                return Response({"message": "username must not be null."}, status.HTTP_400_BAD_REQUEST)
+            if not request.data.get("phone_number"):
+                return Response({"message": "phone_number must not be null."}, status.HTTP_400_BAD_REQUEST)
+            if not request.data.get("country_code"):
+                return Response({"message": "country_code must not be null."}, status.HTTP_400_BAD_REQUEST)
+
             user = Users.objects.filter(
                 phone_number=request.data.get("phone_number"),
                 country_code=request.data.get("country_code"),
