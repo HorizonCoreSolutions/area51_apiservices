@@ -461,6 +461,7 @@ class UserUpdateView(APIViewContext):
                 player.country_code = user_id_proof
                 player.profile_pic = profile_pic
                 player.cashtag = cashtag
+                player.clean()
                 if player.cashtag!=cashtag:
                     if Player.objects.filter(cashtag=cashtag).exists(): 
                         return self.Response({"title":"Error","icon":"error","message": "Cashtag Already Exists!"}, status.HTTP_400_BAD_REQUEST) 

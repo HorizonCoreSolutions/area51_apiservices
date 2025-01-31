@@ -12,7 +12,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
-from django.core.validators import MinLengthValidator, MinValueValidator, MaxLengthValidator
+from django.core.validators import MinLengthValidator, MinValueValidator, MaxLengthValidator, RegexValidator
 from decimal import Decimal
 from django.conf import settings
 from djchoices import ChoiceItem, DjangoChoices
@@ -288,7 +288,13 @@ class Users(AbstractBaseUser, AbstractBaseModel, PermissionsMixin):
     full_name = models.CharField(_("full_name"),max_length=350,default=None,null=True)
     state = models.CharField(_("state"),max_length=500, null=True, default=None)
     complete_address = models.CharField(_("complete_address"),max_length=500, null=True, default=None)
-    phone_number = models.CharField(_("phone number"), max_length=20, null=True, default=None)
+    phone_number = models.CharField(_("phone number"), max_length=20, null=True, default=None,
+                                    validators=[
+                                        RegexValidator(
+                                            regex=r'^\+?1?\d{7,19}$',  # Regex for international phone numbers
+                                            message="Phone number must be entered in the format: '+999999999'. Up to 19 digits allowed."
+                                        )
+                                    ])
     profile_pic = models.FileField(upload_to='admin/profile_pic/',max_length=500, default=None,null=True)
     user_id_proof = models.FileField(upload_to='admin/user_id_proof/',default=None,null=True)
     # url = models.URLField(_("url"), max_length=250, null=True, blank=True, default=None)
@@ -357,7 +363,15 @@ class Users(AbstractBaseUser, AbstractBaseModel, PermissionsMixin):
     USERNAME_FIELD = "username"
 
     objects = UserManager()
-    
+
+    def clean(self):
+        from django.core.exceptions import ValidationError
+        import re
+        patter=r'^\+?1?\d{7,19}$'
+        match=re.match(patter, self.phone_number)
+        if not match:
+            raise ValidationError("Invalid phone number")
+
     def has_permissions(self, permission_code):
         role = Role.objects.filter(name=self.role).first()
         if role:
