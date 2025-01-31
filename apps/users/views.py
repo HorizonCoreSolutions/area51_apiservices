@@ -12,6 +12,8 @@ import traceback
 from datetime import datetime,timedelta,timezone
 
 import requests
+from pyhanko_certvalidator import ValidationError
+
 from apps.admin_panel.tasks import newuser_email, queries_email
 from apps.bets.utils import generate_reference
 from apps.bets.models import CASHBACK, CHARGED
@@ -480,77 +482,84 @@ class GetOTPView(APIViewContext):
     http_method_names = ["post"]
 
     def post(self, request):
-        user = Users.objects.filter(
-            phone_number=request.data.get("phone_number"),
-            country_code=request.data.get("country_code"),
-        ).exists()
-        if (
-            request.data.get("is_signup")
-            and Users.objects.filter(username__iexact=request.data.get("username").lower()).exists()
-        ):
-            return Response(
-                {"message": _("User already exists.")}, status.HTTP_400_BAD_REQUEST
-            )
-        elif request.data.get("is_signup") and user:
-            return Response(
-                {"message": _("This mobile number already exist")},
-                status.HTTP_400_BAD_REQUEST,
-            )
-        elif (request.data.get("is_forgot_password") and
-            not Users.objects.filter(username__iexact=request.data.get("username").lower(),
-                                    phone_number=request.data.get("phone_number"),
-                                    country_code=request.data.get("country_code")).exists()):
-            return Response(
-                {"message": _("User with this mobile number and username doesn't exist")},
-                status.HTTP_400_BAD_REQUEST,
-            )
-        elif (request.data.get("is_forgot_password") and
-              not user and
-              not Users.objects.filter(username__iexact=request.data.get("username").lower()).exists()):
-            return Response(
-                {"message": _("User with this mobile number doesn't exist")},
-                status.HTTP_400_BAD_REQUEST,
-            )
-        serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid():
-            response_data = serializer.validated_data
-            try:
-                client = Client(TWILIO_SID, TWILIO_AUTH_TOKEN)
-                client.verify.services(TWILIO_VERIFY_SERVICE_SID).verifications.create(
-                    to="+"
-                    + response_data["country_code"]
-                    + response_data["phone_number"],
-                    channel="sms",
-                )
+        try:
+            user = Users.objects.filter(
+                phone_number=request.data.get("phone_number"),
+                country_code=request.data.get("country_code"),
+            ).exists()
+            if (
+                request.data.get("is_signup")
+                and Users.objects.filter(username__iexact=request.data.get("username").lower()).exists()
+            ):
                 return Response(
-                    {
-                        "message": _("OTP Sent"),
-                        "phone_number": response_data["phone_number"],
-                        "country_code": response_data["country_code"],
-                    },
-                    status.HTTP_200_OK,
+                    {"message": _("User already exists.")}, status.HTTP_400_BAD_REQUEST
                 )
-
-            except TwilioRestException as e:
-                if e.status == 429:
-                    return Response(
-                        {"message": _("Too many requests for OTP. Please try again later.")},
-                        status.HTTP_429_TOO_MANY_REQUESTS,
+            elif request.data.get("is_signup") and user:
+                return Response(
+                    {"message": _("This mobile number already exist")},
+                    status.HTTP_400_BAD_REQUEST,
+                )
+            elif (request.data.get("is_forgot_password") and
+                not Users.objects.filter(username__iexact=request.data.get("username").lower(),
+                                        phone_number=request.data.get("phone_number"),
+                                        country_code=request.data.get("country_code")).exists()):
+                return Response(
+                    {"message": _("User with this mobile number and username doesn't exist")},
+                    status.HTTP_400_BAD_REQUEST,
+                )
+            elif (request.data.get("is_forgot_password") and
+                  not user and
+                  not Users.objects.filter(username__iexact=request.data.get("username").lower()).exists()):
+                return Response(
+                    {"message": _("User with this mobile number doesn't exist")},
+                    status.HTTP_400_BAD_REQUEST,
+                )
+            serializer = self.get_serializer(data=request.data)
+            if serializer.is_valid():
+                response_data = serializer.validated_data
+                try:
+                    client = Client(TWILIO_SID, TWILIO_AUTH_TOKEN)
+                    client.verify.services(TWILIO_VERIFY_SERVICE_SID).verifications.create(
+                        to="+"
+                        + response_data["country_code"]
+                        + response_data["phone_number"],
+                        channel="sms",
                     )
-                if e.status == 503:
                     return Response(
-                        {"message": _("Service Unavailable. Please try again later.")},
-                        status.HTTP_503_SERVICE_UNAVAILABLE,
+                        {
+                            "message": _("OTP Sent"),
+                            "phone_number": response_data["phone_number"],
+                            "country_code": response_data["country_code"],
+                        },
+                        status.HTTP_200_OK,
                     )
-                return Response(
-                    {"message": _("This mobile number does not exist.")}, status.HTTP_400_BAD_REQUEST
-                )
-            except Exception as e:
-                return Response(
-                    {"message": _("Something went wrong.")}, status.HTTP_400_BAD_REQUEST
-                )
 
-        return Response({"message": serializer.errors}, status.HTTP_400_BAD_REQUEST)
+                except TwilioRestException as e:
+                    if e.status == 429:
+                        return Response(
+                            {"message": _("Too many requests for OTP. Please try again later.")},
+                            status.HTTP_429_TOO_MANY_REQUESTS,
+                        )
+                    if e.status == 503:
+                        return Response(
+                            {"message": _("Service Unavailable. Please try again later.")},
+                            status.HTTP_503_SERVICE_UNAVAILABLE,
+                        )
+                    return Response(
+                        {"message": _("This mobile number does not exist.")}, status.HTTP_400_BAD_REQUEST
+                    )
+                except Exception as e:
+                    return Response(
+                        {"message": _("Something went wrong.")}, status.HTTP_400_BAD_REQUEST
+                    )
+
+            return Response({"message": serializer.errors}, status.HTTP_400_BAD_REQUEST)
+        except ValidationError as e:
+            print(f"Error in GET-OTP : {e}")
+            return Response({"message": str(e)}, status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            print(f"Error in GET-OTP : {e}")
+            return Response({"message": "something went wrong", },status.HTTP_400_BAD_REQUEST)
 
 
 class VerifyOTPView(APIView):
