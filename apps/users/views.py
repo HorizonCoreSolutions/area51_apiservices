@@ -1483,13 +1483,14 @@ class SignUpOTP(APIView):
         try:
             email = request.data.get("email")
             username = request.data.get("username")
+            country_code = request.data.get("country_code")
             phone_number = request.data.get("phone_number")
             if email:
                 if Users.objects.filter(email=email).exists(): 
                     return Response({"error": "Email already exists", "status": status.HTTP_400_BAD_REQUEST},status.HTTP_400_BAD_REQUEST)
                 elif Users.objects.filter(username__iexact=username).exists():
                     return Response({"error": "User already exists", "status": status.HTTP_400_BAD_REQUEST},status.HTTP_400_BAD_REQUEST)
-                elif Users.objects.filter(phone_number=phone_number).exists():
+                elif Users.objects.filter(Q(country_code=country_code), Q(phone_number=phone_number)).exists():
                     return Response({"error": "Phone number already exists", "status": status.HTTP_400_BAD_REQUEST},status.HTTP_400_BAD_REQUEST)
                 elif len(username)<4:
                     return Response({"error": "Username must be atleast 4 characters long", "status": status.HTTP_400_BAD_REQUEST},status.HTTP_400_BAD_REQUEST)
