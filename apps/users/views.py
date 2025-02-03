@@ -1485,6 +1485,17 @@ class SignUpOTP(APIView):
             username = request.data.get("username")
             country_code = request.data.get("country_code")
             phone_number = request.data.get("phone_number")
+
+            if not email:
+                return Response({"message": "Email must not be null"}, status.HTTP_400_BAD_REQUEST)
+            if not username:
+                return Response({"message": "Username must not be null"}, status.HTTP_400_BAD_REQUEST)
+            if not country_code:
+                return Response({"message": "Country code must not be null"}, status.HTTP_400_BAD_REQUEST)
+            if not phone_number:
+                return Response({"message": "Phone number must not be null"}, status.HTTP_400_BAD_REQUEST)
+
+
             if email:
                 if Users.objects.filter(email=email).exists(): 
                     return Response({"error": "Email already exists", "status": status.HTTP_400_BAD_REQUEST},status.HTTP_400_BAD_REQUEST)
