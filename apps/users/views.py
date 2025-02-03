@@ -398,6 +398,9 @@ class SignUpView(APIViewContext):
                 
             return Response({"message": _("User Created Successfully")}, status.HTTP_201_CREATED)
 
+        if serializer.errors.get('non_field_errors', None):
+            return Response({"message": serializer.errors.get('non_field_errors', None)[0]}, status.HTTP_400_BAD_REQUEST)
+
         return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
 
 
