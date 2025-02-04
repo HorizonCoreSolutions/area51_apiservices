@@ -1537,7 +1537,6 @@ class SignUpOTP(APIView):
             else:
                 return Response({"error": "Email not provided", "status": status.HTTP_404_NOT_FOUND},status.HTTP_404_NOT_FOUND)
         except Exception as e:
-            return Response({"error": str(e), "status": status.HTTP_400_BAD_REQUEST},status.HTTP_400_BAD_REQUEST)
             return Response({"message": "Something Went Wrong"}, status.HTTP_500_INTERNAL_SERVER_ERROR)
         
 class TipView(APIView):
@@ -1559,7 +1558,7 @@ class TipView(APIView):
             chathistory_obj.staff = staff
             if is_tip:
                 if Decimal(data.get('tip')) > user.balance:
-                 return Response({"message": "low balance"}, status.HTTP_400_BAD_REQUEST)
+                    return Response({"message": "low balance"}, status.HTTP_400_BAD_REQUEST)
             # try:
             #     chat_messages = ChatMessage.objects.filter(room__name=room_name).order_by('created')
             #     message_list = [{'sender': message.sender.username,
@@ -1600,7 +1599,8 @@ class TipView(APIView):
             send_player_balance_update_notification(user)    
             return Response({"message":"Success"}, status.HTTP_200_OK)
 
-        except:
+        except Exception as e:
+            print(e)
             return Response({"message": "Something Went Wrong"}, status.HTTP_500_INTERNAL_SERVER_ERROR)
        
 
