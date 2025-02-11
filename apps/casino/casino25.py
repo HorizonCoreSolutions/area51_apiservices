@@ -294,7 +294,7 @@ class Casino25:
         params = {
             "PlayerId": user_id,
             "GameId": game_id,
-            "RestorePolicy":"Create",
+            "RestorePolicy":"Restore",
             "Params": {
                 "language":language
             }
