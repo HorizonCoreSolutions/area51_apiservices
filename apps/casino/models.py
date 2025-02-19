@@ -121,11 +121,11 @@ class GSoftTransactions(AbstractBaseModel):
 class PlayerFavouriteCasinoGames(AbstractBaseModel):
     user = models.ForeignKey(Users, on_delete=models.CASCADE, blank=False)
     game_list = JSONField(default=None, null=True, blank=True)
-    fortunepandas_game_list = JSONField(default=lambda : [], null=True, blank=True)
+    fortunepandas_game_list = JSONField(default=list, null=True, blank=True)
     
     
 class CasinoManagement(AbstractBaseModel):
-    game = models.ForeignKey(CasinoGameList,default=None, on_delete=models.CASCADE, null=True, blank=True)
+    game = models.ForeignKey(CasinoGameList,default=None, on_delete=models.CASCADE, null=True, blank=True, related_name="casino_management")
     enabled = models.BooleanField(default=True, null=True, blank=True)
     game_enabled = models.BooleanField(default=True, null=True, blank=True)
     is_top_pick = models.BooleanField(default=False, null=True, blank=True)

@@ -721,8 +721,12 @@ class GetCasinoProviders(APIView):
 
     def get(self, request, **kwargs):
         device_type = self.request.GET.get("device", "desktop")
-       
-        casino_games = CasinoGameList.objects.all()
+
+        # Only returns the games that area enables
+        casino_games = CasinoGameList.objects.filter(
+            casino_management__enabled=True,
+            casino_management__game_enabled=True
+        ).distinct()
         if device_type == "desktop":
             casino_games =  casino_games.filter(is_desktop_supported=True)
         else:
