@@ -2427,15 +2427,15 @@ class EnableDisableCashbackView(CheckRolesMixin, views.JSONResponseMixin, views.
             dealer = Dealer.objects.get(pk=dealer_id)
             agents = Agent.objects.filter(dealer=dealer)
             if cashback_status == "true":
-                dealer.is_cashback_enabled = True
+                dealer.cashback_status = True
                 for agent in agents:
-                    agent.is_cashback_enabled = True
+                    agent.cashback_status = True
                     agent.save()
                 message = _("Cashback has been enabled successfully.")
             else:
-                dealer.is_cashback_enabled = False
+                dealer.cashback_status = False
                 for agent in agents:
-                    agent.is_cashback_enabled = False
+                    agent.cashback_status = False
                     agent.save()
                 message = _("Cashback has been disabled successfully.")
             dealer.save()
@@ -2443,15 +2443,15 @@ class EnableDisableCashbackView(CheckRolesMixin, views.JSONResponseMixin, views.
             agent = Agent.objects.get(pk=agent_id)
             players = Player.objects.filter(agent=agent)
             if cashback_status == "true":
-                agent.is_cashback_enabled = True
+                agent.cashback_status = True
                 for player in players:
-                    player.is_cashback_enabled = True
+                    player.cashback_status = True
                     player.save()
                 message = _("Cashback has been enabled successfully.")
             else:
-                agent.is_cashback_enabled = False
+                agent.cashback_status = False
                 for player in players:
-                    player.is_cashback_enabled = False
+                    player.cashback_status = False
                     player.save()
                 message = _("Cashback has been disabled successfully.")
 

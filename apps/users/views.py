@@ -308,7 +308,7 @@ class CashbackView(APIView):
             if player:
                 is_cashback_available = False
                 cashback_percentage = CASHBACK_PERCENTAGE * 100
-                if (player.cashback_amount > 0) and (player.is_cashback_enabled):
+                if (player.cashback_amount > 0) and player.cashback_status:
                     is_cashback_available = True
                 if hasattr(player.agent, "agentbetlimits"):
                     cashback_percentage = player.agent.agentbetlimits.cashback_percentage * 100
