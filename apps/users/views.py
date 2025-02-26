@@ -1486,14 +1486,14 @@ class SignUpOTP(APIView):
             country_code = request.data.get("country_code")
             phone_number = request.data.get("phone_number")
 
+            check_phone = True
+
             if not email:
                 return Response({"message": "Email must not be null"}, status.HTTP_400_BAD_REQUEST)
             if not username:
                 return Response({"message": "Username must not be null"}, status.HTTP_400_BAD_REQUEST)
-            if not country_code:
-                return Response({"message": "Country code must not be null"}, status.HTTP_400_BAD_REQUEST)
-            if not phone_number:
-                return Response({"message": "Phone number must not be null"}, status.HTTP_400_BAD_REQUEST)
+            if not country_code or not phone_number:
+                check_phone = False
 
 
             if email:
@@ -1501,8 +1501,9 @@ class SignUpOTP(APIView):
                     return Response({"error": "Email already exists", "status": status.HTTP_400_BAD_REQUEST},status.HTTP_400_BAD_REQUEST)
                 elif Users.objects.filter(username__iexact=username).exists():
                     return Response({"error": "User already exists", "status": status.HTTP_400_BAD_REQUEST},status.HTTP_400_BAD_REQUEST)
-                elif Users.objects.filter(Q(country_code=country_code), Q(phone_number=phone_number)).exists():
-                    return Response({"error": "Phone number already exists", "status": status.HTTP_400_BAD_REQUEST},status.HTTP_400_BAD_REQUEST)
+                elif check_phone:
+                    if Users.objects.filter(Q(country_code=country_code), Q(phone_number=phone_number)).exists():
+                        return Response({"error": "Phone number already exists", "status": status.HTTP_400_BAD_REQUEST},status.HTTP_400_BAD_REQUEST)
                 elif len(username)<4:
                     return Response({"error": "Username must be atleast 4 characters long", "status": status.HTTP_400_BAD_REQUEST},status.HTTP_400_BAD_REQUEST)
                 else:
