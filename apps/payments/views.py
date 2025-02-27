@@ -792,7 +792,7 @@ class WithdrawalCurrencyAPI(APIView):
 
         response = requests.get(settings.NOWPAYMENTS_API_URL + 'merchant/coins', headers=headers)
         if response.status_code != 200:
-            return Response({"msg": "Something went Wrong", "status_code": status.HTTP_400_BAD_REQUEST})
+            return Response({"msg": "Something went Wrong", "status_code": status.HTTP_400_BAD_REQUEST}, status=status.HTTP_400_BAD_REQUEST)
         data = response.json()
 
 
@@ -825,6 +825,7 @@ class WithdrawalCurrencyAPI(APIView):
         passed = []
 
         for currency in currencies:
+            currency = currency.upper()
             if currency in available.keys():
                 passed.append(
                     {
