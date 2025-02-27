@@ -448,7 +448,10 @@ class CreatePaymentAPIView(APIView):
     NOWPAYMENTS_API_URL = settings.NOWPAYMENTS_API_URL
 
     def post(self, request):
-        serializer = CreatePaymentSerializer(data=request.data, context = {"user":self.request.user})
+        data = request.data.copy()
+        data['pay_currency'] = 'USD'
+
+        serializer = CreatePaymentSerializer(data=data, context = {"user":self.request.user})
         serializer.is_valid(raise_exception=True)
 
         payload = serializer.validated_data
@@ -480,7 +483,9 @@ class CreatePaymentAPIView(APIView):
                 applied_promo_code=promo_code,
                 transaction_type='DEPOSIT'
                 )
-                return Response(response.json(), status=status.HTTP_200_OK)
+
+                payment_data['invoice_url'] = payment_data['redirectData']['redirect_url']
+                return Response(payment_data, status=status.HTTP_200_OK)
         else:
             return Response(response.json(), status=response.status_code)
 
@@ -781,11 +786,51 @@ class WithdrawalCurrencyAPI(APIView):
     # Add any necessary permission classes here
     
     def get(self, request, format=None):
-        currencies = WithdrawalCurrency.objects.values(
-            'enabled', 'code', 'name','network'
-        )
-        
-        return Response(currencies)
+        headers = {'x-api-key': settings.NOWPAYMENTS_API_KEY}
+
+        response = requests.get(settings.NOWPAYMENTS_API_URL + 'merchant/coins', headers=headers)
+        data = response.json()
+
+        if response.status_code != 200:
+            return Response({"msg": "Something went Wrong", "status_code": status.HTTP_400_BAD_REQUEST})
+
+        available = {
+            "BTC" : "BTC",
+            "ETH" : "ETH",
+            "USDC" : "USDC",
+            "USDTTRC20" : "USDT",
+            "LTC" : "LTC",
+            "USDTERC20" : "USDT",
+            "USDTMATIC" : "USDT",
+            "DOGE" : "DOGE" ,
+            "PYUSD" : "PYUSD",
+            "USDCMATIC" : "USDC"
+        }
+
+        currencies = data['selectedCurrencies']
+        static_url_crypto = settings.DOMAIN_URL + 'static/crypto/'
+
+        passed = []
+
+        for currency in currencies:
+            if currency in available.keys():
+                passed.append(
+                    {
+                        "code": currency,
+                        "logo_url": static_url_crypto + available[currency] + '.webp',
+                    }
+                )
+            elif currency != 'USD':
+                passed.append(
+                    {
+                        "code": available[currency],
+                        "logo_url": static_url_crypto + 'BTC' + '.webp',
+                    }
+                )
+
+
+
+        return Response(passed, status=status.HTTP_200_OK)
     
     
 class CreateNowPaymentsTestWithdrawal(APIView):
@@ -941,7 +986,7 @@ class GetIsValidAddress(APIView):
         except Exception as e:
              print('Error occurred:', e)
              return Response({'error': str(e)}, status=500)
-        
+
 
 class CreatePaymentQrAPIView(APIView):
     permission_class = [IsPlayer]
@@ -949,7 +994,9 @@ class CreatePaymentQrAPIView(APIView):
     NOWPAYMENTS_API_URL = settings.NOWPAYMENTS_API_URL
 
     def post(self, request):
-        serializer = CreatePaymentQrSerializer(data=request.data)
+        data = request.data.copy()
+
+        serializer = CreatePaymentQrSerializer(data=data)
         serializer.is_valid(raise_exception=True)
 
         payload = serializer.validated_data
@@ -979,7 +1026,9 @@ class CreatePaymentQrAPIView(APIView):
                 applied_promo_code=promo_code,
                 )
 
-                return Response(response.json(), status=status.HTTP_200_OK)
+                payment_data['invoice_url'] = settings.NOW_PAYMENTS_KADO_WIDGET + payment_data['id']
+
+                return Response(payment_data, status=status.HTTP_200_OK)
         else:
             return Response(response.json(), status=response.status_code)
 
