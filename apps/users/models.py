@@ -288,13 +288,13 @@ class Users(AbstractBaseUser, AbstractBaseModel, PermissionsMixin):
     full_name = models.CharField(_("full_name"),max_length=350,default=None,null=True)
     state = models.CharField(_("state"),max_length=500, null=True, default=None)
     complete_address = models.CharField(_("complete_address"),max_length=500, null=True, default=None)
-    phone_number = models.CharField(_("phone number"), max_length=20, null=True, default=None,
-                                    validators=[
-                                        RegexValidator(
-                                            regex=r'^\+?1?\d{7,19}$',  # Regex for international phone numbers
-                                            message="Phone number must be entered in the format: '+999999999'. Up to 19 digits allowed."
-                                        )
-                                    ])
+    phone_number = models.CharField(_("phone number"), max_length=20, null=True, default=None)
+                                    # validators=[
+                                    #     RegexValidator(
+                                    #         regex=r'^\+?1?\d{7,19}$',  # Regex for international phone numbers
+                                    #         message="Phone number must be entered in the format: '+999999999'. Up to 19 digits allowed."
+                                    #     )
+                                    # ])
     profile_pic = models.FileField(upload_to='admin/profile_pic/',max_length=500, default=None,null=True)
     user_id_proof = models.FileField(upload_to='admin/user_id_proof/',default=None,null=True)
     # url = models.URLField(_("url"), max_length=250, null=True, blank=True, default=None)

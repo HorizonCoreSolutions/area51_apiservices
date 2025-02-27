@@ -391,8 +391,8 @@ class SignUpSerializer(serializers.ModelSerializer):
         if Users.objects.filter(username__iexact=data.get("username").lower()).exists():
             raise serializers.ValidationError("User already exists.")
         
-        if Users.objects.filter(phone_number=data.get("phone_number")).exists():
-            raise serializers.ValidationError("Phone number already exists.")
+        # if Users.objects.filter(phone_number=data.get("phone_number")).exists():
+        #     raise serializers.ValidationError("Phone number already exists.")
         
         if data.get("applied_promo_code"): 
             promo_code = PromoCodes.objects.filter(promo_code=data.get("applied_promo_code"), bonus__bonus_type="welcome_bonus").first()
