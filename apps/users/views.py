@@ -369,7 +369,12 @@ class SignUpView(APIViewContext):
     ]
 
     def post(self, request):
-        serializer = self.get_serializer(data=request.data)
+        # Skip phone number if one of them does not exist
+        data = request.data.copy()
+        if request.data.get('country_code', '') == '' or request.data.get('phone_number', '') == "":
+            data.pop('countray_code', None)
+            data.pop('phone_number', None)
+        serializer = self.get_serializer(data=data)
         if Users.objects.filter(username__iexact=request.data.get("username")).exists():
             return Response(
                 {"message": _("User already exists.")}, status.HTTP_400_BAD_REQUEST)
@@ -1483,17 +1488,17 @@ class SignUpOTP(APIView):
         try:
             email = request.data.get("email")
             username = request.data.get("username")
-            country_code = request.data.get("country_code")
-            phone_number = request.data.get("phone_number")
-
-            check_phone = True
+            # country_code = request.data.get("country_code")
+            # phone_number = request.data.get("phone_number")
+            #
+            # check_phone = True
 
             if not email:
                 return Response({"message": "Email must not be null"}, status.HTTP_400_BAD_REQUEST)
             if not username:
                 return Response({"message": "Username must not be null"}, status.HTTP_400_BAD_REQUEST)
-            if not country_code or not phone_number:
-                check_phone = False
+            # if not country_code or not phone_number:
+            #     check_phone = False
 
 
             if email:
@@ -1501,9 +1506,9 @@ class SignUpOTP(APIView):
                     return Response({"error": "Email already exists", "status": status.HTTP_400_BAD_REQUEST},status.HTTP_400_BAD_REQUEST)
                 elif Users.objects.filter(username__iexact=username).exists():
                     return Response({"error": "User already exists", "status": status.HTTP_400_BAD_REQUEST},status.HTTP_400_BAD_REQUEST)
-                elif check_phone:
-                    if Users.objects.filter(Q(country_code=country_code), Q(phone_number=phone_number)).exists():
-                        return Response({"error": "Phone number already exists", "status": status.HTTP_400_BAD_REQUEST},status.HTTP_400_BAD_REQUEST)
+                # elif check_phone:
+                #     if Users.objects.filter(Q(country_code=country_code), Q(phone_number=phone_number)).exists():
+                #         return Response({"error": "Phone number already exists", "status": status.HTTP_400_BAD_REQUEST},status.HTTP_400_BAD_REQUEST)
                 elif len(username)<4:
                     return Response({"error": "Username must be atleast 4 characters long", "status": status.HTTP_400_BAD_REQUEST},status.HTTP_400_BAD_REQUEST)
                 else:
@@ -1516,7 +1521,7 @@ class SignUpOTP(APIView):
                     sg = SendGridAPIClient(settings.SENDGRID_API_KEY)
                     mail_template = EmailTemplateDetails.objects.filter(category='signup_otp_mail').first()
                     if mail_template:
-                        mail = Mail( 
+                        mail = Mail(
                             from_email=settings.SENDGRID_EMAIL,
                             to_emails= [email]
                         )
