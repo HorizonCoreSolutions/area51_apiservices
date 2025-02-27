@@ -211,6 +211,7 @@ class NowPaymentsTransactionsSerializer(serializers.Serializer):
         
 class CreatePaymentQrSerializer(serializers.Serializer):
     price_amount = serializers.DecimalField(max_digits=10, decimal_places=2, required=True)
+    pay_currency = serializers.CharField(max_length=10, required=True)
     promo_code = serializers.CharField(max_length=50, required=False)
     
     def validate(self, data):
