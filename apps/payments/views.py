@@ -5,6 +5,8 @@ import traceback
 import uuid
 from datetime import datetime, timedelta
 from decimal import Decimal
+
+from asn1crypto.ocsp import ResponseDataExtension
 from humanize import activate
 
 import pytz
@@ -789,14 +791,24 @@ class WithdrawalCurrencyAPI(APIView):
         headers = {'x-api-key': settings.NOWPAYMENTS_API_KEY}
 
         response = requests.get(settings.NOWPAYMENTS_API_URL + 'merchant/coins', headers=headers)
-        data = response.json()
-
         if response.status_code != 200:
             return Response({"msg": "Something went Wrong", "status_code": status.HTTP_400_BAD_REQUEST})
+        data = response.json()
+
 
         available = {
             "BTC" : "BTC",
             "ETH" : "ETH",
+            "BNB": "BNB",
+            "BRISE": "BRISE",
+            "BSV": "BSV",
+            "DGB": "DGB",
+            "ILV": "ILV",
+            "MIOTA": "MIOTA",
+            "OMNI": "OMNI",
+            "THETA": "THETA",
+            "XMR": "XMR",
+            "ZINU": "ZINU",
             "USDC" : "USDC",
             "USDTTRC20" : "USDT",
             "LTC" : "LTC",
@@ -823,7 +835,7 @@ class WithdrawalCurrencyAPI(APIView):
             elif currency != 'USD':
                 passed.append(
                     {
-                        "code": available[currency],
+                        "code": currency,
                         "logo_url": static_url_crypto + 'BTC' + '.webp',
                     }
                 )
