@@ -617,8 +617,15 @@ class Casino25CategoryWiseGameListSerializer(serializers.Serializer):
                 games = casino_games.filter(game__game_category=category)[:20]
             return Casino25CasinoManagementSerializer(games, many=True).data
         else:
-            games = CasinoGameList.objects.filter(game_category=category, created__lte=datetime.now()-timedelta(hours=48))[:20]
-            return Casino25GameListSerializer(games, many=True).data
+            if category.lower() == "top picks":
+                games = CasinoManagement.objects.filter(enabled=True, game_enabled=True,is_top_pick=True)[:20]
+                serialized_data = Casino25CasinoManagementSerializer(games, many=True).data
+                filtered_data = [{key: game[key] for key in ["game_id", "game_name", "game_image", "game_category", "game_provider", "is_favourite"] if key in game} for game in
+                                 serialized_data]
+                return filtered_data
+            else:
+                games = CasinoGameList.objects.filter(game_category=category, created__lte=datetime.now()-timedelta(hours=48))[:20]
+                return Casino25GameListSerializer(games, many=True).data
         
 
 class Casino25ProviderWiseGameListSerializer(serializers.Serializer):

@@ -615,7 +615,7 @@ class GetNewCasinoGameList(ListAPIView):
     
 class GetCasinoCategoryGameListAdmin(ListAPIView):
 
-    permission_classes = (IsFavCasinoEnabled,)
+    # permission_classes = (IsFavCasinoEnabled,)
     queryset = CasinoManagement.objects.all()
     paginate_by = 20
     pagination_class = PageNumberPagination
@@ -782,7 +782,9 @@ class GetCasinoCategory(APIView):
             num_games=Count("game_category")
         ).order_by("-num_games").values_list("game_category", flat=True))
 
-        if not self.request.user.is_anonymous and CasinoManagement.objects.filter(is_top_pick=True).count() > 1:
+        # if not self.request.user.is_anonymous and CasinoManagement.objects.filter(is_top_pick=True).count() > 1:
+        if CasinoManagement.objects.filter(is_top_pick=True).count() > 1:
+        #     casino_categories.insert(0, "Top Picks")
             casino_categories.insert(0, "Top Picks")
         
         return Response(casino_categories)
@@ -914,7 +916,7 @@ class Casino25CallBackAPIView(APIView):
 
 
 class Casino25GameList(ListAPIView):
-    permission_classes = (IsFavCasinoEnabled,)
+    # permission_classes = (IsFavCasinoEnabled,)
     queryset = CasinoGameList.objects.filter(created__lte=timezone.now()-timedelta(hours=48))
     paginate_by = 20
     pagination_class = PageNumberPagination
@@ -926,14 +928,18 @@ class Casino25GameList(ListAPIView):
         provider = self.request.GET.get("provider", None)
         search = self.request.GET.get("search", None)
         device_type = self.request.GET.get("device", "desktop")
-        
+
+        if category:
+            self.queryset = self.queryset.filter(game_category=category)
+            if category.lower() == 'top picks':
+                self.queryset = CasinoGameList.objects.filter(
+                    casino_management__is_top_pick=True
+                ).distinct().prefetch_related("casino_management")
+
         if device_type == "desktop":
             self.queryset =  self.queryset.filter(is_desktop_supported=True)
         else:
             self.queryset =  self.queryset.filter(is_mobile_supported=True)
-
-        if category:
-            self.queryset = self.queryset.filter(game_category=category)
 
         if provider:
             self.queryset = self.queryset.filter(vendor_name=provider)
@@ -952,7 +958,7 @@ class Casino25GameList(ListAPIView):
 
     
 class Casino25GameListAdmin(ListAPIView):
-    permission_classes = (IsFavCasinoEnabled, IsPlayer)
+    # permission_classes = (IsFavCasinoEnabled, IsPlayer)
     queryset = CasinoManagement.objects.filter(game__created__lte=timezone.now()-timedelta(hours=48), enabled=True, game_enabled=True)
     paginate_by = 20
     pagination_class = PageNumberPagination
@@ -1190,7 +1196,8 @@ class ScoreboardApiView(APIView):
 
 
 class Casino25CategoryWiseGameList(ListAPIView):
-    permission_classes = (IsFavCasinoEnabled,)
+    # Show games
+    # permission_classes = (IsFavCasinoEnabled,)
     paginate_by = 20
     pagination_class = PageNumberPagination
     http_method_name = ["get"]
@@ -1209,9 +1216,12 @@ class Casino25CategoryWiseGameList(ListAPIView):
             num_games=Count("game_category")
         ).filter(num_games__gt=0).order_by("-num_games").values_list("game_category", flat=True))
         
-        if self.request.user.is_authenticated and CasinoManagement.objects.filter(is_top_pick=True).count() > 1:
+        # if self.request.user.is_authenticated and CasinoManagement.objects.filter(is_top_pick=True).count() > 1:\
+        if CasinoManagement.objects.filter(is_top_pick=True).count() > 1:
+        #     casino_categories.insert(0, "Top Picks")
             casino_categories.insert(0, "Top Picks")
-        
+            # casino_categories[0] = top_picks.values_list(flat=True)
+
         return casino_categories
     
     def list(self, request, *args, **kwargs):
