@@ -1034,6 +1034,7 @@ class CreatePaymentQrAPIView(APIView):
                 ipn_callback_url=payment_data['ipn_callback_url'],
                 created_at=payment_data['created_at'],
                 updated_at=payment_data['updated_at'],
+                pay_currency=payment_data['pay_currency'],
                 payment_status='waiting',
                 transaction_type='DEPOSIT',
                 applied_promo_code=promo_code,
