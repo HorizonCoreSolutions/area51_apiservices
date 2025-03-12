@@ -1,17 +1,20 @@
 from django.conf.urls import url
 from apps.users.views import (AboutCmsView, AddSpinWheelView, AdminAdsPublicDetailsView,
-    AdminPublicDetailsView, AffiiateRequestView, AffiliatedPlayers, BonusDetailView,
-    CashAppDetailsApi, CashappQrListView, CashbackView, ChangePassword, ChatSupportView,
-    CmsFAQView, CmsPrivacyPolicyView, ComingSoonPagesDeatilsView, ContactUsView, CookiePolicyView,
-    CsrQueryView, FooterDeatilsView, ForgotPassword, FortunePandasAPIView,
-    FortunePandasCategoryAPIView, GetOTPView, GetSlug, IntroductionView, LoginAPIView,
-    Notification, OffMarketDepositView, OffmarketTransaction, OffMarketWithdrawView,
-    PagesDeatilsView, PlayerDeActiveView, PlayerEmailOTPsender, PlayerEmailOTPsender,
-    PromotionCmsView, QueueView, ReadMessageView, RecentMessagesView, RestrictedLoginView,
-    SetlanguageView, SetPlayerBettingLimitView, SetPlayerBlackoutView, SetPlayerMaxSpendLimitView,
-    SettingsLimitsView, SignUpOTP, SignUpView, SpintheWheelDetailsAPIView, StaffDetailView,
-    TermsConditinosView, TipView, TransactionsAPIView, UserUpdateView, ValidatePromoCode,
-    ValidateReferralUser, ValidateSignUpPromoCode, VerifyOTPView, VerifyOTPView, VerifyToken)
+                              AdminPublicDetailsView, AffiiateRequestView, AffiliatedPlayers, BonusDetailView,
+                              CashAppDetailsApi, CashappQrListView, CashbackView, ChangePassword, ChatSupportView,
+                              CmsFAQView, CmsPrivacyPolicyView, ComingSoonPagesDeatilsView, ContactUsView,
+                              CookiePolicyView,
+                              CsrQueryView, FooterDeatilsView, ForgotPassword, FortunePandasAPIView,
+                              FortunePandasCategoryAPIView, GetOTPView, GetSlug, IntroductionView, LoginAPIView,
+                              Notification, OffMarketDepositView, OffmarketTransaction, OffMarketWithdrawView,
+                              PagesDeatilsView, PlayerDeActiveView, PlayerEmailOTPsender, PlayerEmailOTPsender,
+                              PromotionCmsView, QueueView, ReadMessageView, RecentMessagesView, RestrictedLoginView,
+                              SetlanguageView, SetPlayerBettingLimitView, SetPlayerBlackoutView,
+                              SetPlayerMaxSpendLimitView,
+                              SettingsLimitsView, SignUpOTP, SignUpView, SpintheWheelDetailsAPIView, StaffDetailView,
+                              TermsConditinosView, TipView, TransactionsAPIView, UserUpdateView, ValidatePromoCode,
+                              ValidateReferralUser, ValidateSignUpPromoCode, VerifyOTPView, VerifyOTPView, VerifyToken,
+                              OTPActionsView)
     
 
 app_name = "Users"
@@ -24,6 +27,7 @@ urlpatterns = [
     url(r"^signup/?", SignUpView.as_view(), name="signup"),
     url(r"^get-otp/?", GetOTPView.as_view(), name="get_otp"),
     url(r"^verify-otp/?", VerifyOTPView.as_view(), name="verify_otp"),
+    url(r"^otp-actions/", OTPActionsView.as_view(), name="otp-actions"),
     url(r"^contact-us-details/?", ContactUsView.as_view(), name="contact-us-details"),
     url(r"^about-details/?", AboutCmsView.as_view(), name="about-details"),
     url(r"^promotions/?", PromotionCmsView.as_view(), name="promotion-details"),
