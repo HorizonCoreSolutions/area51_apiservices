@@ -577,7 +577,63 @@ class GetOTPView(APIViewContext):
             return Response({"message": "something went wrong", },status.HTTP_400_BAD_REQUEST)
 
 
+class OTPActionsView(APIView):
+    def post(self, request):
+        try:
+
+            TWILIO_ACCOUNT_SID = settings.TWILIO_ACCOUNT_SID
+            TWILIO_AUTH_TOKEN = settings.TWILIO_AUTH_TOKEN
+
+            data = request.data
+            try:
+                client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+                check = client.verify.v2.services(
+                    TWILIO_VERIFY_SERVICE_SID
+                ).verification_checks.create(
+                    to="+" + data.get("country_code") + data.get("phone_number"),
+                    code=data.get("otp"),
+                )
+            except Exception:
+                return Response(
+                    {"message": "Invalid OTP"}, status.HTTP_400_BAD_REQUEST
+                )
+
+            if check.status == "approved" and check.valid is True:
+                if data.get("verify_number"):
+                    if not request.user.is_authenticated:
+                        return Response({"message": "To verify a number you should be logged in first"}, status=status.HTTP_400_BAD_REQUEST)
+                    user = request.user
+                    if user.is_verified:
+                        return Response({"message": "User was verified"}, status=status.HTTP_202_ACCEPTED)
+                    user.is_verified = True
+                    user.save()
+
+                    return Response({"message": "User is now verified"}, status.HTTP_200_OK)
+
+                if data.get("is_forgot_password"):
+                    user_obj = Users.objects.filter(username__iexact=data.get("username"),
+                                                    country_code=data.get("country_code"),
+                                                    phone_number=data.get("phone_number")).first()
+                    user_obj.password = make_password(data.get("new_password"))
+                    user_obj.save()
+
+                    return Response(
+                        {"message": "Password Changed"},
+                        status.HTTP_200_OK,
+                    )
+            else:
+                return Response({"message": "Invalid OTP"}, status.HTTP_400_BAD_REQUEST)
+        except Exception as err:
+            return Response(
+                {"message": f"Requested service is not allowed. {err}"},
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+
 class VerifyOTPView(APIView):
+    # Verifies the otp from number when sign in
+    # MarcosAlv: I considere this deprecated and we ("I") are planing to remove it slowly ("next update")
+
     def post(self, request):
         try:
             TWILIO_ACCOUNT_SID = settings.TWILIO_ACCOUNT_SID
