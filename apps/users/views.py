@@ -498,35 +498,33 @@ class GetOTPView(APIViewContext):
             if not request.data.get("country_code"):
                 return Response({"message": "country_code must not be null."}, status.HTTP_400_BAD_REQUEST)
 
-            user = Users.objects.filter(
+            # Declare variables for a better readability
+            sign_up = bool(request.data.get("sign_up", False))
+            forgot_psw = bool(request.data.get("is_forgot_password", False))
+            users_with_same_phone = Users.objects.filter(
                 phone_number=request.data.get("phone_number"),
                 country_code=request.data.get("country_code"),
-            ).exists()
-            if (
-                request.data.get("is_signup")
-                and Users.objects.filter(username__iexact=request.data.get("username").lower()).exists()
-            ):
+            )
+            user_with_same_name = Users.objects.filter(username__iexact=request.data.get("username").lower())
+            user_forgotten_pwd = Users.objects.none()
+            if request.data.get("is_forgot_password"):
+                user_forgotten_pwd = Users.objects.filter(username__iexact=request.data.get("username").lower(),
+                                        phone_number=request.data.get("phone_number"),
+                                        country_code=request.data.get("country_code"))
+
+            # Start of the logic
+            if sign_up and user_with_same_name.exists():
                 return Response(
                     {"message": _("User already exists.")}, status.HTTP_400_BAD_REQUEST
                 )
-            elif request.data.get("is_signup") and user:
+            elif sign_up and users_with_same_phone.exists():
                 return Response(
                     {"message": _("This mobile number already exist")},
                     status.HTTP_400_BAD_REQUEST,
                 )
-            elif (request.data.get("is_forgot_password") and
-                not Users.objects.filter(username__iexact=request.data.get("username").lower(),
-                                        phone_number=request.data.get("phone_number"),
-                                        country_code=request.data.get("country_code")).exists()):
+            elif forgot_psw and not user_forgotten_pwd.exists():
                 return Response(
                     {"message": _("User with this mobile number and username doesn't exist")},
-                    status.HTTP_400_BAD_REQUEST,
-                )
-            elif (request.data.get("is_forgot_password") and
-                  not user and
-                  not Users.objects.filter(username__iexact=request.data.get("username").lower()).exists()):
-                return Response(
-                    {"message": _("User with this mobile number doesn't exist")},
                     status.HTTP_400_BAD_REQUEST,
                 )
             serializer = self.get_serializer(data=request.data)
@@ -666,6 +664,9 @@ class VerifyOTPView(APIView):
 
                     # Check if user is referred by?
                     referred_by = Users.objects.filter(referral_code=user_data.get("referral_code", None)).first()
+                    # Affiliated
+                    # Note: this is the way I think it was meant to be implemented
+                    affiliated_by = request.user if request.user.is_authenticated else None
 
                     # Give this user referral code so that he can refer-a-friend as well
                     user_referral_code = ''.join(random.choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(5))
@@ -1942,6 +1943,8 @@ class AddSpinWheelView(APIView):
 
 class SpintheWheelDetailsAPIView(APIView):
     def get(self, request):
+        if not request.user.is_verified:
+            return Response(SpintheWheelDetailsSerializer(SpintheWheelDetails.objects.none(), many=True).data)
         spin_wheel_details = SpintheWheelDetails.objects.all()
         serializer = SpintheWheelDetailsSerializer(spin_wheel_details, many=True)
         return Response(serializer.data)
