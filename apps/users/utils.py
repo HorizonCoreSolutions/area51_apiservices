@@ -325,4 +325,6 @@ def send_active_chat_count(user_id):
             }
         }
     )
-    
+
+def is_only_one(a: bool, b: bool, c: bool) -> bool:
+    return (a + b + c) == 1

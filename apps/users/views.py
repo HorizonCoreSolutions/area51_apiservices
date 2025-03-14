@@ -89,7 +89,7 @@ from apps.users.serializers import (# UserUpdateSerializer, AffiliateSerializer,
 
 from django.contrib.auth.hashers import make_password
 from apps.users.models import Player, Agent, Dealer, AdminBanner, CmsAboutDetails, CmsPromotionDetails
-from apps.users.utils import check_otp, create_otp, create_otp_password,encrypt
+from apps.users.utils import check_otp, create_otp, create_otp_password,encrypt, is_only_one
 from apps.admin_panel.templatetags.navigate import is_active
 from apps.users.fortunepandas import FortunePandaAPI
 from .models import ( AdminAdsBanner,CASHBACK_PERCENTAGE, AffiliateRequests, BonusPercentage, ChatHistory, ChatMessage, ChatRoom, CsrQueries, OffMarketGames, OffMarketTransactions, OffmarketWithdrawalRequests,
@@ -491,26 +491,47 @@ class GetOTPView(APIViewContext):
 
     def post(self, request):
         try:
-            if not request.data.get("username"):
+            data = request.data.copy()
+            if request.user.is_authenticated:
+                print(request.user.username)
+                data["username"] = request.user.username
+
+            if not data.get("username"):
                 return Response({"message": "username must not be null."}, status.HTTP_400_BAD_REQUEST)
-            if not request.data.get("phone_number"):
+            if not data.get("phone_number"):
                 return Response({"message": "phone_number must not be null."}, status.HTTP_400_BAD_REQUEST)
-            if not request.data.get("country_code"):
+            if not data.get("country_code"):
                 return Response({"message": "country_code must not be null."}, status.HTTP_400_BAD_REQUEST)
 
             # Declare variables for a better readability
-            sign_up = bool(request.data.get("sign_up", False))
-            forgot_psw = bool(request.data.get("is_forgot_password", False))
+            sign_up = bool(data.get("is_sign_up", False))
+            forgot_psw = bool(data.get("is_forgot_password", False))
+            verify_number = bool(data.get("is_verify_number", False))
+
+            if not is_only_one(sign_up, forgot_psw, verify_number):
+                return Response(
+                    {"message": "Only one action can be made per OTP"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
             users_with_same_phone = Users.objects.filter(
-                phone_number=request.data.get("phone_number"),
-                country_code=request.data.get("country_code"),
+                phone_number=data.get("phone_number"),
+                country_code=data.get("country_code"),
             )
-            user_with_same_name = Users.objects.filter(username__iexact=request.data.get("username").lower())
+            user_with_same_name = Users.objects.filter(username__iexact=data.get("username").lower())
             user_forgotten_pwd = Users.objects.none()
-            if request.data.get("is_forgot_password"):
-                user_forgotten_pwd = Users.objects.filter(username__iexact=request.data.get("username").lower(),
-                                        phone_number=request.data.get("phone_number"),
-                                        country_code=request.data.get("country_code"))
+            if data.get("is_forgot_password"):
+                user_forgotten_pwd = Users.objects.filter(username__iexact=data.get("username").lower(),
+                                        phone_number=data.get("phone_number"),
+                                        country_code=data.get("country_code"))
+            if verify_number:
+                users_with_same_phone = Users.objects.filter(
+                    phone_number=data.get("phone_number"),
+                    country_code=data.get("country_code"),
+                ).exclude(username=data.get("username"))
+
+                for user in users_with_same_phone:
+                    print(user.username)
 
             # Start of the logic
             if sign_up and user_with_same_name.exists():
@@ -527,7 +548,19 @@ class GetOTPView(APIViewContext):
                     {"message": _("User with this mobile number and username doesn't exist")},
                     status.HTTP_400_BAD_REQUEST,
                 )
-            serializer = self.get_serializer(data=request.data)
+            elif verify_number:
+                if not request.user.is_authenticated:
+                    return Response(
+                        {"message": "User needs to be logged in"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+                if users_with_same_phone.exists():
+                    return Response(
+                        {"message": _("This mobile number already exist")},
+                        status.HTTP_400_BAD_REQUEST,
+                    )
+
+            serializer = self.get_serializer(data=data)
             if serializer.is_valid():
                 response_data = serializer.validated_data
                 try:
@@ -538,6 +571,12 @@ class GetOTPView(APIViewContext):
                         + response_data["phone_number"],
                         channel="sms",
                     )
+                    if verify_number:
+                        user = request.user
+                        user.country_code = response_data["country_code"]
+                        user.phone_number = response_data["phone_number"]
+                        user.save()
+
                     return Response(
                         {
                             "message": _("OTP Sent"),
@@ -582,7 +621,29 @@ class OTPActionsView(APIView):
             TWILIO_ACCOUNT_SID = settings.TWILIO_ACCOUNT_SID
             TWILIO_AUTH_TOKEN = settings.TWILIO_AUTH_TOKEN
 
-            data = request.data
+            data = request.data.copy()
+            # Declare variables for a better readability
+            forgot_psw = bool(data.get("is_forgot_password", False))
+            verify_number = bool(data.get("is_verify_number", False))
+
+            if not is_only_one(False, forgot_psw, verify_number):
+                return Response(
+                    {"message": "Only one action can be made per OTP"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+
+            if verify_number:
+                if not request.user.is_authenticated:
+                    return Response(
+                        {"message": "Must be logged in first"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
+                data["username"]= request.user.username
+                data["country_code"] = request.user.country_code
+                data["phone_number"] = request.user.phone_number
+
             try:
                 client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
                 check = client.verify.v2.services(
@@ -597,7 +658,7 @@ class OTPActionsView(APIView):
                 )
 
             if check.status == "approved" and check.valid is True:
-                if data.get("verify_number"):
+                if verify_number:
                     if not request.user.is_authenticated:
                         return Response({"message": "To verify a number you should be logged in first"}, status=status.HTTP_400_BAD_REQUEST)
                     user = request.user
@@ -608,7 +669,7 @@ class OTPActionsView(APIView):
 
                     return Response({"message": "User is now verified"}, status.HTTP_200_OK)
 
-                if data.get("is_forgot_password"):
+                if forgot_psw:
                     user_obj = Users.objects.filter(username__iexact=data.get("username"),
                                                     country_code=data.get("country_code"),
                                                     phone_number=data.get("phone_number")).first()
