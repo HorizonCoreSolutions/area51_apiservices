@@ -84,6 +84,7 @@ class PlayerSerializer(serializers.Serializer):
     is_max_spending_limit_set_by_admin = serializers.SerializerMethodField()
     affiliate_link = serializers.CharField(max_length=250)
     is_active = serializers.BooleanField(default=False)
+    is_verified = serializers.SerializerMethodField()
     no_of_deposit_counts = serializers.IntegerField()
     is_bonus_on_all_deposits = serializers.BooleanField(default=False)
     affliate_expire_date = serializers.DateTimeField()
@@ -184,7 +185,9 @@ class PlayerSerializer(serializers.Serializer):
             print(e)
         return referral_reward_percentage
 
-  
+    @staticmethod
+    def get_is_verified(obj):
+        return obj.is_verified
 
     @staticmethod
     def get_is_betslip_bonus_enabled(obj):
