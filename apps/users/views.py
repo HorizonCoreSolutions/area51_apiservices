@@ -2004,7 +2004,7 @@ class AddSpinWheelView(APIView):
 
 class SpintheWheelDetailsAPIView(APIView):
     def get(self, request):
-        if not request.user.is_verified:
+        if not request.user.is_authenticated or not request.user.is_verified:
             return Response(SpintheWheelDetailsSerializer(SpintheWheelDetails.objects.none(), many=True).data)
         spin_wheel_details = SpintheWheelDetails.objects.all()
         serializer = SpintheWheelDetailsSerializer(spin_wheel_details, many=True)
