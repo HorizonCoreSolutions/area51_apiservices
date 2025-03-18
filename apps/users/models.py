@@ -470,7 +470,23 @@ class ResponsibleGambling(AbstractBaseModel):
         blank=True, default=None)
     blackout_expire_hours = models.IntegerField(_("blackout expire hours"), null=True,blank=True)
 
+class Country(AbstractBaseModel):
+    name = models.CharField(max_length=255)
+    translated_name = JSONField(default=dict)  # Store translations
+    code_cca2 = models.CharField(max_length=10, unique=True)
+    code_ccn3 = models.CharField(max_length=10, unique=True)
+    code_cca3 = models.CharField(max_length=10, unique=True)
+    flag = models.CharField(max_length=10)  # Stores emoji flag
+    flag_url = models.CharField(max_length=255)
+    timezone = models.CharField(max_length=50)
+    currency_code = models.CharField(max_length=10)
+    currency_name = models.CharField(max_length=255)
+    currency_symbol = models.CharField(max_length=10)
 
+    enabled = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.name
 
 class BlackListedToken(models.Model):
     token = models.CharField(max_length=500)
