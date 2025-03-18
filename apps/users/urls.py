@@ -14,7 +14,7 @@ from apps.users.views import (AboutCmsView, AddSpinWheelView, AdminAdsPublicDeta
                               SettingsLimitsView, SignUpOTP, SignUpView, SpintheWheelDetailsAPIView, StaffDetailView,
                               TermsConditinosView, TipView, TransactionsAPIView, UserUpdateView, ValidatePromoCode,
                               ValidateReferralUser, ValidateSignUpPromoCode, VerifyOTPView, VerifyOTPView, VerifyToken,
-                              OTPActionsView)
+                              OTPActionsView, CountriesView)
     
 
 app_name = "Users"
@@ -80,5 +80,7 @@ urlpatterns = [
     url(r"^bonus-detail/?", BonusDetailView.as_view(), name="bonus-detail"),
     url(r"^fortunepandas-categories/?", FortunePandasCategoryAPIView.as_view(), name="fortunepandas-categories"),
     url(r"^fortunepandas/?", FortunePandasAPIView.as_view(), name="fortunepandas"),
+
+    url(r'^countries/?', CountriesView.as_view(), name='countries'),
 
 ]
