@@ -58,12 +58,12 @@ from django.db import transaction
 from apps.users.utils import send_player_balance_update_notification
 from apps.users.filters import PlayerFilters
 from apps.users.models import (Admin, CashappQr, CmsBonusDetail, CmsFAQ, CmsPrivacyPolicy, CookiePolicy,
-    EmailTemplateDetails, FooterCategory, FooterPages, FortunePandasGameList,
-    FortunePandasGameManagement, Introduction, MAX_MULTI_FOUR_EVENTS_AMOUNT,
-    MAX_MULTI_THREE_EVENTS_AMOUNT, MAX_MULTI_TWO_EVENTS_AMOUNT, MAX_MULTIPLE_BET, MAX_ODD,
-    MAX_SINGLE_BET, MAX_SINGLE_BET_OTHER_SPORTS, MAX_SPEND_AMOUNT, MAX_WIN_AMOUNT, MIN_BET,
-    PlayerBettingLimit, PromoCodes, PromoCodesLogs, SettingsLimits, SocialLink,
-    SpintheWheelDetails, TermsConditinos)
+                               EmailTemplateDetails, FooterCategory, FooterPages, FortunePandasGameList,
+                               FortunePandasGameManagement, Introduction, MAX_MULTI_FOUR_EVENTS_AMOUNT,
+                               MAX_MULTI_THREE_EVENTS_AMOUNT, MAX_MULTI_TWO_EVENTS_AMOUNT, MAX_MULTIPLE_BET, MAX_ODD,
+                               MAX_SINGLE_BET, MAX_SINGLE_BET_OTHER_SPORTS, MAX_SPEND_AMOUNT, MAX_WIN_AMOUNT, MIN_BET,
+                               PlayerBettingLimit, PromoCodes, PromoCodesLogs, SettingsLimits, SocialLink,
+                               SpintheWheelDetails, TermsConditinos, Country)
 from apps.users.serializers import (
     # UserUpdateSerializer, 
     AdminBannerSerializer,
@@ -79,7 +79,7 @@ from apps.users.serializers import (
     PlayerSerializer,
     SignUpSerializer,
     SpintheWheelDetailsSerializer,
-    TransactionsSerializer
+    TransactionsSerializer, CountrySerializer
 )
 
 from apps.users.serializers import (# UserUpdateSerializer, AffiliateSerializer,
@@ -554,6 +554,8 @@ class GetOTPView(APIViewContext):
                         {"message": "User needs to be logged in"},
                         status=status.HTTP_400_BAD_REQUEST,
                     )
+                if request.user.is_verified:
+                    return Response({"message": "User is already verified"}, status=status.HTTP_200_OK)
                 if users_with_same_phone.exists():
                     return Response(
                         {"message": _("This mobile number already exist")},
@@ -1945,7 +1947,22 @@ class OffmarketTransaction(APIView):
             return Response(response)
         
 
-    
+class CountriesView(APIView):
+
+    def get(self, request):
+        lang_code = request.data.get("lang", "en")
+        activate(lang_code)
+
+        countries = Country.objects.filter(enabled=True).order_by('name')
+
+        serializer = CountrySerializer(
+            countries,
+            context={"request": self.request},
+            many=True
+        )
+
+        return Response({ "countries": serializer.data, "status_code": status.HTTP_200_OK}, status=status.HTTP_200_OK)
+
         
 class OffMarketWithdrawView(APIView):
     permission_classes = (IsPlayer,)
