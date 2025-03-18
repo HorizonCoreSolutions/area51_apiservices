@@ -20,6 +20,8 @@ from django.contrib.auth.hashers import make_password
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.db.models import Q
+
+from api_services.settings.base import DOMAIN_URL
 from apps.admin_panel.utils import create_casino_account_id
 from rest_framework import serializers
 from rest_framework_jwt.serializers import JSONWebTokenSerializer
@@ -29,9 +31,9 @@ from cryptography.fernet import Fernet
 import base64
 from apps.core.exceptions import DeactivatedUserException, NotActiveUserException
 from apps.users.models import (AdminBanner, CashAppDeatils, ChatMessage, CmsPromotionDetails,
-    FortunePandasGameList, FortunePandasGameManagement, MAX_MULTIPLE_BET, MAX_SINGLE_BET,
-    MAX_SINGLE_BET_OTHER_SPORTS, MAX_SPEND_AMOUNT, MIN_BET, OffMarketGames, PromoCodes,
-    ResponsibleGambling)
+                               FortunePandasGameList, FortunePandasGameManagement, MAX_MULTIPLE_BET, MAX_SINGLE_BET,
+                               MAX_SINGLE_BET_OTHER_SPORTS, MAX_SPEND_AMOUNT, MIN_BET, OffMarketGames, PromoCodes,
+                               ResponsibleGambling, Country)
 from apps.users.utils import check_otp
 
 from .models import DEFAULT_AFFILIATE_COMMISION_PERCENTAGE, DEFAULT_AFFILIATE_DURATION_IN_DAYS, Admin, DefaultAffiliateValues, OffMarketTransactions, Player, UserGames, Users, BonusPercentage , SpintheWheelDetails, CashappQr 
@@ -495,6 +497,25 @@ class ChangePasswordSerializer(serializers.Serializer):
     password = serializers.CharField(max_length=255, required=True)
 
 
+class CountrySerializer(serializers.Serializer):
+    name = serializers.CharField(max_length=255)
+    code_cca2 = serializers.CharField(max_length=10)
+    code_ccn3 = serializers.CharField(max_length=10)
+    code_cca3 = serializers.CharField(max_length=10)
+    flag = serializers.CharField(max_length=10)  # Stores emoji flag
+    flag_url = serializers.SerializerMethodField()
+    localized_name = serializers.SerializerMethodField()
+    class Meta:
+        model = Country
+        fields = "__all__"
+
+    def get_localized_name(self, obj):
+        request = self.context.get("request")
+        lang_code = request.GET.get("lang", "en") if request else "en"
+        return obj.translated_name.get(lang_code, obj.name)  # Default to English
+
+    def get_flag_url(self, obj):
+        return DOMAIN_URL + obj.flag_url
 
 class GetOtpSerializer(serializers.Serializer):
     def validate(self, attrs):
