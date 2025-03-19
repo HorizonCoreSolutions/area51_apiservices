@@ -62,8 +62,6 @@ def check_otp(otp):
 
 
 
-
-
 refuj_key = settings.ENCRYPTION_KEY
 
 def encrypt(data: dict) -> str:

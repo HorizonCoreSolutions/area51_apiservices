@@ -174,6 +174,12 @@ class PlayerViewSet(viewsets.ModelViewSet):
         elif self.request.user.role == "agent":
             return queryset.filter(agent=self.request.user, role="player")
         return queryset
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context["lang_code"] = "US"
+
+        return context
 #player api
 
 class LoginAPIView(APIViewContext):
@@ -374,6 +380,18 @@ class SignUpView(APIViewContext):
         if request.data.get('country_code', '') == '' or request.data.get('phone_number', '') == "":
             data.pop('countray_code', None)
             data.pop('phone_number', None)
+        if request.data.get('code_cca2'):
+            data.pop("country", None)
+            data.pop('code_cca2', None)
+            country = Country.objects.filter(code_cca2=request.data.get('code_cca2').upper()).first()
+            if not country:
+                return Response({"message" : "code_ccs2 is not valid"},status=status.HTTP_400_BAD_REQUEST)
+
+            data["country_obj"] = country.id
+            data["country"] = country.code_cca2
+        else:
+            return Response({"message" : "code_ccs2 has not been provided"},status=status.HTTP_400_BAD_REQUEST)
+
         serializer = self.get_serializer(data=data)
         if Users.objects.filter(username__iexact=request.data.get("username")).exists():
             return Response(
@@ -429,14 +447,16 @@ class UserUpdateView(APIViewContext):
                 dob = request.data.get("dob", player.dob)
                 zipcode = request.data.get("zip_code", player.zip_code)
                 complete_address = request.data.get("complete_address", player.complete_address)
-                user_id_proof = request.data.get("country_code", player.country_code)
-                profile_pic = request.data.get("profile_pic", player.profile_pic)
+                country_code = request.data.get("country_code", player.country_code)
+                profile_pic =request.data.get("profile_pic", player.profile_pic)
+                cca2 = request.data.get("code_cca2", player.country)
                 if(request.data.get("profile_pic") and not request.data.get("profile_pic").startswith("https")):
-                      userb64_profile_pic = request.data.get("profile_pic")
-                      format, imgstr = userb64_profile_pic.split(';base64,') 
-                      ext = format.split('/')[-1] 
-                      profile_pic = ContentFile(base64.b64decode(imgstr),name='temp.' + ext)
-                      if profile_pic:     
+                    userb64_profile_pic = request.data.get("profile_pic")
+                    format, imgstr = userb64_profile_pic.split(';base64,')
+                    ext = format.split('/')[-1]
+                    profile_pic = ContentFile(base64.b64decode(imgstr),name='temp.' + ext)
+                    if profile_pic:
+                        print("a")
                         filename_format = profile_pic.name.split(".")
                         name, format = filename_format[-2], filename_format[-1]
                         filename = f"{name}{uuid.uuid4()}.{format}"
@@ -450,15 +470,24 @@ class UserUpdateView(APIViewContext):
                                                                  filename,
                                                                  format,
                                                                  sys.getsizeof(profile_thumbnail_io), None)
-                      profile_pic.name = filename
+                    profile_pic.name = filename
                     #   user.profile_pic_thumbnail = page_thumbnail_inmemory
-                      player.profile_pic = profile_pic
+                    player.profile_pic = profile_pic
+                if request.data.get("profile_pic", "https").startswith("https"):
+                    profile_pic = player.profile_pic
                 if Users.objects.filter(phone_number=phone_number).exclude(username=request.data.get('username')).count() > 0:
                     return Response({"message": "Phone number belongs to another user.", }, status.HTTP_400_BAD_REQUEST)
                 # if Users.objects.filter(username=request.data.get("username")).exists():
                 #     return Response({"message": _("User already exists.")}, status.HTTP_400_BAD_REQUEST)
                 if not request.data.get("username") or not request.data.get("email"):
                     return Response("Username or Email must not be null.")
+                if Country.objects.filter(code_cca2=cca2).exists():
+                    print("""d""")
+                    player.country = cca2
+                    player.country_obj = Country.objects.get(code_cca2=cca2)
+
+                print(request.data)
+
                 player.username = username
                 player.email = email
                 player.zip_code = zipcode
@@ -468,20 +497,23 @@ class UserUpdateView(APIViewContext):
                 player.state = state
                 player.dob = dob
                 player.complete_address = complete_address
-                player.country_code = user_id_proof
+                player.country_code = country_code
                 player.profile_pic = profile_pic
                 player.cashtag = cashtag
                 player.clean()
+
+
+
                 if player.cashtag!=cashtag:
                     if Player.objects.filter(cashtag=cashtag).exists(): 
                         return self.Response({"title":"Error","icon":"error","message": "Cashtag Already Exists!"}, status.HTTP_400_BAD_REQUEST) 
                 player.save()
-                return Response({"message": "User Updated Succesfully", },status.HTTP_200_OK)
+                return Response({"message": "User Updated Successfully"},status.HTTP_200_OK)
             else:
                 return Response({"message": "User not found", },status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             print(f"Error in update-user-details : {e}")
-            return Response({"message": "something went wrong", },status.HTTP_400_BAD_REQUEST)
+            return Response({"message": "something went wrong", },status.HTTP_500_INTERNAL_SERVER_ERROR)
         
        
 class GetOTPView(APIViewContext):
@@ -1633,6 +1665,7 @@ class SignUpOTP(APIView):
                     return Response({"error": "Username must be atleast 4 characters long", "status": status.HTTP_400_BAD_REQUEST},status.HTTP_400_BAD_REQUEST)
                 else:
                     generated_otp =  create_otp()
+                    print(generated_otp)
                     context = {
                         "otp": generated_otp,
                         "expiration_time":"10 Mins",
@@ -1950,14 +1983,14 @@ class OffmarketTransaction(APIView):
 class CountriesView(APIView):
 
     def get(self, request):
-        lang_code = request.data.get("lang", "en")
+        lang_code = request.GET.get("lang", "en")
         activate(lang_code)
 
         countries = Country.objects.filter(enabled=True).order_by('name')
 
         serializer = CountrySerializer(
             countries,
-            context={"request": self.request},
+            context={"lang_code": lang_code},
             many=True
         )
 
