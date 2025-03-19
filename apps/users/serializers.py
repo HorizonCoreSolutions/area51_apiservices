@@ -35,11 +35,34 @@ from apps.users.models import (AdminBanner, CashAppDeatils, ChatMessage, CmsProm
                                MAX_SINGLE_BET_OTHER_SPORTS, MAX_SPEND_AMOUNT, MIN_BET, OffMarketGames, PromoCodes,
                                ResponsibleGambling, Country)
 from apps.users.utils import check_otp
+import logging
+logger = logging.getLogger('django')
 
 from .models import DEFAULT_AFFILIATE_COMMISION_PERCENTAGE, DEFAULT_AFFILIATE_DURATION_IN_DAYS, Admin, DefaultAffiliateValues, OffMarketTransactions, Player, UserGames, Users, BonusPercentage , SpintheWheelDetails, CashappQr 
 
 jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
 jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
+
+
+class CountrySerializer(serializers.Serializer):
+    name = serializers.CharField(max_length=255)
+    code_cca2 = serializers.CharField(max_length=10)
+    code_ccn3 = serializers.CharField(max_length=10)
+    code_cca3 = serializers.CharField(max_length=10)
+    flag = serializers.CharField(max_length=10)  # Stores emoji flag
+    flag_url = serializers.SerializerMethodField()
+    localized_name = serializers.SerializerMethodField()
+    class Meta:
+        model = Country
+        fields = "__all__"
+
+    def get_localized_name(self, obj):
+        lang_code = str(self.context.get("lang_code", "en")).lower()
+        return obj.translated_name.get(lang_code, obj.name)  # Default to English
+
+    @staticmethod
+    def get_flag_url(obj):
+        return DOMAIN_URL + obj.flag_url
 
 
 class PlayerSerializer(serializers.Serializer):
@@ -102,6 +125,16 @@ class PlayerSerializer(serializers.Serializer):
     registered_tournament_count = serializers.SerializerMethodField()
     fortune_pandas_balance = serializers.DecimalField(max_digits=15, decimal_places=2, default=0.00)
     mnet_url = serializers.SerializerMethodField()
+
+    country = serializers.SerializerMethodField()
+
+    def get_country(self, obj):
+        lang = self.context.get("lang_code", "en")
+        if obj.country_obj:
+            data = CountrySerializer(obj.country_obj, context={"lang": lang}).data
+            return data
+        logger.warning(f"User: {obj.username} is not using Country objs")
+        return CountrySerializer(Country.objects.filter(code_cca2=obj.country).first(), context={"lang": lang}).data
     
     @staticmethod
     def get_cashapp(obj):
@@ -496,26 +529,6 @@ class ChangePasswordSerializer(serializers.Serializer):
     old_password = serializers.CharField(max_length=255, required=True)
     password = serializers.CharField(max_length=255, required=True)
 
-
-class CountrySerializer(serializers.Serializer):
-    name = serializers.CharField(max_length=255)
-    code_cca2 = serializers.CharField(max_length=10)
-    code_ccn3 = serializers.CharField(max_length=10)
-    code_cca3 = serializers.CharField(max_length=10)
-    flag = serializers.CharField(max_length=10)  # Stores emoji flag
-    flag_url = serializers.SerializerMethodField()
-    localized_name = serializers.SerializerMethodField()
-    class Meta:
-        model = Country
-        fields = "__all__"
-
-    def get_localized_name(self, obj):
-        request = self.context.get("request")
-        lang_code = request.GET.get("lang", "en") if request else "en"
-        return obj.translated_name.get(lang_code, obj.name)  # Default to English
-
-    def get_flag_url(self, obj):
-        return DOMAIN_URL + obj.flag_url
 
 class GetOtpSerializer(serializers.Serializer):
     def validate(self, attrs):
