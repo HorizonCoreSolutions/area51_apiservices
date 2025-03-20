@@ -481,7 +481,10 @@ class SignUpSerializer(serializers.ModelSerializer):
         player = super().create(validated_data)
         player.username = validated_data.get("username").lower()
         player.set_password(validated_data["password"])
-        player.country_code = validated_data.pop("country_code")
+        player.country_code = validated_data.pop("country_code", "")
+        player.phone_number = validated_data.pop("phone_number", "")
+        player.country = validated_data.pop("country", "")
+        player.country_obj = validated_data.pop("country_obj", None)
         player.agent = agent_obj
         player.dealer = dealer_obj
         player.admin = admin
