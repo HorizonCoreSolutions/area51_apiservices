@@ -836,6 +836,8 @@ class AdminPublicDetailsView(APIView):
             # for banner in AdminBanner.objects.filter(banner_category=banner_category):
             #     admin_banners[banner.banner_type.lower()].append({"url": f'{settings.BE_DOMAIN}{banner.url}',})
             banners = AdminBanner.objects.filter(banner_category=banner_category, banner_type__iexact=banner_type).order_by("-created")
+            if request.user.is_authenticated and request.user.is_verified:
+                banners = banners.exclude(title__endswith='$')
             serializer = self.serializer_class(banners, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
         except Exception as err:
