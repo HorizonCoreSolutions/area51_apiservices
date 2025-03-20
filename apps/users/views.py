@@ -456,7 +456,6 @@ class UserUpdateView(APIViewContext):
                     ext = format.split('/')[-1]
                     profile_pic = ContentFile(base64.b64decode(imgstr),name='temp.' + ext)
                     if profile_pic:
-                        print("a")
                         filename_format = profile_pic.name.split(".")
                         name, format = filename_format[-2], filename_format[-1]
                         filename = f"{name}{uuid.uuid4()}.{format}"
@@ -482,11 +481,9 @@ class UserUpdateView(APIViewContext):
                 if not request.data.get("username") or not request.data.get("email"):
                     return Response("Username or Email must not be null.")
                 if Country.objects.filter(code_cca2=cca2).exists():
-                    print("""d""")
                     player.country = cca2
                     player.country_obj = Country.objects.get(code_cca2=cca2)
 
-                print(request.data)
 
                 player.username = username
                 player.email = email
