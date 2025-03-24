@@ -583,8 +583,6 @@ class GetOTPView(APIViewContext):
                         {"message": "User needs to be logged in"},
                         status=status.HTTP_400_BAD_REQUEST,
                     )
-                if request.user.is_verified:
-                    return Response({"message": "User is already verified"}, status=status.HTTP_200_OK)
                 if users_with_same_phone.exists():
                     return Response(
                         {"message": _("This mobile number already exist")},
