@@ -583,6 +583,12 @@ class GetOTPView(APIViewContext):
                         {"message": "User needs to be logged in"},
                         status=status.HTTP_400_BAD_REQUEST,
                     )
+                if request.user.phone_number == data.get("phone_number") and\
+                        request.user.country_code == data.get("country_code"):
+                    return Response(
+                        {"message": _("You cannot change to the same phone number")},
+                        status.HTTP_400_BAD_REQUEST,
+                    )
                 if users_with_same_phone.exists():
                     return Response(
                         {"message": _("This mobile number already exist")},
