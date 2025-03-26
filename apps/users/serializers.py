@@ -377,7 +377,7 @@ class LoginSerializer(JSONWebTokenSerializer):
                     user.username = user.username[6:]
                     existing_token = user.access_token
                     user.access_token = token
-                    user.last_login = datetime.datetime.now()
+                    user.last_login = timezone.now()
 
                     user.save()
                     return {"token": token, "user": user}
