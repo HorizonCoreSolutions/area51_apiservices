@@ -604,7 +604,7 @@ class Casino25CategoryWiseGameListSerializer(serializers.Serializer):
                 admin=self.context.get("user").admin, 
                 enabled=True, 
                 game_enabled=True,
-                game__created__lte=datetime.now()-timedelta(hours=48)
+                game__created__lte=timezone.now()-timedelta(hours=48)
             )
             if self.context.get("device_type") == "desktop":
                 casino_games = casino_games.filter(game__is_desktop_supported=True)
@@ -624,7 +624,7 @@ class Casino25CategoryWiseGameListSerializer(serializers.Serializer):
                                  serialized_data]
                 return filtered_data
             else:
-                games = CasinoGameList.objects.filter(game_category=category, created__lte=datetime.now()-timedelta(hours=48))[:20]
+                games = CasinoGameList.objects.filter(game_category=category, created__lte=timezone.now()-timedelta(hours=48))[:20]
                 return Casino25GameListSerializer(games, many=True).data
         
 
@@ -641,7 +641,7 @@ class Casino25ProviderWiseGameListSerializer(serializers.Serializer):
                 admin=self.context.get("user").admin, 
                 enabled=True, 
                 game_enabled=True,
-                game__created__lte=datetime.now()-timedelta(hours=48),
+                game__created__lte=timezone.now()-timedelta(hours=48),
             )
             if self.context.get("device_type") == "desktop":
                 casino_games = casino_games.filter(game__is_desktop_supported=True)
@@ -651,7 +651,7 @@ class Casino25ProviderWiseGameListSerializer(serializers.Serializer):
             games = casino_games.filter(game__vendor_name=provider)[:20]
             return Casino25CasinoManagementSerializer(games, many=True).data
         else:
-            games = CasinoGameList.objects.filter(vendor_name=provider, created__lte=datetime.now()-timedelta(hours=48))[:20]
+            games = CasinoGameList.objects.filter(vendor_name=provider, created__lte=timezone.now()-timedelta(hours=48))[:20]
             return Casino25GameListSerializer(games, many=True).data
     
     
