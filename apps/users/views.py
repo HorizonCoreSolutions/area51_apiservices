@@ -2029,27 +2029,26 @@ class AddSpinWheelView(APIView):
             user=self.request.user
             data = Transactions.objects.filter(journal_entry = "bonus",bonus_type = SPIN_WHEEL,created__date = datetime.now().date(),user = self.request.user).first()
             spin_wheel=SpintheWheelDetails.objects.filter(id=spin_id).first()
-            if not data:
-                bonus_amount=spin_wheel.value
-                previous_bonus=user.bonus_balance
-                user.bonus_balance=user.bonus_balance+spin_wheel.value
-                user.save()
-                Transactions.objects.create(
-                    user=user,
-                    journal_entry="bonus",
-                    amount=Decimal(spin_wheel.value),
-                    status="charged",
-                    previous_balance=previous_bonus,
-                    new_balance=Decimal(user.bonus_balance),
-                    description="Spin the Wheel Bonus to player",
-                    reference=generate_reference(user),
-                    bonus_type=SPIN_WHEEL,
-                    bonus_amount=bonus_amount,
-                )
-                return Response({"message": "Bonus added"}, status.HTTP_200_OK)
-
-            else:
+            if data:
                 return Response({"message": "Already given spin bonus"}, status.HTTP_400_BAD_REQUEST)
+
+            bonus_amount=spin_wheel.value
+            previous_bonus=user.bonus_balance
+            user.bonus_balance=user.bonus_balance+spin_wheel.value
+            user.save()
+            Transactions.objects.create(
+                user=user,
+                journal_entry="bonus",
+                amount=Decimal(spin_wheel.value),
+                status="charged",
+                previous_balance=previous_bonus,
+                new_balance=Decimal(user.bonus_balance),
+                description="Spin the Wheel Bonus to player",
+                reference=generate_reference(user),
+                bonus_type=SPIN_WHEEL,
+                bonus_amount=bonus_amount,
+            )
+            return Response({"message": "Bonus added"}, status.HTTP_200_OK)
         except:
             return Response({"message": "Something Went Wrong"}, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
