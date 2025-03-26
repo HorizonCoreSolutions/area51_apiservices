@@ -342,13 +342,15 @@ def get_tz_offset(tz_offset: str):
     sign, hours, minutes = result.groups()
     hours, minutes = int(hours), int(minutes) if minutes else 0
 
+    hours *= -1 if sign == "-" else 1
+
     # Ensure the offset is within valid UTC ranges (-12:00 to +14:00)
-    is_n_twelve = hours == 12
-    is_p_fourteen = hours == -14
+    is_n_twelve = hours == -12
+    is_p_fourteen = hours == 14
     is_z_min = minutes == 0
 
     case1 = is_n_twelve and is_z_min  # -12:00
-    case2 = -14 < hours < 12 and 0 <= minutes < 60  # Valid range
+    case2 = -12 < hours < 14 and 0 <= minutes < 60  # Valid range
     case3 = is_p_fourteen and is_z_min  # +14:00
 
     if not (case1 or case2 or case3):
