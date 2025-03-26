@@ -14,7 +14,7 @@ from apps.users.views import (AboutCmsView, AddSpinWheelView, AdminAdsPublicDeta
                               SettingsLimitsView, SignUpOTP, SignUpView, SpintheWheelDetailsAPIView, StaffDetailView,
                               TermsConditinosView, TipView, TransactionsAPIView, UserUpdateView, ValidatePromoCode,
                               ValidateReferralUser, ValidateSignUpPromoCode, VerifyOTPView, VerifyOTPView, VerifyToken,
-                              OTPActionsView, CountriesView)
+                              OTPActionsView, CountriesView, NextSpinWheel)
     
 
 app_name = "Users"
@@ -69,6 +69,7 @@ urlpatterns = [
     url('offmarket-transactions/', OffmarketTransaction.as_view(), name='offmarket-transactions'),
     url(r"offmarket-withdraw-request/", OffMarketWithdrawView.as_view(), name='offmarket-withdraw-request'),
     url(r"add-spin-wheel/", AddSpinWheelView.as_view(), name='add-spin-wheel'),
+    url(r'next-spin-wheel/', NextSpinWheel.as_view(), name='next-spin-wheel'),
     url(r"spin-wheel-details/", SpintheWheelDetailsAPIView.as_view(), name='spin-wheel-details'),
     url(r"transactions/", TransactionsAPIView.as_view(), name='transactions-list'),
     url(r"cashapp-detail/", CashAppDetailsApi.as_view(), name='cashapp-detail'),
