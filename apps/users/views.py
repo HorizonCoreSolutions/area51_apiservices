@@ -9,7 +9,8 @@ import random
 import string
 import traceback
 
-from datetime import datetime,timedelta,timezone
+from datetime import datetime,timedelta
+from django.utils import timezone
 
 import requests
 from pyhanko_certvalidator import ValidationError
@@ -55,7 +56,7 @@ from apps.core.rest_any_permissions import AnyPermissions
 from apps.core.views import APIViewContext
 from django.db import transaction
 
-from apps.users.utils import send_player_balance_update_notification
+from apps.users.utils import send_player_balance_update_notification, UTC_OFFSET_PATTERN, get_tz_offset
 from apps.users.filters import PlayerFilters
 from apps.users.models import (Admin, CashappQr, CmsBonusDetail, CmsFAQ, CmsPrivacyPolicy, CookiePolicy,
                                EmailTemplateDetails, FooterCategory, FooterPages, FortunePandasGameList,
@@ -187,7 +188,6 @@ class LoginAPIView(APIViewContext):
     permission_classes = (AllowAny,)
 
     def post(self, request):
-        from django.utils import timezone
         translation_language = request.data.get("language",'en')
         if(translation_language in ['nl','ru','de','tr','fr']):
             activate(translation_language)
@@ -899,6 +899,7 @@ class SetPlayerMaxSpendLimitView(APIViewContext):
     
     def post(self, request):
         max_spending_limit = int(request.data.get("max_spending_limit", MAX_SPEND_AMOUNT))
+        from datetime import timezone
         try:
             player = Player.objects.filter(id=request.user.id).first()
             if player:
@@ -931,6 +932,7 @@ class SetPlayerBlackoutView(APIViewContext):
 
     def post(self, request):
         blackout_expire_time = request.data.get("blackout_expire_time", None)
+        from datetime import timezone
         try:
             player = Player.objects.filter(id=request.user.id).first()
             if player:
@@ -1501,8 +1503,6 @@ class ComingSoonPagesDeatilsView(APIView):
     http_method_names = ["get", ]
 
     def get(self, request):
-        from django.utils import timezone
-
         admin_obj = Admin.objects.filter().first()
         if admin_obj.coming_soon_scheduled and admin_obj.coming_soon_scheduled < timezone.now():
             admin_obj.is_coming_soon_enabled = False
@@ -1817,7 +1817,6 @@ class RestrictedLoginView(APIView):
     permission_classes = (IsPlayer,)
     http_method_names = ["post"]
     def post(self, request):
-        from django.utils import timezone
         try:
             data = request.data
             user = Users.objects.filter(id=request.user.id).first()
@@ -2018,6 +2017,37 @@ class OffMarketWithdrawView(APIView):
         except:
             return Response({"message": "Something Went Wrong"}, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+class NextSpinWheel(APIView):
+    permission_classes = (IsPlayer,)
+    http_method_names = ["post"]
+    def post(self, request):
+        try:
+            tz_offset = request.data.get("tz_offset", "").strip()
+            result = get_tz_offset(tz_offset)
+            if result.get("message"):
+                return Response(result, status=status.HTTP_400_BAD_REQUEST)
+            offset = result.get("offset")
+
+            users_date = (timezone.now() - offset).date()
+            is_spin_available = not Transactions.objects.filter(journal_entry="bonus", bonus_type=SPIN_WHEEL, created__date=users_date, user=self.request.user).exists()
+
+            from datetime import timezone as dt_timezone
+
+            next_spin = users_date
+
+            if not is_spin_available:
+                next_spin += timedelta(days=1)
+
+            return Response({
+                "is_spin_available": is_spin_available,
+                "next_spin": next_spin,
+            }, status.HTTP_200_OK)
+
+
+        except Exception:
+            return Response({"message": "Something Went Wrong"}, status=status.HTTP_400_BAD_REQUEST)
+
+
 
 class AddSpinWheelView(APIView):
     permission_classes = (IsPlayer,)
@@ -2025,9 +2055,17 @@ class AddSpinWheelView(APIView):
     @transaction.atomic
     def post(self, request):
         try:
+            tz_offset = request.data.get("tz_offset", "").strip()
+            result = get_tz_offset(tz_offset)
+            if result.get("message"):
+                return Response(result, status=status.HTTP_400_BAD_REQUEST)
+            offset = result.get("offset")
+            now = timezone.now()
+            users_date = (now - offset).date()
+
             spin_id = request.data.get('id')
             user=self.request.user
-            data = Transactions.objects.filter(journal_entry = "bonus",bonus_type = SPIN_WHEEL,created__date = datetime.now().date(),user = self.request.user).first()
+            data = Transactions.objects.filter(journal_entry="bonus",bonus_type=SPIN_WHEEL, created__date=users_date, user=self.request.user).first()
             spin_wheel=SpintheWheelDetails.objects.filter(id=spin_id).first()
             if data:
                 return Response({"message": "Already given spin bonus"}, status.HTTP_400_BAD_REQUEST)
@@ -2036,7 +2074,7 @@ class AddSpinWheelView(APIView):
             previous_bonus=user.bonus_balance
             user.bonus_balance=user.bonus_balance+spin_wheel.value
             user.save()
-            Transactions.objects.create(
+            t = Transactions.objects.create(
                 user=user,
                 journal_entry="bonus",
                 amount=Decimal(spin_wheel.value),
@@ -2048,6 +2086,10 @@ class AddSpinWheelView(APIView):
                 bonus_type=SPIN_WHEEL,
                 bonus_amount=bonus_amount,
             )
+            # saves the spin with the correct date
+            t._force_created = now - offset
+            t.save()
+            print("is the error")
             return Response({"message": "Bonus added"}, status.HTTP_200_OK)
         except:
             return Response({"message": "Something Went Wrong"}, status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -2208,7 +2250,6 @@ class ChatSupportView(APIView):
 
     def get(self, request):
         try:
-            from django.utils import timezone
             request_type = request.GET.get('request_type', '')
 
             if request_type == "recent_messages":
