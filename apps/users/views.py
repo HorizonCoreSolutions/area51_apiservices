@@ -2036,7 +2036,7 @@ class NextSpinWheel(APIView):
 
             next_spin = users_date
             if not is_spin_available:
-                next_spin = spin_wheel.created + timedelta(days=1)
+                next_spin = (spin_wheel.created + timedelta(days=1)).date()
 
             return Response({
                 "is_spin_available": is_spin_available,
