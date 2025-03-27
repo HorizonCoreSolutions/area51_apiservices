@@ -2028,15 +2028,13 @@ class NextSpinWheel(APIView):
                 return Response(result, status=status.HTTP_400_BAD_REQUEST)
             offset = result.get("offset")
 
-            users_date = (timezone.now() - offset).date()
-            is_spin_available = not Transactions.objects.filter(journal_entry="bonus", bonus_type=SPIN_WHEEL, created__date=users_date, user=self.request.user).exists()
-
-            from datetime import timezone as dt_timezone
+            users_date = (timezone.now() + offset).date()
+            spin_wheel = Transactions.objects.filter(journal_entry="bonus", bonus_type=SPIN_WHEEL, created__date=users_date, user=self.request.user).order_by("-created").first()
+            is_spin_available = not bool(spin_wheel)
 
             next_spin = users_date
-
             if not is_spin_available:
-                next_spin += timedelta(days=1)
+                next_spin = spin_wheel.created + timedelta(days=1)
 
             return Response({
                 "is_spin_available": is_spin_available,
@@ -2044,7 +2042,8 @@ class NextSpinWheel(APIView):
             }, status.HTTP_200_OK)
 
 
-        except Exception:
+        except Exception as e:
+            print(e)
             return Response({"message": "Something Went Wrong"}, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -2061,15 +2060,14 @@ class AddSpinWheelView(APIView):
                 return Response(result, status=status.HTTP_400_BAD_REQUEST)
             offset = result.get("offset")
             now = timezone.now()
-            users_date = (now - offset).date()
+            users_date = (now + offset).date()
 
             spin_id = request.data.get('id')
             user=self.request.user
             data = Transactions.objects.filter(journal_entry="bonus",bonus_type=SPIN_WHEEL, created__date=users_date, user=self.request.user).first()
-            spin_wheel=SpintheWheelDetails.objects.filter(id=spin_id).first()
             if data:
                 return Response({"message": "Already given spin bonus"}, status.HTTP_400_BAD_REQUEST)
-
+            spin_wheel=SpintheWheelDetails.objects.filter(id=spin_id).first()
             bonus_amount=spin_wheel.value
             previous_bonus=user.bonus_balance
             user.bonus_balance=user.bonus_balance+spin_wheel.value
@@ -2087,7 +2085,7 @@ class AddSpinWheelView(APIView):
                 bonus_amount=bonus_amount,
             )
             # saves the spin with the correct date
-            t._force_created = now - offset
+            t._force_created = now + offset
             t.save()
             print("is the error")
             return Response({"message": "Bonus added"}, status.HTTP_200_OK)
