@@ -584,7 +584,8 @@ class GetOTPView(APIViewContext):
                         status=status.HTTP_400_BAD_REQUEST,
                     )
                 if request.user.phone_number == data.get("phone_number") and\
-                        request.user.country_code == data.get("country_code"):
+                        request.user.country_code == data.get("country_code") and\
+                        request.user.is_verified:
                     return Response(
                         {"message": _("You cannot change to the same phone number")},
                         status.HTTP_400_BAD_REQUEST,
