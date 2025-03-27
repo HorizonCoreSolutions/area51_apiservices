@@ -22,5 +22,8 @@ class AbstractBaseModel(models.Model):
         abstract = True
 
     def save(self, *args, **kwargs):
+        # Allow overriding created only if explicitly set
+        if hasattr(self, '_force_created'):
+            self.created = self._force_created
         self.modified = timezone.now()
         return super().save(*args, **kwargs)

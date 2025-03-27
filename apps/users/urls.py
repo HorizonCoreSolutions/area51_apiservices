@@ -1,17 +1,20 @@
 from django.conf.urls import url
 from apps.users.views import (AboutCmsView, AddSpinWheelView, AdminAdsPublicDetailsView,
-    AdminPublicDetailsView, AffiiateRequestView, AffiliatedPlayers, BonusDetailView,
-    CashAppDetailsApi, CashappQrListView, CashbackView, ChangePassword, ChatSupportView,
-    CmsFAQView, CmsPrivacyPolicyView, ComingSoonPagesDeatilsView, ContactUsView, CookiePolicyView,
-    CsrQueryView, FooterDeatilsView, ForgotPassword, FortunePandasAPIView,
-    FortunePandasCategoryAPIView, GetOTPView, GetSlug, IntroductionView, LoginAPIView,
-    Notification, OffMarketDepositView, OffmarketTransaction, OffMarketWithdrawView,
-    PagesDeatilsView, PlayerDeActiveView, PlayerEmailOTPsender, PlayerEmailOTPsender,
-    PromotionCmsView, QueueView, ReadMessageView, RecentMessagesView, RestrictedLoginView,
-    SetlanguageView, SetPlayerBettingLimitView, SetPlayerBlackoutView, SetPlayerMaxSpendLimitView,
-    SettingsLimitsView, SignUpOTP, SignUpView, SpintheWheelDetailsAPIView, StaffDetailView,
-    TermsConditinosView, TipView, TransactionsAPIView, UserUpdateView, ValidatePromoCode,
-    ValidateReferralUser, ValidateSignUpPromoCode, VerifyOTPView, VerifyOTPView, VerifyToken)
+                              AdminPublicDetailsView, AffiiateRequestView, AffiliatedPlayers, BonusDetailView,
+                              CashAppDetailsApi, CashappQrListView, CashbackView, ChangePassword, ChatSupportView,
+                              CmsFAQView, CmsPrivacyPolicyView, ComingSoonPagesDeatilsView, ContactUsView,
+                              CookiePolicyView,
+                              CsrQueryView, FooterDeatilsView, ForgotPassword, FortunePandasAPIView,
+                              FortunePandasCategoryAPIView, GetOTPView, GetSlug, IntroductionView, LoginAPIView,
+                              Notification, OffMarketDepositView, OffmarketTransaction, OffMarketWithdrawView,
+                              PagesDeatilsView, PlayerDeActiveView, PlayerEmailOTPsender, PlayerEmailOTPsender,
+                              PromotionCmsView, QueueView, ReadMessageView, RecentMessagesView, RestrictedLoginView,
+                              SetlanguageView, SetPlayerBettingLimitView, SetPlayerBlackoutView,
+                              SetPlayerMaxSpendLimitView,
+                              SettingsLimitsView, SignUpOTP, SignUpView, SpintheWheelDetailsAPIView, StaffDetailView,
+                              TermsConditinosView, TipView, TransactionsAPIView, UserUpdateView, ValidatePromoCode,
+                              ValidateReferralUser, ValidateSignUpPromoCode, VerifyOTPView, VerifyOTPView, VerifyToken,
+                              OTPActionsView, CountriesView, NextSpinWheel)
     
 
 app_name = "Users"
@@ -24,6 +27,7 @@ urlpatterns = [
     url(r"^signup/?", SignUpView.as_view(), name="signup"),
     url(r"^get-otp/?", GetOTPView.as_view(), name="get_otp"),
     url(r"^verify-otp/?", VerifyOTPView.as_view(), name="verify_otp"),
+    url(r"^otp-actions/", OTPActionsView.as_view(), name="otp-actions"),
     url(r"^contact-us-details/?", ContactUsView.as_view(), name="contact-us-details"),
     url(r"^about-details/?", AboutCmsView.as_view(), name="about-details"),
     url(r"^promotions/?", PromotionCmsView.as_view(), name="promotion-details"),
@@ -65,6 +69,7 @@ urlpatterns = [
     url('offmarket-transactions/', OffmarketTransaction.as_view(), name='offmarket-transactions'),
     url(r"offmarket-withdraw-request/", OffMarketWithdrawView.as_view(), name='offmarket-withdraw-request'),
     url(r"add-spin-wheel/", AddSpinWheelView.as_view(), name='add-spin-wheel'),
+    url(r'next-spin-wheel/', NextSpinWheel.as_view(), name='next-spin-wheel'),
     url(r"spin-wheel-details/", SpintheWheelDetailsAPIView.as_view(), name='spin-wheel-details'),
     url(r"transactions/", TransactionsAPIView.as_view(), name='transactions-list'),
     url(r"cashapp-detail/", CashAppDetailsApi.as_view(), name='cashapp-detail'),
@@ -76,5 +81,7 @@ urlpatterns = [
     url(r"^bonus-detail/?", BonusDetailView.as_view(), name="bonus-detail"),
     url(r"^fortunepandas-categories/?", FortunePandasCategoryAPIView.as_view(), name="fortunepandas-categories"),
     url(r"^fortunepandas/?", FortunePandasAPIView.as_view(), name="fortunepandas"),
+
+    url(r'^countries/?', CountriesView.as_view(), name='countries'),
 
 ]

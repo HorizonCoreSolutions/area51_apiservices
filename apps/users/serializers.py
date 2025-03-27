@@ -20,6 +20,8 @@ from django.contrib.auth.hashers import make_password
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.db.models import Q
+
+from api_services.settings.base import DOMAIN_URL
 from apps.admin_panel.utils import create_casino_account_id
 from rest_framework import serializers
 from rest_framework_jwt.serializers import JSONWebTokenSerializer
@@ -29,15 +31,38 @@ from cryptography.fernet import Fernet
 import base64
 from apps.core.exceptions import DeactivatedUserException, NotActiveUserException
 from apps.users.models import (AdminBanner, CashAppDeatils, ChatMessage, CmsPromotionDetails,
-    FortunePandasGameList, FortunePandasGameManagement, MAX_MULTIPLE_BET, MAX_SINGLE_BET,
-    MAX_SINGLE_BET_OTHER_SPORTS, MAX_SPEND_AMOUNT, MIN_BET, OffMarketGames, PromoCodes,
-    ResponsibleGambling)
+                               FortunePandasGameList, FortunePandasGameManagement, MAX_MULTIPLE_BET, MAX_SINGLE_BET,
+                               MAX_SINGLE_BET_OTHER_SPORTS, MAX_SPEND_AMOUNT, MIN_BET, OffMarketGames, PromoCodes,
+                               ResponsibleGambling, Country)
 from apps.users.utils import check_otp
+import logging
+logger = logging.getLogger('django')
 
 from .models import DEFAULT_AFFILIATE_COMMISION_PERCENTAGE, DEFAULT_AFFILIATE_DURATION_IN_DAYS, Admin, DefaultAffiliateValues, OffMarketTransactions, Player, UserGames, Users, BonusPercentage , SpintheWheelDetails, CashappQr 
 
 jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
 jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
+
+
+class CountrySerializer(serializers.Serializer):
+    name = serializers.CharField(max_length=255)
+    code_cca2 = serializers.CharField(max_length=10)
+    code_ccn3 = serializers.CharField(max_length=10)
+    code_cca3 = serializers.CharField(max_length=10)
+    flag = serializers.CharField(max_length=10)  # Stores emoji flag
+    flag_url = serializers.SerializerMethodField()
+    localized_name = serializers.SerializerMethodField()
+    class Meta:
+        model = Country
+        fields = "__all__"
+
+    def get_localized_name(self, obj):
+        lang_code = str(self.context.get("lang_code", "en")).lower()
+        return obj.translated_name.get(lang_code, obj.name)  # Default to English
+
+    @staticmethod
+    def get_flag_url(obj):
+        return DOMAIN_URL + obj.flag_url
 
 
 class PlayerSerializer(serializers.Serializer):
@@ -84,6 +109,7 @@ class PlayerSerializer(serializers.Serializer):
     is_max_spending_limit_set_by_admin = serializers.SerializerMethodField()
     affiliate_link = serializers.CharField(max_length=250)
     is_active = serializers.BooleanField(default=False)
+    is_verified = serializers.SerializerMethodField()
     no_of_deposit_counts = serializers.IntegerField()
     is_bonus_on_all_deposits = serializers.BooleanField(default=False)
     affliate_expire_date = serializers.DateTimeField()
@@ -99,6 +125,16 @@ class PlayerSerializer(serializers.Serializer):
     registered_tournament_count = serializers.SerializerMethodField()
     fortune_pandas_balance = serializers.DecimalField(max_digits=15, decimal_places=2, default=0.00)
     mnet_url = serializers.SerializerMethodField()
+
+    country = serializers.SerializerMethodField()
+
+    def get_country(self, obj):
+        lang = self.context.get("lang_code", "en")
+        if obj.country_obj:
+            data = CountrySerializer(obj.country_obj, context={"lang": lang}).data
+            return data
+        logger.warning(f"User: {obj.username} is not using Country objs")
+        return CountrySerializer(Country.objects.filter(code_cca2=obj.country).first(), context={"lang": lang}).data
     
     @staticmethod
     def get_cashapp(obj):
@@ -184,7 +220,9 @@ class PlayerSerializer(serializers.Serializer):
             print(e)
         return referral_reward_percentage
 
-  
+    @staticmethod
+    def get_is_verified(obj):
+        return obj.is_verified
 
     @staticmethod
     def get_is_betslip_bonus_enabled(obj):
@@ -339,7 +377,7 @@ class LoginSerializer(JSONWebTokenSerializer):
                     user.username = user.username[6:]
                     existing_token = user.access_token
                     user.access_token = token
-                    user.last_login = datetime.datetime.now()
+                    user.last_login = timezone.now()
 
                     user.save()
                     return {"token": token, "user": user}
@@ -443,7 +481,10 @@ class SignUpSerializer(serializers.ModelSerializer):
         player = super().create(validated_data)
         player.username = validated_data.get("username").lower()
         player.set_password(validated_data["password"])
-        player.country_code = validated_data.pop("country_code")
+        player.country_code = validated_data.pop("country_code", "")
+        player.phone_number = validated_data.pop("phone_number", "")
+        player.country = validated_data.pop("country", "")
+        player.country_obj = validated_data.pop("country_obj", None)
         player.agent = agent_obj
         player.dealer = dealer_obj
         player.admin = admin
@@ -490,7 +531,6 @@ class ChangePasswordSerializer(serializers.Serializer):
 
     old_password = serializers.CharField(max_length=255, required=True)
     password = serializers.CharField(max_length=255, required=True)
-
 
 
 class GetOtpSerializer(serializers.Serializer):

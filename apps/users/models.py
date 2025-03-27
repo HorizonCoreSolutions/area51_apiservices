@@ -113,6 +113,10 @@ JACKPOT_TIME_LIMIT = 5
 BETSLIP_BONUS_PERCENTAGE = 10.00
 
 
+def get_default_country():
+    return Country.objects.get(code_cca2="US").id if Country.objects.filter(code_cca2="US").exists() else None
+
+
 class UserManager(BuiltInUserManager):
     def create_superuser(self, username, password, **extra_fields):
         return Users.objects.create(
@@ -321,6 +325,13 @@ class Users(AbstractBaseUser, AbstractBaseModel, PermissionsMixin):
     zip_code = models.IntegerField(_("zip_code"), null=True, blank=True, default=None)
     is_verified = models.BooleanField(default=False, null=True)
     country = models.CharField(_("country"), max_length=100, default="US")
+    country_obj = models.ForeignKey(
+        "users.Country",
+        on_delete=models.SET_NULL,
+        blank=False,
+        null=True,
+        related_name="players",
+    )
     affiliate_link = models.CharField(_("affiliate_link"), max_length=260, null=True, blank=True)
     affiliated_by = models.ForeignKey(
         "users.Users",
@@ -456,6 +467,14 @@ class Users(AbstractBaseUser, AbstractBaseModel, PermissionsMixin):
             return system_id
         return None
 
+    def __getattribute__(self, name):
+        if name == "is_active":
+            value = super().__getattribute__(name)
+            country = super().__getattribute__("country_obj")
+            country = country.enabled if country else True
+            return value and country
+        return super().__getattribute__(name)
+
 class ResponsibleGambling(AbstractBaseModel):
     user = models.OneToOneField(Users, on_delete=models.CASCADE,primary_key=True, related_name="responsible_gambling")
     max_spending_limit = models.IntegerField(_("max spending limit for player"), default=MAX_SPEND_AMOUNT)
@@ -470,6 +489,24 @@ class ResponsibleGambling(AbstractBaseModel):
         blank=True, default=None)
     blackout_expire_hours = models.IntegerField(_("blackout expire hours"), null=True,blank=True)
 
+
+class Country(AbstractBaseModel):
+    name = models.CharField(max_length=255)
+    translated_name = JSONField(default=dict)  # Store translations
+    code_cca2 = models.CharField(max_length=10, unique=True)
+    code_ccn3 = models.CharField(max_length=10, unique=True)
+    code_cca3 = models.CharField(max_length=10, unique=True)
+    flag = models.CharField(max_length=10)  # Stores emoji flag
+    flag_url = models.CharField(max_length=255)
+    timezone = models.CharField(max_length=50)
+    currency_code = models.CharField(max_length=10)
+    currency_name = models.CharField(max_length=255)
+    currency_symbol = models.CharField(max_length=10)
+
+    enabled = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.name
 
 
 class BlackListedToken(models.Model):

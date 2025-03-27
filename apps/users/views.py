@@ -9,7 +9,8 @@ import random
 import string
 import traceback
 
-from datetime import datetime,timedelta,timezone
+from datetime import datetime,timedelta
+from django.utils import timezone
 
 import requests
 from pyhanko_certvalidator import ValidationError
@@ -55,15 +56,15 @@ from apps.core.rest_any_permissions import AnyPermissions
 from apps.core.views import APIViewContext
 from django.db import transaction
 
-from apps.users.utils import send_player_balance_update_notification
+from apps.users.utils import send_player_balance_update_notification, UTC_OFFSET_PATTERN, get_tz_offset
 from apps.users.filters import PlayerFilters
 from apps.users.models import (Admin, CashappQr, CmsBonusDetail, CmsFAQ, CmsPrivacyPolicy, CookiePolicy,
-    EmailTemplateDetails, FooterCategory, FooterPages, FortunePandasGameList,
-    FortunePandasGameManagement, Introduction, MAX_MULTI_FOUR_EVENTS_AMOUNT,
-    MAX_MULTI_THREE_EVENTS_AMOUNT, MAX_MULTI_TWO_EVENTS_AMOUNT, MAX_MULTIPLE_BET, MAX_ODD,
-    MAX_SINGLE_BET, MAX_SINGLE_BET_OTHER_SPORTS, MAX_SPEND_AMOUNT, MAX_WIN_AMOUNT, MIN_BET,
-    PlayerBettingLimit, PromoCodes, PromoCodesLogs, SettingsLimits, SocialLink,
-    SpintheWheelDetails, TermsConditinos)
+                               EmailTemplateDetails, FooterCategory, FooterPages, FortunePandasGameList,
+                               FortunePandasGameManagement, Introduction, MAX_MULTI_FOUR_EVENTS_AMOUNT,
+                               MAX_MULTI_THREE_EVENTS_AMOUNT, MAX_MULTI_TWO_EVENTS_AMOUNT, MAX_MULTIPLE_BET, MAX_ODD,
+                               MAX_SINGLE_BET, MAX_SINGLE_BET_OTHER_SPORTS, MAX_SPEND_AMOUNT, MAX_WIN_AMOUNT, MIN_BET,
+                               PlayerBettingLimit, PromoCodes, PromoCodesLogs, SettingsLimits, SocialLink,
+                               SpintheWheelDetails, TermsConditinos, Country)
 from apps.users.serializers import (
     # UserUpdateSerializer, 
     AdminBannerSerializer,
@@ -79,7 +80,7 @@ from apps.users.serializers import (
     PlayerSerializer,
     SignUpSerializer,
     SpintheWheelDetailsSerializer,
-    TransactionsSerializer
+    TransactionsSerializer, CountrySerializer
 )
 
 from apps.users.serializers import (# UserUpdateSerializer, AffiliateSerializer,
@@ -89,7 +90,7 @@ from apps.users.serializers import (# UserUpdateSerializer, AffiliateSerializer,
 
 from django.contrib.auth.hashers import make_password
 from apps.users.models import Player, Agent, Dealer, AdminBanner, CmsAboutDetails, CmsPromotionDetails
-from apps.users.utils import check_otp, create_otp, create_otp_password,encrypt
+from apps.users.utils import check_otp, create_otp, create_otp_password,encrypt, is_only_one
 from apps.admin_panel.templatetags.navigate import is_active
 from apps.users.fortunepandas import FortunePandaAPI
 from .models import ( AdminAdsBanner,CASHBACK_PERCENTAGE, AffiliateRequests, BonusPercentage, ChatHistory, ChatMessage, ChatRoom, CsrQueries, OffMarketGames, OffMarketTransactions, OffmarketWithdrawalRequests,
@@ -174,6 +175,12 @@ class PlayerViewSet(viewsets.ModelViewSet):
         elif self.request.user.role == "agent":
             return queryset.filter(agent=self.request.user, role="player")
         return queryset
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context["lang_code"] = "US"
+
+        return context
 #player api
 
 class LoginAPIView(APIViewContext):
@@ -181,7 +188,6 @@ class LoginAPIView(APIViewContext):
     permission_classes = (AllowAny,)
 
     def post(self, request):
-        from django.utils import timezone
         translation_language = request.data.get("language",'en')
         if(translation_language in ['nl','ru','de','tr','fr']):
             activate(translation_language)
@@ -374,6 +380,18 @@ class SignUpView(APIViewContext):
         if request.data.get('country_code', '') == '' or request.data.get('phone_number', '') == "":
             data.pop('countray_code', None)
             data.pop('phone_number', None)
+        if request.data.get('code_cca2'):
+            data.pop("country", None)
+            data.pop('code_cca2', None)
+            country = Country.objects.filter(code_cca2=request.data.get('code_cca2').upper()).first()
+            if not country:
+                return Response({"message" : "code_ccs2 is not valid"},status=status.HTTP_400_BAD_REQUEST)
+
+            data["country_obj"] = country.id
+            data["country"] = country.code_cca2
+        else:
+            return Response({"message" : "code_ccs2 has not been provided"},status=status.HTTP_400_BAD_REQUEST)
+
         serializer = self.get_serializer(data=data)
         if Users.objects.filter(username__iexact=request.data.get("username")).exists():
             return Response(
@@ -429,14 +447,15 @@ class UserUpdateView(APIViewContext):
                 dob = request.data.get("dob", player.dob)
                 zipcode = request.data.get("zip_code", player.zip_code)
                 complete_address = request.data.get("complete_address", player.complete_address)
-                user_id_proof = request.data.get("country_code", player.country_code)
-                profile_pic = request.data.get("profile_pic", player.profile_pic)
+                country_code = request.data.get("country_code", player.country_code)
+                profile_pic =request.data.get("profile_pic", player.profile_pic)
+                cca2 = request.data.get("code_cca2", player.country)
                 if(request.data.get("profile_pic") and not request.data.get("profile_pic").startswith("https")):
-                      userb64_profile_pic = request.data.get("profile_pic")
-                      format, imgstr = userb64_profile_pic.split(';base64,') 
-                      ext = format.split('/')[-1] 
-                      profile_pic = ContentFile(base64.b64decode(imgstr),name='temp.' + ext)
-                      if profile_pic:     
+                    userb64_profile_pic = request.data.get("profile_pic")
+                    format, imgstr = userb64_profile_pic.split(';base64,')
+                    ext = format.split('/')[-1]
+                    profile_pic = ContentFile(base64.b64decode(imgstr),name='temp.' + ext)
+                    if profile_pic:
                         filename_format = profile_pic.name.split(".")
                         name, format = filename_format[-2], filename_format[-1]
                         filename = f"{name}{uuid.uuid4()}.{format}"
@@ -450,15 +469,22 @@ class UserUpdateView(APIViewContext):
                                                                  filename,
                                                                  format,
                                                                  sys.getsizeof(profile_thumbnail_io), None)
-                      profile_pic.name = filename
+                    profile_pic.name = filename
                     #   user.profile_pic_thumbnail = page_thumbnail_inmemory
-                      player.profile_pic = profile_pic
+                    player.profile_pic = profile_pic
+                if request.data.get("profile_pic", "https").startswith("https"):
+                    profile_pic = player.profile_pic
                 if Users.objects.filter(phone_number=phone_number).exclude(username=request.data.get('username')).count() > 0:
                     return Response({"message": "Phone number belongs to another user.", }, status.HTTP_400_BAD_REQUEST)
                 # if Users.objects.filter(username=request.data.get("username")).exists():
                 #     return Response({"message": _("User already exists.")}, status.HTTP_400_BAD_REQUEST)
                 if not request.data.get("username") or not request.data.get("email"):
                     return Response("Username or Email must not be null.")
+                if Country.objects.filter(code_cca2=cca2).exists():
+                    player.country = cca2
+                    player.country_obj = Country.objects.get(code_cca2=cca2)
+
+
                 player.username = username
                 player.email = email
                 player.zip_code = zipcode
@@ -468,20 +494,23 @@ class UserUpdateView(APIViewContext):
                 player.state = state
                 player.dob = dob
                 player.complete_address = complete_address
-                player.country_code = user_id_proof
+                player.country_code = country_code
                 player.profile_pic = profile_pic
                 player.cashtag = cashtag
                 player.clean()
+
+
+
                 if player.cashtag!=cashtag:
                     if Player.objects.filter(cashtag=cashtag).exists(): 
                         return self.Response({"title":"Error","icon":"error","message": "Cashtag Already Exists!"}, status.HTTP_400_BAD_REQUEST) 
                 player.save()
-                return Response({"message": "User Updated Succesfully", },status.HTTP_200_OK)
+                return Response({"message": "User Updated Successfully"},status.HTTP_200_OK)
             else:
                 return Response({"message": "User not found", },status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             print(f"Error in update-user-details : {e}")
-            return Response({"message": "something went wrong", },status.HTTP_400_BAD_REQUEST)
+            return Response({"message": "something went wrong", },status.HTTP_500_INTERNAL_SERVER_ERROR)
         
        
 class GetOTPView(APIViewContext):
@@ -491,45 +520,82 @@ class GetOTPView(APIViewContext):
 
     def post(self, request):
         try:
-            if not request.data.get("username"):
+            data = request.data.copy()
+            if request.user.is_authenticated:
+                print(request.user.username)
+                data["username"] = request.user.username
+
+            if not data.get("username"):
                 return Response({"message": "username must not be null."}, status.HTTP_400_BAD_REQUEST)
-            if not request.data.get("phone_number"):
+            if not data.get("phone_number"):
                 return Response({"message": "phone_number must not be null."}, status.HTTP_400_BAD_REQUEST)
-            if not request.data.get("country_code"):
+            if not data.get("country_code"):
                 return Response({"message": "country_code must not be null."}, status.HTTP_400_BAD_REQUEST)
 
-            user = Users.objects.filter(
-                phone_number=request.data.get("phone_number"),
-                country_code=request.data.get("country_code"),
-            ).exists()
-            if (
-                request.data.get("is_signup")
-                and Users.objects.filter(username__iexact=request.data.get("username").lower()).exists()
-            ):
+            # Declare variables for a better readability
+            sign_up = bool(data.get("is_sign_up", False))
+            forgot_psw = bool(data.get("is_forgot_password", False))
+            verify_number = bool(data.get("is_verify_number", False))
+
+            if not is_only_one(sign_up, forgot_psw, verify_number):
+                return Response(
+                    {"message": "Only one action can be made per OTP"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            users_with_same_phone = Users.objects.filter(
+                phone_number=data.get("phone_number"),
+                country_code=data.get("country_code"),
+            )
+            user_with_same_name = Users.objects.filter(username__iexact=data.get("username").lower())
+            user_forgotten_pwd = Users.objects.none()
+            if data.get("is_forgot_password"):
+                user_forgotten_pwd = Users.objects.filter(username__iexact=data.get("username").lower(),
+                                        phone_number=data.get("phone_number"),
+                                        country_code=data.get("country_code"))
+            if verify_number:
+                users_with_same_phone = Users.objects.filter(
+                    phone_number=data.get("phone_number"),
+                    country_code=data.get("country_code"),
+                ).exclude(username=data.get("username"))
+
+                for user in users_with_same_phone:
+                    print(user.username)
+
+            # Start of the logic
+            if sign_up and user_with_same_name.exists():
                 return Response(
                     {"message": _("User already exists.")}, status.HTTP_400_BAD_REQUEST
                 )
-            elif request.data.get("is_signup") and user:
+            elif sign_up and users_with_same_phone.exists():
                 return Response(
                     {"message": _("This mobile number already exist")},
                     status.HTTP_400_BAD_REQUEST,
                 )
-            elif (request.data.get("is_forgot_password") and
-                not Users.objects.filter(username__iexact=request.data.get("username").lower(),
-                                        phone_number=request.data.get("phone_number"),
-                                        country_code=request.data.get("country_code")).exists()):
+            elif forgot_psw and not user_forgotten_pwd.exists():
                 return Response(
                     {"message": _("User with this mobile number and username doesn't exist")},
                     status.HTTP_400_BAD_REQUEST,
                 )
-            elif (request.data.get("is_forgot_password") and
-                  not user and
-                  not Users.objects.filter(username__iexact=request.data.get("username").lower()).exists()):
-                return Response(
-                    {"message": _("User with this mobile number doesn't exist")},
-                    status.HTTP_400_BAD_REQUEST,
-                )
-            serializer = self.get_serializer(data=request.data)
+            elif verify_number:
+                if not request.user.is_authenticated:
+                    return Response(
+                        {"message": "User needs to be logged in"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+                if request.user.phone_number == data.get("phone_number") and\
+                        request.user.country_code == data.get("country_code"):
+                    return Response(
+                        {"message": _("You cannot change to the same phone number")},
+                        status.HTTP_400_BAD_REQUEST,
+                    )
+                if users_with_same_phone.exists():
+                    return Response(
+                        {"message": _("This mobile number already exist")},
+                        status.HTTP_400_BAD_REQUEST,
+                    )
+
+            serializer = self.get_serializer(data=data)
             if serializer.is_valid():
                 response_data = serializer.validated_data
                 try:
@@ -540,6 +606,12 @@ class GetOTPView(APIViewContext):
                         + response_data["phone_number"],
                         channel="sms",
                     )
+                    if verify_number:
+                        user = request.user
+                        user.country_code = response_data["country_code"]
+                        user.phone_number = response_data["phone_number"]
+                        user.save()
+
                     return Response(
                         {
                             "message": _("OTP Sent"),
@@ -577,7 +649,85 @@ class GetOTPView(APIViewContext):
             return Response({"message": "something went wrong", },status.HTTP_400_BAD_REQUEST)
 
 
+class OTPActionsView(APIView):
+    def post(self, request):
+        try:
+
+            TWILIO_ACCOUNT_SID = settings.TWILIO_ACCOUNT_SID
+            TWILIO_AUTH_TOKEN = settings.TWILIO_AUTH_TOKEN
+
+            data = request.data.copy()
+            # Declare variables for a better readability
+            forgot_psw = bool(data.get("is_forgot_password", False))
+            verify_number = bool(data.get("is_verify_number", False))
+
+            if not is_only_one(False, forgot_psw, verify_number):
+                return Response(
+                    {"message": "Only one action can be made per OTP"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+
+            if verify_number:
+                if not request.user.is_authenticated:
+                    return Response(
+                        {"message": "Must be logged in first"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
+                data["username"]= request.user.username
+                data["country_code"] = request.user.country_code
+                data["phone_number"] = request.user.phone_number
+
+            try:
+                client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+                check = client.verify.v2.services(
+                    TWILIO_VERIFY_SERVICE_SID
+                ).verification_checks.create(
+                    to="+" + data.get("country_code") + data.get("phone_number"),
+                    code=data.get("otp"),
+                )
+            except Exception:
+                return Response(
+                    {"message": "Invalid OTP"}, status.HTTP_400_BAD_REQUEST
+                )
+
+            if check.status == "approved" and check.valid is True:
+                if verify_number:
+                    if not request.user.is_authenticated:
+                        return Response({"message": "To verify a number you should be logged in first"}, status=status.HTTP_400_BAD_REQUEST)
+                    user = request.user
+                    if user.is_verified:
+                        return Response({"message": "User was verified"}, status=status.HTTP_202_ACCEPTED)
+                    user.is_verified = True
+                    user.save()
+
+                    return Response({"message": "User is now verified"}, status.HTTP_200_OK)
+
+                if forgot_psw:
+                    user_obj = Users.objects.filter(username__iexact=data.get("username"),
+                                                    country_code=data.get("country_code"),
+                                                    phone_number=data.get("phone_number")).first()
+                    user_obj.password = make_password(data.get("new_password"))
+                    user_obj.save()
+
+                    return Response(
+                        {"message": "Password Changed"},
+                        status.HTTP_200_OK,
+                    )
+            else:
+                return Response({"message": "Invalid OTP"}, status.HTTP_400_BAD_REQUEST)
+        except Exception as err:
+            return Response(
+                {"message": f"Requested service is not allowed. {err}"},
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+
 class VerifyOTPView(APIView):
+    # Verifies the otp from number when sign in
+    # MarcosAlv: I considere this deprecated and we ("I") are planing to remove it slowly ("next update")
+
     def post(self, request):
         try:
             TWILIO_ACCOUNT_SID = settings.TWILIO_ACCOUNT_SID
@@ -610,6 +760,9 @@ class VerifyOTPView(APIView):
 
                     # Check if user is referred by?
                     referred_by = Users.objects.filter(referral_code=user_data.get("referral_code", None)).first()
+                    # Affiliated
+                    # Note: this is the way I think it was meant to be implemented
+                    affiliated_by = request.user if request.user.is_authenticated else None
 
                     # Give this user referral code so that he can refer-a-friend as well
                     user_referral_code = ''.join(random.choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(5))
@@ -687,6 +840,8 @@ class AdminPublicDetailsView(APIView):
             # for banner in AdminBanner.objects.filter(banner_category=banner_category):
             #     admin_banners[banner.banner_type.lower()].append({"url": f'{settings.BE_DOMAIN}{banner.url}',})
             banners = AdminBanner.objects.filter(banner_category=banner_category, banner_type__iexact=banner_type).order_by("-created")
+            if request.user.is_authenticated and request.user.is_verified:
+                banners = banners.exclude(title__endswith='$')
             serializer = self.serializer_class(banners, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
         except Exception as err:
@@ -744,6 +899,7 @@ class SetPlayerMaxSpendLimitView(APIViewContext):
     
     def post(self, request):
         max_spending_limit = int(request.data.get("max_spending_limit", MAX_SPEND_AMOUNT))
+        from datetime import timezone
         try:
             player = Player.objects.filter(id=request.user.id).first()
             if player:
@@ -776,6 +932,7 @@ class SetPlayerBlackoutView(APIViewContext):
 
     def post(self, request):
         blackout_expire_time = request.data.get("blackout_expire_time", None)
+        from datetime import timezone
         try:
             player = Player.objects.filter(id=request.user.id).first()
             if player:
@@ -1346,8 +1503,6 @@ class ComingSoonPagesDeatilsView(APIView):
     http_method_names = ["get", ]
 
     def get(self, request):
-        from django.utils import timezone
-
         admin_obj = Admin.objects.filter().first()
         if admin_obj.coming_soon_scheduled and admin_obj.coming_soon_scheduled < timezone.now():
             admin_obj.is_coming_soon_enabled = False
@@ -1513,6 +1668,7 @@ class SignUpOTP(APIView):
                     return Response({"error": "Username must be atleast 4 characters long", "status": status.HTTP_400_BAD_REQUEST},status.HTTP_400_BAD_REQUEST)
                 else:
                     generated_otp =  create_otp()
+                    print(generated_otp)
                     context = {
                         "otp": generated_otp,
                         "expiration_time":"10 Mins",
@@ -1661,7 +1817,6 @@ class RestrictedLoginView(APIView):
     permission_classes = (IsPlayer,)
     http_method_names = ["post"]
     def post(self, request):
-        from django.utils import timezone
         try:
             data = request.data
             user = Users.objects.filter(id=request.user.id).first()
@@ -1827,7 +1982,22 @@ class OffmarketTransaction(APIView):
             return Response(response)
         
 
-    
+class CountriesView(APIView):
+
+    def get(self, request):
+        lang_code = request.GET.get("lang", "en")
+        activate(lang_code)
+
+        countries = Country.objects.filter(enabled=True).order_by('name')
+
+        serializer = CountrySerializer(
+            countries,
+            context={"lang_code": lang_code},
+            many=True
+        )
+
+        return Response({ "countries": serializer.data, "status_code": status.HTTP_200_OK}, status=status.HTTP_200_OK)
+
         
 class OffMarketWithdrawView(APIView):
     permission_classes = (IsPlayer,)
@@ -1847,6 +2017,38 @@ class OffMarketWithdrawView(APIView):
         except:
             return Response({"message": "Something Went Wrong"}, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+class NextSpinWheel(APIView):
+    permission_classes = (IsPlayer,)
+    http_method_names = ["post"]
+    def post(self, request):
+        try:
+            tz_offset = request.data.get("tz_offset", "").strip()
+            if tz_offset == "":
+                tz_offset = "UTC+0:00"
+            result = get_tz_offset(tz_offset)
+            if result.get("message"):
+                return Response(result, status=status.HTTP_400_BAD_REQUEST)
+            offset = result.get("offset")
+
+            users_date = (timezone.now() + offset).date()
+            spin_wheel = Transactions.objects.filter(journal_entry="bonus", bonus_type=SPIN_WHEEL, created__date=users_date, user=self.request.user).order_by("-created").first()
+            is_spin_available = not bool(spin_wheel)
+
+            next_spin = users_date
+            if not is_spin_available:
+                next_spin = (spin_wheel.created + timedelta(days=1)).date()
+
+            return Response({
+                "is_spin_available": is_spin_available,
+                "next_spin": next_spin,
+            }, status.HTTP_200_OK)
+
+
+        except Exception as e:
+            print(e)
+            return Response({"message": "Something Went Wrong"}, status=status.HTTP_400_BAD_REQUEST)
+
+
 
 class AddSpinWheelView(APIView):
     permission_classes = (IsPlayer,)
@@ -1854,31 +2056,42 @@ class AddSpinWheelView(APIView):
     @transaction.atomic
     def post(self, request):
         try:
+            tz_offset = request.data.get("tz_offset", "").strip()
+            if tz_offset == "":
+                tz_offset = "UTC+0:00"
+            result = get_tz_offset(tz_offset)
+            if result.get("message"):
+                return Response(result, status=status.HTTP_400_BAD_REQUEST)
+            offset = result.get("offset")
+            now = timezone.now()
+            users_date = (now + offset).date()
+
             spin_id = request.data.get('id')
             user=self.request.user
-            data = Transactions.objects.filter(journal_entry = "bonus",bonus_type = SPIN_WHEEL,created__date = datetime.now().date(),user = self.request.user).first()
-            spin_wheel=SpintheWheelDetails.objects.filter(id=spin_id).first()
-            if not data:
-                bonus_amount=spin_wheel.value
-                previous_bonus=user.bonus_balance
-                user.bonus_balance=user.bonus_balance+spin_wheel.value
-                user.save()
-                Transactions.objects.create(
-                    user=user,
-                    journal_entry="bonus",
-                    amount=Decimal(spin_wheel.value),
-                    status="charged",
-                    previous_balance=previous_bonus,
-                    new_balance=Decimal(user.bonus_balance),
-                    description="Spin the Wheel Bonus to player",
-                    reference=generate_reference(user),
-                    bonus_type=SPIN_WHEEL,
-                    bonus_amount=bonus_amount,
-                )
-                return Response({"message": "Bonus added"}, status.HTTP_200_OK)
-
-            else:
+            data = Transactions.objects.filter(journal_entry="bonus",bonus_type=SPIN_WHEEL, created__date=users_date, user=self.request.user).first()
+            if data:
                 return Response({"message": "Already given spin bonus"}, status.HTTP_400_BAD_REQUEST)
+            spin_wheel=SpintheWheelDetails.objects.filter(id=spin_id).first()
+            bonus_amount=spin_wheel.value
+            previous_bonus=user.bonus_balance
+            user.bonus_balance=user.bonus_balance+spin_wheel.value
+            user.save()
+            t = Transactions.objects.create(
+                user=user,
+                journal_entry="bonus",
+                amount=Decimal(spin_wheel.value),
+                status="charged",
+                previous_balance=previous_bonus,
+                new_balance=Decimal(user.bonus_balance),
+                description="Spin the Wheel Bonus to player",
+                reference=generate_reference(user),
+                bonus_type=SPIN_WHEEL,
+                bonus_amount=bonus_amount,
+            )
+            # saves the spin with the correct date
+            t._force_created = now + offset
+            t.save()
+            return Response({"message": "Bonus added"}, status.HTTP_200_OK)
         except:
             return Response({"message": "Something Went Wrong"}, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -1886,6 +2099,9 @@ class AddSpinWheelView(APIView):
 
 class SpintheWheelDetailsAPIView(APIView):
     def get(self, request):
+        # Hide the spin the wheel when it is not verified
+        # if not request.user.is_authenticated or not request.user.is_verified:
+        #     return Response(SpintheWheelDetailsSerializer(SpintheWheelDetails.objects.none(), many=True).data)
         spin_wheel_details = SpintheWheelDetails.objects.all()
         serializer = SpintheWheelDetailsSerializer(spin_wheel_details, many=True)
         return Response(serializer.data)
@@ -2035,7 +2251,6 @@ class ChatSupportView(APIView):
 
     def get(self, request):
         try:
-            from django.utils import timezone
             request_type = request.GET.get('request_type', '')
 
             if request_type == "recent_messages":

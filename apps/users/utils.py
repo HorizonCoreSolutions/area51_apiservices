@@ -1,3 +1,4 @@
+import re
 import binascii
 from decimal import Decimal
 import hashlib
@@ -18,6 +19,7 @@ from django.db import transaction
 from django.db.models import F, Q, Count, Value, CharField, Window
 from django.db.models.functions import Concat, DenseRank, RowNumber
 
+from datetime import timedelta
 from apps.bets.models import Transactions
 from apps.bets.utils import generate_reference
 from apps.users.models import ChatRoom, OffMarketGames, OffMarketTransactions, Users
@@ -59,8 +61,6 @@ def check_otp(otp):
     except Exception as e:
         print("Check OTP Exception", e)
         return False
-
-
 
 
 
@@ -325,4 +325,36 @@ def send_active_chat_count(user_id):
             }
         }
     )
-    
+
+def is_only_one(a: bool, b: bool, c: bool) -> bool:
+    return (a + b + c) == 1
+
+# regex to extract UTC OFFSET
+UTC_OFFSET_PATTERN = re.compile(r"^UTC([+-])(\d{1,2}):?(\d{2})?$")
+
+
+def get_tz_offset(tz_offset: str):
+    result = UTC_OFFSET_PATTERN.match(tz_offset)
+
+    if not result:
+        return {"message": "Invalid timezone format"}
+
+    sign, hours, minutes = result.groups()
+    hours, minutes = int(hours), int(minutes) if minutes else 0
+
+    hours *= -1 if sign == "-" else 1
+
+    # Ensure the offset is within valid UTC ranges (-12:00 to +14:00)
+    is_n_twelve = hours == -12
+    is_p_fourteen = hours == 14
+    is_z_min = minutes == 0
+
+    case1 = is_n_twelve and is_z_min  # -12:00
+    case2 = -12 < hours < 14 and 0 <= minutes < 60  # Valid range
+    case3 = is_p_fourteen and is_z_min  # +14:00
+
+    if not (case1 or case2 or case3):
+        return {"message": "Invalid timezone range"}
+
+    offset = timedelta(hours=hours, minutes=minutes)
+    return {"offset": offset}

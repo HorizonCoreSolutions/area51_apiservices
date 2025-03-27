@@ -830,7 +830,7 @@ class BalanceUpdateConsumer(AsyncWebsocketConsumer):
         except Exception as e:
             print("ERROR", e)
 
-    async def disconnect(self):
+    async def disconnect(self, close_code=None):
         await self.channel_layer.group_discard(
             self.room_group_name,
             self.channel_name
@@ -869,7 +869,7 @@ class TournamentScoreboardConsumer(AsyncWebsocketConsumer):
             print("ERROR", e)
 
 
-    async def disconnect(self):
+    async def disconnect(self, close_code=None):
         await self.channel_layer.group_discard(
             self.room_group_name,
             self.channel_name
