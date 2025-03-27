@@ -2023,6 +2023,8 @@ class NextSpinWheel(APIView):
     def post(self, request):
         try:
             tz_offset = request.data.get("tz_offset", "").strip()
+            if tz_offset == "":
+                tz_offset = "UTC+0:00"
             result = get_tz_offset(tz_offset)
             if result.get("message"):
                 return Response(result, status=status.HTTP_400_BAD_REQUEST)
@@ -2055,6 +2057,8 @@ class AddSpinWheelView(APIView):
     def post(self, request):
         try:
             tz_offset = request.data.get("tz_offset", "").strip()
+            if tz_offset == "":
+                tz_offset = "UTC+0:00"
             result = get_tz_offset(tz_offset)
             if result.get("message"):
                 return Response(result, status=status.HTTP_400_BAD_REQUEST)
@@ -2087,7 +2091,6 @@ class AddSpinWheelView(APIView):
             # saves the spin with the correct date
             t._force_created = now + offset
             t.save()
-            print("is the error")
             return Response({"message": "Bonus added"}, status.HTTP_200_OK)
         except:
             return Response({"message": "Something Went Wrong"}, status.HTTP_500_INTERNAL_SERVER_ERROR)
