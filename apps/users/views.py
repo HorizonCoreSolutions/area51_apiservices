@@ -2057,26 +2057,32 @@ class AddSpinWheelView(APIView):
     @transaction.atomic
     def post(self, request):
         try:
+            # get tz_offset or default to UTC+0:00
             tz_offset = request.data.get("tz_offset", "").strip()
             if tz_offset == "":
                 tz_offset = "UTC+0:00"
+            # Transform the offset to a delta time
             result = get_tz_offset(tz_offset)
             if result.get("message"):
                 return Response(result, status=status.HTTP_400_BAD_REQUEST)
             offset = result.get("offset")
+
+            # Calculates the date of the user
             now = timezone.now()
             users_date = (now + offset).date()
 
-            spin_id = request.data.get('id')
             user=self.request.user
             data = Transactions.objects.filter(journal_entry="bonus",bonus_type=SPIN_WHEEL, created__date=users_date, user=self.request.user).first()
             if data:
                 return Response({"message": "Already given spin bonus"}, status.HTTP_400_BAD_REQUEST)
+
+            spin_id = random.choice(SpintheWheelDetails.objects.values_list('pk', flat=True))
             spin_wheel=SpintheWheelDetails.objects.filter(id=spin_id).first()
             bonus_amount=spin_wheel.value
             previous_bonus=user.bonus_balance
             user.bonus_balance=user.bonus_balance+spin_wheel.value
             user.save()
+            serializer = SpintheWheelDetailsSerializer(spin_wheel, many=False)
             t = Transactions.objects.create(
                 user=user,
                 journal_entry="bonus",
@@ -2092,7 +2098,7 @@ class AddSpinWheelView(APIView):
             # saves the spin with the correct date
             t._force_created = now + offset
             t.save()
-            return Response({"message": "Bonus added"}, status.HTTP_200_OK)
+            return Response({"message": "Bonus added", "result": serializer.data}, status.HTTP_200_OK)
         except:
             return Response({"message": "Something Went Wrong"}, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
