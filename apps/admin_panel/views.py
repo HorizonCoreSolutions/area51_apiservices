@@ -1,5 +1,6 @@
 import datetime
 from datetime import date,timedelta
+from bisect import bisect_right
 from itertools import count
 import json
 import math
@@ -2542,7 +2543,53 @@ class PlayerTransactionsView(CheckRolesMixin, views.JSONResponseMixin, views.Aja
             transaction_filter_dict["journal_entry"] = activity_type
 
         queryset = queryset.filter(**transaction_filter_dict).order_by("-created")
+        transaction_filter_dict.pop("journal_entry", None)
+        # Now Payments transactions
+        npt_queryset = NowPaymentsTransactions.objects.filter(**transaction_filter_dict).order_by("-created")
+        gst_queryset = GSoftTransactions.objects.filter(**transaction_filter_dict).order_by("-created")
+        game_dict = CasinoGameList.objects.in_bulk(set(gst_queryset.filter(game_id__regex=r'^\d+$').values_list("game_id", flat=True)))
+
+
+        # Creates a result and an index, the index saves cpu usage in exchange of some memory
+        # in other methos you had to create a [itm.created.timestamp for itm in query]
+        # if a faster method is found please change this
+        # this might be O(n), though
         results = []
+        createds = []
+
+        for obj in npt_queryset:
+            data = {"id": str(obj.payment_id),
+                    "created": obj.created.strftime("%d/%m/%y %H:%M"),
+                    "amount": round(obj.price_amount, 2),
+                    "journal_entry": obj.payment_status,
+                    "trans_type": obj.transaction_type,
+                    "provider" : "NowPayments"}
+
+            # Find the correct index to insert
+            idx = bisect_right(createds, data["created"])
+
+            # Insert the new entry at the found index
+            results.insert(idx, data)
+            createds.insert(idx, data["created"])
+
+        for obj in gst_queryset:
+            if obj.action_type == "LOSE" or obj.bonus_type in GSoftTransactions.BonusType.choices:
+                continue
+            multiply = 1 if obj.action_type == 'WIN' else (-1 if obj.action_type == 'BET' else 1)
+            data = {"id": str(game_dict.get(gst.game_id, None) if str(obj.game_id).isdigit() else obj.game_id),
+                    "created": obj.created.strftime("%d/%m/%y %H:%M"),
+                    "amount": obj.amount * multiply,
+                    "journal_entry": obj.transaction_type,
+                    "trans_type": obj.action_type,
+                    "provider" : "GSoft" if str(obj.game_id).isdigit() else "Casino25" }
+
+            # Find the correct index to insert
+            idx = bisect_right(createds, data["created"])
+
+            # Insert the new entry at the found index
+            results.insert(idx, data)
+            createds.insert(idx, data["created"])
+
         for obj in queryset:
             description = obj.description
             trans_type = ""
@@ -2575,8 +2622,14 @@ class PlayerTransactionsView(CheckRolesMixin, views.JSONResponseMixin, views.Aja
                 "amount": amount,
                 "journal_entry": obj.journal_entry,
                 "trans_type": trans_type,
+                "provider" : "Area 51"
             }
-            results.append(response)
+            # Find the correct index to insert
+            idx = bisect_right(createds, response["created"])
+
+            # Insert the new entry at the found index
+            results.insert(idx, response)
+            createds.insert(idx, response["created"])
 
         return self.render_json_response(results)
 
