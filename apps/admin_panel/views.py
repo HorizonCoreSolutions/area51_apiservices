@@ -4318,7 +4318,7 @@ class CreateAdminBannerView(CheckRolesMixin, TemplateView, View):
                 name, format = filename_format[-2], filename_format[-1]
                 filename = f"{name}{uuid.uuid4()}.{format}"
                 banner_thumbnail = Image.open(banner)
-                banner_thumbnail.thumbnail((100, 100))
+                
                 banner_thumbnail_io = BytesIO()
                 format = 'JPEG' if format.lower() == 'jpg' else format.upper()
                 banner_thumbnail.save(banner_thumbnail_io, format=format,filename=filename)
@@ -5669,7 +5669,7 @@ class EditAdminBannerView(CheckRolesMixin, TemplateView, views.JSONResponseMixin
                 name, format = filename_format[-2], filename_format[-1]
                 filename = f"{name}{uuid.uuid4()}.{format}"
                 banner_thumbnail = Image.open(banner)
-                banner_thumbnail.thumbnail((100, 100))
+                
                 banner_thumbnail_io = BytesIO()
                 format = 'JPEG' if format.lower() == 'jpg' else format.upper()
                 banner_thumbnail.save(banner_thumbnail_io, format=format, filename=filename)
