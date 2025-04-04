@@ -7,6 +7,11 @@ from apps.core.models import AbstractBaseModel
 from apps.users.models import Admin, Users
 
 
+class Providers(AbstractBaseModel):
+    name = models.CharField(max_length=250,blank=True,null=True)
+    logo = models.ImageField(upload_to='admin/providers/', null=True, blank=True)
+
+
 class CasinoGameList(AbstractBaseModel):
     # game_list = JSONField(default=None, null=True, blank=True)
     game_name = models.CharField(max_length=250,blank=True,null=True)
@@ -14,6 +19,7 @@ class CasinoGameList(AbstractBaseModel):
     game_type = models.CharField(max_length=250,blank=True,null=True)
     game_image = models.CharField(max_length=250,blank=True,null=True)
     vendor_name = models.CharField(max_length=250,blank=True,null=True)
+    provider = models.ForeignKey(Providers, on_delete=models.CASCADE, null=True, related_name="games")
     game_category = models.CharField(max_length=250,blank=True,null=True)
     is_support_jackpot = models.BooleanField(default=False)
     jackpot_type = models.CharField(max_length=250,blank=True,null=True)
@@ -33,6 +39,7 @@ class CasinoGameList(AbstractBaseModel):
 class GameImages(AbstractBaseModel):
     name = models.CharField(max_length=256, default=None, null=True, blank=False)
     url = models.URLField(max_length=200, default=None, null=True, blank=False)
+
 
 class GSoftTransactions(AbstractBaseModel):
     class RequestType(DjangoChoices):
