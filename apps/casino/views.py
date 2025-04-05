@@ -739,6 +739,10 @@ class GetCasinoProviders(APIView):
         ).order_by("-num_games").values_list("vendor_name", flat=True)
 
         res_providers = Providers.objects.filter(name__in=casino_providers)
+
+        if not 'img_urls' in self.request.GET:
+            return res_providers
+
         serializer = ProviderSerializer(res_providers, many=True)
         serialized_data = serializer.data
 
