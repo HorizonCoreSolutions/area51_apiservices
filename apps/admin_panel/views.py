@@ -5788,7 +5788,7 @@ class CasinoBetslipReportView(CheckRolesMixin, ListView):
                 queryset = queryset.filter(user__agent__in=agents)
             
             if self.request.GET.get("provider"):
-                games = CasinoGameList.objects.filter(vendor_name=self.request.GET.get("provider"))
+                games = CasinoGameList.objects.filter(provider__name=self.request.GET.get("provider"))
                 queryset = queryset.filter(Q(game_id__in=games.values('game_id')))
                 
             if self.request.GET.get("games"):
@@ -6761,6 +6761,7 @@ class CasinoHeaderCategoryStatus(CheckRolesMixin, views.JSONResponseMixin, views
     
 
 class SpinToWinProviderStatus(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseMixin, View):
+    '''accounts/manage-spin-to-win-provider-status/'''
     allowed_roles = ("admin")
 
     @method_decorator(csrf_exempt)
