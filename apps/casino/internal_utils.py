@@ -9,6 +9,8 @@ import uuid
 
 # It is here to prevent circular imports
 def rename_image(instance, filename):
+    if not filename:
+        return None
     # Get extension
     ext = filename.split('.')[-1]
     # Generate new unique name
