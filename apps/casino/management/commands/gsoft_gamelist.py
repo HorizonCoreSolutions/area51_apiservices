@@ -48,7 +48,6 @@ class Command(BaseCommand):
                                 
                             }
 
-                            provider = self.fetch_provider_obj(game.get('subVendorName'))
                             obj, created = CasinoGameList.objects.update_or_create(
                                 game_name = game.get('gameName'),
                                 game_id = game.get('gameId'),
@@ -56,7 +55,6 @@ class Command(BaseCommand):
                                 game_category = game.get('gameCategory'),
                                 game_image = game.get('defaultImg', ''),
                                 vendor_name = game.get('subVendorName'),
-                                provider=provider,
                                 is_support_jackpot = True if is_support_jackpot == "Yes" else False,
                                 jackpot_type = game.get('jackpotType'),
                                 release_date = game.get('releaseDate'),
@@ -78,15 +76,6 @@ class Command(BaseCommand):
             print(e)
             raise e
 
-
-    def fetch_provider_obj(self, name: str) -> Providers:
-        queryset = Providers.objects.filter(name=name)
-
-        if queryset.exists():
-            return queryset.first()
-
-        return Providers.objects.create(name=name)
-    
     
     def update_or_create_casino_management(self, game):
 

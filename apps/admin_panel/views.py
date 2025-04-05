@@ -5788,7 +5788,7 @@ class CasinoBetslipReportView(CheckRolesMixin, ListView):
                 queryset = queryset.filter(user__agent__in=agents)
             
             if self.request.GET.get("provider"):
-                games = CasinoGameList.objects.filter(provider__name=self.request.GET.get("provider"))
+                games = CasinoGameList.objects.filter(vendor_name=self.request.GET.get("provider"))
                 queryset = queryset.filter(Q(game_id__in=games.values('game_id')))
                 
             if self.request.GET.get("games"):
@@ -6552,6 +6552,11 @@ class CasinoManagementView(CheckRolesMixin, ListView):
 
 
 class CasinoManagementProviderView(CheckRolesMixin, ListView):
+    '''
+    URL: admin/casino-management-provider-list/
+    Shows the panel to activate or deactivate providers
+    '''
+
     allowed_roles = ["admin",]
     template_name = "admin/provider_casino_management.html"
     paginate_by = 20
@@ -6585,9 +6590,17 @@ class ProviderView(CheckRolesMixin, ListView):
     context_object_name = "provider"
 
     def get_queryset(self):
-        provider_id = self.request.GET.get("provider_id")
-        if provider_id:
-            return Providers.objects.filter(id=provider_id).first()
+        provider_name = self.request.GET.get("provider_name")
+        if not provider_name:
+            return Providers.objects.none()
+        
+        provider = Providers.objects.filter(name=provider_name)
+        if provider.exists():
+            return provider.first()
+        
+        if CasinoGameList.objects.filter(vendor_name=provider_name).exists():
+            return Providers.objects.create(name=provider_name)
+        
         return Providers.objects.none()
 
 
@@ -6770,12 +6783,12 @@ class SpinToWinProviderStatus(CheckRolesMixin, views.JSONResponseMixin, views.Aj
     
     def post_ajax(self, request, *args, **kwargs):
         provider = request.POST.get("provider")
+
         casino_obj = CasinoManagement.objects.filter(
             admin = self.request.user, 
             game__vendor_name= provider,
         )
         
-
         if casino_obj.exists() and casino_obj.first().enabled:
             casino_obj.update(enabled = False)
             message = "Provider disabled"

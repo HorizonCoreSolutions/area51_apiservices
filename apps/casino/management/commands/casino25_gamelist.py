@@ -70,7 +70,6 @@ class Command(BaseCommand):
                             obj.game_category = games_category.get(game.get("Id"), "Slots")
                             vendor_name = self.available_providers.get(game.get("SectionId"), game.get("SectionId"))
                             obj.vendor_name = vendor_name
-                            obj.provider = self.fetch_provider_obj(vendor_name)
                             obj.save()
                         self.update_or_create_casino_management(obj)
                         casino_game_ids.append(game.get("Id"))
@@ -86,15 +85,6 @@ class Command(BaseCommand):
         except Exception as e:
             print(e)
             raise e
-
-
-    def fetch_provider_obj(self, name: str) -> Providers:
-        queryset = Providers.objects.filter(name=name)
-
-        if queryset.exists():
-            return queryset.first()
-
-        return Providers.objects.create(name=name)
 
     
     def get_game_list(self):

@@ -3,7 +3,7 @@ import hashlib
 import hmac
 import urllib
 import uuid
-
+import os
 import requests
 from django.utils import timezone
 import uuid
@@ -18,6 +18,14 @@ from apps.users.models import BonusPercentage, Player, Users
 
 def format_date(date_time=timezone.now()):
     return "%sZ" % date_time.strftime("%Y-%m-%dT%H:%M:%S.%f")[:23]
+
+
+def rename_image(instance, filename):
+    # Get extension
+    ext = filename.split('.')[-1]
+    # Generate new unique name
+    new_filename = f"{uuid.uuid4().hex}.{ext}"
+    return os.path.join('uploads/images/', new_filename)
 
 
 class CasinoApiClinet(object):

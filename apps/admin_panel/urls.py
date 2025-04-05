@@ -354,6 +354,7 @@ urlpatterns = [
     url(r"^casino-management-game-category/", CasinoCategoryHeaderManagementView.as_view(), name="casino-management-game-category"),
     url(r"^casino-management-categories-status/", CasinoHeaderCategoryStatus.as_view(), name="casino-management-categories-status"),
     url(r"^manage-spin-to-win-game-status/", SpinToWinGameStatus.as_view(), name="manage-spin-to-win-game-status"),
+    # TODO: 
     url(r"^casino-provider-ajax/$", CasinoProviderAjaxView.as_view(), name="casino-provider-ajax"),
     url(r"^casino-game-ajax/$", CasinoGameAjaxView.as_view(), name="casino-game-ajax"),
     url(r"^delete-admin-ads/", DeleteAdminSponser.as_view(), name="delete-admin-ads"),
