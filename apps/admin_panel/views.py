@@ -6590,9 +6590,17 @@ class ProviderView(CheckRolesMixin, ListView):
     context_object_name = "provider"
 
     def get_queryset(self):
-        provider_id = self.request.GET.get("provider_id")
-        if provider_id:
-            return Providers.objects.filter(id=provider_id).first()
+        provider_name = self.request.GET.get("provider_name")
+        if not provider_name:
+            return Providers.objects.none()
+        
+        provider = Providers.objects.filter(name=provider_name)
+        if provider.exists():
+            return provider.first()
+        
+        if CasinoGameList.objects.filter(vendor_name=provider_name).exists():
+            return Providers.objects.create(name=provider_name)
+        
         return Providers.objects.none()
 
 
