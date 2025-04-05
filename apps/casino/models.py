@@ -9,7 +9,9 @@ from apps.users.models import Admin, Users
 
 class Providers(AbstractBaseModel):
     name = models.CharField(max_length=250,blank=True,null=True)
+    enabled = models.BooleanField(default=True, null=True, blank=True)
     logo = models.ImageField(upload_to='admin/providers/', null=True, blank=True)
+    admin = models.ForeignKey(Admin, on_delete=models.CASCADE,null=True, blank=True)
 
 
 class CasinoGameList(AbstractBaseModel):
