@@ -6,9 +6,9 @@ from rest_framework import serializers
 
 from apps.bets.models import Transactions
 from apps.casino.utils import get_user_tournament_rank
-from .models import (CasinoGameList, CasinoHeaderCategory, CasinoManagement, Providers, Tournament, TournamentPrize,
+from .models import (CasinoGameList, CasinoHeaderCategory, CasinoManagement, Tournament, TournamentPrize,
     TournamentTransaction, UserTournament)
-from .models import CasinoGameList,PlayerFavouriteCasinoGames
+from .models import CasinoGameList,PlayerFavouriteCasinoGames, Providers
 from django.contrib.auth.models import AnonymousUser
 from django.db.models import Sum,  F, Window
 from django.db.models.functions import RowNumber
