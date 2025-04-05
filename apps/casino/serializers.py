@@ -6,7 +6,7 @@ from rest_framework import serializers
 
 from apps.bets.models import Transactions
 from apps.casino.utils import get_user_tournament_rank
-from .models import (CasinoGameList, CasinoHeaderCategory, CasinoManagement, Tournament, TournamentPrize,
+from .models import (CasinoGameList, CasinoHeaderCategory, CasinoManagement, Providers, Tournament, TournamentPrize,
     TournamentTransaction, UserTournament)
 from .models import CasinoGameList,PlayerFavouriteCasinoGames
 from django.contrib.auth.models import AnonymousUser
@@ -208,6 +208,15 @@ class GameTransactionSerializer(serializers.Serializer):
         pass
 
 
+class ProviderSerializer(serializers.ModelSerializer):
+    url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Providers
+        fields = ['name', 'url']
+
+    def get_url(self, instance: Providers):
+        return settings.BE_DOMAIN + instance.logo.url
 
 class GameListSerializer(serializers.ModelSerializer):
     is_favourite = serializers.SerializerMethodField()
