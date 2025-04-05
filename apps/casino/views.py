@@ -22,7 +22,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from apps.casino.custom_pagination import CustomPagination
-from apps.casino.models import (CasinoGameList, CasinoHeaderCategory, CasinoManagement, PlayerFavouriteCasinoGames,
+from apps.casino.models import (CasinoGameList, CasinoHeaderCategory, CasinoManagement, PlayerFavouriteCasinoGames, Providers,
     Tournament, TournamentTransaction, UserTournament)
 from apps.core.pagination import PageNumberPagination
 from apps.core.permissions import *
@@ -37,7 +37,7 @@ from .serializers import (Casino25CasinoManagementSerializer,
     CasinoManagementSerializer, FavouriteCasinoGameListSerializer,
     FavouriteGameListSerializer, GameListSerializer, GameLobbySerializer,
     GameTransactionSerializer, MostPopularGamesSerializer, OffMarketGamesSerializer,
-    PlayerGameHistorySerializer, RollbackSerializer, TournamentDetailSerializer,
+    PlayerGameHistorySerializer, ProviderSerializer, RollbackSerializer, TournamentDetailSerializer,
     TournamentListSerializer, TournamentTransactionListSerializer,
     UserTournamentHistoryListSerializer, WithdrawAndDepositSerializer)
 from .utils import (ValidateRequest,
@@ -737,8 +737,15 @@ class GetCasinoProviders(APIView):
         casino_providers = casino_games.values("vendor_name").annotate(
             num_games=Count("vendor_name")
         ).order_by("-num_games").values_list("vendor_name", flat=True)
-        
-        return Response(casino_providers)
+
+        res_providers = Providers.objects.filter(name__in=casino_providers)
+        serializer = ProviderSerializer(res_providers, many=True)
+
+        return Response(
+            {
+                "providers" : serializer.data
+            }
+        )
     
 
 class GetCasinoProviderGameList(APIView):
