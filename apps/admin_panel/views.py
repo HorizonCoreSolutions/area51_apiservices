@@ -6552,6 +6552,11 @@ class CasinoManagementView(CheckRolesMixin, ListView):
 
 
 class CasinoManagementProviderView(CheckRolesMixin, ListView):
+    '''
+    URL: admin/casino-management-provider-list/
+    Shows the panel to activate or deactivate providers
+    '''
+
     allowed_roles = ["admin",]
     template_name = "admin/provider_casino_management.html"
     paginate_by = 20
