@@ -73,7 +73,7 @@
         </label>      
         <input type="file" id="file_input" accept="image/*" onchange="previewImage()" class="form-control" style="display: none;">
         <div class="preview_provider" style="margin-top:10px; padding: 15px;">
-          <img id="provider_img" width="150px" height="92px" src="{% if provider.logo %}{{ provider.logo.url }}{% else %}{{  }}{% endif %}" onclick="provider_click()" />
+          <img id="provider_img" width="150px" height="92px" src="{% if provider.logo %}{{ provider.logo.url }}{% else %}/static/casino_images/baw_a51_default.webp{% endif %}" onclick="provider_click()" />
         </div>
         <button id="button-upload" class="btn btn-primary mt-3" style="margin-bottom: 1.5rem;" type="button">Update</button>
       </div>
@@ -124,7 +124,7 @@
             formData.append('logo', fileInput.files[0]);
             formData.append('id', '{{ provider.id }}')
       
-            fetch('/admin/edit-provider/', {
+            fetch('{% url 'admin-panel:edit-provider' %}', {
               method: 'POST',
               body: formData,
               headers: {
