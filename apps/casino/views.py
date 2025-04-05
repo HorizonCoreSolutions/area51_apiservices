@@ -740,11 +740,21 @@ class GetCasinoProviders(APIView):
 
         res_providers = Providers.objects.filter(name__in=casino_providers)
         serializer = ProviderSerializer(res_providers, many=True)
+        serialized_data = serializer.data
+
+        existing_names = set(p["name"] for p in serialized_data)
+
+        for vendor_name in casino_providers:
+            if vendor_name not in existing_names:
+                serialized_data.append({
+                    "name": vendor_name,
+                    "url": settings.BE_DOMAIN + settings.STATIC_URL + 'casino_images/baw_a51_default.webp'
+                })
 
         return Response(
             {
-                "providers" : serializer.data
-            }
+                "providers" : serialized_data
+            }, status=status.HTTP_200_OK
         )
     
 
