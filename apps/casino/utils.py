@@ -20,14 +20,6 @@ def format_date(date_time=timezone.now()):
     return "%sZ" % date_time.strftime("%Y-%m-%dT%H:%M:%S.%f")[:23]
 
 
-def rename_image(instance, filename):
-    # Get extension
-    ext = filename.split('.')[-1]
-    # Generate new unique name
-    new_filename = f"{uuid.uuid4().hex}.{ext}"
-    return os.path.join('uploads/images/', new_filename)
-
-
 class CasinoApiClinet(object):
     def __init__(self, url=settings.CASINO_API_URL, key=settings.CASINO_API_KEY):
         self.api_url = url
@@ -140,7 +132,7 @@ class GSoftUtils(object):
     something = ""
     
 from datetime import date    
-from apps.casino.models import Tournament, UserTournament
+from apps.casino.models import UserTournament
 # bet bonus to player on wager place    
 def bet_bonus(user,betamount):
     user = Player.objects.filter(id=user).first()
