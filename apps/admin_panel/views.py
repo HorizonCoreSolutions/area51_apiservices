@@ -5788,7 +5788,7 @@ class CasinoBetslipReportView(CheckRolesMixin, ListView):
                 queryset = queryset.filter(user__agent__in=agents)
             
             if self.request.GET.get("provider"):
-                games = CasinoGameList.objects.filter(provider__name=self.request.GET.get("provider"))
+                games = CasinoGameList.objects.filter(vendor_name=self.request.GET.get("provider"))
                 queryset = queryset.filter(Q(game_id__in=games.values('game_id')))
                 
             if self.request.GET.get("games"):
@@ -6775,12 +6775,12 @@ class SpinToWinProviderStatus(CheckRolesMixin, views.JSONResponseMixin, views.Aj
     
     def post_ajax(self, request, *args, **kwargs):
         provider = request.POST.get("provider")
+
         casino_obj = CasinoManagement.objects.filter(
             admin = self.request.user, 
             game__vendor_name= provider,
         )
         
-
         if casino_obj.exists() and casino_obj.first().enabled:
             casino_obj.update(enabled = False)
             message = "Provider disabled"
