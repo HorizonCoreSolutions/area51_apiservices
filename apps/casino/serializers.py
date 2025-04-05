@@ -216,7 +216,9 @@ class ProviderSerializer(serializers.ModelSerializer):
         fields = ['name', 'url']
 
     def get_url(self, instance: Providers):
-        return settings.BE_DOMAIN + instance.logo.url
+        if instance.logo:
+            return settings.BE_DOMAIN + instance.logo.url
+        return settings.BE_DOMAIN + settings.STATIC_URL + 'casino_images/baw_a51_default.webp'
 
 class GameListSerializer(serializers.ModelSerializer):
     is_favourite = serializers.SerializerMethodField()
