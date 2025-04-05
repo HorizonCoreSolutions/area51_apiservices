@@ -581,6 +581,7 @@ class GetPlayersFavCasinoGames(APIView):
         
         
 class GetNewCasinoGameList(ListAPIView):
+    '''accounts/(not-defined)'''
     permission_classes = (IsFavCasinoEnabled,)
     queryset = CasinoGameList.objects.all()
     paginate_by = 20
@@ -716,6 +717,7 @@ class UploadGsoftGames(APIView):
             print(e)
 
 class GetCasinoProviders(APIView):
+    """accounts/get-casino-vendor/"""
     http_method_name = ["get"]
     
 
