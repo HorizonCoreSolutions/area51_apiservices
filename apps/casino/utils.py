@@ -3,7 +3,7 @@ import hashlib
 import hmac
 import urllib
 import uuid
-
+import os
 import requests
 from django.utils import timezone
 import uuid
@@ -132,7 +132,7 @@ class GSoftUtils(object):
     something = ""
     
 from datetime import date    
-from apps.casino.models import Tournament, UserTournament
+from apps.casino.models import UserTournament
 # bet bonus to player on wager place    
 def bet_bonus(user,betamount):
     user = Player.objects.filter(id=user).first()

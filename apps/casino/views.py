@@ -22,7 +22,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from apps.casino.custom_pagination import CustomPagination
-from apps.casino.models import (CasinoGameList, CasinoHeaderCategory, CasinoManagement, PlayerFavouriteCasinoGames,
+from apps.casino.models import (CasinoGameList, CasinoHeaderCategory, CasinoManagement, PlayerFavouriteCasinoGames, Providers,
     Tournament, TournamentTransaction, UserTournament)
 from apps.core.pagination import PageNumberPagination
 from apps.core.permissions import *
@@ -37,7 +37,7 @@ from .serializers import (Casino25CasinoManagementSerializer,
     CasinoManagementSerializer, FavouriteCasinoGameListSerializer,
     FavouriteGameListSerializer, GameListSerializer, GameLobbySerializer,
     GameTransactionSerializer, MostPopularGamesSerializer, OffMarketGamesSerializer,
-    PlayerGameHistorySerializer, RollbackSerializer, TournamentDetailSerializer,
+    PlayerGameHistorySerializer, ProviderSerializer, RollbackSerializer, TournamentDetailSerializer,
     TournamentListSerializer, TournamentTransactionListSerializer,
     UserTournamentHistoryListSerializer, WithdrawAndDepositSerializer)
 from .utils import (ValidateRequest,
@@ -581,6 +581,7 @@ class GetPlayersFavCasinoGames(APIView):
         
         
 class GetNewCasinoGameList(ListAPIView):
+    '''accounts/(not-defined)'''
     permission_classes = (IsFavCasinoEnabled,)
     queryset = CasinoGameList.objects.all()
     paginate_by = 20
@@ -716,6 +717,7 @@ class UploadGsoftGames(APIView):
             print(e)
 
 class GetCasinoProviders(APIView):
+    """accounts/get-casino-vendor/"""
     http_method_name = ["get"]
     
 
@@ -735,8 +737,28 @@ class GetCasinoProviders(APIView):
         casino_providers = casino_games.values("vendor_name").annotate(
             num_games=Count("vendor_name")
         ).order_by("-num_games").values_list("vendor_name", flat=True)
+
+        if not 'img_urls' in self.request.GET:
+            return Response(casino_providers, status=status.HTTP_200_OK)
         
-        return Response(casino_providers)
+        res_providers = Providers.objects.filter(name__in=casino_providers)
+        serializer = ProviderSerializer(res_providers, many=True)
+        serialized_data = serializer.data
+
+        existing_names = set(p["name"] for p in serialized_data)
+
+        for vendor_name in casino_providers:
+            if vendor_name not in existing_names:
+                serialized_data.append({
+                    "name": vendor_name,
+                    "url": settings.BE_DOMAIN + settings.STATIC_URL + 'casino_images/baw_a51_default.webp'
+                })
+
+        return Response(
+            {
+                "providers" : serialized_data
+            }, status=status.HTTP_200_OK
+        )
     
 
 class GetCasinoProviderGameList(APIView):

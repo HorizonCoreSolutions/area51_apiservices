@@ -258,6 +258,9 @@ input:checked + .slider:before {
                     <input type="checkbox" brand-id='{{ game.game.vendor_name }}' {% if game.enabled %}checked{% endif %}>
                     <span title="{% if game.enabled %}Disable Provider {% else %} Enable Provider {% endif %}" onclick="switchToggle(this)" class="slider"></span>
                 </label>
+                <a type="button" class="btn btn-warning btn-sm" href="{% url 'admin-panel:provider-manager' %}?provider_name={{ game.game.vendor_name }}" title="Edit">
+                  <i class="fa fa-edit" style="font-size: 15px; color: #1f2d3d;"></i>
+                </a>
             </td>
           </tr>
         {% endfor %}

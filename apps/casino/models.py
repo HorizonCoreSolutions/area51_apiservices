@@ -5,6 +5,12 @@ from django.utils.translation import gettext_lazy as _
 
 from apps.core.models import AbstractBaseModel
 from apps.users.models import Admin, Users
+from apps.casino.internal_utils import rename_image
+
+
+class Providers(AbstractBaseModel):
+    name = models.CharField(max_length=250,blank=True,null=True)
+    logo = models.ImageField(upload_to=rename_image, null=True, blank=True)
 
 
 class CasinoGameList(AbstractBaseModel):
@@ -14,6 +20,7 @@ class CasinoGameList(AbstractBaseModel):
     game_type = models.CharField(max_length=250,blank=True,null=True)
     game_image = models.CharField(max_length=250,blank=True,null=True)
     vendor_name = models.CharField(max_length=250,blank=True,null=True)
+    enabled = models.BooleanField(default=True, null=True, blank=True)
     game_category = models.CharField(max_length=250,blank=True,null=True)
     is_support_jackpot = models.BooleanField(default=False)
     jackpot_type = models.CharField(max_length=250,blank=True,null=True)
@@ -33,6 +40,7 @@ class CasinoGameList(AbstractBaseModel):
 class GameImages(AbstractBaseModel):
     name = models.CharField(max_length=256, default=None, null=True, blank=False)
     url = models.URLField(max_length=200, default=None, null=True, blank=False)
+
 
 class GSoftTransactions(AbstractBaseModel):
     class RequestType(DjangoChoices):

@@ -7,7 +7,7 @@ from django.db.models import Q
 from django.core.management.base import BaseCommand
 
 from apps.users.models import Users
-from apps.casino.models import CasinoGameList, CasinoHeaderCategory, CasinoManagement
+from apps.casino.models import CasinoGameList, CasinoHeaderCategory, CasinoManagement, Providers
 
 
 class Command(BaseCommand):
@@ -68,7 +68,8 @@ class Command(BaseCommand):
                         )
                         if created:
                             obj.game_category = games_category.get(game.get("Id"), "Slots")
-                            obj.vendor_name = self.available_providers.get(game.get("SectionId"), game.get("SectionId"))
+                            vendor_name = self.available_providers.get(game.get("SectionId"), game.get("SectionId"))
+                            obj.vendor_name = vendor_name
                             obj.save()
                         self.update_or_create_casino_management(obj)
                         casino_game_ids.append(game.get("Id"))
@@ -84,7 +85,7 @@ class Command(BaseCommand):
         except Exception as e:
             print(e)
             raise e
-    
+
     
     def get_game_list(self):
         try:

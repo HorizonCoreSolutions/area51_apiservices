@@ -45,7 +45,7 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.forms.models import model_to_dict
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse, response
 from apps.casino.models import (CasinoGameList, CasinoHeaderCategory, CasinoManagement, GSoftTransactions, Tournament,
-    TournamentPrize, TournamentTransaction)
+    TournamentPrize, TournamentTransaction, Providers)
 
 from django.shortcuts import render
 from django.urls import reverse, reverse_lazy
@@ -83,7 +83,7 @@ from excel_response import ExcelResponse
 from apps.bets.utils import generate_reference
 from apps.admin_panel.utils import *
 from apps.core.auth_mixins import CheckRolesMixin
-from apps.core.permissions import IsPlayer
+from apps.core.permissions import IsPlayer, IsAdmin
 from apps.payments.utils import COIN_PAYMENTS,createnowpaymentswithdrawal
 from .tasks import email_template_crm, rejection_mail, send_sms_crm, transaction_mail
 
@@ -6552,6 +6552,11 @@ class CasinoManagementView(CheckRolesMixin, ListView):
 
 
 class CasinoManagementProviderView(CheckRolesMixin, ListView):
+    '''
+    URL: admin/casino-management-provider-list/
+    Shows the panel to activate or deactivate providers
+    '''
+
     allowed_roles = ["admin",]
     template_name = "admin/provider_casino_management.html"
     paginate_by = 20
@@ -6576,6 +6581,64 @@ class CasinoManagementProviderView(CheckRolesMixin, ListView):
         queryset = queryset.filter(admin=self.request.user).distinct("game__vendor_name")
         
         return queryset
+
+
+class ProviderView(CheckRolesMixin, ListView):
+    allowed_roles = ["admin",]
+    template_name = "admin/edit_provider_casino_management.html"
+    model = Providers
+    context_object_name = "provider"
+
+    def get_queryset(self):
+        provider_name = self.request.GET.get("provider_name")
+        if not provider_name:
+            return Providers.objects.none()
+        
+        provider = Providers.objects.filter(name=provider_name)
+        if provider.exists():
+            return provider.first()
+        
+        if CasinoGameList.objects.filter(vendor_name=provider_name).exists():
+            return Providers.objects.create(name=provider_name)
+        
+        return Providers.objects.none()
+
+
+class EditProviderView(APIView):
+    allowed_roles = ["admin",]
+    permission_classes = [IsAdmin]
+
+    def post(self, request):
+        # set variables
+        id = self.request.POST.get("id")
+        logo = self.request.FILES.get("logo")
+
+        # Request check
+        if not logo:
+            return Response({"message" : "Should upload an image (logo)"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if not id:
+            return Response({"message" : "Must pass id in the body"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Provider checks (if exists id)
+        provider = Providers.objects.filter(id=id)
+        if not provider.exists():
+            return Response({"message" : "The selected id is not valid"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Format check
+        filename_format = logo.name.split(".")
+        name, format = filename_format[-2], filename_format[-1]
+        format = 'JPEG' if format.lower() == 'jpg' else format.upper()
+        allow_format = ['JPEG', 'WEBP', 'PNG']
+        if not format in allow_format:
+            return Response({"message" : "The IMG should be of type " + ', '.join(allow_format) + " o JPG"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Save the logo
+        provider = provider.first()
+        provider.logo = logo
+        provider.save()
+
+        return Response({"success" : True,"message" : "The provider was modified"}, status=status.HTTP_200_OK)
 
 
 class CasinoCategoryHeaderManagementView(CheckRolesMixin, TemplateView, views.JSONResponseMixin, views.AjaxResponseMixin, View):
@@ -6711,6 +6774,7 @@ class CasinoHeaderCategoryStatus(CheckRolesMixin, views.JSONResponseMixin, views
     
 
 class SpinToWinProviderStatus(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseMixin, View):
+    '''accounts/manage-spin-to-win-provider-status/'''
     allowed_roles = ("admin")
 
     @method_decorator(csrf_exempt)
@@ -6719,12 +6783,12 @@ class SpinToWinProviderStatus(CheckRolesMixin, views.JSONResponseMixin, views.Aj
     
     def post_ajax(self, request, *args, **kwargs):
         provider = request.POST.get("provider")
+
         casino_obj = CasinoManagement.objects.filter(
             admin = self.request.user, 
             game__vendor_name= provider,
         )
         
-
         if casino_obj.exists() and casino_obj.first().enabled:
             casino_obj.update(enabled = False)
             message = "Provider disabled"

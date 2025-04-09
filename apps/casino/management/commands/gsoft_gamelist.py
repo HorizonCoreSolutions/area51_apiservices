@@ -2,7 +2,7 @@ import json
 import requests
 from datetime import datetime
 from django.core.management.base import BaseCommand
-from apps.casino.models import CasinoGameList, CasinoManagement
+from apps.casino.models import CasinoGameList, CasinoManagement, Providers
 from apps.users.models import Users
 from requests.auth import HTTPBasicAuth
 from django.http.response import HttpResponse
@@ -47,6 +47,7 @@ class Command(BaseCommand):
                             gsoft_casino_games={
                                 
                             }
+
                             obj, created = CasinoGameList.objects.update_or_create(
                                 game_name = game.get('gameName'),
                                 game_id = game.get('gameId'),
@@ -74,6 +75,8 @@ class Command(BaseCommand):
         except Exception as e:
             print(e)
             raise e
+
+    
     def update_or_create_casino_management(self, game):
 
                         users = Users.objects.filter(role="admin")

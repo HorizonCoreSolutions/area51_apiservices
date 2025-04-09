@@ -84,7 +84,7 @@ class PlayerSerializer(serializers.Serializer):
     state=serializers.CharField(max_length=20)
     casino_account_id=serializers.CharField(max_length=20)
     complete_address=serializers.CharField(max_length=100)
-    phone_number=serializers.IntegerField()
+    phone_number=serializers.CharField(max_length=255)
     profile_pic=serializers.SerializerMethodField()
     user_id_proof=serializers.SerializerMethodField()
     full_name=serializers.CharField()
