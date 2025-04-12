@@ -2528,7 +2528,7 @@ class PlayerTransactionsView(CheckRolesMixin, views.JSONResponseMixin, views.Aja
         )
         from_date = self.request.GET.get("from_date", None)
         to_date = self.request.GET.get("to_date", None)
-        activity_type = self.request.GET.get("activity_type", None)
+        activity_type = self.request.GET.get("activity_type", "")
 
         external = True if activity_type in ["nowpayments", "area51", "gsoft"] else False
 
@@ -2596,7 +2596,7 @@ class PlayerTransactionsView(CheckRolesMixin, views.JSONResponseMixin, views.Aja
                 createds.insert(idx, data["created"])
 
 
-        if activity_type in ["casino", "wallet", "area51"]:
+        if activity_type in ["casino", "wallet", "area51", ""]:
             for obj in queryset:
                 description = obj.description
                 trans_type = ""
@@ -2638,7 +2638,7 @@ class PlayerTransactionsView(CheckRolesMixin, views.JSONResponseMixin, views.Aja
                 results.insert(idx, response)
                 createds.insert(idx, response["created"])
 
-            return self.render_json_response(results)
+        return self.render_json_response(results)
 
 
 
