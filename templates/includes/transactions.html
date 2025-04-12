@@ -93,6 +93,7 @@
                             <th>{% trans "Journal Entry" %}</th>
                             <th>{% trans "Amount" %}</th>
                             <th id="bonusBetAmount">{% trans "Bonus Amount" %}</th>
+                            <th>{% trans "Provider" %}</th>
                         </tr>
                     </thead>
                     <tbody id="result-body">
@@ -323,6 +324,7 @@ $("#search-date-created-to1").change(validateDateRange);
                                 <td>${data[i]['trans_type']}</td>
                                 <td>${journal_entry}</td>
                                 <td><font color='${color}'>${data[i]['amount']}</font></td>
+                                <td>${data[i]['provider']}</td>
                                 ${bonus_bet_column}
                             </tr>
                         `

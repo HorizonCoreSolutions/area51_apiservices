@@ -1,8 +1,10 @@
+#: apps/users/models.py:259 templates/home.html:173 templates/home.html:648
+#: templates/home.html:1163
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-07-31 14:02+0000\n"
+"POT-Creation-Date: 2025-04-02 06:13+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -12,753 +14,4800 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: apps/admin_panel/forms.py:14 apps/admin_panel/forms.py:59
-#: apps/admin_panel/forms.py:98 templates/login.html:13
+#: apps/admin_panel/forms.py:15 apps/users/models.py:78
+msgid "None"
+msgstr ""
+
+#: apps/admin_panel/forms.py:16 apps/users/models.py:79
+msgid "Contact Form"
+msgstr ""
+
+#: apps/admin_panel/forms.py:23 templates/admin/chat_support/chat_room.html:545
+#: templates/admin/chats/chat_room.html:547
+#, fuzzy
+#| msgid "Username"
+msgid "Enter Username"
+msgstr "Имя пользователя"
+
+#: apps/admin_panel/forms.py:34
+msgid "Enter Email"
+msgstr ""
+
+#: apps/admin_panel/forms.py:35 templates/admin/player/create_player.html:41
+#: templates/admin/player/update_player.html:35
+msgid "DOB"
+msgstr ""
+
+#: apps/admin_panel/forms.py:36
+msgid "Enter State"
+msgstr ""
+
+#: apps/admin_panel/forms.py:37
+msgid "Enter Country Code"
+msgstr ""
+
+#: apps/admin_panel/forms.py:38
+msgid "Enter Mobile No"
+msgstr ""
+
+#: apps/admin_panel/forms.py:39
+msgid "Enter Complete Address"
+msgstr ""
+
+#: apps/admin_panel/forms.py:40
+#, fuzzy
+#| msgid "New Password"
+msgid "Enter Password"
+msgstr "Пароль"
+
+#: apps/admin_panel/forms.py:41
+msgid "Enter Full Name"
+msgstr ""
+
+#: apps/admin_panel/forms.py:42 apps/admin_panel/forms.py:99
+#: apps/admin_panel/forms.py:142 apps/admin_panel/forms.py:731
+#: templates/admin/agent/create_agent.html:49
+#: templates/admin/dealer/create_dealer.html:62
+#: templates/admin/player/create_player.html:115
+#: templates/admin/player/update_player.html:103
+#: templates/admin/roles/create_user.html:51
+#: templates/admin/roles/update_user.html:39
+#: templates/admin/staff/create_staff.html:50
+#, fuzzy
+#| msgid "Confirm password"
+msgid "Confirm Password"
+msgstr "Подтвердите Пароль"
+
+#: apps/admin_panel/forms.py:45
+msgid "Enter zipcode"
+msgstr ""
+
+#: apps/admin_panel/forms.py:85 apps/admin_panel/forms.py:127
+#: apps/admin_panel/forms.py:173 apps/admin_panel/forms.py:717
+#: templates/admin/admins.html:76 templates/admin/agent/create_agent.html:27
+#: templates/admin/agent/update_agent.html:22
+#: templates/admin/chat_support/chat_room.html:544
+#: templates/admin/chats/chat_room.html:546
+#: templates/admin/create-admin.html:45
+#: templates/admin/dealer/create_dealer.html:40
+#: templates/admin/dealer/update_dealer.html:43
+#: templates/admin/player/create_player.html:27
+#: templates/admin/player/players.html:873
+#: templates/admin/player/update_player.html:20
+#: templates/admin/roles/create_user.html:27
+#: templates/admin/roles/update_user.html:20
+#: templates/admin/staff/create_staff.html:27
+#: templates/admin/staff/update_staff.html:22 templates/login.html:31
 msgid "Username"
 msgstr "Имя пользователя"
 
-#: apps/admin_panel/forms.py:24 apps/admin_panel/forms.py:70
-#: apps/admin_panel/forms.py:109 templates/login.html:19
+#: apps/admin_panel/forms.py:97 apps/admin_panel/forms.py:140
+#: apps/admin_panel/forms.py:185 apps/admin_panel/forms.py:729
+#: templates/admin/agent/create_agent.html:37
+#: templates/admin/agent/update_agent.html:32
+#: templates/admin/create-admin.html:54
+#: templates/admin/dealer/create_dealer.html:50
+#: templates/admin/dealer/update_dealer.html:53
+#: templates/admin/player/create_player.html:105
+#: templates/admin/player/update_player.html:93
+#: templates/admin/roles/create_user.html:41
+#: templates/admin/roles/update_user.html:28
+#: templates/admin/staff/create_staff.html:37
+#: templates/admin/staff/update_staff.html:32 templates/login.html:37
 #, fuzzy
 #| msgid "New Password"
 msgid "Password"
 msgstr "Пароль"
+
+#: apps/admin_panel/forms.py:159
+msgid "Password and Confirm Password does not match."
+msgstr ""
+
+#: apps/admin_panel/forms.py:197 apps/admin_panel/views.py:547
+#: apps/admin_panel/views.py:1061 apps/admin_panel/views.py:1120
+#: apps/admin_panel/views.py:1262 apps/admin_panel/views.py:1323
+#: apps/admin_panel/views.py:7821 apps/admin_panel/views.py:7900
+#: apps/admin_panel/views.py:11113
+msgid "The username has to be at least 4 characters"
+msgstr ""
+
+#: apps/admin_panel/forms.py:201
+msgid "The username already exists"
+msgstr ""
+
+#: apps/admin_panel/forms.py:204 apps/admin_panel/views.py:1069
+#: apps/admin_panel/views.py:1128 apps/admin_panel/views.py:1270
+#: apps/admin_panel/views.py:1331 apps/admin_panel/views.py:7829
+#: apps/admin_panel/views.py:7908 apps/admin_panel/views.py:11117
+#: apps/admin_panel/views.py:11161
+msgid "The password has to be at least 5 characters"
+msgstr ""
 
 #: apps/admin_panel/validators.py:12
 msgid ""
 "Enter a valid username. This value may contain only English letters, numbers."
 msgstr ""
 
-#: apps/bets/filters.py:8
+#: apps/admin_panel/views.py:508 apps/admin_panel/views.py:1049
+#: apps/admin_panel/views.py:7888 apps/admin_panel/views.py:8722
+#: apps/admin_panel/views.py:11111
+msgid "Username already exists"
+msgstr ""
+
+#: apps/admin_panel/views.py:517 apps/admin_panel/views.py:814
+msgid "email already exists"
+msgstr ""
+
+#: apps/admin_panel/views.py:524 apps/admin_panel/views.py:821
+msgid "Invalid email"
+msgstr ""
+
+#: apps/admin_panel/views.py:556 apps/admin_panel/views.py:797
+msgid "The password has to be at least 8 characters"
+msgstr ""
+
+#: apps/admin_panel/views.py:565 apps/admin_panel/views.py:805
+#: apps/admin_panel/views.py:1077 apps/admin_panel/views.py:1278
+#: apps/admin_panel/views.py:7916
+msgid "Confirm password does not match password."
+msgstr ""
+
+#: apps/admin_panel/views.py:610
+msgid "Player's age should be 18+"
+msgstr ""
+
+#: apps/admin_panel/views.py:879
+msgid "Player has edited successfully."
+msgstr ""
+
+#: apps/admin_panel/views.py:881
+msgid "Some internal error."
+msgstr ""
+
+#: apps/admin_panel/views.py:1054 apps/admin_panel/views.py:7893
+#: apps/admin_panel/views.py:11109
+msgid "Username must be Alphanumeric"
+msgstr ""
+
+#: apps/admin_panel/views.py:1140
+msgid "Agent has been edited."
+msgstr ""
+
+#: apps/admin_panel/views.py:1284
+msgid "Username must be unique."
+msgstr ""
+
+#: apps/admin_panel/views.py:1300
+msgid "Master Agent has been created."
+msgstr ""
+
+#: apps/admin_panel/views.py:1345
+msgid "Master Agent has been edited."
+msgstr ""
+
+#: apps/admin_panel/views.py:1383 apps/admin_panel/views.py:1645
+msgid "You can withdraw after : "
+msgstr ""
+
+#: apps/admin_panel/views.py:1735
+msgid "Admin Not Found!"
+msgstr ""
+
+#: apps/admin_panel/views.py:2227 apps/admin_panel/views.py:2237
+msgid "Casino has been enabled successfully."
+msgstr ""
+
+#: apps/admin_panel/views.py:2230 apps/admin_panel/views.py:2240
+msgid "Casino has been disabled successfully."
+msgstr ""
+
+#: apps/admin_panel/views.py:2264
+msgid "Live Casino has been enabled successfully."
+msgstr ""
+
+#: apps/admin_panel/views.py:2267
+msgid "Live Casino has been disabled successfully."
+msgstr ""
+
+#: apps/admin_panel/views.py:2305 apps/admin_panel/views.py:2334
+#: apps/admin_panel/views.py:2352 apps/admin_panel/views.py:2435
+#: apps/admin_panel/views.py:2451
+msgid "Cashback has been enabled successfully."
+msgstr ""
+
+#: apps/admin_panel/views.py:2320 apps/admin_panel/views.py:2345
+#: apps/admin_panel/views.py:2357 apps/admin_panel/views.py:2441
+#: apps/admin_panel/views.py:2457
+msgid "Cashback has been disabled successfully."
+msgstr ""
+
+#: apps/admin_panel/views.py:2474
+msgid "Invalid Request."
+msgstr ""
+
+#: apps/admin_panel/views.py:2480
+msgid "Player has been activated successfully."
+msgstr ""
+
+#: apps/admin_panel/views.py:2483
+msgid "Player has been deactivated successfully."
+msgstr ""
+
+#: apps/admin_panel/views.py:2489
+msgid "Player account has been closed/cancelled successfully."
+msgstr ""
+
+#: apps/admin_panel/views.py:2492
+msgid "Player has been reopen/active successfully."
+msgstr ""
+
+#: apps/admin_panel/views.py:2504
+msgid "Player has been blackout successfully."
+msgstr ""
+
+#: apps/admin_panel/views.py:2509
+msgid "Player has been removed from blackout successfully."
+msgstr ""
+
+#: apps/admin_panel/views.py:3346
+msgid "OTP permission updated"
+msgstr ""
+
+#: apps/admin_panel/views.py:3634
+#, python-brace-format
+msgid ""
+"Promo code with the name '{promo_code}' already exists. Please choose a "
+"unique name."
+msgstr ""
+
+#: apps/admin_panel/views.py:3678 apps/admin_panel/views.py:7967
+#: apps/admin_panel/views.py:9235 apps/admin_panel/views.py:9237
+#: apps/admin_panel/views.py:9257 apps/admin_panel/views.py:9259
+msgid "Something Went Wrong"
+msgstr ""
+
+#: apps/admin_panel/views.py:3680
+msgid "Promo code created successfully"
+msgstr ""
+
+#: apps/admin_panel/views.py:3682
+msgid "Bonus details saved successfully"
+msgstr ""
+
+#: apps/admin_panel/views.py:3839
+msgid "Bonus permission updated"
+msgstr ""
+
+#: apps/admin_panel/views.py:3959 apps/admin_panel/views.py:8354
+msgid "Something went wrong"
+msgstr ""
+
+#: apps/admin_panel/views.py:3976
+msgid "Service not available"
+msgstr ""
+
+#: apps/admin_panel/views.py:4000
+msgid "Logo image should be in png format"
+msgstr ""
+
+#: apps/admin_panel/views.py:4012 apps/admin_panel/views.py:4025
+msgid "Agent is not a Special Agent"
+msgstr ""
+
+#: apps/admin_panel/views.py:4060
+msgid "Unknown error, Please contact Admin"
+msgstr ""
+
+#: apps/admin_panel/views.py:4071
+msgid "Logo Uploaded Successfully"
+msgstr ""
+
+#: apps/admin_panel/views.py:4115 apps/admin_panel/views.py:6962
+msgid "Logo Deleted Successfully"
+msgstr ""
+
+#: apps/admin_panel/views.py:4124 apps/admin_panel/views.py:4173
+#: apps/admin_panel/views.py:5570 apps/admin_panel/views.py:6202
+#: apps/admin_panel/views.py:6446 apps/admin_panel/views.py:6971
+#: apps/admin_panel/views.py:8934
+msgid "Logo not found"
+msgstr ""
+
+#: apps/admin_panel/views.py:4250
+msgid "Cashback Percentage should not be less than zero"
+msgstr ""
+
+#: apps/admin_panel/views.py:4256
+msgid "Cashback Time Limit should not be less than 24hrs"
+msgstr ""
+
+#: apps/admin_panel/views.py:4374 apps/admin_panel/views.py:6934
+msgid "Please provide valid banner details!"
+msgstr ""
+
+#: apps/admin_panel/views.py:4398
+msgid "Banner Deleted Successfully"
+msgstr ""
+
+#: apps/admin_panel/views.py:4407
+msgid "Banner not found"
+msgstr ""
+
+#: apps/admin_panel/views.py:5561 apps/admin_panel/views.py:5996
+#: apps/admin_panel/views.py:6192
+msgid "Page Deleted Successfully"
+msgstr ""
+
+#: apps/admin_panel/views.py:6005
+msgid "Page not found"
+msgstr ""
+
+#: apps/admin_panel/views.py:6057
+msgid "Social Link Deleted Successfully"
+msgstr ""
+
+#: apps/admin_panel/views.py:6066
+msgid "Social Link Not Found"
+msgstr ""
+
+#: apps/admin_panel/views.py:6349
+msgid "ID is required"
+msgstr ""
+
+#: apps/admin_panel/views.py:6353
+msgid "Media not found"
+msgstr ""
+
+#: apps/admin_panel/views.py:6361 apps/admin_panel/views.py:6653
+#: apps/admin_panel/views.py:6720 apps/admin_panel/views.py:10989
+#: apps/admin_panel/views.py:11142 apps/admin_panel/views.py:11177
+msgid "Internal Error"
+msgstr ""
+
+#: apps/admin_panel/views.py:6437
+msgid "Category Deleted Successfully"
+msgstr ""
+
+#: apps/admin_panel/views.py:6623 apps/admin_panel/views.py:6667
+msgid "Category not found"
+msgstr ""
+
+#: apps/admin_panel/views.py:6628
+msgid "Please provide valid image"
+msgstr ""
+
+#: apps/admin_panel/views.py:6645
+msgid "Image Updated"
+msgstr ""
+
+#: apps/admin_panel/views.py:6672
+msgid "Please provide valid position"
+msgstr ""
+
+#: apps/admin_panel/views.py:6686
+msgid "Categories updated"
+msgstr ""
+
+#: apps/admin_panel/views.py:6713
+msgid "Position updated"
+msgstr ""
+
+#: apps/admin_panel/views.py:7525
+msgid "Note has been saved successfully."
+msgstr ""
+
+#: apps/admin_panel/views.py:7602
+msgid "Coming Soon Page permission updated"
+msgstr ""
+
+#: apps/admin_panel/views.py:7650
+msgid "Coming Soon Page Updated Successfully"
+msgstr ""
+
+#: apps/admin_panel/views.py:7841
+msgid "Staff has been edited."
+msgstr ""
+
+#: apps/admin_panel/views.py:7964
+msgid "Changes Done"
+msgstr ""
+
+#: apps/admin_panel/views.py:8139 apps/admin_panel/views.py:9624
+msgid "Username Must be greater than 5 characters"
+msgstr ""
+
+#: apps/admin_panel/views.py:8141 apps/admin_panel/views.py:9626
+msgid "Game Does Not Exist"
+msgstr ""
+
+#: apps/admin_panel/views.py:8143 apps/admin_panel/views.py:8688
+#: apps/admin_panel/views.py:9630
+msgid "Username Already Exists"
+msgstr ""
+
+#: apps/admin_panel/views.py:8146
+msgid "User Alredy have Account For this Game"
+msgstr ""
+
+#: apps/admin_panel/views.py:8152 apps/admin_panel/views.py:9636
+msgid "Account Created Successfully"
+msgstr ""
+
+#: apps/admin_panel/views.py:8331
+msgid "Invalid Address"
+msgstr ""
+
+#: apps/admin_panel/views.py:8339
+msgid "amount is greater than available balance"
+msgstr ""
+
+#: apps/admin_panel/views.py:8351
+msgid "Withdrawal Request Created."
+msgstr ""
+
+#: apps/admin_panel/views.py:8514 apps/admin_panel/views.py:8609
+msgid "Game Code already exists"
+msgstr ""
+
+#: apps/admin_panel/views.py:8519
+msgid "Game already exists"
+msgstr ""
+
+#: apps/admin_panel/views.py:8553
+msgid "Please provide valid game details!"
+msgstr ""
+
+#: apps/admin_panel/views.py:8605
+msgid "Game Login ID already exists"
+msgstr ""
+
+#: apps/admin_panel/views.py:8680 apps/admin_panel/views.py:9628
+msgid "User Already have Account For this Game"
+msgstr ""
+
+#: apps/admin_panel/views.py:8925
+msgid "Game Deleted Successfully"
+msgstr ""
+
+#: apps/admin_panel/views.py:9223
+msgid "Only 5 Wheels Details allowed, Please delete any existing detail."
+msgstr ""
+
+#: apps/admin_panel/views.py:9233
+msgid "Details Added Successfully"
+msgstr ""
+
+#: apps/admin_panel/views.py:9255
+msgid "Updated Added Successfully"
+msgstr ""
+
+#: apps/admin_panel/views.py:10489 apps/admin_panel/views.py:10547
+msgid "Incomplete Entries"
+msgstr ""
+
+#: apps/admin_panel/views.py:10492
+msgid "Category Already Exists"
+msgstr ""
+
+#: apps/admin_panel/views.py:10495 apps/admin_panel/views.py:10550
+msgid "Template ID Already Exists"
+msgstr ""
+
+#: apps/admin_panel/views.py:10503
+msgid "Email Template Added Successfully"
+msgstr ""
+
+#: apps/admin_panel/views.py:10621
+msgid "All types of bonus details are already added!"
+msgstr ""
+
+#: apps/admin_panel/views.py:10656
+#, python-brace-format
+msgid "Details for {bonus_type} already exists."
+msgstr ""
+
+#: apps/admin_panel/views.py:10684
+msgid "Please provide valid id!"
+msgstr ""
+
+#: apps/admin_panel/views.py:10706
+msgid "Something went wrong!"
+msgstr ""
+
+#: apps/admin_panel/views.py:10720
+msgid "Invalid ID."
+msgstr ""
+
+#: apps/admin_panel/views.py:10746
+msgid "Bonus Deleted Successfully"
+msgstr ""
+
+#: apps/admin_panel/views.py:10756
+msgid "Not found"
+msgstr ""
+
+#: apps/admin_panel/views.py:10901 apps/admin_panel/views.py:10935
+#: apps/admin_panel/views.py:11107 apps/admin_panel/views.py:11157
+msgid "All fields are required"
+msgstr ""
+
+#: apps/admin_panel/views.py:10903 apps/admin_panel/views.py:10939
+msgid "Role already exists"
+msgstr ""
+
+#: apps/admin_panel/views.py:10905 apps/admin_panel/views.py:10941
+msgid "The role has to be at least 4 characters"
+msgstr ""
+
+#: apps/admin_panel/views.py:10907
+msgid "Invalid Permission."
+msgstr ""
+
+#: apps/admin_panel/views.py:10937
+msgid "Invalid ID"
+msgstr ""
+
+#: apps/admin_panel/views.py:10964
+msgid "Role Not Found"
+msgstr ""
+
+#: apps/admin_panel/views.py:10969
+msgid "Invalid Permission"
+msgstr ""
+
+#: apps/admin_panel/views.py:10982
+msgid "Permission updated"
+msgstr ""
+
+#: apps/admin_panel/views.py:11115
+msgid "Password should not contain empty space"
+msgstr ""
+
+#: apps/admin_panel/views.py:11119 apps/admin_panel/views.py:11163
+msgid "Passwords do not match."
+msgstr ""
+
+#: apps/admin_panel/views.py:11121
+msgid "Invalid role."
+msgstr ""
+
+#: apps/admin_panel/views.py:11136
+msgid "User Created Successfully."
+msgstr ""
+
+#: apps/admin_panel/views.py:11159
+msgid "User Not Found"
+msgstr ""
+
+#: apps/admin_panel/views.py:11170
+#, fuzzy
+#| msgid "New Password"
+msgid "Password Updated"
+msgstr "Пароль"
+
+#: apps/admin_panel/views.py:11353
+msgid "Maintenance Mode Details Updated Successfully"
+msgstr ""
+
+#: apps/bets/filters.py:10 templates/includes/transactions.html:61
+#: templates/includes/transactions.html:264
+#: templates/report/mnet_report.html:102
+#: templates/report/offmarket_report.html:171
+#: templates/report/transaction_report.html:158
 msgid "Withdraw"
 msgstr ""
 
-#: apps/bets/filters.py:9
+#: apps/bets/filters.py:11 apps/bets/filters.py:14
+#: templates/includes/transactions.html:60
+#: templates/includes/transactions.html:263
+#: templates/report/mnet_report.html:101
+#: templates/report/nowpayments_report.html:102
+#: templates/report/offmarket_report.html:170
+#: templates/report/transaction_report.html:157
 msgid "Deposit"
 msgstr ""
 
-#: apps/bets/models.py:29
+#: apps/bets/filters.py:12 templates/admin/agent/agents.html:161
+#: templates/admin/dealer/dealers.html:127
+#: templates/admin/staff/staffs.html:165 templates/header.html:158
+#: templates/includes/transactions.html:62
+#: templates/includes/transactions.html:265
+#: templates/includes/transactions.html:273
+#: templates/report/alchemypay_report.html:169
+#: templates/report/offmarket_report.html:168
+#: templates/report/transaction_report.html:155
+msgid "Credit"
+msgstr "Кредит"
+
+#: apps/bets/filters.py:13 templates/includes/transactions.html:63
+#: templates/includes/transactions.html:266
+#: templates/includes/transactions.html:274
+#: templates/report/alchemypay_report.html:170
+#: templates/report/offmarket_report.html:169
+#: templates/report/transaction_report.html:156
+msgid "Debit"
+msgstr ""
+
+#: apps/bets/models.py:35
 msgid "Pending Charge"
 msgstr ""
 
-#: apps/bets/models.py:30
+#: apps/bets/models.py:36
 msgid "Failed Charge"
 msgstr ""
 
-#: apps/bets/models.py:31
+#: apps/bets/models.py:37
 msgid "Charged"
 msgstr "Начислённый"
 
-#: apps/bets/models.py:32
+#: apps/bets/models.py:38
 msgid "Pending Pay"
 msgstr ""
 
-#: apps/bets/models.py:33
+#: apps/bets/models.py:39
 msgid "Failed Reject"
 msgstr ""
 
-#: apps/bets/models.py:40
-msgid "Single"
-msgstr "Одиночная"
-
-#: apps/bets/models.py:41
-msgid "Multiple"
-msgstr "Экспресс"
-
-#: apps/bets/models.py:48
+#: apps/bets/models.py:51 apps/payments/models.py:24 apps/users/models.py:885
+#: apps/users/models.py:1074
 msgid "amount"
 msgstr ""
 
-#: apps/bets/models.py:50
+#: apps/bets/models.py:54 apps/users/models.py:1077
 msgid "journal_entry"
 msgstr ""
 
-#: apps/bets/models.py:53
-msgid "Status"
+#: apps/bets/models.py:57 apps/users/models.py:1080
+#, fuzzy
+#| msgid "Status"
+msgid "status"
 msgstr "Состояние"
 
-#: apps/bets/models.py:56
+#: apps/bets/models.py:60
 msgid "previous_balance"
 msgstr ""
 
-#: apps/bets/models.py:59
+#: apps/bets/models.py:63
 msgid "new_balance"
 msgstr ""
 
-#: apps/bets/models.py:62
+#: apps/bets/models.py:66
 msgid "reference"
 msgstr ""
 
-#: apps/bets/models.py:65
-msgid "Description"
+#: apps/bets/models.py:68 apps/users/models.py:1082
+#, fuzzy
+#| msgid "Description"
+msgid "description"
 msgstr "Описание"
 
-#: apps/bets/models.py:174
-msgid "multi stake"
+#: apps/bets/models.py:70
+msgid "payment_id"
 msgstr ""
 
-#: apps/bets/models.py:177
-msgid "multi price"
+#: apps/bets/models.py:71 apps/users/models.py:1083
+msgid "txn_id"
 msgstr ""
 
-#: apps/bets/models.py:242
-msgid "bet id"
+#: apps/bets/models.py:72 templates/admin/pendingwithdrawals.html:350
+#: templates/admin/player/create_player.html:83
+#: templates/admin/player/players.html:430
+#: templates/admin/player/update_player.html:77
+#: templates/admin/staff_wallet_and_transactions.html:66
+#: templates/admin/staff_wallet_and_transactions.html:119
+msgid "Address"
 msgstr ""
 
-#: apps/bets/models.py:245 apps/pulls/models.py:127
-msgid "fixture id"
+#: apps/bets/models.py:73
+msgid "Confirms needed"
 msgstr ""
 
-#: apps/bets/models.py:246 apps/pulls/models.py:38
-msgid "market id"
+#: apps/bets/models.py:75
+msgid "QR Code Url"
 msgstr ""
 
-#: apps/bets/models.py:247
-msgid "provider id"
+#: apps/bets/models.py:76
+#, fuzzy
+#| msgid "Status"
+msgid "Status Url"
+msgstr "Состояние"
+
+#: apps/bets/models.py:77
+msgid "Checkout Url"
 msgstr ""
 
-#: apps/bets/models.py:249
-msgid "champ"
+#: apps/bets/models.py:78
+msgid "Valid until"
 msgstr ""
 
-#: apps/bets/models.py:252
-msgid "Мatch"
-msgstr "Матч"
-
-#: apps/bets/models.py:255
-msgid "market"
+#: apps/bets/models.py:80
+msgid "bonus_type"
 msgstr ""
 
-#: apps/bets/models.py:258 apps/pulls/models.py:39 apps/pulls/models.py:40
-#: apps/pulls/models.py:41 apps/pulls/models.py:42 apps/pulls/models.py:43
-#: apps/pulls/models.py:48 apps/pulls/models.py:49 apps/pulls/models.py:50
-#: apps/pulls/models.py:51 apps/pulls/models.py:52 apps/pulls/models.py:57
-#: apps/pulls/models.py:58 apps/pulls/models.py:59 apps/pulls/models.py:60
-#: apps/pulls/models.py:61 apps/pulls/models.py:66 apps/pulls/models.py:67
-#: apps/pulls/models.py:68 apps/pulls/models.py:69 apps/pulls/models.py:70
-#: apps/pulls/models.py:80 apps/pulls/models.py:81 apps/pulls/models.py:82
-#: apps/pulls/models.py:83 apps/pulls/models.py:84 apps/pulls/models.py:129
-#: apps/pulls/models.py:130 apps/pulls/models.py:131 apps/pulls/models.py:132
-#: apps/pulls/models.py:133 apps/pulls/models.py:135 apps/pulls/models.py:136
-#: apps/pulls/models.py:137 apps/pulls/models.py:138 apps/pulls/models.py:139
-#: apps/pulls/models.py:141 apps/pulls/models.py:142 apps/pulls/models.py:143
-#: apps/pulls/models.py:144 apps/pulls/models.py:145
-msgid "name"
+#: apps/bets/models.py:83
+msgid "bonus_amount"
 msgstr ""
 
-#: apps/bets/models.py:262
-msgid "price"
+#: apps/bets/models.py:85 templates/report/alchemypay_report.html:166
+#: templates/report/alchemypay_report.html:246
+msgid "Payment Method"
 msgstr ""
 
-#: apps/bets/models.py:264
-msgid "start_date"
+#: apps/bets/models.py:86
+msgid "C ash App transation"
 msgstr ""
 
-#: apps/bets/serializers.py:97 apps/bets/serializers.py:103
-#: apps/bets/serializers.py:115 apps/bets/serializers.py:129
-msgid "Fixture id "
+#: apps/casino/models.py:159
+msgid "Entry fees"
 msgstr ""
 
-#: apps/bets/serializers.py:135
-msgid "Insufficient balance!"
+#: apps/casino/models.py:162
+#, fuzzy
+#| msgid "Max bet amount"
+msgid "Jackpot amount"
+msgstr "Максимальная сумма ставки"
+
+#: apps/casino/models.py:165
+msgid "Initial fees"
 msgstr ""
 
-#: apps/bets/serializers.py:139
-msgid "Stake can't be empty."
+#: apps/casino/models.py:173
+msgid "Rebuy fees"
 msgstr ""
 
-#: apps/bets/serializers.py:166
-msgid "Bet stake must be less or equal to "
+#: apps/casino/models.py:189
+#, fuzzy
+#| msgid "Min bet amount"
+msgid "prize amount"
+msgstr "Минимальная сумма ставки"
+
+#: apps/casino/models.py:200 apps/casino/models.py:224
+msgid "Points"
 msgstr ""
 
-#: apps/bets/serializers.py:170
-msgid "Bet stake must be great then "
+#: apps/casino/models.py:203
+msgid "Spent Points"
 msgstr ""
 
-#: apps/bets/serializers.py:174
-msgid "Max odd must be "
+#: apps/casino/models.py:206
+#, fuzzy
+#| msgid "Win Amount"
+msgid "Win Points"
+msgstr "Сумма выигрыша"
+
+#: apps/casino/models.py:208
+msgid "Win Prize"
 msgstr ""
 
-#: apps/bets/serializers.py:178
-msgid "Max win amount can be "
+#: apps/core/custom_refresh_token.py:32
+#: apps/core/jwt_token_authentication.py:81
+#: apps/core/jwt_token_authentication.py:85
+msgid "Invalid payload."
 msgstr ""
 
-#: apps/bets/serializers.py:196
-msgid "Same bet count must be "
+#: apps/core/custom_refresh_token.py:39
+msgid "User doesn't exist."
 msgstr ""
 
-#: apps/bets/serializers.py:209
-msgid "For one bet max amount is "
+#: apps/core/custom_refresh_token.py:43
+#: apps/core/jwt_token_authentication.py:95
+msgid "User account is disabled."
 msgstr ""
 
-#: apps/bets/serializers.py:217
-msgid "For multiple bet with count 2 and price lower than 2.2 max bet is "
+#: apps/core/custom_refresh_token.py:68
+msgid "Refresh has expired."
 msgstr ""
 
-#: apps/bets/serializers.py:223
-msgid "For multiple bet with count 3 and price lower than 3.2 max bet is "
+#: apps/core/custom_refresh_token.py:71
+msgid "orig_iat field is required."
 msgstr ""
 
-#: apps/bets/serializers.py:229
-msgid "For multiple bet with count 4 and price lower than 4.2 max bet is "
+#: apps/core/jwt_token_authentication.py:39
+msgid "Invalid Authorization header. No credentials provided."
 msgstr ""
 
-#: apps/bets/views.py:40
-msgid "Bet created"
+#: apps/core/jwt_token_authentication.py:42
+msgid ""
+"Invalid Authorization header. Credentials string should not contain spaces."
 msgstr ""
 
-#: apps/pulls/models.py:25
-msgid "NOT_STARTED"
+#: apps/core/jwt_token_authentication.py:91
+msgid "Invalid signature."
 msgstr ""
 
-#: apps/pulls/models.py:26
-msgid "IN_PROGRESS"
+#: apps/payments/models.py:67 apps/payments/models.py:125
+msgid "Applied Promo Code"
 msgstr ""
 
-#: apps/pulls/models.py:27
-msgid "FINISHED"
-msgstr ""
-
-#: apps/pulls/models.py:28
-msgid "CANCELLED"
-msgstr ""
-
-#: apps/pulls/models.py:29
-msgid "POSTPONED"
-msgstr ""
-
-#: apps/pulls/models.py:30
-msgid "INTERRUPTED"
-msgstr ""
-
-#: apps/pulls/models.py:31
-msgid "ABANDONED"
-msgstr ""
-
-#: apps/pulls/models.py:32
-msgid "COVERAGE_LOST"
-msgstr ""
-
-#: apps/pulls/models.py:33
-msgid "ABOUT_TO_START"
-msgstr ""
-
-#: apps/pulls/models.py:47
-msgid "sport id"
-msgstr ""
-
-#: apps/pulls/models.py:56
-msgid "location id"
-msgstr ""
-
-#: apps/pulls/models.py:65
-msgid "league id"
-msgstr ""
-
-#: apps/pulls/models.py:74
-msgid "season"
-msgstr ""
-
-#: apps/pulls/models.py:79
-msgid "participant id"
-msgstr ""
-
-#: apps/pulls/models.py:148
-msgid "Start date"
-msgstr ""
-
-#: apps/pulls/models.py:151
-msgid "Last update"
-msgstr ""
-
-#: apps/pulls/models.py:267
-msgid "Participant position"
-msgstr ""
-
-#: apps/pulls/models.py:269
-msgid "Participant rotation id"
-msgstr ""
-
-#: apps/pulls/models.py:270
-msgid "Participant active status"
-msgstr ""
-
-#: apps/pulls/serializers.py:601
-msgid "Event is already in favorites."
-msgstr ""
-
-#: apps/pulls/views.py:532
-msgid "Favorite added"
-msgstr ""
-
-#: apps/pulls/views.py:605
-msgid "You don't have permission to delete this favorite event."
-msgstr ""
-
-#: apps/users/filters.py:7 templates/admin/agent/agents.html:47
-#: templates/admin/dealer/dealers.html:22
-#: templates/admin/player/players.html:55
+#: apps/users/filters.py:7 templates/admin/agent/agents.html:93
+#: templates/admin/dealer/dealers.html:59
+#: templates/admin/player/players.html:267
+#: templates/admin/roles/users_list.html:128
 msgid "Recent Login"
 msgstr "Недавний вход"
 
-#: apps/users/filters.py:8 templates/admin/agent/agents.html:48
-#: templates/admin/dealer/dealers.html:23
-#: templates/admin/player/players.html:56
+#: apps/users/filters.py:8 templates/admin/agent/agents.html:94
+#: templates/admin/dealer/dealers.html:60
+#: templates/admin/player/players.html:268
 msgid "Credit Ascending"
 msgstr "Кредит по возрастанию"
 
-#: apps/users/filters.py:9 templates/admin/agent/agents.html:49
-#: templates/admin/dealer/dealers.html:24
-#: templates/admin/player/players.html:57
+#: apps/users/filters.py:9 templates/admin/agent/agents.html:95
+#: templates/admin/dealer/dealers.html:61
+#: templates/admin/player/players.html:269
 msgid "Credit Descending"
 msgstr "Кредит по убыванию"
 
-#: apps/users/filters.py:10 templates/admin/agent/agents.html:50
-#: templates/admin/dealer/dealers.html:25
-#: templates/admin/player/players.html:58
+#: apps/users/filters.py:10 templates/admin/agent/agents.html:96
+#: templates/admin/dealer/dealers.html:62
+#: templates/admin/player/players.html:270
 msgid "Profit Ascending"
 msgstr "Прибыль по возрастанию"
 
-#: apps/users/filters.py:11 templates/admin/agent/agents.html:51
-#: templates/admin/dealer/dealers.html:26
-#: templates/admin/player/players.html:59
+#: apps/users/filters.py:11 templates/admin/agent/agents.html:97
+#: templates/admin/dealer/dealers.html:63
+#: templates/admin/player/players.html:271
 msgid "Profit Descending"
 msgstr "Прибыль по убыванию"
 
-#: apps/users/models.py:14 templates/bets/betslips.html:144
+#: apps/users/models.py:25 templates/admin/chat_support/chat_history.html:186
+#: templates/admin/chats/chat_history.html:211
+#: templates/admin/player/players.html:905
+#: templates/admin/unresolved_queries.html:259
+#: templates/report/transaction_report.html:144
 msgid "Player"
 msgstr "Игрок"
 
-#: apps/users/models.py:15 templates/admin/agent/agents.html:99
-#: templates/home.html:34
+#: apps/users/models.py:26 templates/admin/agent/agents.html:159
+#: templates/admin/agent/agents.html:515 templates/admin/agent/agents.html:542
+#: templates/admin/player/players.html:434
+#: templates/admin/staff/staffs.html:162 templates/admin/staff/staffs.html:499
+#: templates/admin/staff/staffs.html:526 templates/home_.html:35
+#: templates/report/transaction_report.html:143
 msgid "Agent"
 msgstr "Агент"
 
-#: apps/users/models.py:16 templates/admin/agent/agents.html:33
-#: templates/admin/dealer/dealers.html:78
+#: apps/users/models.py:27
 msgid "Dealer"
 msgstr "Дилер"
 
-#: apps/users/models.py:17
+#: apps/users/models.py:28 templates/home_.html:71
 msgid "Manager"
 msgstr "Менеджер"
 
-#: apps/users/models.py:18 templates/home.html:48
+#: apps/users/models.py:29 templates/admin/admins.html:140
+#: templates/header.html:350 templates/home_.html:50
 msgid "Admin"
 msgstr "Администратор"
 
-#: apps/users/models.py:19
+#: apps/users/models.py:30
 msgid "Super Admin"
 msgstr ""
 
-#: apps/users/models.py:23
-msgid "Europe/Berlin"
+#: apps/users/models.py:31 templates/admin/chats/chat_history.html:212
+#: templates/admin/staff/staffs.html:161 templates/header.html:392
+msgid "Staff"
 msgstr ""
 
-#: apps/users/models.py:24
-msgid "Europe/Amsterdam"
+#: apps/users/models.py:35
+msgid "EST"
 msgstr ""
 
-#: apps/users/models.py:25
-msgid "Europe/Istanbul"
+#: apps/users/models.py:39
+msgid "STAGING"
 msgstr ""
 
-#: apps/users/models.py:26
-msgid "UTC"
+#: apps/users/models.py:40
+msgid "PRODUCTION"
 msgstr ""
 
-#: apps/users/models.py:30
+#: apps/users/models.py:41
+msgid "DISABLED"
+msgstr ""
+
+#: apps/users/models.py:45
+msgid "HOMEPAGE"
+msgstr ""
+
+#: apps/users/models.py:46
+msgid "TOURNAMENT"
+msgstr ""
+
+#: apps/users/models.py:47
+msgid "BETSLIP"
+msgstr ""
+
+#: apps/users/models.py:50
+msgid "DESKTOP"
+msgstr ""
+
+#: apps/users/models.py:51
+msgid "MOBILE RESPONSIVE"
+msgstr ""
+
+#: apps/users/models.py:52
+msgid "MOBILE APP"
+msgstr ""
+
+#: apps/users/models.py:56
 msgid "transaction delay"
 msgstr ""
 
+#: apps/users/models.py:59
+msgid "EUR"
+msgstr ""
+
 #: apps/users/models.py:60
+msgid "TRY"
+msgstr ""
+
+#: apps/users/models.py:61
+msgid "RUB"
+msgstr ""
+
+#: apps/users/models.py:62
+msgid "USD"
+msgstr ""
+
+#: apps/users/models.py:67
+msgid "Twilio OTP Service"
+msgstr ""
+
+#: apps/users/models.py:71 templates/report/bonus_transactions_report.html:135
+msgid "Welcome Bonus"
+msgstr ""
+
+#: apps/users/models.py:72
+msgid "Referral Bonus"
+msgstr ""
+
+#: apps/users/models.py:73 templates/admin/bonuses.html:110
+#: templates/admin/bonuses/losing_bonus.html:66
+msgid "Losing Bonus"
+msgstr ""
+
+#: apps/users/models.py:74 templates/admin/admins.html:146
+#: templates/admin/bonuses/deposit_bonus.html:56 templates/header.html:634
+#: templates/report/bonus_transactions_report.html:138
+msgid "Deposit Bonus"
+msgstr ""
+
+#: apps/users/models.py:165 apps/users/models.py:1052
 msgid "password"
 msgstr ""
 
-#: apps/users/models.py:63
+#: apps/users/models.py:174
 msgid "user type"
 msgstr ""
 
-#: apps/users/models.py:66
+#: apps/users/models.py:176
 msgid "active"
 msgstr ""
 
-#: apps/users/models.py:69
+#: apps/users/models.py:179
 msgid ""
 "Designates whether this user should be treated as active. Unselect this "
 "instead of deleting accounts."
 msgstr ""
 
-#: apps/users/models.py:74
+#: apps/users/models.py:184 apps/users/models.py:1042
 msgid "username"
 msgstr ""
 
-#: apps/users/models.py:76
+#: apps/users/models.py:195
 msgid "balance"
 msgstr ""
 
-#: apps/users/models.py:77
+#: apps/users/models.py:198
+msgid "Bonus balance"
+msgstr ""
+
+#: apps/users/models.py:201
+msgid "Spin Wheel balance"
+msgstr ""
+
+#: apps/users/models.py:204 templates/report/cash_app.html:84
 msgid "pending"
 msgstr ""
 
-#: apps/users/models.py:78
+#: apps/users/models.py:207
 msgid "locked"
 msgstr ""
 
-#: apps/users/models.py:80
-msgid "Timezone"
+#: apps/users/models.py:210
+#, fuzzy
+#| msgid "Timezone"
+msgid "timezone"
 msgstr "Часовой пояс"
 
-#: apps/users/models.py:101
-msgid "Мax single bet"
-msgstr "Максимальная одиночная ставка"
-
-#: apps/users/models.py:102
-msgid "Min single bet"
-msgstr "Минимальная одиночная ставка"
-
-#: apps/users/models.py:103
-msgid "Max win amount"
-msgstr "Максимальная сумма выигрыша"
-
-#: apps/users/models.py:104
-msgid "Max odd"
-msgstr "Максимальный коэффициент"
-
-#: apps/users/models.py:105
-msgid "Max bet amount per match"
-msgstr "Максимальная сумма ставки за матч"
-
-#: apps/users/models.py:106
-msgid "max same bet count"
+#: apps/users/models.py:245
+msgid "callback key"
 msgstr ""
 
-#: apps/users/models.py:108
-msgid "max multi two events amount"
+#: apps/users/models.py:246
+msgid "casino account id"
 msgstr ""
 
-#: apps/users/models.py:111
-msgid "max multi three events amount"
+#: apps/users/models.py:247 apps/users/models.py:248
+msgid "is_casino_enabled"
 msgstr ""
 
-#: apps/users/models.py:114
-msgid "max multi four events amount"
+#: apps/users/models.py:250
+#, fuzzy
+#| msgid "Current"
+msgid "currency"
+msgstr "Текущий"
+
+#: apps/users/models.py:252
+msgid "system id"
 msgstr ""
 
-#: apps/users/models.py:196
+#: apps/users/models.py:254
+msgid "access token"
+msgstr ""
+
+#: apps/users/models.py:257
+msgid "casino token"
+msgstr ""
+
+#: apps/users/models.py:260
+msgid "token expires time"
+msgstr ""
+
+#: apps/users/models.py:262 apps/users/models.py:1004
+msgid "cashback_amount"
+msgstr ""
+
+#: apps/users/models.py:264
+msgid "OTP Service Status"
+msgstr ""
+
+#: apps/users/models.py:266
+msgid "payment token expires time"
+msgstr ""
+
+#: apps/users/models.py:268
+msgid "payment access token"
+msgstr ""
+
+#: apps/users/models.py:271
+msgid "Welcome Bonus Status"
+msgstr ""
+
+#: apps/users/models.py:272
+msgid "Referral Bonus Status"
+msgstr ""
+
+#: apps/users/models.py:273
+msgid "Losing Bonus Status"
+msgstr ""
+
+#: apps/users/models.py:274
+#, fuzzy
+#| msgid "Status"
+msgid "Jackpot Status"
+msgstr "Состояние"
+
+#: apps/users/models.py:275
+msgid "country_code"
+msgstr ""
+
+#: apps/users/models.py:276
+msgid "is_betslip_bonus_enabled"
+msgstr ""
+
+#: apps/users/models.py:277
+msgid "Is Special Agent"
+msgstr ""
+
+#: apps/users/models.py:278 templates/admin/agent/agents.html:519
+#: templates/admin/staff/staffs.html:503
+msgid "Special Agent"
+msgstr ""
+
+#: apps/users/models.py:280
+msgid "betslip bonus percentage"
+msgstr ""
+
+#: apps/users/models.py:284
+msgid "cashback_status"
+msgstr ""
+
+#: apps/users/models.py:285 templates/header.html:1263
+#: templates/includes/betting_limits_popup.html:202
+msgid "Cashback Percentage"
+msgstr ""
+
+#: apps/users/models.py:287
+msgid "Cashback Time Limit"
+msgstr ""
+
+#: apps/users/models.py:289
+#, fuzzy
+#| msgid "Create player"
+msgid "Affiliate Player"
+msgstr "Создать игрока"
+
+#: apps/users/models.py:290
+msgid "email"
+msgstr ""
+
+#: apps/users/models.py:291
+msgid "dob"
+msgstr ""
+
+#: apps/users/models.py:292
+msgid "full_name"
+msgstr ""
+
+#: apps/users/models.py:293
+msgid "state"
+msgstr ""
+
+#: apps/users/models.py:294
+msgid "complete_address"
+msgstr ""
+
+#: apps/users/models.py:295 apps/users/models.py:891
+msgid "phone number"
+msgstr ""
+
+#: apps/users/models.py:307 apps/users/models.py:480
+msgid "max spending limit for player"
+msgstr ""
+
+#: apps/users/models.py:310 apps/users/models.py:487
+msgid ""
+"user will not able to login/participate in paid games during the blackout "
+"time"
+msgstr ""
+
+#: apps/users/models.py:314
+msgid "applied promo code"
+msgstr ""
+
+#: apps/users/models.py:315
+msgid "Deposit Bonus Status"
+msgstr ""
+
+#: apps/users/models.py:325
+msgid "zip_code"
+msgstr ""
+
+#: apps/users/models.py:327
+#, fuzzy
+#| msgid "Amount"
+msgid "country"
+msgstr "Количество"
+
+#: apps/users/models.py:335
+msgid "affiliate_link"
+msgstr ""
+
+#: apps/users/models.py:344 apps/users/models.py:945
+msgid "affiliation_percentage"
+msgstr ""
+
+#: apps/users/models.py:345
+msgid "is_redeemable_amount"
+msgstr ""
+
+#: apps/users/models.py:348
+msgid "Coming Soon bonus"
+msgstr ""
+
+#: apps/users/models.py:350
+msgid "maintenance mode message"
+msgstr ""
+
+#: apps/users/models.py:351
+msgid "no of deposit counts"
+msgstr ""
+
+#: apps/users/models.py:354
+msgid "is_lifetime_affiliate"
+msgstr ""
+
+#: apps/users/models.py:355
+msgid "Wallet Address"
+msgstr ""
+
+#: apps/users/models.py:356
+msgid "Wallet Currency"
+msgstr ""
+
+#: apps/users/models.py:357
+msgid "is_staff_active"
+msgstr ""
+
+#: apps/users/models.py:359
+msgid "cashtag"
+msgstr ""
+
+#: apps/users/models.py:370
+msgid "payout balance"
+msgstr ""
+
+#: apps/users/models.py:490
+msgid "blackout expire hours"
+msgstr ""
+
+#: apps/users/models.py:607
 msgid "config name"
 msgstr ""
 
-#: apps/users/models.py:197
+#: apps/users/models.py:608
 msgid "config value"
 msgstr ""
 
-#: apps/users/serializers.py:70
+#: apps/users/models.py:615
+msgid "cron name"
+msgstr ""
+
+#: apps/users/models.py:624
+msgid "access_token"
+msgstr ""
+
+#: apps/users/models.py:625
+msgid "public_key"
+msgstr ""
+
+#: apps/users/models.py:629
+msgid "OTP Service Name"
+msgstr ""
+
+#: apps/users/models.py:632
+msgid "OTP Service Creds"
+msgstr ""
+
+#: apps/users/models.py:641
+msgid "percentage"
+msgstr ""
+
+#: apps/users/models.py:642
+msgid "bonus type"
+msgstr ""
+
+#: apps/users/models.py:643
+msgid "deposit_bonus"
+msgstr ""
+
+#: apps/users/models.py:644
+msgid "referral_bonus"
+msgstr ""
+
+#: apps/users/models.py:645
+msgid "welcome_bonus"
+msgstr ""
+
+#: apps/users/models.py:646
+msgid "losing_bonus"
+msgstr ""
+
+#: apps/users/models.py:647
+msgid "bet_bonus"
+msgstr ""
+
+#: apps/users/models.py:648
+msgid "bet_bonus_per_day_limit"
+msgstr ""
+
+#: apps/users/models.py:649
+msgid "deposit_bonus_per_day_limit"
+msgstr ""
+
+#: apps/users/models.py:664 apps/users/models.py:1171
+#: templates/admin/bonus_content/bonus_contents.html:141
+#: templates/admin/bonuses.html:118 templates/admin/bonuses.html:199
+#: templates/admin/bonuses/deposit_bonus.html:63
+#: templates/admin/bonuses/deposit_bonus.html:150
+#: templates/admin/bonuses/edit_bonuses.html:40
+#: templates/admin/bonuses/edit_deposit_bonus.html:38
+#: templates/admin/bonuses/edit_losing_bonus.html:32
+#: templates/admin/bonuses/losing_bonus.html:74
+#: templates/admin/bonuses/losing_bonus.html:159
+#: templates/admin/bonuses/sign_up_bonus.html:89
+#: templates/admin/bonuses/sign_up_bonus.html:188
+msgid "Promo Code"
+msgstr ""
+
+#: apps/users/models.py:665 templates/admin/bonuses.html:201
+#: templates/admin/bonuses/deposit_bonus.html:153
+#: templates/admin/bonuses/losing_bonus.html:162
+#: templates/admin/bonuses/sign_up_bonus.html:193
+#: templates/admin/tournament/tournament_list.html:248
+msgid "Start Date"
+msgstr ""
+
+#: apps/users/models.py:666 templates/admin/bonuses.html:202
+#: templates/admin/bonuses/deposit_bonus.html:154
+#: templates/admin/bonuses/losing_bonus.html:163
+#: templates/admin/bonuses/sign_up_bonus.html:194
+#: templates/admin/tournament/tournament_list.html:249
+#, fuzzy
+#| msgid "Date"
+msgid "End Date"
+msgstr "Дата"
+
+#: apps/users/models.py:667
+msgid "bonus percentage"
+msgstr ""
+
+#: apps/users/models.py:668
+msgid "Is Expired"
+msgstr ""
+
+#: apps/users/models.py:669
+msgid "usage limit"
+msgstr ""
+
+#: apps/users/models.py:670
+#, fuzzy
+#| msgid "Max bet amount"
+msgid "Max bonus amount limit"
+msgstr "Максимальная сумма ставки"
+
+#: apps/users/models.py:673 templates/admin/bonuses/edit_bonuses.html:76
+#: templates/admin/bonuses/sign_up_bonus.html:128
+msgid "Instant Bonus Amount"
+msgstr ""
+
+#: apps/users/models.py:681 templates/includes/transactions.html:94
+#: templates/transactions/transactions.html:130
+msgid "Date"
+msgstr "Дата"
+
+#: apps/users/models.py:688 apps/users/models.py:899
+msgid "title"
+msgstr ""
+
+#: apps/users/models.py:690 apps/users/models.py:901
+msgid "Banner Category"
+msgstr ""
+
+#: apps/users/models.py:691 apps/users/models.py:902
+msgid "banner type"
+msgstr ""
+
+#: apps/users/models.py:693 apps/users/models.py:842 apps/users/models.py:904
+msgid "redirect url"
+msgstr ""
+
+#: apps/users/models.py:694 apps/users/models.py:724 apps/users/models.py:819
+#: apps/users/models.py:905
+msgid "url"
+msgstr ""
+
+#: apps/users/models.py:695 apps/users/models.py:906
+msgid "clicks"
+msgstr ""
+
+#: apps/users/models.py:698
+msgid "button text"
+msgstr ""
+
+#: apps/users/models.py:839
+msgid "is_form"
+msgstr ""
+
+#: apps/users/models.py:841
+msgid "is_redirect"
+msgstr ""
+
+#: apps/users/models.py:843
+msgid "is_page"
+msgstr ""
+
+#: apps/users/models.py:871
+#, fuzzy
+#| msgid "Description"
+msgid "position"
+msgstr "Описание"
+
+#: apps/users/models.py:1002 templates/admin/chats/chat_history.html:214
+msgid "Comment"
+msgstr ""
+
+#: apps/users/models.py:1020
+msgid "game bonus percentage"
+msgstr ""
+
+#: apps/users/models.py:1025
+msgid "download url"
+msgstr ""
+
+#: apps/users/models.py:1084 apps/users/models.py:1086
+msgid "game_name"
+msgstr ""
+
+#: apps/users/models.py:1088
+msgid "bonus"
+msgstr ""
+
+#: apps/users/serializers.py:303
 msgid "You can not change your role."
 msgstr ""
 
-#: apps/users/serializers.py:76 apps/users/serializers.py:81
+#: apps/users/serializers.py:307 apps/users/serializers.py:310
 msgid "Username already exists."
 msgstr ""
 
-#: apps/users/serializers.py:106
-msgid "Invalid username or password"
+#: apps/users/serializers.py:343
+msgid "Invalid username"
 msgstr ""
 
-#: apps/users/serializers.py:109
-msgid "Please activate your account"
+#: apps/users/serializers.py:349
+msgid " You are already logged in on another device"
 msgstr ""
 
-#: apps/users/serializers.py:112
+#: apps/users/serializers.py:369
+msgid "You Account is in cancelled state. Please contact your admin."
+msgstr ""
+
+#: apps/users/serializers.py:385
+msgid "Incorrect password. Please try again."
+msgstr ""
+
+#: apps/users/serializers.py:388
+msgid "Your account has been deactivated. Please contact your agent."
+msgstr ""
+
+#: apps/users/serializers.py:391
 msgid "Your account is deactivated"
 msgstr ""
 
-#: apps/users/serializers.py:115
+#: apps/users/serializers.py:394
 #, python-brace-format
 msgid "Must include \"{username_field}\" and \"password\"."
 msgstr ""
 
-#: apps/users/views.py:129
+#: apps/users/views.py:217
+msgid "You are already logged in on another device"
+msgstr ""
+
+#: apps/users/views.py:256
 msgid "Invalid current password"
 msgstr ""
 
-#: templates/admin/agent/agents.html:11
-msgid "Agents"
-msgstr "Агенты"
+#: apps/users/views.py:296
+msgid "Invalid Token"
+msgstr ""
 
-#: templates/admin/agent/agents.html:61 templates/admin/dealer/dealers.html:36
-#: templates/admin/player/players.html:70 templates/bets/betslips.html:111
-#: templates/profit/profit.html:65 templates/transactions/transactions.html:46
+#: apps/users/views.py:332
+msgid "Invalid User"
+msgstr ""
+
+#: apps/users/views.py:362
+msgid "Cashback added to your balance"
+msgstr ""
+
+#: apps/users/views.py:366
+msgid "Invalid User or Cashback Not available"
+msgstr ""
+
+#: apps/users/views.py:398 apps/users/views.py:568
+msgid "User already exists."
+msgstr ""
+
+#: apps/users/views.py:422
+msgid "User Created Successfully"
+msgstr ""
+
+#: apps/users/views.py:572 apps/users/views.py:595
+msgid "This mobile number already exist"
+msgstr ""
+
+#: apps/users/views.py:577
+msgid "User with this mobile number and username doesn't exist"
+msgstr ""
+
+#: apps/users/views.py:590
+msgid "You cannot change to the same phone number"
+msgstr ""
+
+#: apps/users/views.py:618
+msgid "OTP Sent"
+msgstr ""
+
+#: apps/users/views.py:628
+msgid "Too many requests for OTP. Please try again later."
+msgstr ""
+
+#: apps/users/views.py:633
+msgid "Service Unavailable. Please try again later."
+msgstr ""
+
+#: apps/users/views.py:637
+msgid "This mobile number does not exist."
+msgstr ""
+
+#: apps/users/views.py:641 apps/users/views.py:2258
+msgid "Something went wrong."
+msgstr ""
+
+#: apps/users/views.py:884
+#, python-brace-format
+msgid ""
+"Account has been already deactivated. Please contact your administrator "
+"{agent_email} to reactivate."
+msgstr ""
+
+#: apps/users/views.py:892 apps/users/views.py:925 apps/users/views.py:964
+#: apps/users/views.py:1348
+msgid "Player doesn't exist"
+msgstr ""
+
+#: apps/users/views.py:910
+msgid "Max spending limit already set for the next 24hrs."
+msgstr ""
+
+#: apps/users/views.py:913
+#, python-brace-format
+msgid "Max spending limit cannot be greater than {MAX_SPEND_AMOUNT}"
+msgstr ""
+
+#: apps/users/views.py:961
+msgid "Player already in blackout"
+msgstr ""
+
+#: apps/users/views.py:963
+msgid "Blackout time not provided"
+msgstr ""
+
+#: apps/users/views.py:1340
+msgid "Betting limit already set, please wait for 24 hours to reset again."
+msgstr ""
+
+#: apps/users/views.py:1345
+msgid "Your Betting limit successfully saved for next 24 hours."
+msgstr ""
+
+#: apps/users/views.py:1349
+msgid "Please provide the amount."
+msgstr ""
+
+#: templates/admin/add_casino_categories.html:24
+msgid "Game Category"
+msgstr ""
+
+#: templates/admin/add_casino_categories.html:25
+msgid "Enter Category Name"
+msgstr ""
+
+#: templates/admin/add_casino_categories.html:33
+#, fuzzy
+#| msgid "Add Dealer"
+msgid "Add Category"
+msgstr "Добавить Дилера"
+
+#: templates/admin/add_casino_categories.html:34
+#: templates/admin/cms/footer/category/update_category.html:63
+msgid "Update Category"
+msgstr ""
+
+#: templates/admin/add_casino_categories.html:35
+#: templates/admin/chat_support/cashapp.html:33
+#: templates/admin/chat_support/chat_room.html:561
+#: templates/admin/chats/cashapp.html:33
+#: templates/admin/chats/chat_room.html:564
+#: templates/admin/cms/pages/page.html:230
+#: templates/admin/staff_wallet_and_transactions.html:81
+msgid "Close"
+msgstr ""
+
+#: templates/admin/add_casino_categories.html:42
+msgid "Category Name"
+msgstr ""
+
+#: templates/admin/add_casino_categories.html:43
+#: templates/admin/chat_support/cashapp.html:40
+#: templates/admin/chats/cashapp.html:39
+msgid "Actions"
+msgstr ""
+
+#: templates/admin/admins.html:52
+#, fuzzy
+#| msgid "Search User"
+msgid " Search User "
+msgstr "Поиск"
+
+#: templates/admin/admins.html:55 templates/admin/affiliate/affiliates.html:117
+#: templates/admin/affiliate_requests.html:333
+#: templates/admin/agent/agents.html:118 templates/admin/cash_app.html:93
+#: templates/admin/chat_support/chat_history.html:168
+#: templates/admin/chats/chat_history.html:189
+#: templates/admin/crm_cms/cms_contact.html:52
+#: templates/admin/crm_cms/crm.html:74 templates/admin/crm_cms/crm.html:144
+#: templates/admin/crm_cms/sms.html:70 templates/admin/crm_cms/sms.html:143
+#: templates/admin/dealer/dealers.html:84
+#: templates/admin/pendingwithdrawals.html:333
+#: templates/admin/player/players.html:311 templates/admin/roles/roles.html:185
+#: templates/admin/roles/users_list.html:167
+#: templates/admin/staff/staffs.html:120
+#: templates/admin/unresolved_queries.html:237
+#: templates/includes/transactions.html:72
+#: templates/offmarkets/offmarket_withdrawal_requests.html:333
+#: templates/profit/profit.html:123 templates/report/alchemypay_report.html:188
+#: templates/report/alchemypay_report.html:218
+#: templates/report/bonus_transactions_report.html:156
+#: templates/report/cash_app.html:173
+#: templates/report/casino_betslip_report.html:205
+#: templates/report/mnet_report.html:134
+#: templates/report/nowpayments_report.html:194
+#: templates/report/offmarket_report.html:187
+#: templates/report/offmarket_report.html:217
+#: templates/report/transaction_report.html:191
+#: templates/transactions/transactions.html:61
+#: templates/transactions/transactions.html:92
 msgid "Search"
 msgstr "Поиск"
 
-#: templates/admin/agent/agents.html:100 templates/admin/agent/agents.html:254
-#: templates/admin/dealer/dealers.html:79
-msgid "Credit"
-msgstr "Кредит"
+#: templates/admin/admins.html:66
+#, fuzzy
+#| msgid "Admin"
+msgid "Add Admin"
+msgstr "Администратор"
 
-#: templates/admin/agent/agents.html:101 templates/admin/agent/agents.html:205
-#: templates/admin/agent/agents.html:228
-#: templates/admin/dealer/dealers.html:185
-#: templates/admin/player/players.html:220
-#: templates/admin/player/players.html:240 templates/home.html:90
-#: templates/profit/profit.html:15 templates/profit/profit.html:93
-#: templates/profit/profit.html:120
-msgid "Profit"
-msgstr "Прибыль"
+#: templates/admin/admins.html:78 templates/admin/affiliate/affiliates.html:146
+#: templates/admin/player/players.html:437
+msgid "Balance"
+msgstr ""
 
-#: templates/admin/agent/agents.html:209
-msgid "Sport"
-msgstr "Спорт"
+#: templates/admin/admins.html:138 templates/admin/agent/agents.html:513
+#: templates/admin/agent/agents.html:540
+#: templates/admin/dealer/dealers.html:356
+#: templates/admin/player/players.html:903
+#: templates/admin/roles/create_role.html:201
+#: templates/admin/roles/roles.html:278
+#: templates/admin/roles/users_list.html:260
+#: templates/admin/staff/staffs.html:497 templates/admin/staff/staffs.html:524
+#, fuzzy
+#| msgid "Terminals"
+msgid "Permissions"
+msgstr "Терминалы"
 
-#: templates/admin/agent/agents.html:215
-#: templates/admin/dealer/dealers.html:193
-#: templates/admin/player/players.html:228 templates/profit/profit.html:108
-msgid "In"
-msgstr "В"
+#: templates/admin/admins.html:160
+#: templates/admin/bonuses/sign_up_bonus.html:72 templates/header.html:624
+msgid "Sign Up Bonus"
+msgstr ""
 
-#: templates/admin/agent/agents.html:221
-#: templates/admin/dealer/dealers.html:199
-#: templates/admin/player/players.html:234 templates/profit/profit.html:114
-msgid "Out"
-msgstr "Вне"
+#: templates/admin/admins.html:173
+msgid "Coming Soon Page"
+msgstr ""
 
-#: templates/admin/agent/agents.html:294
-#: templates/admin/dealer/dealers.html:269
-msgid "Betting limits"
-msgstr "Лимит ставок"
+#: templates/admin/ads_sponser.html:164
+msgid "Ads/Sponser"
+msgstr ""
 
-#: templates/admin/agent/agents.html:308
-#: templates/admin/dealer/dealers.html:282
-#: templates/admin/player/players.html:351
-#: templates/includes/betting_limits_popup.html:19
-msgid "Max Bet"
-msgstr "Максимальная сумма ставки"
+#: templates/admin/ads_sponser.html:165 templates/admin/banner.html:169
+#: templates/admin/bonus_content/bonus_contents.html:130
+#: templates/admin/cms/footer/category/category.html:125
+#: templates/admin/cms/footer/footer.html:126 templates/admin/cms/page.html:132
+#: templates/admin/cms/pages/page.html:154
+#: templates/admin/cms/social/links.html:146
+#: templates/admin/cms/spin_the_wheel.html:78
+#: templates/admin/crm_cms/crm.html:151 templates/admin/crm_cms/sms.html:153
+#: templates/admin/footer/footer.html:130
+#: templates/admin/mobile_banner.html:119
+#: templates/admin/player/players.html:863
+#: templates/admin/roles/create_user.html:62
+#: templates/offmarkets/games.html:166
+#, fuzzy
+#| msgid "Create player"
+msgid "Create"
+msgstr "Создать игрока"
 
-#: templates/admin/agent/agents.html:328
-#: templates/admin/dealer/dealers.html:299
-#: templates/admin/player/players.html:373
-#: templates/includes/betting_limits_popup.html:31
-msgid "Min Bet"
-msgstr "Минимальная сумма ставки"
+#: templates/admin/ads_sponser.html:173 templates/admin/banner.html:178
+#: templates/admin/cms/create_page.html:74
+#: templates/admin/cms/edit_page_template.html:74
+#: templates/admin/cms/footer/category/category.html:133
+#: templates/admin/cms/footer/category/create_category.html:77
+#: templates/admin/cms/footer/category/update_category.html:77
+#: templates/admin/cms/page.html:141
+#: templates/admin/cms/pages/create_page.html:173
+#: templates/admin/cms/pages/page.html:163
+#: templates/admin/cms/pages/update_page.html:165
+#: templates/admin/cms/social/create_link.html:71
+#: templates/admin/cms/social/details_link.html:76
+#: templates/admin/cms/social/links.html:156
+#: templates/admin/cms/social/update_link.html:71
+#: templates/admin/crm_cms/cms_about.html:77
+#: templates/admin/crm_cms/cms_cookies_policy.html:75
+#: templates/admin/crm_cms/cms_faq.html:75
+#: templates/admin/crm_cms/cms_introduction.html:75
+#: templates/admin/crm_cms/cms_privacy_policy.html:75
+#: templates/admin/crm_cms/cms_promotion.html:75
+#: templates/admin/crm_cms/cms_setting_limits.html:75
+#: templates/admin/crm_cms/cms_terms_and_conditions.html:75
+#: templates/admin/crm_cms/notification.html:47
+#: templates/offmarkets/games.html:174
+msgid "Title"
+msgstr ""
 
-#: templates/admin/agent/agents.html:348
-#: templates/admin/dealer/dealers.html:315
-#: templates/admin/player/players.html:392
-#: templates/includes/betting_limits_popup.html:44
-msgid "Max Win Amount"
-msgstr "Максимальная сумма выигрыша"
+#: templates/admin/ads_sponser.html:174 templates/admin/banner.html:179
+#: templates/admin/cms/footer/create_footer.html:107
+#: templates/admin/cms/footer/footer.html:134
+#: templates/admin/crm_cms/create_crm_template.html:96
+#: templates/admin/crm_cms/create_sms_template.html:59
+#: templates/admin/crm_cms/crm.html:175
+#: templates/admin/crm_cms/edit_crm_template.html:92
+#: templates/admin/crm_cms/edit_email_template.html:53
+#: templates/admin/crm_cms/edit_sms_template.html:58
+#: templates/admin/crm_cms/email_template.html:123
+#: templates/admin/crm_cms/sms.html:178
+#: templates/admin/footer/create_footer.html:100
+msgid "Category"
+msgstr ""
 
-#: templates/admin/agent/agents.html:369
-#: templates/admin/dealer/dealers.html:333
-#: templates/admin/player/players.html:412
-#: templates/includes/betting_limits_popup.html:55
-msgid "Max Odd"
-msgstr "Максимальный коэффициент"
+#: templates/admin/ads_sponser.html:175 templates/admin/banner.html:180
+#: templates/includes/transactions.html:45
+msgid "Type"
+msgstr ""
 
-#: templates/admin/agent/agents.html:391
-#: templates/admin/dealer/dealers.html:349
-#: templates/admin/player/players.html:433
-#: templates/includes/betting_limits_popup.html:68
-msgid "Max Bet Amount Per Match"
-msgstr "Максимальная сумма ставки за матч"
+#: templates/admin/ads_sponser.html:176
+msgid "Redirect URL"
+msgstr ""
 
-#: templates/admin/agent/agents.html:410
-#: templates/admin/dealer/dealers.html:365
-#: templates/admin/player/players.html:452
-#: templates/includes/betting_limits_popup.html:79
-msgid "Max Same Bet Count Amount"
-msgstr "Макс. Количество ставок"
+#: templates/admin/ads_sponser.html:179 templates/admin/banner.html:185
+#: templates/admin/create_banner.html:437
+msgid "Banner"
+msgstr ""
 
-#: templates/admin/agent/agents.html:430
-#: templates/admin/dealer/dealers.html:381
-#: templates/admin/player/players.html:470
-#: templates/includes/betting_limits_popup.html:92
-msgid "Max Multi Two Events Amount Combine"
-msgstr "Макс. Мульти-сумма на два события"
+#: templates/admin/ads_sponser.html:181
+#: templates/admin/affiliate_requests.html:352 templates/admin/banner.html:188
+#: templates/admin/bonus_content/bonus_contents.html:142
+#: templates/admin/bonuses/deposit_bonus.html:157
+#: templates/admin/bonuses/sign_up_bonus.html:200
+#: templates/admin/cash_app.html:110
+#: templates/admin/cms/footer/category/category.html:136
+#: templates/admin/cms/footer/footer.html:136 templates/admin/cms/page.html:145
+#: templates/admin/cms/pages/page.html:168
+#: templates/admin/cms/social/links.html:159
+#: templates/admin/cms/spin_the_wheel.html:133
+#: templates/admin/crm_cms/cms_contact.html:77
+#: templates/admin/crm_cms/crm.html:179
+#: templates/admin/crm_cms/email_template.html:125
+#: templates/admin/crm_cms/sms.html:181
+#: templates/admin/pendingwithdrawals.html:355
+#: templates/admin/player/players.html:875 templates/admin/roles/roles.html:216
+#: templates/admin/roles/users_list.html:199
+#: templates/admin/tournament/tournament_list.html:252
+#: templates/offmarkets/games.html:182
+#: templates/offmarkets/offmarket_withdrawal_requests.html:354
+#: templates/report/offmarket_report.html:252
+msgid "Action"
+msgstr ""
 
-#: templates/admin/agent/agents.html:449
-#: templates/admin/dealer/dealers.html:397
-#: templates/admin/player/players.html:488
-#: templates/includes/betting_limits_popup.html:103
-msgid "Max Multi Three Events Amount Combine"
-msgstr "Комбинация Макс Мульти Три События Сумма"
+#: templates/admin/affiliate/add_affiliate.html:32
+#: templates/admin/affiliate/affiliates.html:282
+#: templates/admin/affiliate/affiliates.html:288
+msgid "Affiliate Bonus Percentage"
+msgstr ""
 
-#: templates/admin/agent/agents.html:471
-#: templates/admin/dealer/dealers.html:416
-#: templates/admin/player/players.html:509
-#: templates/includes/betting_limits_popup.html:116
-msgid "Max Multi Three Events"
-msgstr "Макс Мульти Три События"
+#: templates/admin/affiliate/add_affiliate.html:45
+#: templates/admin/affiliate/affiliates.html:290
+msgid ""
+"Bonus percentage for which affiliate will get bonus on affiliated player's "
+"first deposit"
+msgstr ""
 
-#: templates/admin/agent/update_agent.html:30
-#: templates/admin/dealer/dealers.html:429
-#: templates/admin/dealer/update_dealer.html:43
-#: templates/admin/player/update_player.html:30
-#: templates/includes/betting_limits_popup.html:194
+#: templates/admin/affiliate/add_affiliate.html:53
+#, fuzzy
+#| msgid "Search User"
+msgid "Select User"
+msgstr "Поиск"
+
+#: templates/admin/affiliate/add_affiliate.html:68
+#: templates/admin/affiliate/affiliates.html:343
+msgid "Affiliate Expire Date"
+msgstr ""
+
+#: templates/admin/affiliate/add_affiliate.html:78
+#: templates/admin/affiliate/affiliates.html:316
+msgid "Bonus On No. of Deposits"
+msgstr ""
+
+#: templates/admin/affiliate/add_affiliate.html:87
+#: templates/admin/affiliate/affiliates.html:327
+msgid "Bonus On All Deposits"
+msgstr ""
+
+#: templates/admin/affiliate/add_affiliate.html:99
+#: templates/admin/affiliate/affiliates.html:299
+msgid "Redeemable"
+msgstr ""
+
+#: templates/admin/affiliate/add_affiliate.html:111
+msgid "Lifetime Affliate"
+msgstr ""
+
+#: templates/admin/affiliate/add_affiliate.html:123
+msgid "Assign link"
+msgstr ""
+
+#: templates/admin/affiliate/add_affiliate.html:143
+#: templates/admin/roles/roles.html:587
+#: templates/admin/roles/users_list.html:598
+#, fuzzy
+#| msgid "Search User"
+msgid "Search by Username"
+msgstr "Поиск"
+
+#: templates/admin/affiliate/affiliates.html:88
+msgid "Affiliates"
+msgstr ""
+
+#: templates/admin/affiliate/affiliates.html:132
+msgid "affiliate link"
+msgstr ""
+
+#: templates/admin/affiliate/affiliates.html:144
+#: templates/admin/player/players.html:428
+msgid "Name"
+msgstr ""
+
+#: templates/admin/affiliate/affiliates.html:145
+#: templates/admin/crm_cms/cms_contact.html:73
+#: templates/admin/player/create_player.html:55
+#: templates/admin/player/players.html:432
+#: templates/admin/player/update_player.html:49
+#: templates/admin/unresolved_queries.html:260
+msgid "Email"
+msgstr ""
+
+#: templates/admin/affiliate/affiliates.html:147
+msgid "Affiliate Revenue"
+msgstr ""
+
+#: templates/admin/affiliate/affiliates.html:258 templates/header.html:919
+msgid "Affiliate Link"
+msgstr ""
+
+#: templates/admin/affiliate/affiliates.html:264
+msgid "Affiliate Url"
+msgstr ""
+
+#: templates/admin/affiliate/affiliates.html:301
+msgid ""
+"Bonuses will directly added to balance if enabled otherwise added to bonus "
+"balance"
+msgstr ""
+
+#: templates/admin/affiliate/affiliates.html:318
+msgid "Bonuses on no. of  deposits made by the affilated player"
+msgstr ""
+
+#: templates/admin/affiliate/affiliates.html:329
+msgid "Bonuses on all deposits made by the affilated player"
+msgstr ""
+
+#: templates/admin/affiliate/affiliates.html:345
+msgid "Expiration Date for the Affiliate Link"
+msgstr ""
+
+#: templates/admin/affiliate/affiliates.html:355
+msgid "Lifetime Affiliate"
+msgstr ""
+
+#: templates/admin/affiliate/affiliates.html:357
+msgid "No Expiration Date for the Affiliate Link"
+msgstr ""
+
+#: templates/admin/affiliate/affiliates.html:375
+#: templates/admin/agent/agents.html:494
+#: templates/admin/agent/update_agent.html:46
+#: templates/admin/create-admin.html:65
+#: templates/admin/dealer/update_dealer.html:67
+#: templates/admin/player/players.html:1030
+#: templates/admin/player/update_player.html:115
+#: templates/admin/roles/update_user.html:51
+#: templates/admin/staff/staffs.html:478
+#: templates/admin/staff/update_staff.html:46
+#: templates/includes/betting_limits_popup.html:281
 msgid "Save"
 msgstr "Сохранить"
 
-#: templates/admin/dealer/create_dealer.html:6
-#: templates/admin/dealer/dealers.html:65
-msgid "Add Dealer"
-msgstr "Добавить Дилера"
-
-#: templates/admin/dealer/dealers.html:11 templates/home.html:58
-msgid "Dealers"
-msgstr "Дилеры"
-
-#: templates/admin/player/create_player.html:6
-#: templates/admin/player/players.html:99
-msgid "Add Player"
-msgstr "Добавить Игрока"
-
-#: templates/admin/player/players.html:10 templates/home.html:22
-msgid "Players"
-msgstr "Игроки"
-
-#: templates/admin/player/players.html:337 templates/home.html:140
-#: templates/includes/betting_limits_popup.html:6
-msgid "Betting Limits"
-msgstr "Лимит ставок"
-
-#: templates/bets/betslips.html:15 templates/home.html:127
-msgid "Coupons"
-msgstr "Купоны"
-
-#: templates/bets/betslips.html:106 templates/profit/profit.html:61
+#: templates/admin/affiliate/affiliates.html:520
+#: templates/admin/affiliate_requests.html:166
+#: templates/admin/pendingwithdrawals.html:166
+#: templates/admin/unresolved_queries.html:567
+#: templates/offmarkets/offmarket_withdrawal_requests.html:166
 #, fuzzy
 #| msgid "Player"
-msgid "Search Player"
+msgid "Search by player"
 msgstr "Поиск Игрока"
 
-msgid "Bet Amount"
-msgstr "Сумма ставки"
+#: templates/admin/affiliate/affiliates.html:541
+#: templates/admin/chat_support/chat_history.html:296
+#: templates/admin/player/players.html:2337 templates/profit/profit.html:600
+#: templates/report/alchemypay_report.html:428
+#: templates/report/bonus_transactions_report.html:359
+#: templates/report/cash_app.html:363
+#: templates/report/casino_betslip_report.html:404
+#: templates/report/mnet_report.html:256
+#: templates/report/nowpayments_report.html:408
+#: templates/report/offmarket_report.html:476
+#: templates/report/transaction_report.html:444
+#, fuzzy
+#| msgid "Player"
+msgid "Search by Player"
+msgstr "Поиск Игрока"
 
-#: templates/bets/betslips.html:146
-msgid "Possible Win"
-msgstr "Возможная победа"
-
-#: templates/bets/betslips.html:147
-msgid "Win Amount"
-msgstr "Сумма выигрыша"
-
-#: templates/bets/betslips.html:148 templates/transactions/transactions.html:64
-msgid "Date"
-msgstr "Дата"
-
-#: templates/header.html:70
-msgid "Log Out"
-msgstr "Выйти"
-
-#: templates/home.html:9
-msgid "Dashboard :"
+#: templates/admin/affiliate/default_affiliate_settings.html:56
+msgid "Affiliate Settings"
 msgstr ""
 
-#: templates/home.html:103
-msgid "Transaction"
-msgstr "Транзакция"
+#: templates/admin/affiliate/default_affiliate_settings.html:63
+#: templates/admin/bonuses.html:131 templates/admin/bonuses.html:200
+#: templates/admin/bonuses/bet_bonus.html:92
+#: templates/admin/bonuses/deposit_bonus.html:77
+#: templates/admin/bonuses/deposit_bonus.html:151
+#: templates/admin/bonuses/edit_bonuses.html:53
+#: templates/admin/bonuses/edit_deposit_bonus.html:52
+#: templates/admin/bonuses/edit_losing_bonus.html:46
+#: templates/admin/bonuses/losing_bonus.html:87
+#: templates/admin/bonuses/losing_bonus.html:160
+#: templates/admin/bonuses/referral_bonus.html:61
+#: templates/admin/bonuses/sign_up_bonus.html:102
+#: templates/admin/bonuses/sign_up_bonus.html:191
+msgid "Percentage"
+msgstr ""
 
-#: templates/limits/limits.html:13
+#: templates/admin/affiliate/default_affiliate_settings.html:65
+msgid "Enter Default Bonus Percentage."
+msgstr ""
+
+#: templates/admin/affiliate/default_affiliate_settings.html:77
 #, fuzzy
-#| msgid "Betting Limits"
-msgid "Betting Limit2"
-msgstr "Лимит ставок"
+#| msgid "Bet Amount"
+msgid "Deposit Count"
+msgstr "Сумма ставки"
 
-#: templates/profit/profit.html:101
+#: templates/admin/affiliate/default_affiliate_settings.html:79
+#: templates/admin/bonuses/deposit_bonus.html:93
+#: templates/admin/bonuses/edit_deposit_bonus.html:68
+#: templates/admin/bonuses/referral_bonus.html:73
+msgid "Enter maximum bonus limit."
+msgstr ""
+
+#: templates/admin/affiliate/default_affiliate_settings.html:87
+#: templates/admin/affiliate_requests.html:348
+msgid "No of Days"
+msgstr ""
+
+#: templates/admin/affiliate/default_affiliate_settings.html:89
+#: templates/admin/bonuses/bet_bonus.html:118
+#: templates/admin/bonuses/bet_bonus.html:121
+#: templates/admin/bonuses/deposit_bonus.html:105
+#: templates/admin/bonuses/deposit_bonus.html:107
+#: templates/admin/bonuses/edit_deposit_bonus.html:80
+#: templates/admin/bonuses/edit_deposit_bonus.html:82
+msgid "Per day usage"
+msgstr ""
+
+#: templates/admin/affiliate/default_affiliate_settings.html:98
+#: templates/admin/bonuses.html:66 templates/admin/bonuses.html:93
+#: templates/admin/bonuses.html:173 templates/admin/bonuses/bet_bonus.html:156
+#: templates/admin/bonuses/deposit_bonus.html:126
+#: templates/admin/bonuses/edit_bonuses.html:114
+#: templates/admin/bonuses/edit_deposit_bonus.html:108
+#: templates/admin/bonuses/edit_losing_bonus.html:79
+#: templates/admin/bonuses/referral_bonus.html:81
+#: templates/admin/bonuses/sign_up_bonus.html:162
+#: templates/admin/cms/coming_soon.html:198
+#: templates/admin/cms/coming_soon.html:240
+#: templates/admin/cms/footer/create_footer.html:153
+#: templates/admin/crm_cms/create_crm_template.html:157
+#: templates/admin/crm_cms/create_sms_template.html:126
+#: templates/admin/footer/create_footer.html:146
+msgid "Submit"
+msgstr ""
+
+#: templates/admin/affiliate/default_affiliate_settings.html:145
+#: templates/admin/agent/agents.html:810 templates/admin/bonuses.html:467
+#: templates/admin/bonuses.html:554 templates/admin/bonuses.html:611
+#: templates/admin/bonuses/bet_bonus.html:493
+#: templates/admin/bonuses/bet_bonus.html:614
+#: templates/admin/bonuses/losing_bonus.html:395
+#: templates/admin/bonuses/losing_bonus.html:451
+#: templates/admin/bonuses/losing_bonus.html:571
+#: templates/admin/bonuses/losing_bonus.html:618
+#: templates/admin/bonuses/referral_bonus.html:264
+#: templates/admin/bonuses/referral_bonus.html:353
+#: templates/admin/bonuses/referral_bonus.html:410
+#: templates/admin/bonuses/sign_up_bonus.html:589
+#: templates/admin/bonuses/sign_up_bonus.html:741
+#: templates/admin/cms/coming_soon.html:393
+#: templates/admin/cms/spin_the_wheel.html:200
+#: templates/admin/cms/spin_the_wheel.html:260
+#: templates/admin/cms/spin_the_wheel.html:310
+#: templates/admin/dealer/dealers.html:696
+#: templates/admin/player/players.html:1322
+#: templates/admin/player/players.html:1432
+#: templates/admin/player/players.html:1569 templates/admin/settings.html:440
+#: templates/admin/settings.html:549 templates/admin/settings.html:639
+#: templates/admin/staff/staffs.html:813
+#: templates/admin/staff_wallet_and_transactions.html:435
+msgid "Are you sure"
+msgstr "Ты уверен"
+
+#: templates/admin/affiliate/default_affiliate_settings.html:153
+#: templates/admin/agent/agents.html:819 templates/admin/bonuses.html:475
+#: templates/admin/bonuses.html:562 templates/admin/bonuses.html:619
+#: templates/admin/bonuses/bet_bonus.html:442
+#: templates/admin/bonuses/bet_bonus.html:501
+#: templates/admin/bonuses/bet_bonus.html:622
+#: templates/admin/bonuses/deposit_bonus.html:426
+#: templates/admin/bonuses/deposit_bonus.html:476
+#: templates/admin/bonuses/losing_bonus.html:403
+#: templates/admin/bonuses/losing_bonus.html:459
+#: templates/admin/bonuses/losing_bonus.html:579
+#: templates/admin/bonuses/losing_bonus.html:626
+#: templates/admin/bonuses/referral_bonus.html:272
+#: templates/admin/bonuses/referral_bonus.html:361
+#: templates/admin/bonuses/referral_bonus.html:418
+#: templates/admin/bonuses/sign_up_bonus.html:597
+#: templates/admin/bonuses/sign_up_bonus.html:749
+#: templates/admin/cms/coming_soon.html:401
+#: templates/admin/cms/coming_soon.html:460
+#: templates/admin/cms/spin_the_wheel.html:208
+#: templates/admin/cms/spin_the_wheel.html:268
+#: templates/admin/cms/spin_the_wheel.html:318
+#: templates/admin/crm_cms/email_template.html:200
+#: templates/admin/dealer/dealers.html:705
+#: templates/admin/player/players.html:260
+#: templates/admin/player/players.html:1331
+#: templates/admin/player/players.html:1441
+#: templates/admin/player/players.html:1578 templates/admin/settings.html:448
+#: templates/admin/settings.html:557 templates/admin/settings.html:647
+#: templates/admin/staff/staffs.html:822
+#: templates/admin/staff_wallet_and_transactions.html:443
+#: templates/report/alchemypay_report.html:468
+#: templates/report/alchemypay_report.html:567
+#: templates/report/alchemypay_report.html:688
+#: templates/report/offmarket_report.html:516
+#: templates/report/offmarket_report.html:615
+#: templates/report/offmarket_report.html:736
+msgid "Yes"
+msgstr "Да"
+
+#: templates/admin/affiliate/default_affiliate_settings.html:154
+#: templates/admin/agent/agents.html:820 templates/admin/bonuses.html:476
+#: templates/admin/bonuses.html:563 templates/admin/bonuses.html:620
+#: templates/admin/bonuses/bet_bonus.html:443
+#: templates/admin/bonuses/bet_bonus.html:502
+#: templates/admin/bonuses/bet_bonus.html:623
+#: templates/admin/bonuses/deposit_bonus.html:427
+#: templates/admin/bonuses/deposit_bonus.html:477
+#: templates/admin/bonuses/losing_bonus.html:404
+#: templates/admin/bonuses/losing_bonus.html:460
+#: templates/admin/bonuses/losing_bonus.html:580
+#: templates/admin/bonuses/losing_bonus.html:627
+#: templates/admin/bonuses/referral_bonus.html:273
+#: templates/admin/bonuses/referral_bonus.html:362
+#: templates/admin/bonuses/referral_bonus.html:419
+#: templates/admin/bonuses/sign_up_bonus.html:598
+#: templates/admin/bonuses/sign_up_bonus.html:750
+#: templates/admin/cms/coming_soon.html:402
+#: templates/admin/cms/coming_soon.html:461
+#: templates/admin/cms/spin_the_wheel.html:209
+#: templates/admin/cms/spin_the_wheel.html:269
+#: templates/admin/cms/spin_the_wheel.html:319
+#: templates/admin/crm_cms/email_template.html:201
+#: templates/admin/dealer/dealers.html:706
+#: templates/admin/player/players.html:261
+#: templates/admin/player/players.html:1332
+#: templates/admin/player/players.html:1442
+#: templates/admin/player/players.html:1579 templates/admin/settings.html:449
+#: templates/admin/settings.html:558 templates/admin/settings.html:648
+#: templates/admin/staff/staffs.html:823
+#: templates/admin/staff_wallet_and_transactions.html:444
+#: templates/report/alchemypay_report.html:469
+#: templates/report/alchemypay_report.html:568
+#: templates/report/alchemypay_report.html:689
+#: templates/report/offmarket_report.html:517
+#: templates/report/offmarket_report.html:616
+#: templates/report/offmarket_report.html:737
+msgid "No"
+msgstr "Нет"
+
+#: templates/admin/affiliate_requests.html:261
+msgid "Affiliate Request"
+msgstr ""
+
+#: templates/admin/affiliate_requests.html:291
+#: templates/admin/agent/agents.html:130 templates/admin/bonuses.html:161
+#: templates/admin/bonuses/deposit_bonus.html:114
+#: templates/admin/bonuses/edit_bonuses.html:95
+#: templates/admin/bonuses/edit_deposit_bonus.html:89
+#: templates/admin/bonuses/edit_losing_bonus.html:67
+#: templates/admin/bonuses/losing_bonus.html:121
+#: templates/admin/bonuses/sign_up_bonus.html:150
+#: templates/admin/chats/chat_history.html:166
+#: templates/admin/crm_cms/crm.html:124 templates/admin/crm_cms/sms.html:120
+#: templates/admin/dealer/dealers.html:94
+#: templates/admin/pendingwithdrawals.html:291
+#: templates/admin/player/players.html:294 templates/admin/roles/roles.html:169
+#: templates/admin/roles/users_list.html:151
+#: templates/admin/staff/staffs.html:132
+#: templates/admin/unresolved_queries.html:214
+#: templates/includes/transactions.html:22
+#: templates/offmarkets/offmarket_withdrawal_requests.html:291
+#: templates/profit/profit.html:85 templates/report/alchemypay_report.html:135
+#: templates/report/bonus_transactions_report.html:114
+#: templates/report/cash_app.html:99
+#: templates/report/casino_betslip_report.html:118
+#: templates/report/mnet_report.html:115
+#: templates/report/nowpayments_report.html:120
+#: templates/report/offmarket_report.html:135
+#: templates/report/transaction_report.html:122
+#: templates/transactions/transactions.html:104
+msgid "From date"
+msgstr ""
+
+#: templates/admin/affiliate_requests.html:292
+#: templates/admin/agent/agents.html:131 templates/admin/crm_cms/crm.html:125
+#: templates/admin/crm_cms/sms.html:121 templates/admin/dealer/dealers.html:96
+#: templates/admin/pendingwithdrawals.html:292
+#: templates/admin/player/players.html:295 templates/admin/roles/roles.html:171
+#: templates/admin/roles/users_list.html:153
+#: templates/admin/staff/staffs.html:133
+#: templates/offmarkets/offmarket_withdrawal_requests.html:292
+#: templates/profit/profit.html:86 templates/report/alchemypay_report.html:136
+#: templates/report/bonus_transactions_report.html:115
+#: templates/report/cash_app.html:100
+#: templates/report/casino_betslip_report.html:119
+#: templates/report/mnet_report.html:116
+#: templates/report/nowpayments_report.html:121
+#: templates/report/offmarket_report.html:136
+#: templates/report/transaction_report.html:123
+msgid "Select from date"
+msgstr ""
+
+#: templates/admin/affiliate_requests.html:300
+#: templates/admin/agent/agents.html:137 templates/admin/bonuses.html:167
+#: templates/admin/bonuses/deposit_bonus.html:120
+#: templates/admin/bonuses/edit_bonuses.html:101
+#: templates/admin/bonuses/edit_deposit_bonus.html:95
+#: templates/admin/bonuses/edit_losing_bonus.html:73
+#: templates/admin/bonuses/losing_bonus.html:127
+#: templates/admin/bonuses/sign_up_bonus.html:156
+#: templates/admin/chats/chat_history.html:175
+#: templates/admin/crm_cms/crm.html:133 templates/admin/crm_cms/sms.html:129
+#: templates/admin/dealer/dealers.html:102
+#: templates/admin/pendingwithdrawals.html:300
+#: templates/admin/player/players.html:301 templates/admin/roles/roles.html:177
+#: templates/admin/roles/users_list.html:159
+#: templates/admin/staff/staffs.html:139
+#: templates/admin/unresolved_queries.html:223
+#: templates/includes/transactions.html:32
+#: templates/offmarkets/offmarket_withdrawal_requests.html:300
+#: templates/profit/profit.html:92 templates/report/alchemypay_report.html:144
+#: templates/report/bonus_transactions_report.html:123
+#: templates/report/cash_app.html:108
+#: templates/report/casino_betslip_report.html:127
+#: templates/report/mnet_report.html:124
+#: templates/report/nowpayments_report.html:129
+#: templates/report/offmarket_report.html:144
+#: templates/report/transaction_report.html:131
+#: templates/transactions/transactions.html:111
+msgid "To date"
+msgstr ""
+
+#: templates/admin/affiliate_requests.html:301
+#: templates/admin/agent/agents.html:138 templates/admin/crm_cms/crm.html:134
+#: templates/admin/crm_cms/sms.html:130 templates/admin/dealer/dealers.html:104
+#: templates/admin/pendingwithdrawals.html:301
+#: templates/admin/player/players.html:302 templates/admin/roles/roles.html:179
+#: templates/admin/roles/users_list.html:161
+#: templates/admin/staff/staffs.html:140
+#: templates/offmarkets/offmarket_withdrawal_requests.html:301
+#: templates/profit/profit.html:93 templates/report/alchemypay_report.html:145
+#: templates/report/bonus_transactions_report.html:124
+#: templates/report/cash_app.html:109
+#: templates/report/casino_betslip_report.html:128
+#: templates/report/mnet_report.html:125
+#: templates/report/nowpayments_report.html:130
+#: templates/report/offmarket_report.html:145
+#: templates/report/transaction_report.html:132
+msgid "Select to date"
+msgstr ""
+
+#: templates/admin/affiliate_requests.html:309
+#, fuzzy
+#| msgid "Status"
+msgid "Request Status"
+msgstr "Состояние"
+
+#: templates/admin/affiliate_requests.html:311
+#: templates/admin/pendingwithdrawals.html:311
+#: templates/admin/player/players.html:259
+#: templates/offmarkets/offmarket_withdrawal_requests.html:311
+#: templates/report/alchemypay_report.html:154
+#: templates/report/alchemypay_report.html:168
+#: templates/report/bonus_transactions_report.html:134
+#: templates/report/cash_app.html:82 templates/report/mnet_report.html:84
+#: templates/report/mnet_report.html:100
+#: templates/report/nowpayments_report.html:82
+#: templates/report/nowpayments_report.html:101
+#: templates/report/offmarket_report.html:154
+#: templates/report/offmarket_report.html:167
+#: templates/report/transaction_report.html:141
+#: templates/report/transaction_report.html:154
+msgid "--All--"
+msgstr ""
+
+#: templates/admin/affiliate_requests.html:312
+#: templates/admin/pendingwithdrawals.html:312
+#: templates/offmarkets/offmarket_withdrawal_requests.html:312
+#: templates/report/mnet_report.html:86
+msgid "Approved"
+msgstr ""
+
+#: templates/admin/affiliate_requests.html:313
+#: templates/admin/pendingwithdrawals.html:313
+#: templates/offmarkets/offmarket_withdrawal_requests.html:313
+#: templates/report/mnet_report.html:88
+#: templates/report/nowpayments_report.html:85
+msgid "Rejected"
+msgstr ""
+
+#: templates/admin/affiliate_requests.html:314
+#: templates/admin/pendingwithdrawals.html:314
+#: templates/offmarkets/offmarket_withdrawal_requests.html:314
+#: templates/report/alchemypay_report.html:155
+#: templates/report/cash_app.html:239
+#: templates/report/offmarket_report.html:155
+#, fuzzy
+#| msgid "Profit Ascending"
+msgid "Pending"
+msgstr "Прибыль по возрастанию"
+
+#: templates/admin/affiliate_requests.html:327
+#: templates/admin/pendingwithdrawals.html:327
+#: templates/offmarkets/offmarket_withdrawal_requests.html:327
+#: templates/report/alchemypay_report.html:182
+#: templates/report/alchemypay_report.html:212
+#: templates/report/bonus_transactions_report.html:150
+#: templates/report/cash_app.html:167
+#: templates/report/casino_betslip_report.html:198
+#: templates/report/nowpayments_report.html:188
+#: templates/report/offmarket_report.html:181
+#: templates/report/offmarket_report.html:211
+#: templates/report/transaction_report.html:185
+msgid "Download"
+msgstr ""
+
+#: templates/admin/affiliate_requests.html:347
+#: templates/admin/cash_app.html:106
+#: templates/admin/pendingwithdrawals.html:347 templates/home.html:1233
+#: templates/offmarkets/offmarket_withdrawal_requests.html:348
+#: templates/report/alchemypay_report.html:240
+#: templates/report/bonus_transactions_report.html:171
+#: templates/report/casino_betslip_report.html:225
+#: templates/report/mnet_report.html:148
+#: templates/report/nowpayments_report.html:215
+#: templates/report/offmarket_report.html:240
+#: templates/report/transaction_report.html:213
+#, fuzzy
+#| msgid "Username"
+msgid "User"
+msgstr "Имя пользователя"
+
+#: templates/admin/affiliate_requests.html:349
+msgid "No of Deposits"
+msgstr ""
+
+#: templates/admin/affiliate_requests.html:350
+#: templates/admin/cash_app.html:108
+#: templates/admin/pendingwithdrawals.html:353
+#: templates/offmarkets/offmarket_withdrawal_requests.html:347
+#, fuzzy
+#| msgid "Create player"
+msgid "Created"
+msgstr "Создать игрока"
+
+#: templates/admin/affiliate_requests.html:351 templates/admin/bonuses.html:205
+#: templates/admin/bonuses/deposit_bonus.html:156
+#: templates/admin/bonuses/losing_bonus.html:166
+#: templates/admin/bonuses/sign_up_bonus.html:199
+#: templates/admin/crm_cms/cms_contact.html:76
+#: templates/admin/crm_cms/crm.html:177 templates/admin/crm_cms/sms.html:180
+#: templates/admin/pendingwithdrawals.html:354
+#: templates/admin/unresolved_queries.html:263
+#: templates/offmarkets/games.html:179
+#: templates/offmarkets/offmarket_withdrawal_requests.html:353
+#: templates/report/alchemypay_report.html:152
+#: templates/report/alchemypay_report.html:247
+#: templates/report/bonus_transactions_report.html:176
+#: templates/report/mnet_report.html:153
+#: templates/report/offmarket_report.html:152
+#: templates/report/offmarket_report.html:246
+#: templates/report/offmarket_report.html:247
+#: templates/report/transaction_report.html:219
+msgid "Status"
+msgstr "Состояние"
+
+#: templates/admin/agent/agents.html:78 templates/admin/agent/agents.html:160
+#: templates/admin/player/players.html:435
+#: templates/report/transaction_report.html:142
+msgid "Master Agent"
+msgstr ""
+
+#: templates/admin/agent/agents.html:98 templates/admin/dealer/dealers.html:64
+#: templates/admin/player/players.html:272 templates/admin/roles/roles.html:147
+#: templates/admin/roles/users_list.html:129
+#, fuzzy
+#| msgid "Credit Ascending"
+msgid "Created Ascending"
+msgstr "Кредит по возрастанию"
+
+#: templates/admin/agent/agents.html:99 templates/admin/dealer/dealers.html:65
+#: templates/admin/player/players.html:273 templates/admin/roles/roles.html:148
+#: templates/admin/roles/users_list.html:130
+#, fuzzy
+#| msgid "Credit Descending"
+msgid "Created Descending"
+msgstr "Кредит по убыванию"
+
+#: templates/admin/agent/agents.html:147
+#, fuzzy
+#| msgid "Agent"
+msgid "Add Agent"
+msgstr "Агент"
+
+#: templates/admin/agent/agents.html:186
+msgid "Special-Agent"
+msgstr ""
+
+#: templates/admin/agent/agents.html:340
+#: templates/admin/dealer/dealers.html:239
+#: templates/admin/player/players.html:748
+#: templates/includes/transactions.html:65 templates/profit/profit.html:139
+msgid "Provider"
+msgstr "Поставщик"
+
+#: templates/admin/agent/agents.html:341
+#: templates/admin/dealer/dealers.html:240
+#: templates/admin/player/players.html:749 templates/profit/profit.html:140
+msgid "In"
+msgstr "В"
+
+#: templates/admin/agent/agents.html:342
+#: templates/admin/dealer/dealers.html:241
+#: templates/admin/player/players.html:750 templates/profit/profit.html:141
+msgid "Out"
+msgstr "Вне"
+
+#: templates/admin/agent/agents.html:343
+#: templates/admin/dealer/dealers.html:242
+#: templates/admin/player/players.html:751 templates/home_.html:93
+#: templates/profit/profit.html:142
+msgid "Profit"
+msgstr "Прибыль"
+
+#: templates/admin/agent/agents.html:348
+#: templates/admin/dealer/dealers.html:247
+#: templates/admin/player/players.html:756
 #, fuzzy
 #| msgid "Sport"
 msgid "SportsBook"
 msgstr "Спорт"
 
-#: templates/profit/profit.html:102
+#: templates/admin/agent/agents.html:354 templates/admin/agent/agents.html:367
+#: templates/admin/agent/agents.html:546
+#: templates/admin/dealer/dealers.html:253
+#: templates/admin/dealer/dealers.html:266
+#: templates/admin/player/players.html:762
+#: templates/admin/player/players.html:776
+#: templates/admin/staff/staffs.html:530
+#: templates/includes/transactions.html:47 templates/profit/profit.html:154
 msgid "Casino"
 msgstr ""
 
-#: templates/profit/profit.html:103
-msgid "All"
+#: templates/admin/agent/agents.html:360 templates/admin/agent/agents.html:558
+#: templates/admin/dealer/dealers.html:259
+#: templates/admin/player/players.html:768
+#: templates/admin/staff/staffs.html:542 templates/profit/profit.html:166
+msgid "Live Casino"
 msgstr ""
 
-msgid "Search User"
+#: templates/admin/agent/agents.html:374
+#: templates/admin/dealer/dealers.html:273
+#: templates/admin/player/players.html:782 templates/profit/profit.html:160
+msgid "Offmarket"
+msgstr ""
+
+#: templates/admin/agent/agents.html:382
+#: templates/admin/dealer/dealers.html:280
+#: templates/admin/player/players.html:788 templates/profit/profit.html:177
+msgid "Total"
+msgstr ""
+
+#: templates/admin/agent/agents.html:388
+#: templates/admin/dealer/dealers.html:286
+#: templates/admin/player/players.html:794 templates/profit/profit.html:184
+msgid "BONUS"
+msgstr ""
+
+#: templates/admin/agent/agents.html:395
+#: templates/admin/dealer/dealers.html:293
+#: templates/admin/player/players.html:800 templates/profit/profit.html:191
+#, fuzzy
+#| msgid "Profit"
+msgid "Net Profit"
+msgstr "Прибыль"
+
+#: templates/admin/agent/agents.html:461 templates/admin/staff/staffs.html:445
+msgid "Service Credentials"
+msgstr ""
+
+#: templates/admin/agent/agents.html:466 templates/admin/agent/agents.html:589
+#: templates/admin/staff/staffs.html:450 templates/admin/staff/staffs.html:589
+msgid "Betslip Bonus"
+msgstr ""
+
+#: templates/admin/agent/agents.html:477 templates/admin/staff/staffs.html:461
+msgid "Betslip Bonus Percentage"
+msgstr ""
+
+#: templates/admin/agent/agents.html:570
+#: templates/admin/player/players.html:981
+#: templates/admin/staff/staffs.html:554
+#: templates/report/alchemypay_report.html:174
+#: templates/report/offmarket_report.html:173
+#: templates/report/transaction_report.html:159
+msgid "Cashback"
+msgstr ""
+
+#: templates/admin/agent/agents.html:623
+#: templates/admin/dealer/dealers.html:382
+#: templates/admin/staff/staffs.html:623
+#, fuzzy
+#| msgid "Save"
+msgid "Save note"
+msgstr "Сохранить"
+
+#: templates/admin/agent/agents.html:1500
+#: templates/admin/dealer/dealers.html:1122
+#: templates/admin/player/players.html:2317 templates/profit/profit.html:521
+#: templates/report/bonus_transactions_report.html:386
+#: templates/report/cash_app.html:422
+#: templates/report/casino_betslip_report.html:463
+#: templates/report/mnet_report.html:315
+#: templates/report/nowpayments_report.html:467
+#: templates/report/transaction_report.html:471
+#, fuzzy
+#| msgid "Search User"
+msgid "Search by Master Agent"
 msgstr "Поиск"
 
-#: templates/transactions/transactions.html:61
-msgid "Paid"
-msgstr "Oплаченный"
+#: templates/admin/agent/agents.html:1505
+#: templates/admin/dealer/dealers.html:1164
+#: templates/admin/player/players.html:2367 templates/profit/profit.html:543
+#: templates/report/bonus_transactions_report.html:411
+#: templates/report/cash_app.html:390
+#: templates/report/casino_betslip_report.html:431
+#: templates/report/mnet_report.html:283
+#: templates/report/nowpayments_report.html:435
+#: templates/report/transaction_report.html:496
+#, fuzzy
+#| msgid "Player"
+msgid "Search by Agent"
+msgstr "Поиск Игрока"
 
-#: templates/transactions/transactions.html:62
-msgid "Received"
-msgstr "Полученные"
+#: templates/admin/agent/create_agent.html:63
+#, fuzzy
+#| msgid "Create player"
+msgid "Create Agent"
+msgstr "Создать игрока"
 
-#: templates/transactions/transactions.html:63
-msgid "Amount"
+#: templates/admin/banner.html:167 templates/header.html:741
+msgid "Banners"
+msgstr ""
+
+#: templates/admin/bonus_content/add_bonus_content.html:196
+msgid "Bonus Detail"
+msgstr ""
+
+#: templates/admin/bonus_content/bonus_contents.html:128
+#: templates/header.html:779
+msgid "Bonus Details"
+msgstr ""
+
+#: templates/admin/bonus_content/bonus_contents.html:140
+#: templates/admin/cms/coming_soon.html:183
+#: templates/includes/transactions.html:64
+#: templates/includes/transactions.html:267
+#: templates/report/offmarket_report.html:245
+msgid "Bonus"
+msgstr ""
+
+#: templates/admin/bonuses.html:54
+msgid "Welcome Bonus Percentage"
+msgstr ""
+
+#: templates/admin/bonuses.html:60
+msgid "Enter Welcome Bonus Percentage"
+msgstr ""
+
+#: templates/admin/bonuses.html:81
+msgid "Referral Bonus Percentage"
+msgstr ""
+
+#: templates/admin/bonuses.html:87
+msgid "Enter Referral Bonus Percentage"
+msgstr ""
+
+#: templates/admin/bonuses.html:120
+#: templates/admin/bonuses/deposit_bonus.html:65
+#: templates/admin/bonuses/edit_bonuses.html:42
+#: templates/admin/bonuses/edit_deposit_bonus.html:40
+#: templates/admin/bonuses/edit_losing_bonus.html:35
+#: templates/admin/bonuses/losing_bonus.html:76
+#: templates/admin/bonuses/sign_up_bonus.html:91
+msgid "Enter promo code."
+msgstr ""
+
+#: templates/admin/bonuses.html:133
+#: templates/admin/bonuses/losing_bonus.html:89
+msgid "Enter losing Bonus Percentage."
+msgstr ""
+
+#: templates/admin/bonuses.html:142
+#, fuzzy
+#| msgid "Max bet amount"
+msgid "Maximum bet limit"
+msgstr "Максимальная сумма ставки"
+
+#: templates/admin/bonuses.html:144
+msgid "Enter losing maximum bet limit."
+msgstr ""
+
+#: templates/admin/bonuses.html:153
+#: templates/admin/bonuses/edit_bonuses.html:87
+#: templates/admin/bonuses/losing_bonus.html:110
+msgid "Promo-Code Usage Limit (per player)"
+msgstr ""
+
+#: templates/admin/bonuses.html:192
+#: templates/admin/bonuses/deposit_bonus.html:143
+#: templates/admin/bonuses/losing_bonus.html:152
+#: templates/admin/bonuses/sign_up_bonus.html:181
+msgid "Promo Codes History"
+msgstr ""
+
+#: templates/admin/bonuses.html:198
+#: templates/admin/bonuses/deposit_bonus.html:149
+#: templates/admin/bonuses/losing_bonus.html:158
+#: templates/admin/bonuses/sign_up_bonus.html:187
+#: templates/admin/crm_cms/sms.html:176
+msgid "S. No."
+msgstr ""
+
+#: templates/admin/bonuses.html:203
+#: templates/admin/bonuses/deposit_bonus.html:155
+#: templates/admin/bonuses/losing_bonus.html:164
+msgid "Usage Limit"
+msgstr ""
+
+#: templates/admin/bonuses.html:204
+#: templates/admin/bonuses/losing_bonus.html:165
+#: templates/report/bonus_transactions_report.html:132
+#: templates/report/bonus_transactions_report.html:173
+msgid "Bonus Type"
+msgstr ""
+
+#: templates/admin/bonuses.html:213
+#: templates/admin/bonuses/deposit_bonus.html:164
+#: templates/admin/bonuses/losing_bonus.html:174
+#: templates/admin/bonuses/sign_up_bonus.html:207
+#: templates/admin/cms/spin_the_wheel.html:140
+msgid "No data found"
+msgstr ""
+
+#: templates/admin/bonuses/bet_bonus.html:70 templates/header.html:597
+#: templates/report/bonus_transactions_report.html:139
+#, fuzzy
+#| msgid "Bet Amount"
+msgid "Bet Bonus"
+msgstr "Сумма ставки"
+
+#: templates/admin/bonuses/bet_bonus.html:95
+#: templates/admin/bonuses/sign_up_bonus.html:105
+msgid "Enter Bonus Percentage"
+msgstr ""
+
+#: templates/admin/bonuses/bet_bonus.html:106
+#: templates/admin/bonuses/bet_bonus.html:109
+#, fuzzy
+#| msgid "Min bet amount"
+msgid "Minimum Bet Amount"
+msgstr "Минимальная сумма ставки"
+
+#: templates/admin/bonuses/deposit_bonus.html:79
+#: templates/admin/bonuses/edit_deposit_bonus.html:54
+msgid "Enter Deposit Bonus Percentage."
+msgstr ""
+
+#: templates/admin/bonuses/deposit_bonus.html:91
+#: templates/admin/bonuses/deposit_bonus.html:152
+#: templates/admin/bonuses/edit_bonuses.html:64
+#: templates/admin/bonuses/edit_deposit_bonus.html:66
+#: templates/admin/bonuses/losing_bonus.html:98
+#: templates/admin/bonuses/referral_bonus.html:71
+#: templates/admin/bonuses/sign_up_bonus.html:115
+#: templates/admin/bonuses/sign_up_bonus.html:192
+msgid "Maximum Bonus Limit"
+msgstr ""
+
+#: templates/admin/bonuses/edit_bonuses.html:32
+msgid "Edit Sign Up Bonus"
+msgstr ""
+
+#: templates/admin/bonuses/edit_bonuses.html:55
+msgid "Enter Sign-Up Bonus Percentage"
+msgstr ""
+
+#: templates/admin/bonuses/edit_bonuses.html:67
+#: templates/admin/bonuses/losing_bonus.html:101
+#: templates/admin/bonuses/sign_up_bonus.html:118
+msgid "Enter Max Bonus Limit"
+msgstr ""
+
+#: templates/admin/bonuses/edit_bonuses.html:78
+#: templates/admin/bonuses/sign_up_bonus.html:130
+msgid "Enter Instant Bonus Amount"
+msgstr ""
+
+#: templates/admin/bonuses/edit_deposit_bonus.html:31
+msgid "Edit Deposit Bonus"
+msgstr ""
+
+#: templates/admin/bonuses/edit_losing_bonus.html:24
+msgid "Edit Losing Bonus"
+msgstr ""
+
+#: templates/admin/bonuses/edit_losing_bonus.html:48
+msgid "Enter Losing Bonus Percentage"
+msgstr ""
+
+#: templates/admin/bonuses/edit_losing_bonus.html:57
+msgid "Promo Code Usage Limit (per player)"
+msgstr ""
+
+#: templates/admin/bonuses/losing_bonus.html:114
+msgid "Enter promo code usage limit."
+msgstr ""
+
+#: templates/admin/bonuses/losing_bonus.html:133
+msgid "Create Promocode"
+msgstr ""
+
+#: templates/admin/bonuses/losing_bonus.html:161
+msgid "Maximum Bouns Limit"
+msgstr ""
+
+#: templates/admin/bonuses/referral_bonus.html:55
+msgid "Refer-A-Friend Bonus"
+msgstr ""
+
+#: templates/admin/bonuses/referral_bonus.html:63
+msgid "Enter Refer-A-Friend Bonus Percentage."
+msgstr ""
+
+#: templates/admin/bonuses/sign_up_bonus.html:189
+msgid "Distribution Type"
+msgstr ""
+
+#: templates/admin/bonuses/sign_up_bonus.html:190
+msgid "Instant Bonus"
+msgstr ""
+
+#: templates/admin/cash_app.html:58 templates/admin/chats/chat_history.html:142
+#, fuzzy
+#| msgid "Player"
+msgid "Search By Player"
+msgstr "Поиск Игрока"
+
+#: templates/admin/cash_app.html:105
+#: templates/admin/chat_support/cashapp.html:38
+#: templates/admin/chat_support/chat_history.html:184
+#: templates/admin/chats/chat_history.html:209
+#: templates/admin/player/players.html:1096
+#: templates/admin/unresolved_queries.html:257 templates/home.html:1227
+msgid "ID"
+msgstr ""
+
+#: templates/admin/cash_app.html:107
+msgid "New Cashapp"
+msgstr ""
+
+#: templates/admin/cash_app.html:109
+msgid "Action By"
+msgstr ""
+
+#: templates/admin/cashapp_qr/cashapp.html:163
+#: templates/admin/player/players.html:1089
+msgid "CashApp Details"
+msgstr ""
+
+#: templates/admin/cashapp_qr/cashapp.html:178
+msgid "Upload CA Reg"
+msgstr ""
+
+#: templates/admin/casino-management.html:275
+msgid "Casino Games"
+msgstr ""
+
+#: templates/admin/casino-management.html:308
+#: templates/admin/roles/roles.html:214
+#: templates/admin/roles/users_list.html:196
+#: templates/report/bonus_transactions_report.html:175
+#: templates/report/transaction_report.html:139
+#: templates/report/transaction_report.html:218
+msgid "Role"
+msgstr ""
+
+#: templates/admin/casino-management.html:482
+#: templates/admin/provider_casino_management.html:293
+msgid "Search by Casino Provider"
+msgstr ""
+
+#: templates/admin/casino-management.html:504
+msgid "Search by Casino Game"
+msgstr ""
+
+#: templates/admin/casino-management.html:526
+msgid "Search by Casino Category"
+msgstr ""
+
+#: templates/admin/casino_category_header_management.html:174
+msgid "Website Headers"
+msgstr ""
+
+#: templates/admin/chat_support/cashapp.html:24
+#: templates/admin/chats/cashapp.html:24
+msgid "CashApp Id"
+msgstr ""
+
+#: templates/admin/chat_support/cashapp.html:25
+#: templates/admin/chat_support/cashapp.html:26
+#: templates/admin/chats/cashapp.html:25 templates/admin/chats/cashapp.html:26
+msgid "Enter CashApp Id"
+msgstr ""
+
+#: templates/admin/chat_support/cashapp.html:31
+#: templates/admin/chats/cashapp.html:31
+msgid "Add CashApp"
+msgstr ""
+
+#: templates/admin/chat_support/cashapp.html:32
+#: templates/admin/chats/cashapp.html:32
+msgid "Update CashApp"
+msgstr ""
+
+#: templates/admin/chat_support/cashapp.html:39
+#: templates/admin/chats/cashapp.html:38
+msgid "CashApp ID"
+msgstr ""
+
+#: templates/admin/chat_support/chat_history.html:185
+msgid "Last Chat At"
+msgstr ""
+
+#: templates/admin/chat_support/chat_history.html:193
+#: templates/admin/chats/chat_history.html:215 templates/header.html:1015
+msgid "Chat History"
+msgstr ""
+
+#: templates/admin/chat_support/chat_history.html:324
+#: templates/admin/staff/staffs.html:1496
+msgid "Search by Staff"
+msgstr ""
+
+#: templates/admin/chat_support/chat_history_tab.html:9
+#: templates/admin/chat_support/chat_room.html:577
+#: templates/admin/chats/chat_history_tab.html:9
+#: templates/admin/chats/chat_history_tab.html:360
+#: templates/admin/chats/chat_history_tab.html:372
+#: templates/admin/chats/chat_room.html:9
+#: templates/admin/chats/chat_room.html:570
+#: templates/admin/chats/chat_room.html:582 templates/header.html:1002
+msgid "Chat"
+msgstr ""
+
+#: templates/admin/chat_support/chat_history_tab.html:404
+#: templates/admin/chat_support/chat_room.html:671
+#: templates/admin/chats/chat_room.html:699
+msgid "Type your message here"
+msgstr ""
+
+#: templates/admin/chat_support/chat_room.html:9
+msgid "Inbox"
+msgstr ""
+
+#: templates/admin/chat_support/chat_room.html:538
+#: templates/admin/chats/chat_room.html:540
+#: templates/admin/staff_wallet_and_transactions.html:56
+msgid "Enter Details"
+msgstr ""
+
+#: templates/admin/chat_support/chat_room.html:549
+#: templates/admin/chats/chat_room.html:551 templates/offmarkets/games.html:175
+#: templates/offmarkets/offmarket_withdrawal_requests.html:350
+msgid "Game Code"
+msgstr ""
+
+#: templates/admin/chat_support/chat_room.html:551
+#: templates/admin/chats/chat_room.html:553
+msgid "Select Game"
+msgstr ""
+
+#: templates/admin/chat_support/chat_room.html:560
+#: templates/admin/chats/chat_room.html:563
+#, fuzzy
+#| msgid "Bet Amount"
+msgid "Create Account"
+msgstr "Сумма ставки"
+
+#: templates/admin/chats/chat_history.html:152
+msgid "Search By Staff"
+msgstr ""
+
+#: templates/admin/chats/chat_history.html:210
+#: templates/admin/staff_wallet_and_transactions.html:170
+#: templates/admin/unresolved_queries.html:258
+#: templates/report/mnet_report.html:150
+#: templates/report/nowpayments_report.html:212
+#, fuzzy
+#| msgid "Create player"
+msgid "Created At"
+msgstr "Создать игрока"
+
+#: templates/admin/chats/chat_history.html:213
+#, fuzzy
+#| msgid "Win Amount"
+msgid "Tip Amount(USD)"
+msgstr "Сумма выигрыша"
+
+#: templates/admin/cms/coming_soon.html:167
+msgid "Coming Page Details"
+msgstr ""
+
+#: templates/admin/cms/coming_soon.html:175
+msgid "Ending Date Time : "
+msgstr ""
+
+#: templates/admin/cms/coming_soon.html:182
+msgid "Bonus Text To Be Displayed"
+msgstr ""
+
+#: templates/admin/cms/coming_soon.html:216
+msgid "Maintenance Page Details"
+msgstr ""
+
+#: templates/admin/cms/coming_soon.html:224
+msgid "Message To Be Displayed"
+msgstr ""
+
+#: templates/admin/cms/coming_soon.html:225
+#: templates/admin/crm_cms/create_sms_template.html:104
+#: templates/admin/crm_cms/edit_sms_template.html:98
+msgid "Message"
+msgstr ""
+
+#: templates/admin/cms/create_page.html:60
+msgid "Create Promotion Page"
+msgstr ""
+
+#: templates/admin/cms/create_page.html:87
+#: templates/admin/cms/edit_page_template.html:86
+#: templates/admin/cms/page.html:142
+#: templates/admin/cms/pages/create_page.html:186
+#: templates/admin/cms/pages/page.html:164
+#: templates/admin/cms/pages/update_page.html:176
+msgid "More Info"
+msgstr ""
+
+#: templates/admin/cms/create_page.html:100
+#: templates/admin/cms/edit_page_template.html:99
+#: templates/admin/cms/pages/create_page.html:261
+#: templates/admin/cms/pages/update_page.html:257
+#, fuzzy
+#| msgid "Description"
+msgid "Meta Description"
+msgstr "Описание"
+
+#: templates/admin/cms/create_page.html:110
+#: templates/admin/cms/edit_page_template.html:109
+#: templates/admin/cms/pages/create_page.html:271
+#: templates/admin/cms/pages/update_page.html:267
+msgid "Json Metadata"
+msgstr ""
+
+#: templates/admin/cms/create_page.html:120
+#: templates/admin/cms/edit_page_template.html:119
+#: templates/admin/cms/pages/create_page.html:281
+#: templates/admin/cms/pages/update_page.html:277
+#: templates/admin/crm_cms/cms_about.html:100
+#: templates/admin/crm_cms/cms_cookies_policy.html:98
+#: templates/admin/crm_cms/cms_faq.html:98
+#: templates/admin/crm_cms/cms_introduction.html:98
+#: templates/admin/crm_cms/cms_privacy_policy.html:98
+#: templates/admin/crm_cms/cms_promotion.html:98
+#: templates/admin/crm_cms/cms_setting_limits.html:98
+#: templates/admin/crm_cms/cms_terms_and_conditions.html:98
+#: templates/admin/crm_cms/create_crm_template.html:138
+#: templates/admin/crm_cms/edit_crm_template.html:132
+#: templates/admin/crm_cms/notification.html:59
+msgid "Content"
+msgstr ""
+
+#: templates/admin/cms/edit_page_template.html:60
+msgid "Edit Promotion Page"
+msgstr ""
+
+#: templates/admin/cms/footer/category/category.html:124
+msgid "Categories"
+msgstr ""
+
+#: templates/admin/cms/footer/category/category.html:134
+#: templates/admin/cms/pages/page.html:166
+msgid "Slug"
+msgstr ""
+
+#: templates/admin/cms/footer/category/category.html:135
+#: templates/admin/cms/footer/category/create_category.html:87
+#: templates/admin/cms/footer/category/update_category.html:87
+#, fuzzy
+#| msgid "Description"
+msgid "Position"
+msgstr "Описание"
+
+#: templates/admin/cms/footer/category/create_category.html:62
+#: templates/admin/footer/create_footer.html:89
+#, fuzzy
+#| msgid "Create player"
+msgid "Create Category"
+msgstr "Создать игрока"
+
+#: templates/admin/cms/footer/create_footer.html:93
+msgid "Update Links"
+msgstr ""
+
+#: templates/admin/cms/footer/create_footer.html:95
+msgid "Create Links"
+msgstr ""
+
+#: templates/admin/cms/footer/create_footer.html:114
+#: templates/admin/crm_cms/email_template.html:80
+#: templates/admin/footer/create_footer.html:107
+msgid "Select Category"
+msgstr ""
+
+#: templates/admin/cms/footer/create_footer.html:132
+#: templates/admin/cms/footer/footer.html:135
+#: templates/admin/cms/pages/page.html:152
+#: templates/admin/footer/create_footer.html:125 templates/header.html:751
+msgid "Pages"
+msgstr ""
+
+#: templates/admin/cms/footer/create_footer.html:166
+#: templates/admin/footer/create_footer.html:160
+msgid "Select Pages"
+msgstr ""
+
+#: templates/admin/cms/footer/footer.html:124
+msgid "Footer Links"
+msgstr ""
+
+#: templates/admin/cms/footer/update_footer.html:93
+msgid "Update Footer Pages"
+msgstr ""
+
+#: templates/admin/cms/page.html:130
+msgid "Promotion Pages"
+msgstr ""
+
+#: templates/admin/cms/page.html:143 templates/admin/cms/pages/page.html:165
+msgid "Page"
+msgstr ""
+
+#: templates/admin/cms/pages/create_page.html:154
+#, fuzzy
+#| msgid "Create player"
+msgid "Create Page"
+msgstr "Создать игрока"
+
+#: templates/admin/cms/pages/create_page.html:198
+#: templates/admin/cms/pages/update_page.html:188
+msgid "Image Preview Type"
+msgstr ""
+
+#: templates/admin/cms/pages/create_page.html:210
+#: templates/admin/cms/pages/update_page.html:200
+msgid "Image"
+msgstr ""
+
+#: templates/admin/cms/pages/create_page.html:228
+#: templates/admin/cms/pages/update_page.html:224
+msgid "Page Type"
+msgstr ""
+
+#: templates/admin/cms/pages/create_page.html:246
+#: templates/admin/cms/pages/update_page.html:243
+msgid "Set Redirect URL"
+msgstr ""
+
+#: templates/admin/cms/pages/create_page.html:251
+#: templates/admin/cms/pages/update_page.html:248
+msgid "Please select Form"
+msgstr ""
+
+#: templates/admin/cms/pages/update_page.html:146
+msgid "Update Page"
+msgstr ""
+
+#: templates/admin/cms/social/create_link.html:59
+msgid "Create Social Link"
+msgstr ""
+
+#: templates/admin/cms/social/create_link.html:80
+msgid "Url"
+msgstr ""
+
+#: templates/admin/cms/social/create_link.html:89
+#: templates/admin/cms/social/links.html:158
+#: templates/admin/cms/social/update_link.html:89
+msgid "Logo"
+msgstr ""
+
+#: templates/admin/cms/social/create_link.html:103
+#: templates/admin/cms/social/update_link.html:103
+msgid "Logo Preview"
+msgstr ""
+
+#: templates/admin/cms/social/details_link.html:62
+#: templates/admin/cms/social/update_link.html:59
+msgid "Edit Social Link"
+msgstr ""
+
+#: templates/admin/cms/social/details_link.html:88
+#: templates/admin/cms/social/links.html:157
+#: templates/admin/cms/social/update_link.html:79
+msgid "URL"
+msgstr ""
+
+#: templates/admin/cms/social/links.html:143 templates/header.html:771
+msgid "Social Links"
+msgstr ""
+
+#: templates/admin/cms/spin_the_wheel.html:63
+msgid "Spin the Wheel Details"
+msgstr ""
+
+#: templates/admin/cms/spin_the_wheel.html:72
+msgid "Enter Value"
+msgstr ""
+
+#: templates/admin/cms/spin_the_wheel.html:125
+msgid "Existing Wheel Details"
+msgstr ""
+
+#: templates/admin/cms/spin_the_wheel.html:131
+msgid "Sr. No."
+msgstr ""
+
+#: templates/admin/cms/spin_the_wheel.html:132
+msgid "Value"
+msgstr ""
+
+#: templates/admin/crm_cms/cms_about.html:62 templates/header.html:690
+msgid "About"
+msgstr ""
+
+#: templates/admin/crm_cms/cms_about.html:88
+#: templates/admin/crm_cms/cms_cookies_policy.html:86
+#: templates/admin/crm_cms/cms_faq.html:86
+#: templates/admin/crm_cms/cms_introduction.html:86
+#: templates/admin/crm_cms/cms_privacy_policy.html:86
+#: templates/admin/crm_cms/cms_promotion.html:86
+#: templates/admin/crm_cms/cms_setting_limits.html:86
+#: templates/admin/crm_cms/cms_terms_and_conditions.html:86
+msgid "More info"
+msgstr ""
+
+#: templates/admin/crm_cms/cms_contact.html:38 templates/header.html:834
+msgid "Contact Queries"
+msgstr ""
+
+#: templates/admin/crm_cms/cms_contact.html:48
+msgid "Search by Email"
+msgstr ""
+
+#: templates/admin/crm_cms/cms_contact.html:71
+msgid "First Name"
+msgstr ""
+
+#: templates/admin/crm_cms/cms_contact.html:72
+msgid "Last Name"
+msgstr ""
+
+#: templates/admin/crm_cms/cms_contact.html:74
+msgid "Phone"
+msgstr ""
+
+#: templates/admin/crm_cms/cms_contact.html:75
+#: templates/admin/unresolved_queries.html:262
+msgid "Query"
+msgstr ""
+
+#: templates/admin/crm_cms/cms_cookies_policy.html:60
+msgid "Cookies Policy"
+msgstr ""
+
+#: templates/admin/crm_cms/cms_faq.html:60 templates/header.html:704
+msgid "FAQ"
+msgstr ""
+
+#: templates/admin/crm_cms/cms_introduction.html:60 templates/header.html:725
+msgid "Introduction"
+msgstr ""
+
+#: templates/admin/crm_cms/cms_privacy_policy.html:60 templates/header.html:697
+msgid "Privacy Policy"
+msgstr ""
+
+#: templates/admin/crm_cms/cms_promotion.html:60 templates/header.html:761
+msgid "Promotion"
+msgstr ""
+
+#: templates/admin/crm_cms/cms_setting_limits.html:60 templates/header.html:732
+#, fuzzy
+#| msgid "Betting Limits"
+msgid "Settings Limits"
+msgstr "Лимит ставок"
+
+#: templates/admin/crm_cms/cms_terms_and_conditions.html:60
+msgid "Terms & Conditions"
+msgstr ""
+
+#: templates/admin/crm_cms/create_crm_template.html:74
+#, fuzzy
+#| msgid "Create player"
+msgid "Create Template"
+msgstr "Создать игрока"
+
+#: templates/admin/crm_cms/create_crm_template.html:84
+#: templates/admin/crm_cms/create_sms_template.html:47
+#: templates/admin/crm_cms/crm.html:174
+#: templates/admin/crm_cms/edit_crm_template.html:80
+#: templates/admin/crm_cms/edit_sms_template.html:46
+#: templates/admin/crm_cms/sms.html:177
+#: templates/admin/unresolved_queries.html:261
+msgid "Subject"
+msgstr ""
+
+#: templates/admin/crm_cms/create_crm_template.html:102
+#: templates/admin/crm_cms/create_sms_template.html:65
+#: templates/admin/crm_cms/crm.html:95 templates/admin/crm_cms/sms.html:91
+msgid "Notification Category"
+msgstr ""
+
+#: templates/admin/crm_cms/create_crm_template.html:103
+#: templates/admin/crm_cms/create_sms_template.html:66
+#: templates/admin/crm_cms/crm.html:96
+#: templates/admin/crm_cms/edit_crm_template.html:99
+#: templates/admin/crm_cms/edit_sms_template.html:65
+#: templates/admin/crm_cms/sms.html:92
+msgid "Upcoming Event Notification"
+msgstr ""
+
+#: templates/admin/crm_cms/create_crm_template.html:104
+#: templates/admin/crm_cms/create_sms_template.html:67
+#: templates/admin/crm_cms/crm.html:97
+#: templates/admin/crm_cms/edit_crm_template.html:100
+#: templates/admin/crm_cms/edit_sms_template.html:66
+#: templates/admin/crm_cms/sms.html:93
+msgid "Promotional Notification"
+msgstr ""
+
+#: templates/admin/crm_cms/create_crm_template.html:105
+#: templates/admin/crm_cms/create_sms_template.html:68
+#: templates/admin/crm_cms/crm.html:98
+#: templates/admin/crm_cms/edit_crm_template.html:101
+#: templates/admin/crm_cms/edit_sms_template.html:67
+#: templates/admin/crm_cms/sms.html:94
+msgid "Site Maintenance Notification"
+msgstr ""
+
+#: templates/admin/crm_cms/create_crm_template.html:106
+#: templates/admin/crm_cms/create_sms_template.html:69
+#: templates/admin/crm_cms/crm.html:99
+#: templates/admin/crm_cms/edit_crm_template.html:102
+#: templates/admin/crm_cms/edit_sms_template.html:68
+#: templates/admin/crm_cms/sms.html:95
+msgid "Active User Notification"
+msgstr ""
+
+#: templates/admin/crm_cms/create_crm_template.html:107
+#: templates/admin/crm_cms/create_sms_template.html:70
+#: templates/admin/crm_cms/crm.html:100
+#: templates/admin/crm_cms/edit_crm_template.html:103
+#: templates/admin/crm_cms/edit_sms_template.html:69
+#: templates/admin/crm_cms/sms.html:96
+msgid "Inactive User Notification"
+msgstr ""
+
+#: templates/admin/crm_cms/create_crm_template.html:115
+#: templates/admin/crm_cms/edit_crm_template.html:111
+msgid "Emails"
+msgstr ""
+
+#: templates/admin/crm_cms/create_crm_template.html:126
+#: templates/admin/crm_cms/create_sms_template.html:91
+#: templates/admin/crm_cms/crm.html:176
+#: templates/admin/crm_cms/edit_crm_template.html:120
+#: templates/admin/crm_cms/edit_sms_template.html:86
+msgid "Scheduled at (UTC)"
+msgstr ""
+
+#: templates/admin/crm_cms/create_crm_template.html:149
+#: templates/admin/crm_cms/create_sms_template.html:118
+#: templates/admin/crm_cms/edit_crm_template.html:144
+#: templates/admin/crm_cms/edit_sms_template.html:114
+msgid "Below listed variables can be used in the above text area::"
+msgstr ""
+
+#: templates/admin/crm_cms/create_crm_template.html:158
+#: templates/admin/crm_cms/create_sms_template.html:127
+#: templates/admin/crm_cms/notification.html:74
+#: templates/admin/settings.html:258
+msgid "Cancel"
+msgstr ""
+
+#: templates/admin/crm_cms/create_crm_template.html:335
+#: templates/admin/crm_cms/create_sms_template.html:298
+#: templates/admin/crm_cms/edit_crm_template.html:328
+#: templates/admin/crm_cms/edit_sms_template.html:290
+#, fuzzy
+#| msgid "Search User"
+msgid "Select Users"
+msgstr "Поиск"
+
+#: templates/admin/crm_cms/create_sms_template.html:37
+msgid "Create SMS Notification"
+msgstr ""
+
+#: templates/admin/crm_cms/create_sms_template.html:79
+#: templates/admin/crm_cms/edit_sms_template.html:77
+msgid "Phone Numbers"
+msgstr ""
+
+#: templates/admin/crm_cms/crm.html:70 templates/admin/crm_cms/sms.html:66
+#, fuzzy
+#| msgid "Player"
+msgid "Search By Subject"
+msgstr "Поиск Игрока"
+
+#: templates/admin/crm_cms/crm.html:86 templates/admin/crm_cms/sms.html:82
+#, fuzzy
+#| msgid "Search User"
+msgid "Search Subject"
+msgstr "Поиск"
+
+#: templates/admin/crm_cms/crm.html:110 templates/admin/crm_cms/sms.html:106
+#, fuzzy
+#| msgid "Status"
+msgid "Select Status"
+msgstr "Состояние"
+
+#: templates/admin/crm_cms/crm.html:111 templates/admin/crm_cms/sms.html:107
+msgid "Active"
+msgstr ""
+
+#: templates/admin/crm_cms/crm.html:112 templates/admin/crm_cms/sms.html:108
+msgid "Inactive"
+msgstr ""
+
+#: templates/admin/crm_cms/edit_crm_template.html:70
+#: templates/admin/crm_cms/edit_email_template.html:36
+msgid "Update Template"
+msgstr ""
+
+#: templates/admin/crm_cms/edit_email_template.html:45
+#: templates/admin/crm_cms/email_template.html:124
+msgid "Template ID"
+msgstr ""
+
+#: templates/admin/crm_cms/edit_sms_template.html:36
+msgid "Update SMS Notification"
+msgstr ""
+
+#: templates/admin/crm_cms/email_template.html:72
+msgid "Add Email Template"
+msgstr ""
+
+#: templates/admin/crm_cms/email_template.html:81
+msgid "Signup OTP Mail"
+msgstr ""
+
+#: templates/admin/crm_cms/email_template.html:82
+msgid "Welcome Mail"
+msgstr ""
+
+#: templates/admin/crm_cms/email_template.html:83
+msgid "Customer Query Mail"
+msgstr ""
+
+#: templates/admin/crm_cms/email_template.html:84
+msgid "Withdrawal Approved Mail"
+msgstr ""
+
+#: templates/admin/crm_cms/email_template.html:85
+msgid "Withdrawal Pending Mail"
+msgstr ""
+
+#: templates/admin/crm_cms/email_template.html:86
+msgid "Withdrawal Cancelled Mail"
+msgstr ""
+
+#: templates/admin/crm_cms/email_template.html:87
+msgid "Withdrawal Failed Mail"
+msgstr ""
+
+#: templates/admin/crm_cms/email_template.html:88
+msgid "Payment Finished Mail"
+msgstr ""
+
+#: templates/admin/crm_cms/email_template.html:89
+msgid "Payment Partially Paid Mail"
+msgstr ""
+
+#: templates/admin/crm_cms/email_template.html:90
+msgid "Payment In-Progress Mail"
+msgstr ""
+
+#: templates/admin/crm_cms/email_template.html:91
+msgid "Payment Failed Mail"
+msgstr ""
+
+#: templates/admin/crm_cms/email_template.html:92
+msgid "Payment Expired Mail"
+msgstr ""
+
+#: templates/admin/crm_cms/email_template.html:93
+msgid "Withdrawal Rejected Mail (NowPayments)"
+msgstr ""
+
+#: templates/admin/crm_cms/email_template.html:94
+msgid "Offmarket Withdrawal Request Rejection Mail"
+msgstr ""
+
+#: templates/admin/crm_cms/email_template.html:102
+msgid "Enter Template ID"
+msgstr ""
+
+#: templates/admin/crm_cms/email_template.html:109
+msgid "Add Email Template ID"
+msgstr ""
+
+#: templates/admin/crm_cms/notification.html:37
+msgid "Create Notification"
+msgstr ""
+
+#: templates/admin/crm_cms/notification.html:73
+msgid "Send"
+msgstr ""
+
+#: templates/admin/crm_cms/sms.html:179
+msgid "Scheduled at"
+msgstr ""
+
+#: templates/admin/dealer/create_dealer.html:17
+#: templates/admin/dealer/update_dealer.html:21
+msgid "Timezone"
+msgstr "Часовой пояс"
+
+#: templates/admin/dealer/create_dealer.html:75
+#, fuzzy
+#| msgid "Create player"
+msgid "Create Master Agent"
+msgstr "Создать игрока"
+
+#: templates/admin/dealer/dealers.html:113
+msgid "Add Master Agent"
+msgstr ""
+
+#: templates/admin/dealer/dealers.html:126
+#: templates/admin/dealer/dealers.html:358 templates/header.html:364
+#: templates/home_.html:61
+#, fuzzy
+#| msgid "Agents"
+msgid "Master Agents"
+msgstr "Агенты"
+
+#: templates/admin/dealer/update_dealer.html:14
+msgid "Edit Master Agent"
+msgstr ""
+
+#: templates/admin/dealer/update_dealer.html:32
+#: templates/admin/pendingwithdrawals.html:349
+#: templates/admin/staff_wallet_and_transactions.html:70
+#: templates/admin/staff_wallet_and_transactions.html:128
+#: templates/admin/staff_wallet_and_transactions.html:173
+#: templates/report/nowpayments_report.html:223
+#, fuzzy
+#| msgid "Current"
+msgid "Currency"
+msgstr "Текущий"
+
+#: templates/admin/edit_note.html:14
+msgid "Edit Note Content"
+msgstr ""
+
+#: templates/admin/edit_note.html:29
+msgid "Edit"
+msgstr ""
+
+#: templates/admin/footer/footer.html:128
+msgid "Footer Pages"
+msgstr ""
+
+#: templates/admin/fortunepandas-management.html:275 templates/header.html:536
+msgid "Fortunepanda Games"
+msgstr ""
+
+#: templates/admin/fortunepandas-management.html:364
+msgid "Search by Game Name"
+msgstr ""
+
+#: templates/admin/fortunepandas-management.html:386
+msgid "Search by Game Category"
+msgstr ""
+
+#: templates/admin/mobile_banner.html:118
+msgid "Mobile Banners"
+msgstr ""
+
+#: templates/admin/pendingwithdrawals.html:261
+#: templates/offmarkets/offmarket_withdrawal_requests.html:261
+msgid "Withdrawal Request"
+msgstr ""
+
+#: templates/admin/pendingwithdrawals.html:309
+#: templates/offmarkets/offmarket_withdrawal_requests.html:309
+#, fuzzy
+#| msgid "Transaction data"
+msgid "Transaction Status"
+msgstr "Данные транзакции"
+
+#: templates/admin/pendingwithdrawals.html:348
+#: templates/admin/staff_wallet_and_transactions.html:172
+#: templates/admin/staff_wallet_and_transactions.html:246
+#: templates/offmarkets/offmarket_withdrawal_requests.html:349
+#: templates/report/cash_app.html:192 templates/report/mnet_report.html:151
+#: templates/report/nowpayments_report.html:222
+#, fuzzy
+#| msgid "Amount"
+msgid "Amount(USD)"
 msgstr "Количество"
 
-msgid "Terminals"
-msgstr "Терминалы"
+#: templates/admin/player/create_player.html:34
+#: templates/admin/player/update_player.html:27
+#: templates/admin/roles/create_user.html:34
+msgid "Full Name"
+msgstr ""
 
-msgid "Voucher"
-msgstr "Ваучер"
+#: templates/admin/player/create_player.html:48
+#: templates/admin/player/players.html:429
+#: templates/admin/player/update_player.html:42
+#, fuzzy
+#| msgid "Status"
+msgid "State"
+msgstr "Состояние"
 
-msgid "Logs"
-msgstr "Журнал"
+#: templates/admin/player/create_player.html:62
+#: templates/admin/player/update_player.html:56
+msgid "Country Code"
+msgstr ""
 
-msgid "Confirm password"
-msgstr "Подтвердите Пароль"
+#: templates/admin/player/create_player.html:69
+#: templates/admin/player/players.html:433
+#: templates/admin/player/update_player.html:63
+msgid "Phone Number"
+msgstr ""
 
+#: templates/admin/player/create_player.html:76
+#: templates/admin/player/players.html:431
+msgid "ZIPCODE"
+msgstr ""
+
+#: templates/admin/player/create_player.html:90
+#: templates/admin/player/update_player.html:84
+msgid "Profile Picture"
+msgstr ""
+
+#: templates/admin/player/create_player.html:98
+msgid "ID Proof"
+msgstr ""
+
+#: templates/admin/player/create_player.html:126
 msgid "Create player"
 msgstr "Создать игрока"
 
-msgid "All status"
-msgstr "Весь статус"
+#: templates/admin/player/players.html:186 templates/header.html:406
+#: templates/home_.html:23
+msgid "Players"
+msgstr "Игроки"
 
-msgid "Is not a number"
-msgstr "Не число"
+#: templates/admin/player/players.html:255
+msgid "Ability to Play"
+msgstr ""
 
-msgid "Are you sure"
-msgstr "Ты уверен"
+#: templates/admin/player/players.html:279
+msgid "Search by Location"
+msgstr ""
 
-msgid "Yes"
-msgstr "Да"
+#: templates/admin/player/players.html:284
+#, fuzzy
+#| msgid "Player"
+msgid "Search by Zipcode"
+msgstr "Поиск Игрока"
 
-msgid "No"
-msgstr "Нет"
+#: templates/admin/player/players.html:323
+msgid "Add Player"
+msgstr "Добавить Игрока"
 
-msgid "Charge"
-msgstr "Начислить"
+#: templates/admin/player/players.html:436
+#, fuzzy
+#| msgid "Create player"
+msgid "Created Date"
+msgstr "Создать игрока"
 
-msgid "Data"
-msgstr "Данные"
+#: templates/admin/player/players.html:438
+msgid "Bonus Balance"
+msgstr ""
 
-msgid "Transaction data"
-msgstr "Данные транзакции"
+#: templates/admin/player/players.html:824
+msgid "OFF-Market Deposit"
+msgstr ""
 
-msgid "Merchant"
-msgstr "Коммерсант"
+#: templates/admin/player/players.html:857
+#, fuzzy
+#| msgid "Username"
+msgid "Usergames"
+msgstr "Имя пользователя"
 
-msgid "Journal entry"
-msgstr "Запись в журнале"
+#: templates/admin/player/players.html:874
+msgid "Game"
+msgstr ""
 
-msgid "Provider"
-msgstr "Поставщик"
+#: templates/admin/player/players.html:909
+msgid "Ability to play"
+msgstr ""
 
-msgid "Bet"
+#: templates/admin/player/players.html:922
+msgid "Cancelled/Close"
+msgstr ""
+
+#: templates/admin/player/players.html:936
+msgid "Blackout Period"
+msgstr ""
+
+#: templates/admin/player/players.html:942
+msgid "Select Hours"
+msgstr ""
+
+#: templates/admin/player/players.html:943
+msgid "24 hours"
+msgstr ""
+
+#: templates/admin/player/players.html:944
+msgid "48 hours"
+msgstr ""
+
+#: templates/admin/player/players.html:945
+msgid "72 hours"
+msgstr ""
+
+#: templates/admin/player/players.html:952
+msgid "Till Hours"
+msgstr ""
+
+#: templates/admin/player/players.html:963
+#: templates/admin/player/players.html:966
+#, fuzzy
+#| msgid "Betting Limits"
+msgid "Betting Limit"
+msgstr "Лимит ставок"
+
+#: templates/admin/player/players.html:970
+#, fuzzy
+#| msgid "Bet"
+msgid "Set"
 msgstr "Ставка"
 
-msgid "Current"
-msgstr "Текущий"
+#: templates/admin/player/players.html:1009
+msgid "Cashtag"
+msgstr ""
 
-msgid "Won"
-msgstr "Выиграл"
+#: templates/admin/player/players.html:1062
+msgid "User ID Proof"
+msgstr ""
 
-msgid "Lost"
-msgstr "Проиграл"
+#: templates/admin/player/players.html:1063
+msgid "Verified"
+msgstr ""
 
-msgid "Min bet amount"
+#: templates/admin/player/players.html:1097 templates/header.html:151
+#: templates/header.html:1032
+msgid "CashApp"
+msgstr ""
+
+#: templates/admin/player/players.html:1098
+msgid "Is Deleted"
+msgstr ""
+
+#: templates/admin/player/update_player.html:70
+msgid "Zip Code"
+msgstr ""
+
+#: templates/admin/provider_casino_management.html:201
+#, fuzzy
+#| msgid "Provider"
+msgid "Casino Providers"
+msgstr "Поставщик"
+
+#: templates/admin/roles/create_role.html:176
+msgid "Role Information"
+msgstr ""
+
+#: templates/admin/roles/roles.html:198
+#, fuzzy
+#| msgid "Add Dealer"
+msgid "Add New Role"
+msgstr "Добавить Дилера"
+
+#: templates/admin/roles/roles.html:215
+#: templates/admin/roles/users_list.html:197
+#, fuzzy
+#| msgid "Create player"
+msgid "Created at"
+msgstr "Создать игрока"
+
+#: templates/admin/roles/update_role.html:14
+msgid "Edit Role"
+msgstr ""
+
+#: templates/admin/roles/update_role.html:26
+msgid "Role Name"
+msgstr ""
+
+#: templates/admin/roles/update_role.html:35
+msgid "Update"
+msgstr ""
+
+#: templates/admin/roles/users_list.html:180
+msgid "Add"
+msgstr ""
+
+#: templates/admin/roles/users_list.html:195
+msgid "SN"
+msgstr ""
+
+#: templates/admin/roles/users_list.html:198
+msgid "Last Login at"
+msgstr ""
+
+#: templates/admin/settings.html:243
+msgid "Please confirm"
+msgstr ""
+
+#: templates/admin/settings.html:248
+msgid "Please confirm by entering the Password"
+msgstr ""
+
+#: templates/admin/settings.html:250
+#, fuzzy
+#| msgid "Confirm password"
+msgid "Enter password"
+msgstr "Подтвердите Пароль"
+
+#: templates/admin/settings.html:253
+#, fuzzy
+#| msgid "Status"
+msgid "Change Status"
+msgstr "Состояние"
+
+#: templates/admin/settings.html:345
+msgid "Nothing Found"
+msgstr ""
+
+#: templates/admin/staff/create_staff.html:64
+#, fuzzy
+#| msgid "Create player"
+msgid "Create Staff"
+msgstr "Создать игрока"
+
+#: templates/admin/staff/staffs.html:149
+msgid "Add Staff"
+msgstr ""
+
+#: templates/admin/staff/staffs.html:571
+#, fuzzy
+#| msgid "Betting limits"
+msgid "Betting"
+msgstr "Лимит ставок"
+
+#: templates/admin/staff_wallet_and_transactions.html:62
+#: templates/includes/transactions.html:97
+#: templates/transactions/transactions.html:129
+msgid "Amount"
+msgstr "Количество"
+
+#: templates/admin/staff_wallet_and_transactions.html:63
+#, fuzzy
+#| msgid "Bet Amount"
+msgid "Enter Amount"
+msgstr "Сумма ставки"
+
+#: templates/admin/staff_wallet_and_transactions.html:67
+msgid "Enter Address"
+msgstr ""
+
+#: templates/admin/staff_wallet_and_transactions.html:80
+msgid "Create Request"
+msgstr ""
+
+#: templates/admin/staff_wallet_and_transactions.html:102
+#: templates/includes/transactions.html:46
+msgid "Wallet"
+msgstr ""
+
+#: templates/admin/staff_wallet_and_transactions.html:121
+msgid "Enter Wallet Address."
+msgstr ""
+
+#: templates/admin/staff_wallet_and_transactions.html:138
+msgid "Update Details"
+msgstr ""
+
+#: templates/admin/staff_wallet_and_transactions.html:152
+msgid "Select Table"
+msgstr ""
+
+#: templates/admin/staff_wallet_and_transactions.html:154
+#: templates/admin/staff_wallet_and_transactions.html:163
+#, fuzzy
+#| msgid "Transaction"
+msgid "Withdrawal Transactions"
+msgstr "Транзакция"
+
+#: templates/admin/staff_wallet_and_transactions.html:155
+#, fuzzy
+#| msgid "Transaction"
+msgid "Tips Transactions"
+msgstr "Транзакция"
+
+#: templates/admin/staff_wallet_and_transactions.html:169
+#: templates/report/nowpayments_report.html:211
+msgid "Payment Id"
+msgstr ""
+
+#: templates/admin/staff_wallet_and_transactions.html:171
+#: templates/admin/staff_wallet_and_transactions.html:245
+#: templates/report/alchemypay_report.html:242
+#: templates/report/bonus_transactions_report.html:172
+#: templates/report/offmarket_report.html:242
+#: templates/report/transaction_report.html:215
+#, fuzzy
+#| msgid "Create player"
+msgid "Create Date"
+msgstr "Создать игрока"
+
+#: templates/admin/staff_wallet_and_transactions.html:174
+#: templates/report/mnet_report.html:152
+#: templates/report/nowpayments_report.html:224
+#: templates/report/offmarket_report.html:165
+#: templates/report/offmarket_report.html:243
+#: templates/report/transaction_report.html:152
+#, fuzzy
+#| msgid "Transaction"
+msgid "Transaction Type"
+msgstr "Транзакция"
+
+#: templates/admin/staff_wallet_and_transactions.html:175
+#: templates/report/cash_app.html:80 templates/report/cash_app.html:195
+#: templates/report/mnet_report.html:82
+#: templates/report/nowpayments_report.html:80
+#: templates/report/nowpayments_report.html:225
+#, fuzzy
+#| msgid "Status"
+msgid "Payment Status"
+msgstr "Состояние"
+
+#: templates/admin/staff_wallet_and_transactions.html:238
+#, fuzzy
+#| msgid "Transaction"
+msgid " Tips Transactions"
+msgstr "Транзакция"
+
+#: templates/admin/staff_wallet_and_transactions.html:244
+msgid "Tip By"
+msgstr ""
+
+#: templates/admin/tournament/create_tournament.html:143
+#: templates/admin/tournament/edit_tournament.html:131
+msgid "Tournament Details"
+msgstr ""
+
+#: templates/admin/tournament/create_tournament.html:220
+#: templates/admin/tournament/edit_tournament.html:212
+msgid "Rebuy Details"
+msgstr ""
+
+#: templates/admin/tournament/create_tournament.html:254
+#: templates/admin/tournament/edit_tournament.html:246
+msgid "Player Limit Details"
+msgstr ""
+
+#: templates/admin/tournament/create_tournament.html:304
+#: templates/admin/tournament/edit_tournament.html:296
+msgid "Game Selection"
+msgstr ""
+
+#: templates/admin/tournament/create_tournament.html:364
+#: templates/admin/tournament/edit_tournament.html:357
+msgid "Prize Distrubation"
+msgstr ""
+
+#: templates/admin/tournament/create_tournament.html:393
+#: templates/admin/tournament/edit_tournament.html:386
+msgid "Prize Details"
+msgstr ""
+
+#: templates/admin/tournament/tournament_detail.html:176
+msgid "Tournament Detail"
+msgstr ""
+
+#: templates/admin/tournament/tournament_list.html:181
+#: templates/header.html:465
+#, fuzzy
+#| msgid "Journal entry"
+msgid "Tournaments"
+msgstr "Запись в журнале"
+
+#: templates/admin/tournament/tournament_list.html:233
+#, fuzzy
+#| msgid "Create player"
+msgid "Create Tournament"
+msgstr "Создать игрока"
+
+#: templates/admin/tournament/tournament_list.html:245
+msgid "Serial No."
+msgstr ""
+
+#: templates/admin/tournament/tournament_list.html:246
+msgid "Tournament Name"
+msgstr ""
+
+#: templates/admin/tournament/tournament_list.html:247
+msgid "Jackpot"
+msgstr ""
+
+#: templates/admin/tournament/tournament_list.html:250
+msgid "Registration End Date"
+msgstr ""
+
+#: templates/admin/tournament/tournament_list.html:251
+msgid "Is Active"
+msgstr ""
+
+#: templates/admin/tournament/tournament_list.html:311
+msgid "Search by Tournament Name"
+msgstr ""
+
+#: templates/admin/withdrawal_currencies.html:204 templates/header.html:573
+msgid "Withdrawal Currencies"
+msgstr ""
+
+#: templates/admin/withdrawal_currencies.html:298
+msgid "Search by Currency Name"
+msgstr ""
+
+#: templates/header.html:207
+msgid "Logout"
+msgstr ""
+
+#: templates/header.html:243
+msgid "Dashboard"
+msgstr ""
+
+#: templates/header.html:254
+#, fuzzy
+#| msgid "Sport"
+msgid "Reports"
+msgstr "Спорт"
+
+#: templates/header.html:262
+msgid "Balance Transfer"
+msgstr ""
+
+#: templates/header.html:271 templates/report/offmarket_report.html:53
+msgid "Off Market Report"
+msgstr ""
+
+#: templates/header.html:288 templates/report/casino_betslip_report.html:55
+msgid "Casino Report"
+msgstr ""
+
+#: templates/header.html:297
+msgid "NowPayments Report"
+msgstr ""
+
+#: templates/header.html:306 templates/report/alchemypay_report.html:53
+msgid "AlchemyPay Report"
+msgstr ""
+
+#: templates/header.html:315 templates/report/cash_app.html:55
+msgid "CashApp Report"
+msgstr ""
+
+#: templates/header.html:324 templates/report/bonus_transactions_report.html:53
+msgid "Bonus Report"
+msgstr ""
+
+#: templates/header.html:333 templates/report/mnet_report.html:55
+msgid "Mnet Report"
+msgstr ""
+
+#: templates/header.html:378
+msgid "Agents"
+msgstr "Агенты"
+
+#: templates/header.html:418
+msgid "Roles"
+msgstr ""
+
+#: templates/header.html:426
+msgid "Roles List"
+msgstr ""
+
+#: templates/header.html:453
+#, fuzzy
+#| msgid "Profit"
+msgid "Profits"
+msgstr "Прибыль"
+
+#: templates/header.html:477
+msgid "Casino Management"
+msgstr ""
+
+#: templates/header.html:486 templates/header.html:526
+msgid "Games"
+msgstr ""
+
+#: templates/header.html:495
+#, fuzzy
+#| msgid "Provider"
+msgid "Providers"
+msgstr "Поставщик"
+
+#: templates/header.html:504
+msgid "Website Header"
+msgstr ""
+
+#: templates/header.html:518 templates/header.html:959
+msgid "OffMarket Games"
+msgstr ""
+
+#: templates/header.html:546 templates/header.html:562
+#: templates/header.html:969
+msgid "Withdrawal Requests"
+msgstr ""
+
+#: templates/header.html:589
+msgid "Bonuses"
+msgstr ""
+
+#: templates/header.html:683
+msgid "CMS"
+msgstr ""
+
+#: templates/header.html:711
+msgid "Terms&Condition"
+msgstr ""
+
+#: templates/header.html:718
+msgid "Cookie Policy"
+msgstr ""
+
+#: templates/header.html:787
+msgid "Spin the Wheel"
+msgstr ""
+
+#: templates/header.html:795
+msgid "Email Templates"
+msgstr ""
+
+#: templates/header.html:802
+msgid "Operational Status"
+msgstr ""
+
+#: templates/header.html:811
+msgid "Footer"
+msgstr ""
+
+#: templates/header.html:818
+msgid "Link Categories"
+msgstr ""
+
+#: templates/header.html:825
+msgid "Link"
+msgstr ""
+
+#: templates/header.html:848 templates/header.html:885
+msgid "CRM"
+msgstr ""
+
+#: templates/header.html:856
+msgid "Email Notifications"
+msgstr ""
+
+#: templates/header.html:863
+msgid "SMS Notifications"
+msgstr ""
+
+#: templates/header.html:870
+msgid "WebSite Notifications"
+msgstr ""
+
+#: templates/header.html:898
+msgid "Affiliate"
+msgstr ""
+
+#: templates/header.html:908
+msgid "Default Settings"
+msgstr ""
+
+#: templates/header.html:929
+msgid "Affiliate Requests"
+msgstr ""
+
+#: templates/header.html:987
+#, fuzzy
+#| msgid "Transaction"
+msgid "Wallet & Transactions"
+msgstr "Транзакция"
+
+#: templates/header.html:1085 templates/includes/betting_limits_popup.html:26
+#: templates/includes/transactions.html:20
+#, fuzzy
+#| msgid "Мax single bet"
+msgid "Max Single Bet"
+msgstr "Максимальная одиночная ставка"
+
+#: templates/header.html:1100 templates/includes/betting_limits_popup.html:41
+msgid "Max Single Bet Other Sports"
+msgstr ""
+
+#: templates/header.html:1115 templates/includes/betting_limits_popup.html:56
+#: templates/includes/transactions.html:29
+#, fuzzy
+#| msgid "Max Multi Three Events"
+msgid "Max Multiple Bet"
+msgstr "Макс Мульти Три События"
+
+#: templates/header.html:1130 templates/includes/betting_limits_popup.html:71
+#: templates/includes/transactions.html:56
+msgid "Min Bet"
 msgstr "Минимальная сумма ставки"
 
-msgid "Max bet amount"
+#: templates/header.html:1143 templates/includes/betting_limits_popup.html:84
+#, fuzzy
+#| msgid "Max Win Amount"
+msgid "Max Live Casino Amount"
+msgstr "Максимальная сумма выигрыша"
+
+#: templates/header.html:1158 templates/includes/betting_limits_popup.html:98
+msgid "Max Win Amount"
+msgstr "Максимальная сумма выигрыша"
+
+#: templates/header.html:1169 templates/includes/betting_limits_popup.html:109
+msgid "Max Odd"
+msgstr "Максимальный коэффициент"
+
+#: templates/header.html:1182 templates/includes/betting_limits_popup.html:122
+msgid "Max Bet Amount Per Match"
+msgstr "Максимальная сумма ставки за матч"
+
+#: templates/header.html:1193 templates/includes/betting_limits_popup.html:133
+msgid "Max Same Bet Count Amount"
+msgstr "Макс. Количество ставок"
+
+#: templates/header.html:1206 templates/includes/betting_limits_popup.html:146
+msgid "Max Multi Two Events Amount Combine"
+msgstr "Макс. Мульти-сумма на два события"
+
+#: templates/header.html:1217 templates/includes/betting_limits_popup.html:157
+msgid "Max Multi Three Events Amount Combine"
+msgstr "Комбинация Макс Мульти Три События Сумма"
+
+#: templates/header.html:1230 templates/includes/betting_limits_popup.html:170
+msgid "Max Multi Three Events"
+msgstr "Макс Мульти Три События"
+
+#: templates/header.html:1240 templates/includes/betting_limits_popup.html:180
+msgid "Cashout Commission Percentage"
+msgstr ""
+
+#: templates/header.html:1253 templates/includes/betting_limits_popup.html:192
+msgid "Cashback Time Limit(in hours)"
+msgstr ""
+
+#: templates/header.html:1284
+msgid "Permissions "
+msgstr ""
+
+#: templates/header.html:1291 templates/includes/betting_limits_popup.html:254
+#, fuzzy
+#| msgid "Max Bet"
+msgid "Max Agent"
 msgstr "Максимальная сумма ставки"
 
-msgid "Login"
-msgstr "Войти"
+#: templates/header.html:1303 templates/includes/betting_limits_popup.html:266
+msgid "Max Player per Agent"
+msgstr ""
+
+#: templates/home.html:103
+msgid "Total Player in Waiting"
+msgstr ""
+
+#: templates/home.html:123 templates/home.html:598
+msgid "Open"
+msgstr ""
+
+#: templates/home.html:132
+msgid "Total Tip"
+msgstr ""
+
+#: templates/home.html:137 templates/home.html:277 templates/home.html:612
+#: templates/home.html:946 templates/home.html:1081 templates/home.html:1096
+#: templates/home.html:1111 templates/home.html:1150 templates/home.html:1178
+#: templates/home.html:1193
+msgid " "
+msgstr ""
+
+#: templates/home.html:144 templates/home.html:619
+msgid "Open BetSlips"
+msgstr ""
+
+#: templates/home.html:149 templates/home.html:161 templates/home.html:624
+#: templates/home.html:636
+msgid "In last 7 Days"
+msgstr ""
+
+#: templates/home.html:156 templates/home.html:631
+msgid "Total BetSlips"
+msgstr ""
+
+#: templates/home.html:168
+msgid "Total Players Served"
+msgstr ""
+
+#: templates/home.html:187
+msgid "Latest Tips"
+msgstr ""
+
+#: templates/home.html:210 templates/home.html:686
+msgid "Total Master Agents"
+msgstr ""
+
+#: templates/home.html:228 templates/home.html:755
+msgid "Pending CA request"
+msgstr ""
+
+#: templates/home.html:242 templates/home.html:700
+#, fuzzy
+#| msgid "Agents"
+msgid "Total Agents"
+msgstr "Агенты"
+
+#: templates/home.html:277
+msgid "Tips"
+msgstr ""
+
+#: templates/home.html:346 templates/home.html:357 templates/home.html:368
+#: templates/home.html:381 templates/home.html:392 templates/home.html:403
+#: templates/home.html:843 templates/home.html:854 templates/home.html:865
+#: templates/home.html:878 templates/home.html:889 templates/home.html:900
+msgid "Bets"
+msgstr ""
+
+#: templates/home.html:476 templates/home.html:983
+msgid "Total Bets"
+msgstr ""
+
+#: templates/home.html:477 templates/home.html:984
+msgid "(Total Bets Per Sports)"
+msgstr ""
+
+#: templates/home.html:480 templates/home.html:987
+msgid "Total Winning"
+msgstr ""
+
+#: templates/home.html:481 templates/home.html:988
+msgid "(Total winning per sports)"
+msgstr ""
+
+#: templates/home.html:484 templates/home.html:488 templates/home.html:991
+#: templates/home.html:995
+#, fuzzy
+#| msgid "Profit"
+msgid "Total Profit"
+msgstr "Прибыль"
+
+#: templates/home.html:485 templates/home.html:992
+msgid "(Total profit per sports)"
+msgstr ""
+
+#: templates/home.html:489 templates/home.html:996
+msgid "(Total profits in percentage of bets)"
+msgstr ""
+
+#: templates/home.html:578
+msgid "New Registration"
+msgstr ""
+
+#: templates/home.html:607 templates/home.html:1145
+msgid "Total Deposit"
+msgstr ""
+
+#: templates/home.html:643 templates/home.html:1158
+msgid "Total Withdraws"
+msgstr ""
+
+#: templates/home.html:739
+#, fuzzy
+#| msgid "Players"
+msgid "Total Players"
+msgstr "Игроки"
+
+#: templates/home.html:773
+msgid "Total Players Joined By Affiliate"
+msgstr ""
+
+#: templates/home.html:788
+msgid "Total Earned By Affiliates"
+msgstr ""
+
+#: templates/home.html:946
+#, fuzzy
+#| msgid "Profit"
+msgid "Net Profits"
+msgstr "Прибыль"
+
+#: templates/home.html:1074
+msgid "Total Tournaments"
+msgstr ""
+
+#: templates/home.html:1089
+msgid "Total Active Tournaments"
+msgstr ""
+
+#: templates/home.html:1104
+msgid "Total Tournament Prize Distributed"
+msgstr ""
+
+#: templates/home.html:1123
+msgid "Websit Headers"
+msgstr ""
+
+#: templates/home.html:1173
+msgid "Total Banners Count"
+msgstr ""
+
+#: templates/home.html:1188
+msgid "Total Pages Count"
+msgstr ""
+
+#: templates/home.html:1237
+#, fuzzy
+#| msgid "Win Amount"
+msgid "Tip Amount"
+msgstr "Сумма выигрыша"
+
+#: templates/home_.html:81
+msgid "Terminals"
+msgstr "Терминалы"
+
+#: templates/home_.html:106
+msgid "Transaction"
+msgstr "Транзакция"
+
+#: templates/home_.html:117
+#, fuzzy
+#| msgid "Voucher"
+msgid "E-Vouchers"
+msgstr "Ваучер"
+
+#: templates/home_.html:131
+msgid "Coupons"
+msgstr "Купоны"
+
+#: templates/home_.html:145 templates/includes/betting_limits_popup.html:6
+#: templates/includes/betting_limits_popup.html:11
+msgid "Betting Limits"
+msgstr "Лимит ставок"
+
+#: templates/home_.html:157
+#, fuzzy
+#| msgid "Betting limits"
+msgid "Settings"
+msgstr "Лимит ставок"
+
+#: templates/includes/betting_limits_popup.html:221
+msgid "Permissions Master Agent"
+msgstr ""
+
+#: templates/includes/betting_limits_popup.html:225
+msgid "Creating Agent"
+msgstr ""
+
+#: templates/includes/betting_limits_popup.html:240
+msgid "Block Master Agent"
+msgstr ""
+
+#: templates/includes/transactions.html:58
+#: templates/includes/transactions.html:261
+#: templates/includes/transactions.html:271
+msgid "Activity Type"
+msgstr ""
+
+#: templates/includes/transactions.html:59
+#: templates/includes/transactions.html:262
+#: templates/includes/transactions.html:272
+msgid "All"
+msgstr ""
+
+#: templates/includes/transactions.html:93
+msgid "Trans ID"
+msgstr ""
+
+#: templates/includes/transactions.html:94
+#: templates/report/casino_betslip_report.html:224
+#, fuzzy
+#| msgid "Timezone"
+msgid "Time"
+msgstr "Часовой пояс"
+
+#: templates/includes/transactions.html:95 templates/report/mnet_report.html:98
+#: templates/report/nowpayments_report.html:99
+#: templates/transactions/transactions.html:127
+msgid "Trans Type"
+msgstr ""
+
+#: templates/includes/transactions.html:96
+#: templates/report/transaction_report.html:216
+#, fuzzy
+#| msgid "Journal entry"
+msgid "Journal Entry"
+msgstr "Запись в журнале"
+
+#: templates/includes/transactions.html:98
+#, fuzzy
+#| msgid "Bet Amount"
+msgid "Bonus Amount"
+msgstr "Сумма ставки"
+
+#: templates/login.html:27
+msgid "Sign In"
+msgstr ""
+
+#: templates/login.html:47
+msgid "Sign in"
+msgstr ""
+
+#: templates/offmarkets/games.html:165
+msgid "Off Market Games"
+msgstr ""
+
+#: templates/offmarkets/games.html:176
+msgid "Download URL"
+msgstr ""
+
+#: templates/offmarkets/games.html:177
+msgid "Bonus Percentage"
+msgstr ""
+
+#: templates/offmarkets/games.html:178
+msgid "Image URL"
+msgstr ""
+
+#: templates/offmarkets/games.html:180
+msgid "Coming Soon"
+msgstr ""
+
+#: templates/report/alchemypay_report.html:110
+#: templates/report/offmarket_report.html:110
+#: templates/report/transaction_report.html:109
+#, fuzzy
+#| msgid "Transaction"
+msgid "Search by Trasnsaction ID"
+msgstr "Транзакция"
+
+#: templates/report/alchemypay_report.html:156
+#: templates/report/nowpayments_report.html:83
+msgid "Finished"
+msgstr ""
+
+#: templates/report/alchemypay_report.html:157
+#: templates/report/nowpayments_report.html:86
+#: templates/report/offmarket_report.html:157
+msgid "Failed"
+msgstr ""
+
+#: templates/report/alchemypay_report.html:158
+#, fuzzy
+#| msgid "Received"
+msgid "Payment Received"
+msgstr "Полученные"
+
+#: templates/report/alchemypay_report.html:171
+msgid "Apple Pay"
+msgstr ""
+
+#: templates/report/alchemypay_report.html:172
+msgid "Google Pay"
+msgstr ""
+
+#: templates/report/alchemypay_report.html:173
+#, fuzzy
+#| msgid "Credit"
+msgid "Credit Card"
+msgstr "Кредит"
+
+#: templates/report/alchemypay_report.html:228
+#: templates/report/offmarket_report.html:227
+#: templates/report/transaction_report.html:201
+msgid "Total Deposit Sum ="
+msgstr ""
+
+#: templates/report/alchemypay_report.html:229
+#: templates/report/offmarket_report.html:228
+#: templates/report/transaction_report.html:202
+msgid "Total Withdraw Sum ="
+msgstr ""
+
+#: templates/report/alchemypay_report.html:231
+#: templates/report/alchemypay_report.html:233
+#: templates/report/offmarket_report.html:230
+#: templates/report/offmarket_report.html:232
+#: templates/report/transaction_report.html:204
+#: templates/report/transaction_report.html:206
+#, fuzzy
+#| msgid "Transaction"
+msgid "Transactions Sum ="
+msgstr "Транзакция"
+
+#: templates/report/alchemypay_report.html:239
+msgid "Order Id"
+msgstr ""
+
+#: templates/report/alchemypay_report.html:241
+msgid "Payin address"
+msgstr ""
+
+#: templates/report/alchemypay_report.html:243
+msgid "Crypto"
+msgstr ""
+
+#: templates/report/alchemypay_report.html:244
+msgid "Network"
+msgstr ""
+
+#: templates/report/alchemypay_report.html:245
+#: templates/report/bonus_transactions_report.html:174
+#: templates/report/casino_betslip_report.html:232
+#: templates/report/offmarket_report.html:244
+#: templates/report/transaction_report.html:217
+#, fuzzy
+#| msgid "Amount"
+msgid "Amount (USD)"
+msgstr "Количество"
+
+#: templates/report/alchemypay_report.html:460
+#: templates/report/offmarket_report.html:508
+#, fuzzy
+#| msgid "Are you sure"
+msgid "Are you sure?"
+msgstr "Ты уверен"
+
+#: templates/report/alchemypay_report.html:545
+#: templates/report/offmarket_report.html:593
+msgid "Are you sure you want to change status to completed or failed"
+msgstr ""
+
+#: templates/report/alchemypay_report.html:549
+#: templates/report/alchemypay_report.html:558
+#: templates/report/alchemypay_report.html:679
+#: templates/report/offmarket_report.html:597
+#: templates/report/offmarket_report.html:606
+#: templates/report/offmarket_report.html:727
+msgid "Are you sure you want to change status to completed"
+msgstr ""
+
+#: templates/report/alchemypay_report.html:551
+#: templates/report/offmarket_report.html:599
+msgid "Are you sure you want to change status to failed"
+msgstr ""
+
+#: templates/report/bonus_transactions_report.html:136
+msgid "Affiliate Bonus"
+msgstr ""
+
+#: templates/report/bonus_transactions_report.html:137
+msgid "Offmarket Bonus"
+msgstr ""
+
+#: templates/report/bonus_transactions_report.html:170
+#: templates/report/offmarket_report.html:238
+#: templates/report/transaction_report.html:212
+#: templates/transactions/transactions.html:124
+msgid "Trans Id"
+msgstr ""
+
+#: templates/report/bonus_transactions_report.html:177
+#: templates/report/transaction_report.html:223
+#: templates/transactions/transactions.html:128
+msgid "Description"
+msgstr "Описание"
+
+#: templates/report/cash_app.html:83 templates/report/cash_app.html:237
+#: templates/report/offmarket_report.html:156
+msgid "Completed"
+msgstr ""
+
+#: templates/report/cash_app.html:190
+#, fuzzy
+#| msgid "Player"
+msgid "Player Name"
+msgstr "Игрок"
+
+#: templates/report/cash_app.html:191
+msgid "Cashapp ID"
+msgstr ""
+
+#: templates/report/cash_app.html:193
+msgid "Created At "
+msgstr ""
+
+#: templates/report/cash_app.html:194
+#, fuzzy
+#| msgid "Transaction"
+msgid "Transaction ID"
+msgstr "Транзакция"
+
+#: templates/report/cash_app.html:445
+#: templates/report/casino_betslip_report.html:486
+#: templates/report/mnet_report.html:338
+#: templates/report/nowpayments_report.html:490
+#, fuzzy
+#| msgid "Player"
+msgid "Search by Provider"
+msgstr "Поиск Игрока"
+
+#: templates/report/casino_betslip_report.html:222
+#: templates/report/mnet_report.html:149
+#, fuzzy
+#| msgid "Transaction"
+msgid "Transaction Id"
+msgstr "Транзакция"
+
+#: templates/report/casino_betslip_report.html:223
+msgid "Game Id"
+msgstr ""
+
+#: templates/report/casino_betslip_report.html:230
+#: templates/report/nowpayments_report.html:220
+msgid "Event Id"
+msgstr ""
+
+#: templates/report/casino_betslip_report.html:231
+#: templates/report/nowpayments_report.html:221
+msgid "Fixture Id"
+msgstr ""
+
+#: templates/report/casino_betslip_report.html:233
+msgid "Bonus Amount (USD)"
+msgstr ""
+
+#: templates/report/casino_betslip_report.html:234
+msgid "Request Type"
+msgstr ""
+
+#: templates/report/casino_betslip_report.html:235
+msgid "Action Type"
+msgstr ""
+
+#: templates/report/mnet_report.html:85
+msgid "Requested"
+msgstr ""
+
+#: templates/report/mnet_report.html:87
+msgid "Cancelled"
+msgstr ""
+
+#: templates/report/mnet_report.html:89
+#: templates/report/offmarket_report.html:172
+msgid "Refund"
+msgstr ""
+
+#: templates/report/mnet_report.html:90
+#, fuzzy
+#| msgid "Charge"
+msgid "Chargeback"
+msgstr "Начислить"
+
+#: templates/report/nowpayments_report.html:55
+msgid "NowPayment Report"
+msgstr ""
+
+#: templates/report/nowpayments_report.html:84
+msgid "Waiting"
+msgstr ""
+
+#: templates/report/nowpayments_report.html:87
+msgid "Expired"
+msgstr ""
+
+#: templates/report/nowpayments_report.html:88
+msgid "Refunded"
+msgstr ""
+
+#: templates/report/nowpayments_report.html:89
+#, fuzzy
+#| msgid "Confirm password"
+msgid "Confirmed"
+msgstr "Подтвердите Пароль"
+
+#: templates/report/nowpayments_report.html:90
+msgid "Sending"
+msgstr ""
+
+#: templates/report/nowpayments_report.html:91
+msgid "Processing"
+msgstr ""
+
+#: templates/report/nowpayments_report.html:103
+msgid "Withdrawal"
+msgstr ""
+
+#: templates/report/offmarket_report.html:239
+msgid "Payment ID"
+msgstr ""
+
+#: templates/report/offmarket_report.html:241
+#: templates/report/transaction_report.html:214
+#, fuzzy
+#| msgid "Merchant"
+msgid "User Merchant"
+msgstr "Коммерсант"
+
+#: templates/report/offmarket_report.html:248
+#: templates/report/transaction_report.html:220
+msgid "Previous Balance"
+msgstr ""
+
+#: templates/report/offmarket_report.html:249
+#: templates/report/transaction_report.html:221
+msgid "New Balance"
+msgstr ""
+
+#: templates/report/offmarket_report.html:250
+#: templates/report/transaction_report.html:222
+msgid "Reference"
+msgstr ""
+
+#: templates/report/offmarket_report.html:251
+msgid "Game Initial"
+msgstr ""
+
+#: templates/report/offmarket_report.html:253
+#: templates/report/transaction_report.html:224
+msgid "Betslip Id"
+msgstr ""
+
+#: templates/report/transaction_report.html:52
+msgid "Balance Transfer Report"
+msgstr ""
+
+#: templates/transactions/transactions.html:57
+msgid "Search User"
+msgstr "Поиск"
+
+#: templates/transactions/transactions.html:125
+msgid "Paid"
+msgstr "Oплаченный"
+
+#: templates/transactions/transactions.html:126
+msgid "Received"
+msgstr "Полученные"
+
+#~ msgid "Single"
+#~ msgstr "Одиночная"
+
+#~ msgid "Multiple"
+#~ msgstr "Экспресс"
+
+#~ msgid "Мatch"
+#~ msgstr "Матч"
+
+#~ msgid "Min single bet"
+#~ msgstr "Минимальная одиночная ставка"
+
+#~ msgid "Max win amount"
+#~ msgstr "Максимальная сумма выигрыша"
+
+#~ msgid "Max odd"
+#~ msgstr "Максимальный коэффициент"
+
+#~ msgid "Max bet amount per match"
+#~ msgstr "Максимальная сумма ставки за матч"
+
+#~ msgid "Dealers"
+#~ msgstr "Дилеры"
+
+#~ msgid "Possible Win"
+#~ msgstr "Возможная победа"
+
+#~ msgid "Log Out"
+#~ msgstr "Выйти"
+
+#, fuzzy
+#~| msgid "Betting Limits"
+#~ msgid "Betting Limit2"
+#~ msgstr "Лимит ставок"
+
+#~ msgid "Logs"
+#~ msgstr "Журнал"
+
+#~ msgid "All status"
+#~ msgstr "Весь статус"
+
+#~ msgid "Is not a number"
+#~ msgstr "Не число"
+
+#~ msgid "Data"
+#~ msgstr "Данные"
+
+#~ msgid "Won"
+#~ msgstr "Выиграл"
+
+#~ msgid "Lost"
+#~ msgstr "Проиграл"
+
+#~ msgid "Login"
+#~ msgstr "Войти"
