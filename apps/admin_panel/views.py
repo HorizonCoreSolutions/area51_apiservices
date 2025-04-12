@@ -2530,6 +2530,8 @@ class PlayerTransactionsView(CheckRolesMixin, views.JSONResponseMixin, views.Aja
         to_date = self.request.GET.get("to_date", None)
         activity_type = self.request.GET.get("activity_type", None)
 
+        external = True if activity_type in ["nowpayments", "area51", "gsoft"] else False
+
         user_name = self.request.GET.get("user_id", None)
 
         transaction_filter_dict = {"user__username": user_name}
@@ -2539,7 +2541,7 @@ class PlayerTransactionsView(CheckRolesMixin, views.JSONResponseMixin, views.Aja
         if to_date:
             to_date = datetime.strptime(to_date, "%d/%m/%Y").strftime("%Y-%m-%d")
             transaction_filter_dict["created__date__lte"] = to_date
-        if activity_type:
+        if activity_type and not external:
             transaction_filter_dict["journal_entry"] = activity_type
 
         queryset = queryset.filter(**transaction_filter_dict).order_by("-created")
@@ -2557,81 +2559,86 @@ class PlayerTransactionsView(CheckRolesMixin, views.JSONResponseMixin, views.Aja
         results = []
         createds = []
 
-        for obj in npt_queryset:
-            data = {"id": str(obj.payment_id),
-                    "created": obj.created.strftime("%d/%m/%y %H:%M"),
-                    "amount": round(obj.price_amount, 2),
-                    "journal_entry": obj.payment_status,
-                    "trans_type": obj.transaction_type,
-                    "provider" : "NowPayments"}
+        if (external and activity_type == "nowpayments") or activity_type == "":
+            for obj in npt_queryset:
+                data = {"id": str(obj.payment_id),
+                        "created": obj.created.strftime("%d/%m/%y %H:%M"),
+                        "amount": round(obj.price_amount, 2),
+                        "journal_entry": obj.payment_status,
+                        "trans_type": obj.transaction_type,
+                        "provider" : "NowPayments"}
 
-            # Find the correct index to insert
-            idx = bisect_right(createds, data["created"])
+                # Find the correct index to insert
+                idx = bisect_right(createds, data["created"])
 
-            # Insert the new entry at the found index
-            results.insert(idx, data)
-            createds.insert(idx, data["created"])
+                # Insert the new entry at the found index
+                results.insert(idx, data)
+                createds.insert(idx, data["created"])
 
-        for obj in gst_queryset:
-            if obj.action_type == "LOSE" or obj.bonus_type in GSoftTransactions.BonusType.choices:
-                continue
-            multiply = 1 if obj.action_type == 'WIN' else (-1 if obj.action_type == 'BET' else 1)
-            data = {"id": str(game_dict.get(gst.game_id, None) if str(obj.game_id).isdigit() else obj.game_id),
-                    "created": obj.created.strftime("%d/%m/%y %H:%M"),
-                    "amount": obj.amount * multiply,
-                    "journal_entry": obj.transaction_type,
-                    "trans_type": obj.action_type,
-                    "provider" : "GSoft" if str(obj.game_id).isdigit() else "Casino25" }
 
-            # Find the correct index to insert
-            idx = bisect_right(createds, data["created"])
+        if (external and activity_type == "gsoft") or activity_type == "":
+            for obj in gst_queryset:
+                if obj.action_type == "LOSE" or obj.bonus_type in GSoftTransactions.BonusType.choices:
+                    continue
+                multiply = 1 if obj.action_type == 'WIN' else (-1 if obj.action_type == 'BET' else 1)
+                data = {"id": str(game_dict.get(gst.game_id, None) if str(obj.game_id).isdigit() else obj.game_id),
+                        "created": obj.created.strftime("%d/%m/%y %H:%M"),
+                        "amount": obj.amount * multiply,
+                        "journal_entry": obj.transaction_type,
+                        "trans_type": obj.action_type,
+                        "provider" : "GSoft" if str(obj.game_id).isdigit() else "Casino25" }
 
-            # Insert the new entry at the found index
-            results.insert(idx, data)
-            createds.insert(idx, data["created"])
+                # Find the correct index to insert
+                idx = bisect_right(createds, data["created"])
 
-        for obj in queryset:
-            description = obj.description
-            trans_type = ""
-            amount = round(obj.amount, 2)
-            if obj.journal_entry in [WITHDRAW, DEPOSIT]:
+                # Insert the new entry at the found index
+                results.insert(idx, data)
+                createds.insert(idx, data["created"])
+
+
+        if activity_type in ["casino", "wallet", "area51"]:
+            for obj in queryset:
+                description = obj.description
                 trans_type = ""
-            elif "cashout" in description.lower():
-                trans_type = "Cashout"
-            elif (
-                ("refunded" in description.lower())
-                or ("refund" in description.lower())
-                or ("cancel" in description.lower())
-                or ("cancelled" in description.lower())
-            ):
-                trans_type = "Refunded"
-            elif "bonus" in description.lower() or (obj.bonus_type and  "bonus" in obj.bonus_type.lower()):
-                 trans_type = obj.bonus_type.replace('_', ' ')
-                 amount = round(obj.bonus_amount,2)
-                 
-            else:
-                # if obj.journal_entry == CREDIT:
-                #     amount = -amount
-                trans_type = "Betting"
-     
-            timezone = request.session._session_cache['user_timezone'] 
-            created = obj.created + timedelta(minutes=int(timezone))
-            response = {
-                "id": obj.id,
-                "created": created.strftime("%d/%m/%y %H:%M"),
-                "amount": amount,
-                "journal_entry": obj.journal_entry,
-                "trans_type": trans_type,
-                "provider" : "Area 51"
-            }
-            # Find the correct index to insert
-            idx = bisect_right(createds, response["created"])
+                amount = round(obj.amount, 2)
+                if obj.journal_entry in [WITHDRAW, DEPOSIT]:
+                    trans_type = ""
+                elif "cashout" in description.lower():
+                    trans_type = "Cashout"
+                elif (
+                    ("refunded" in description.lower())
+                    or ("refund" in description.lower())
+                    or ("cancel" in description.lower())
+                    or ("cancelled" in description.lower())
+                ):
+                    trans_type = "Refunded"
+                elif "bonus" in description.lower() or (obj.bonus_type and  "bonus" in obj.bonus_type.lower()):
+                    trans_type = obj.bonus_type.replace('_', ' ')
+                    amount = round(obj.bonus_amount,2)
+                    
+                else:
+                    # if obj.journal_entry == CREDIT:
+                    #     amount = -amount
+                    trans_type = "Betting"
+        
+                timezone = request.session._session_cache['user_timezone'] 
+                created = obj.created + timedelta(minutes=int(timezone))
+                response = {
+                    "id": obj.id,
+                    "created": created.strftime("%d/%m/%y %H:%M"),
+                    "amount": amount,
+                    "journal_entry": obj.journal_entry,
+                    "trans_type": trans_type,
+                    "provider" : "Area 51"
+                }
+                # Find the correct index to insert
+                idx = bisect_right(createds, response["created"])
 
-            # Insert the new entry at the found index
-            results.insert(idx, response)
-            createds.insert(idx, response["created"])
+                # Insert the new entry at the found index
+                results.insert(idx, response)
+                createds.insert(idx, response["created"])
 
-        return self.render_json_response(results)
+            return self.render_json_response(results)
 
 
 
