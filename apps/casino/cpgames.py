@@ -92,7 +92,7 @@ class CPgames():
         result_params: dict[str] = {
             **params,
             "game_key" : game_key,
-            "sub_uid" : user.id,
+            "sub_uid" : user.id + settings.ENV_POSTFIX,
             "user_name" : user.username if len(user.username) <= 32 else user.username[:29] + "...",
             "time" : str(int(time.time())),
         }

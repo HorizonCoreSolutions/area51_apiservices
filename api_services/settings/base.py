@@ -195,6 +195,8 @@ API_VERSION_URL = 'api/v0/'
 
 LOCAL = os.environ.get('IS_LOCAL_ENV')
 
+ENV_POSTFIX = get_env_var('ENV_POSTFIX')
+
 AUTH_USER_MODEL = 'users.Users'
 
 AUTHENTICATION_BACKENDS = [
