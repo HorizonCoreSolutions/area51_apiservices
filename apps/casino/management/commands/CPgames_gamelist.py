@@ -77,3 +77,7 @@ class Command(BaseCommand):
         {"code": "2_1700067", "name": "Freedom Day", "type": "SLOTS"},
         {"code": "2_1700071", "name": "Samba Sensation", "type": "SLOTS"},
     ]
+
+
+    def handle(self, *args, **kwargs):
+        pass
