@@ -86,7 +86,7 @@ class CPgames():
         }
     
 
-    def login_user(self, user: Users, game_key: str):
+    def login_user(self, user: Users, game_key: str) -> bool:
         params = self.get_base_params()
         
         result_params: dict[str] = {
