@@ -156,7 +156,7 @@ class CPgames():
         if result.get("code") != 0:
             raise RuntimeError(f"API error: { result.get('code') } {result.get('msg')}")
 
-       print(data) 
+        print(result)
 
         return result.get("data", "")
 
