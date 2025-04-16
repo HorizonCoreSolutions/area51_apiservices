@@ -8,6 +8,7 @@ class CPgamesTest(TestCase):
 
     def setUp(self):
         Users.objects.create(
+            id=1,
             username="test_user",
             balance=500,
             bonus_balance=10,
@@ -23,7 +24,7 @@ class CPgamesTest(TestCase):
 
 
     def test_02_get_url(self):
-        t = Users.objects.filter(username="test_user").first()
+        t = Users.objects.filter(id=1).first()
         cp = CPgames()
 
         # list_games = cp.get_games()

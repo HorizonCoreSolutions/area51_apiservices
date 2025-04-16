@@ -37,7 +37,7 @@ class CPgames():
         self.config = config
         self.config['api_domain'] = config.get('api_domain', settings.CP_GAMES_URL)
         self.config['appid'] = config.get('appid', settings.CP_GAMES_APP_ID)
-        self.config['secret'] = config.get('appid', settings.CP_GAMES_SECRET)
+        self.config['secret'] = config.get('secret', settings.CP_GAMES_SECRET)
 
 
         self.session = requests.Session()
@@ -155,6 +155,8 @@ class CPgames():
 
         if result.get("code") != 0:
             raise RuntimeError(f"API error: { result.get('code') } {result.get('msg')}")
+
+       print(data) 
 
         return result.get("data", "")
 
