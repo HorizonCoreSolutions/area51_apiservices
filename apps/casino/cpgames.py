@@ -132,7 +132,7 @@ class CPgames():
         return response.get("code") == 0
 
 
-    def get_game_url(self, user:Users, game_id: str, lang: str="en"):
+    def get_game_url(self, user:Users, game_id: str, lang: str="en") -> str:
         params = self.get_base_params()
 
         # trash the unused items (prevents errors)
@@ -155,7 +155,7 @@ class CPgames():
         if result.get("code") != 0:
             raise RuntimeError(f"API error: { result.get('code') } {result.get('msg')}")
 
-        return result.get("data")
+        return result.get("data", "")
 
 
     def get_games(self):
@@ -165,3 +165,4 @@ class CPgames():
     @classmethod
     def parse_to_message(cls, code: int):
         return {"message" : cls.ERRORS.get(code, 1199), "code": code if code in cls.ERRORS.values() else 1199}
+
