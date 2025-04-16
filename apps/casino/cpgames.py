@@ -76,7 +76,7 @@ class CPgames():
 
         # Sort the params
         param_keys: List[str] = list(params.values())
-        param_keys.sort()
+        param_keys = sorted(param_keys)
 
         # Only hash the values where are different than None or 0 (sorted by name)
         data = "&".join([f"{p}={params.get(p)}" for p in param_keys if params.get(p, 0) != 0])
@@ -129,6 +129,10 @@ class CPgames():
         # appid=appidtest001&game_key=hog&sub_uid=1001&user_name=&time=1401248256&token=xxxx
 
         response = self.__execute_api(params=params, url=url)
+
+        if response.get("code") != 0:
+            print(response.get("code"))
+
         return response.get("code") == 0
 
 
