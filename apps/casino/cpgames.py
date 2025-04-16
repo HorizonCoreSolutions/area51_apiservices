@@ -1,7 +1,7 @@
 import json
 import time
 import requests
-from typing import Optional, Dict, List
+from typing import Optional, Dict, List, Union
 from hashlib import md5, sha1
 from django.conf import settings
 
@@ -41,17 +41,23 @@ class CPgames():
 
 
         self.session = requests.Session()
-        self.availables_languages: list = ["en", "th", "vi", "pt", "es", "bn", "ko", "id", "fr", "tr"]
+        self.availables_languages: list[str] = ["en", "th", "vi", "pt", "es", "bn", "ko", "id", "fr", "tr"]
 
 
-    def __execute_api(self, data: Optional[dict]=None, url: str="") -> dict:
-        if data is None:
-            data = {}
+    def __execute_api(self, params: Optional[dict]=None, url: str="") -> dict:
+        if params is None:
+            params = {}
         response = None
         try:
             self.session.headers.update({
                 'Content-Type': 'application/x-www-form-urlencoded',
             })
+
+            # generate the token
+            data = {
+                **params,
+                "token" : self.__generate_hash(params=params),
+            }
 
             response = self.session.post(url=url, data=data)
             return response.json()
@@ -83,41 +89,73 @@ class CPgames():
 
 
     @staticmethod
-    def get_base_params():
+    def get_username(user: Users) -> str:
+        u_name = str(user.username)
+        return u_name if len(u_name) <= 32 else u_name[:29] + "..."
+
+
+    @staticmethod
+    def get_sub_uid(user: Users) -> str:
+        return user.id + settings.ENV_POSTFIX
+
+
+    @staticmethod
+    def get_user_from_uid(sub_uid: str) -> Optional[Users]:
+        qs = Users.objects.filter(id=sub_uid[:-len(settings.ENV_POSTFIX)])
+        return qs.first() if qs else None
+
+
+    @staticmethod
+    def get_base_params() -> Dict[str, Union[str, int]]:
         return {
             "appid" : settings.CP_GAMES_APP_ID,
+            "game_key" : "hog"
         }
 
 
-    def login_user(self, user: Users, game_key: str) -> bool:
-        params = self.get_base_params()
+    def login_user(self, user: Users) -> bool:
+        params: dict[str, Union[str, int]] = self.get_base_params()
 
-        u_name = str(user.username)
-        u_name = u_name if len(u_name) <= 32 else u_name[:29] + "..."
-
-        result_params: dict[str, str] = {
-            **params,
-            "game_key" : game_key,
-            "sub_uid" : user.id + settings.ENV_POSTFIX,
-            "user_name" : u_name,
-            "time" : str(int(time.time())),
-        }
         params = {
             **params,
-            "token" : self.__generate_hash(params=result_params),
+            "sub_uid" : self.get_sub_uid(user=user),
+            "user_name" : self.get_username(user=user),
+            "time" : int(time.time()),
         }
-        # Request example：
+                # Request example：
         # https://{api_domain}/api/login
         url = self.config.get("api_domain", "") + "api/login"
-        # Request subject：
+        # Request subject:
         # appid=appidtest001&game_key=hog&sub_uid=1001&user_name=&time=1401248256&token=xxxx
 
-        response = self.__execute_api(data=params, url=url)
+        response = self.__execute_api(params=params, url=url)
         return response.get("code") == 0
 
 
-    def get_game_url(self, user:Users, game_id: str):
-        pass
+    def get_game_url(self, user:Users, game_id: str, lang: str="en"):
+        params = self.get_base_params()
+
+        # trash the unused items (prevents errors)
+        params.pop("user_name")
+
+        # The currency is set in the CP appid
+        # there are a few apps you can chose from
+        # to date 15/04/2025 is set to USD appid and secret
+        params = {
+            **params,
+            "sub_uid" : self.get_sub_uid(user=user),
+            "game_id" : game_id,
+            "lang" : lang if lang in self.availables_languages else "en",
+            "time" : int(time.time())
+        }
+
+        url = self.config.get("api_domain", "") + "api/login"
+        result = self.__execute_api(params=params, url=url)
+
+        if result.get("code") != 0:
+            raise RuntimeError(f"API error: { result.get('code') } {result.get('msg')}")
+
+        return result.get("data")
 
 
     def get_games(self):
