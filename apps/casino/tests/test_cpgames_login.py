@@ -17,6 +17,6 @@ class CPgamesTest(TestCase):
         t = Users.objects.first()
         cp = CPgames()
 
-        result = cp.login_user(t, "2_1700063")
+        result = cp.login_user(t)
 
         self.assertTrue(result, "CPgames call was not successful")
