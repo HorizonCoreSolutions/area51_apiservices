@@ -96,7 +96,7 @@ class CPgames():
 
     @staticmethod
     def get_sub_uid(user: Users) -> str:
-        return user.id + settings.ENV_POSTFIX
+        return str(user.id) + settings.ENV_POSTFIX
 
 
     @staticmethod
@@ -134,9 +134,6 @@ class CPgames():
 
     def get_game_url(self, user:Users, game_id: str, lang: str="en") -> str:
         params = self.get_base_params()
-
-        # trash the unused items (prevents errors)
-        params.pop("user_name")
 
         # The currency is set in the CP appid
         # there are a few apps you can chose from
