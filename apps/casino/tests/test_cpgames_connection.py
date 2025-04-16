@@ -44,7 +44,7 @@ class CPgamesTest(TestCase):
 
         result = cp.get_games()
 
-        self.assertAlmostEqual(len(result), 1, msg="No games were fetched")
+        self.assertGreaterEqual(len(result), 1, msg="No games were fetched")
 
 
 
