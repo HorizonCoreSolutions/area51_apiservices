@@ -39,3 +39,12 @@ class CPgamesTest(TestCase):
         self.assertTrue(valid_url, "the result is not a valid url")
 
 
+    def test_03_game_list(self):
+        cp = CPgames()
+
+        result = cp.get_games()
+
+        self.assertAlmostEqual(len(result), 1, msg="No games were fetched")
+
+
+

@@ -161,8 +161,26 @@ class CPgames():
         return result.get("data", "")
 
 
-    def get_games(self):
-        pass
+    def get_games(self) -> Optional[List[Optional[Dict[str, str]]]]:
+        params = self.get_base_params()
+
+        params = {
+            **params,
+            "game_key" : "hog",
+            "time" : int(time.time()),
+        }
+
+        url = self.config.get("api_domain", "") + "api/game_list"
+        result = self.__execute_api(params=params, url=url)
+
+        if result.get("code") != 0:
+            return []
+
+        return result.get("data")
+
+
+    def get_games_on_db(self):
+        return
 
 
     @classmethod
