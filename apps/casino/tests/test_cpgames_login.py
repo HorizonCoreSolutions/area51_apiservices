@@ -1,3 +1,4 @@
+import re
 from django.test import TestCase
 from apps.casino.cpgames import CPgames
 from apps.users.models import Users
@@ -31,14 +32,10 @@ class CPgamesTest(TestCase):
         # game_key = choices(list_games)
 
         game_key = "2_1700063"
-        try:
-            url = cp.get_game_url(user=t, game_id=game_key,lang="es")
+        url = cp.get_game_url(user=t, game_id=game_key,lang="es")
 
-            print(url)
-            self.assertIsNone(url, "url result to be None")
-
-        except Exception as e:
-            print(e)
-            self.assertTrue(False, "Got an error")
+        print(url)
+        valid_url = bool(re.match(r'^https?://[\w\.-]+\.\w+', url))
+        self.assertTrue(valid_url, "the result is not a valid url")
 
 

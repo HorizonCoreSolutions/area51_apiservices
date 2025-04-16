@@ -150,7 +150,7 @@ class CPgames():
             "time" : int(time.time())
         }
 
-        url = self.config.get("api_domain", "") + "api/login"
+        url = self.config.get("api_domain", "") + "api/get_game_url"
         result = self.__execute_api(params=params, url=url)
 
         if result.get("code") != 0:
