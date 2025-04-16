@@ -75,7 +75,7 @@ class CPgames():
             params = {}
 
         # Sort the params
-        param_keys: List[str] = list(params.values())
+        param_keys: List[str] = list(params.keys())
         param_keys = sorted(param_keys)
 
         # Only hash the values where are different than None or 0 (sorted by name)
