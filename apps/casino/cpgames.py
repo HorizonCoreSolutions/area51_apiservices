@@ -79,7 +79,7 @@ class CPgames():
         param_keys = sorted(param_keys)
 
         # Only hash the values where are different than None or 0 (sorted by name)
-        data = "&".join([f"{p}={params.get(p)}" for p in param_keys if params.get(p, 0) != 0])
+        data = "&".join([f"{p}={params.get(p)}" for p in param_keys if params.get(p) not in [None, "0", 0] and (p != "token")])
         # (except secret, always at the end)
         s_key = self.config.get("secret")
         data += f"&secret={s_key}"
@@ -156,12 +156,19 @@ class CPgames():
         if result.get("code") != 0:
             raise RuntimeError(f"API error: { result.get('code') } {result.get('msg')}")
 
-        print(result)
-
         return result.get("data", "")
 
 
     def get_games(self) -> Optional[List[Optional[Dict[str, str]]]]:
+        ''' Example: return
+        [
+        {
+            "name_en": "Lucky Cat",
+            "game_id": "1_1",
+            "type": "SLOTS"
+        },...
+        ]
+        '''
         params = self.get_base_params()
 
         params = {
@@ -185,5 +192,5 @@ class CPgames():
 
     @classmethod
     def parse_to_message(cls, code: int):
-        return {"message" : cls.ERRORS.get(code, 1199), "code": code if code in cls.ERRORS.values() else 1199}
+        return {"message" : cls.ERRORS.get(code, 1199), "code": code if code in cls.ERRORS.keys() else 1199}
 
