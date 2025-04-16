@@ -1,7 +1,7 @@
 import json
 import time
 import requests
-from typing import Optional
+from typing import Optional, Dict, List
 from hashlib import md5, sha1
 from django.conf import settings
 
@@ -30,7 +30,7 @@ class CPgames():
     }
 
 
-    def __init__(self, config: Optional[dict|None]=None):
+    def __init__(self, config: Optional[dict]=None):
         if config is None:
             config = {}
 
@@ -41,39 +41,42 @@ class CPgames():
 
 
         self.session = requests.Session()
-        self.availables_languages: dict = ["en", "th", "vi", "pt", "es", "bn", "ko", "id", "fr", "tr"]
+        self.availables_languages: list = ["en", "th", "vi", "pt", "es", "bn", "ko", "id", "fr", "tr"]
 
 
-    def __execute_api(self, data: Optional[dict | None]=None, url=None):
-        if params is None:
-            params = {}
+    def __execute_api(self, data: Optional[dict]=None, url: str="") -> dict:
+        if data is None:
+            data = {}
+        response = None
         try:
             self.session.headers.update({
                 'Content-Type': 'application/x-www-form-urlencoded',
             })
 
-            response = self.session.post(url, data=data)
+            response = self.session.post(url=url, data=data)
             return response.json()
         except Exception as e:
             print(e)
-            print(response.text)
-            if "503 service temporarily unavailable" in response.text.lower():
-                return {"code": 503,"msg": "Sorry, the service you're trying to access is currently unavailable. Please try again later."}
-            return
+            if response:
+                print(response.text)
+                if "503 service temporarily unavailable" in response.text.lower():
+                    return {"code": 503,"msg": "Sorry, the service you're trying to access is currently unavailable. Please try again later."}
+            return {"code" : 500, "msg" : "Sorry, there was a problem with the server response."}
 
 
-    def __generate_hash(self, params: Optional[dict | None]) -> str:
+    def __generate_hash(self, params: Optional[Dict[str, str]]) -> str:
         if params is None:
             params = {}
 
         # Sort the params
-        param_keys: list[str] = params.values()
-        param_keys = param_keys.sort()
-        
+        param_keys: List[str] = list(params.values())
+        param_keys.sort()
+
         # Only hash the values where are different than None or 0 (sorted by name)
         data = "&".join([f"{p}={params.get(p)}" for p in param_keys if params.get(p, 0) != 0])
         # (except secret, always at the end)
-        data += f"&secret={self.config.get("secret")}"
+        s_key = self.config.get("secret")
+        data += f"&secret={s_key}"
 
         # Following the docs: strtoupper(sha1(md5(string)))
         return sha1(md5(data.encode()).hexdigest().encode()).hexdigest().upper()
@@ -84,16 +87,19 @@ class CPgames():
         return {
             "appid" : settings.CP_GAMES_APP_ID,
         }
-    
+
 
     def login_user(self, user: Users, game_key: str) -> bool:
         params = self.get_base_params()
-        
-        result_params: dict[str] = {
+
+        u_name = str(user.username)
+        u_name = u_name if len(u_name) <= 32 else u_name[:29] + "..."
+
+        result_params: dict[str, str] = {
             **params,
             "game_key" : game_key,
             "sub_uid" : user.id + settings.ENV_POSTFIX,
-            "user_name" : user.username if len(user.username) <= 32 else user.username[:29] + "...",
+            "user_name" : u_name,
             "time" : str(int(time.time())),
         }
         params = {
@@ -102,7 +108,7 @@ class CPgames():
         }
         # Request example：
         # https://{api_domain}/api/login
-        url = self.config.get("api_domain") + "api/login"
+        url = self.config.get("api_domain", "") + "api/login"
         # Request subject：
         # appid=appidtest001&game_key=hog&sub_uid=1001&user_name=&time=1401248256&token=xxxx
 
@@ -114,7 +120,7 @@ class CPgames():
         pass
 
 
-    def get_games():
+    def get_games(self):
         pass
 
 
