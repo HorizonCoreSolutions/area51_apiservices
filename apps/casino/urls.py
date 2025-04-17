@@ -10,12 +10,13 @@ from .views import (Casino25APIView, Casino25CallBackAPIView, Casino25GameList,
     TournamentListApiView, TournamentOptApiView, TournamentTransactionListApiView,
     UpdatePlayersFavCasinoGames, UploadGsoftGames, UserTournamentHistoryListApiView,
     VerifySessions, Casino25CategoryWiseGameList, Casino25ProviderWiseGameList,
-    CPGamesQueryBalanceApiView)
+    CPGamesQueryBalanceApiView, CPGamesPlacingSettingBetsApiView)
 
 app_name = "Casino"
 
 cpgames_urls = [
     url("get", CPGamesQueryBalanceApiView.as_view(), name="cpg_get_balance"),
+    url("transferInOut", CPGamesPlacingSettingBetsApiView.as_view(), name="cpg-transfer-in-out"),
 ]
 
 urlpatterns = [

@@ -105,6 +105,9 @@ class CPgames():
 
     @staticmethod
     def get_user_from_uid(sub_uid: str) -> Optional[Users]:
+        if not sub_uid.endswith(settings.ENV_POSTFIX):
+            return None
+
         qs = Users.objects.filter(id=sub_uid[:-len(settings.ENV_POSTFIX)])
         return qs.first() if qs else None
 
@@ -223,6 +226,11 @@ class CPgames():
                 "currency": "USD",
             }
         }
+
+
+    def place_bet(self):
+        return self.BASE_SUCCESS
+
 
     def save_request(self, request, is_response=False):
         file = "cp_request_log.txt"
