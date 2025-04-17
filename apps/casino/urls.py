@@ -8,9 +8,14 @@ from .views import (Casino25APIView, Casino25CallBackAPIView, Casino25GameList,
     GetPlayersFavCasinoGames, ScoreboardApiView, SearchView, TournamentDetailApiView,
     TournamentListApiView, TournamentOptApiView, TournamentTransactionListApiView,
     UpdatePlayersFavCasinoGames, UploadGsoftGames, UserTournamentHistoryListApiView,
-    VerifySessions, Casino25CategoryWiseGameList, Casino25ProviderWiseGameList)
+    VerifySessions, Casino25CategoryWiseGameList, Casino25ProviderWiseGameList,
+    CPGamesQueryBalanceApiView)
 
 app_name = "Casino"
+
+cpgames_urls = [
+    url("get", CPGamesQueryBalanceApiView.as_view(), name="cpg_get_balance"),
+]
 
 urlpatterns = [
     url(r"^(?P<player_id>\w+)/session", VerifySessions.as_view(), name="verify_session"),
