@@ -1302,7 +1302,7 @@ class Casino25ProviderWiseGameList(ListAPIView):
 class CPGamesQueryBalanceApiView(APIView):
 
     def post(self, request) -> Response:
-        data = request.data
+        data = request.data.copy()
         cp = CPgames()
         cp.save_request(request)
         if not cp.verify_request(request=data):
