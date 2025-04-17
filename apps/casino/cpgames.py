@@ -224,12 +224,12 @@ class CPgames():
             }
         }
 
-    def save_request(self, request):
+    def save_request(self, request, is_response=False):
         file = "cp_request_log.txt"
         ts = str(time.time())
-        full_url = request.build_absolute_uri()
+        full_url = request.build_absolute_uri() if not is_response else "response:"
         from pprint import pformat
-        data = pformat(request.data)
+        data = pformat(request.data) if not is_response else pformat(request)
 
         entry = (
             f"\n--- {ts} ---\n"
