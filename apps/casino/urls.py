@@ -1,4 +1,5 @@
 from django.conf.urls import url
+from django.urls import include, path
 
 from .views import (Casino25APIView, Casino25CallBackAPIView, Casino25GameList,
     Casino25GameListAdmin, CasinoHeaderCategoryAPIView, GameSearchView, GetBalance, GetCasinoCategory,
@@ -50,7 +51,7 @@ urlpatterns = [
     url(r"tournament-history", UserTournamentHistoryListApiView.as_view(), name="tournament-history"),
     url(r"tournament-scoreboard/(?P<pk>\d+)?/$", ScoreboardApiView.as_view(), name="tournament-scoreboard"),
     
-
+    path("cpgames-callback/balance/", include(cpgames_urls)),
 
 ]
 

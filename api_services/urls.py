@@ -43,8 +43,6 @@ from apps.users.views import (PlayerViewSet,
                               AdminPublicDetailsView,
                               AdminBannerClicksView, GetSocialLinkView,
                               GetFooterLinks)
-# TODO: remove this when deploy
-from apps.casino.urls import cpgames_urls
 
 # Desktop Router
 
@@ -108,11 +106,8 @@ urlpatterns = [
     url(r'^footer-links/', GetFooterLinks.as_view(), name="footer-links"),
     url(r'^GSoft/', GsoftCasinoView.as_view(), name="gsoft-casino"),
     url(r'^tinymce/', include('tinymce.urls')),
-
-
-    # TODO: REMOVE THIS
-    path("balance/", include(cpgames_urls)),
 ]
+
 
 # urlpatterns.append(path('admin/', admin.site.urls),),
 
