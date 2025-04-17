@@ -1306,14 +1306,24 @@ class CPGamesQueryBalanceApiView(APIView):
         cp = CPgames()
         cp.save_request(request)
         if not cp.verify_request(request=data):
+            print("CPgames: query balance #Signature error#")
             # Signature error 1111
             response_data = cp.parse_to_message(1111)
             return Response(data=response_data, status=status.HTTP_200_OK)
 
+        try:
+            message = json.loads(request.data.get("message"))
+            sub_uid = message.get("sub_uid")
 
-        response_data = cp.get_user_balance(request.get("sub_uid"))
+            response_data = cp.get_user_balance(sub_uid)
 
-        return Response(data=response_data, status=status.HTTP_200_OK)
+            return Response(data=response_data, status=status.HTTP_200_OK)
+        except Exception as e:
+            print(e)
+            # Parameter error: 1110
+            data = cp.parse_to_message(1110)
+            return Response(data=data, status=status.HTTP_200_OK)
+
 
 
 class CPGamesPlacingSettingBetsApiView(APIView):
