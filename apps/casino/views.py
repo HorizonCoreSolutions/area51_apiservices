@@ -29,6 +29,7 @@ from apps.core.permissions import *
 from apps.users.models import (FortunePandasGameList, FortunePandasGameManagement, OffMarketGames,
     Player, UserGames, Users)
 from apps.casino.casino25 import Casino25
+from apps.casino.cpgames import CPgames
 from apps.bets.models import CHARGED, DEBIT, Transactions
 from apps.bets.utils import generate_reference
 from .serializers import (Casino25CasinoManagementSerializer,
@@ -1295,4 +1296,38 @@ class Casino25ProviderWiseGameList(ListAPIView):
 
         return context
     
-    
+
+# CPgames_views.py
+# NOTE: Guide 3.1 Query Player Balance
+class CPGamesQueryBalanceApiView(APIView):
+
+    def post(self, request) -> Response:
+        data = request.data
+        cp = CPgames()
+        cp.save_request(request)
+        if not cp.verify_request(request=data):
+            # Signature error 1111
+            response_data = cp.parse_to_message(1111)
+            return Response(data=response_data, status=status.HTTP_200_OK)
+
+
+        response_data = cp.get_user_balance(request.get("sub_uid"))
+
+        return Response(data=response_data, status=status.HTTP_200_OK)
+
+
+class CPGamesPlacingSettingBetsApiView(APIView):
+
+    def post(self, request) -> Response:
+        data = request.data
+        cp = CPgames()
+        if not cp.verify_request(request=data):
+            # Signature error 1111
+            response_data = cp.parse_to_message(1111)
+            return Response(data=response_data, status=status.HTTP_200_OK)
+
+        request.pop("this", None)
+        return Response(data={}, status=status.HTTP_200_OK)
+
+
+

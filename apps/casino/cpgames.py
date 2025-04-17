@@ -29,6 +29,10 @@ class CPgames():
         1199 : "Unknown error generic error return"
     }
 
+    BASE_SUCCESS: Dict[str, str] = {
+        "code" : 0,
+        "msg" : "success",
+    }
 
     def __init__(self, config: Optional[dict]=None):
         if config is None:
@@ -170,7 +174,6 @@ class CPgames():
         ]
         '''
         params = self.get_base_params()
-
         params = {
             **params,
             "game_key" : "hog",
@@ -190,7 +193,55 @@ class CPgames():
         return
 
 
+    def verify_request(self, request:dict) -> bool:
+        token = request.pop("token")
+        if not token:
+            return False
+
+        result_token = self.__generate_hash(params=request)
+        return result_token == token
+
+
+    def get_user_balance(self, user_sub: Optional[str]) -> Dict[str, Union[str, Dict[str, str]]]:
+        if not user_sub:
+            return self.parse_to_message(1004)
+        if not user_sub.endswith(settings.ENV_POSTFIX):
+            # 1116 player does not exist
+            return self.parse_to_message(1116)
+        user_id = user_sub[:-len(settings.ENV_POSTFIX)]
+
+        user = Users.objects.filter(id=user_id)
+        if not user.exists():
+            return self.parse_to_message(1116)
+
+        user = user.first()
+
+        return {
+            **self.BASE_SUCCESS,
+            "data" : {
+                "balance" : user.balance + user.bonus_balance,
+                "currency": "USD",
+            }
+        }
+
+    def save_request(self, request):
+        file = "cp_request_log.txt"
+        ts = str(time.time())
+        full_url = request.build_absolute_uri()
+        from pprint import pformat
+        data = pformat(request.data)
+
+        entry = (
+            f"\n--- {ts} ---\n"
+            f"URL: {full_url}\n"
+            f"DATA:\n{data}\n"
+        )
+
+        with open(file, 'a') as f:
+            f.write(entry)
+
+
     @classmethod
     def parse_to_message(cls, code: int):
-        return {"message" : cls.ERRORS.get(code, 1199), "code": code if code in cls.ERRORS.keys() else 1199}
+        return {"msg" : cls.ERRORS.get(code, 1199), "code": code if code in cls.ERRORS.keys() else 1199}
 
