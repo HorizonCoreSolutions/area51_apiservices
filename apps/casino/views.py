@@ -1299,6 +1299,7 @@ class Casino25ProviderWiseGameList(ListAPIView):
 
 # CPgames_views.py
 # NOTE: Guide 3.1 Query Player Balance
+# State: Compleated
 class CPGamesQueryBalanceApiView(APIView):
 
     def post(self, request) -> Response:
@@ -1330,16 +1331,14 @@ class CPGamesQueryBalanceApiView(APIView):
 
 
 class CPGamesPlacingSettingBetsApiView(APIView):
-
     def post(self, request) -> Response:
-        data = request.data
+        data = request.data.copy()
         cp = CPgames()
         if not cp.verify_request(request=data):
             # Signature error 1111
             response_data = cp.parse_to_message(1111)
             return Response(data=response_data, status=status.HTTP_200_OK)
 
-        request.pop("this", None)
         return Response(data={}, status=status.HTTP_200_OK)
 
 
