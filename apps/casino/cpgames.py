@@ -194,7 +194,7 @@ class CPgames():
 
 
     def verify_request(self, request:dict) -> bool:
-        token = request.pop("token")
+        token = request.get("token")
         if not token:
             return False
 
