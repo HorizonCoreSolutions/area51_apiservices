@@ -1334,7 +1334,6 @@ class CPGamesQueryBalanceApiView(APIView):
 class CPGamesPlacingSettingBetsApiView(APIView):
     @transaction.atomic
     def post(self, request) -> Response:
-        data = request.data.copy()
         cp = CPgames()
         cp.save_request(request)
         data, status = cp.transfer_in_out(request=request)

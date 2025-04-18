@@ -277,7 +277,7 @@ class CPgames():
             return response_data, status.HTTP_401_UNAUTHORIZED
 
         try:
-            msg = request.data.get("message", {})
+            msg = json.loads(request.data.get("message", "{}"))
             sub_uid: str = msg.get("sub_uid")
             user, error = self.select_user_for_update(sub_uid=sub_uid)
             if error is not None and user is None:

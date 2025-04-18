@@ -17,6 +17,7 @@ app_name = "Casino"
 cpgames_urls = [
     url("get", CPGamesQueryBalanceApiView.as_view(), name="cpg_get_balance"),
     url("transferInOut", CPGamesPlacingSettingBetsApiView.as_view(), name="cpg-transfer-in-out"),
+
 ]
 
 urlpatterns = [
