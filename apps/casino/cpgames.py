@@ -286,7 +286,9 @@ class CPgames():
 
             # 3.2: 1.
             bet_info = msg.get("bet_info")
-            bet_id = msg.get("bet_id")
+            bet_id = bet_info.get("bet_id")
+            transaction_id = bet_info.get("transaction_id", bet_id)
+
             # 3.2: 4.
             round_id = bet_info.get("parent_bet_id")
             amount = Decimal(bet_info.get("bet_amout", 0))
@@ -333,7 +335,8 @@ class CPgames():
             transaction_obj = GSoftTransactions()
             transaction_obj.withdraw = withdraw
             transaction_obj.deposit = deposit
-            transaction_obj.transaction_id = bet_id
+            transaction_obj.transaction_id = transaction_id
+            transaction_obj.bet_id = bet_id
             transaction_obj.round_id = round_id
             transaction_obj.request_type = GSoftTransactions.RequestType.wager
             transaction_obj.action_type = action_type
