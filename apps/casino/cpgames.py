@@ -460,7 +460,7 @@ class CPgames():
 
             # 3.4: 2.
             round_id = bet_info.get("round_id")
-            amount = Decimal(bet_info.get("bet_amout", 0))
+            amount = Decimal(bet_info.get("bet_amount", 0))
 
             # CHECK: if the bet already exist
             if GSoftTransactions.objects.filter(callerId=settings.CP_GAMES_ID, user=user, bet_id=bet_id).exists():
@@ -659,11 +659,11 @@ class CPgames():
             given_from_balance = Decimal(0)
             for item in all_games:
                 if item[0] is not None and item[0] > 0:
-                    given_from_bonus -= item[3]
-                    given_from_balance -= item[2]
+                    given_from_bonus -= Decimal(item[3])
+                    given_from_balance -= Decimal(item[2])
                 elif item[1] is not None and item[1] > 0:
-                    given_from_bonus += item[3]
-                    given_from_balance += item[2]
+                    given_from_bonus += Decimal(item[3])
+                    given_from_balance += Decimal(item[2])
 
             transfer_bonus = min(given_from_bonus, payout)
             transfer_balance = payout - transfer_bonus
