@@ -20,7 +20,7 @@ cpgames_urls = [
     url("cancelInOut", CPGamesCancelInOutApiView.as_view(), name="cpg_cancel_in_out"),
     url("transferOut", CPGamesBetApiView.as_view(), name="cpg_bet"),
     url("cancelOut", CPGamesCancelBetApiView.as_view(), name="cpg_cancel_bet"),
-    url("transfer_in", CPGamesSettleBetApiView.as_view(), name="cpg_transfer_in"),
+    url("transferIn", CPGamesSettleBetApiView.as_view(), name="cpg_transfer_in"),
 ]
 
 urlpatterns = [
