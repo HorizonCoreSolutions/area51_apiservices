@@ -350,9 +350,13 @@ class CPgames():
             transaction_obj.save()
 
             return self.get_formated_balance(user=user), status.HTTP_200_OK
-        except AttributeError:
+        except AttributeError as e:
+            print("grep here")
+            print(e)
             return self.parse_to_message(1110), status.HTTP_400_BAD_REQUEST
-        except TypeError:
+        except TypeError as e:
+            print("grep here")
+            print(e)
             return self.parse_to_message(1110), status.HTTP_400_BAD_REQUEST
 
 
@@ -498,9 +502,13 @@ class CPgames():
             transaction_obj.save()
 
             return self.get_formated_balance(user=user), status.HTTP_200_OK
-        except AttributeError:
+        except AttributeError as e:
+            print("grep here")
+            print(e)
             return self.parse_to_message(1110), status.HTTP_400_BAD_REQUEST
-        except TypeError:
+        except TypeError as e:
+            print("grep here")
+            print(e)
             return self.parse_to_message(1110), status.HTTP_400_BAD_REQUEST
 
 
@@ -578,9 +586,13 @@ class CPgames():
             transaction_obj.save()
 
             return self.get_formated_balance(user=user), status.HTTP_200_OK
-        except AttributeError:
+        except AttributeError as e:
+            print("grep here")
+            print(e)
             return self.parse_to_message(1110), status.HTTP_400_BAD_REQUEST
-        except TypeError:
+        except TypeError as e:
+            print("grep here")
+            print(e)
             return self.parse_to_message(1110), status.HTTP_400_BAD_REQUEST
 
 
@@ -677,9 +689,13 @@ class CPgames():
             transaction_obj.save()
 
             return self.get_formated_balance(user=user), status.HTTP_200_OK
-        except AttributeError:
+        except AttributeError as e:
+            print("grep here")
+            print(e)
             return self.parse_to_message(1110), status.HTTP_400_BAD_REQUEST
-        except TypeError:
+        except TypeError as e:
+            print("grep here")
+            print(e)
             return self.parse_to_message(1110), status.HTTP_400_BAD_REQUEST
 
 
