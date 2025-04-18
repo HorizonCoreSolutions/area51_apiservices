@@ -456,7 +456,7 @@ class CPgames():
             game_id = msg.get("game_id")
             bet_info = msg.get("bet_info")
             bet_id = bet_info.get("bet_id")
-            transaction_id = bet_info.get("transaction_id", bet_id)
+            transaction_id = bet_info.get("transaction_id")
 
             # 3.4: 2.
             round_id = bet_info.get("round_id")
@@ -477,7 +477,7 @@ class CPgames():
                 response_data = self.parse_to_message(1117)
                 return response_data, status.HTTP_400_BAD_REQUEST
 
-            transfer_bonus: Decimal = - min(abs(amount), bonus_balance)
+            transfer_bonus = - min(abs(amount), bonus_balance)
             transfer_balance = - (abs(amount) + transfer_bonus)
             withdraw = abs(amount)
 
@@ -625,7 +625,7 @@ class CPgames():
 
             # CHECK: if the bet already exist
             # 3.2: 2.
-            case_a = settle_type == bet_id and settle_type is not None
+            case_a = settle_type == "bet_id"
             case_b = settle_type == round_id and settle_type is not None
 
             qs = GSoftTransactions.objects.filter(
