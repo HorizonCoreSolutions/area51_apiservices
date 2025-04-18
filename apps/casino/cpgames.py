@@ -3,6 +3,7 @@ import time
 import requests
 from rest_framework import status
 from django.utils import timezone
+from django.db.models import Q
 from typing import Optional, Dict, List, Union, Tuple, cast
 from decimal import Decimal
 from hashlib import md5, sha1
@@ -34,7 +35,7 @@ class CPgames():
     }
 
     BASE_SUCCESS: Dict[str, str] = {
-        "code" : 0,
+        "code" : 0, # pyright: ignore
         "msg" : "success",
     }
 
@@ -266,23 +267,21 @@ class CPgames():
         }
 
 
-    def place_bet(self):
-        return self.BASE_SUCCESS
-
-
-    def transfer_in_out(self, request) -> Tuple[Dict, int]:
-        data = request.data.copy()
-        if not self.verify_request(request=data):
+    def transfer_in_out(self, data) -> Tuple[Dict, int]:
+        to_verify = data.copy()
+        if not self.verify_request(request=to_verify):
             # Signature error 1111
             response_data = self.parse_to_message(1111)
             return response_data, status.HTTP_401_UNAUTHORIZED
 
         try:
-            msg = json.loads(request.data.get("message", "{}"))
+            msg = json.loads(data.get("message", "{}"))
             sub_uid: str = msg.get("sub_uid")
             user, error = self.select_user_for_update(sub_uid=sub_uid)
-            if error is not None and user is None:
+            if error is not None:
                 return error, status.HTTP_400_BAD_REQUEST
+            if user is None:
+                return self.parse_to_message(1116), status.HTTP_400_BAD_REQUEST
 
             # 3.2: 1.
             game_id = msg.get("game_id")
@@ -298,8 +297,8 @@ class CPgames():
 
             # CHECK: if the bet already exist
             # 3.2: 2.
-            if GSoftTransactions.objects.filter(callerId=settings.CP_GAMES_ID, game_id=bet_id).exists():
-                return self.BASE_SUCCESS, status.HTTP_200_OK
+            if GSoftTransactions.objects.filter(callerId=settings.CP_GAMES_ID, user=user, bet_id=bet_id).exists():
+                return self.get_formated_balance(user=user), status.HTTP_200_OK
 
             # CHECK: win_amount is higher or equals to 0
             # 3.2: 7.
@@ -334,6 +333,7 @@ class CPgames():
             user.save()
 
             transaction_obj = GSoftTransactions()
+            transaction_obj.callerId = settings.CP_GAMES_ID
             transaction_obj.user = user
             transaction_obj.withdraw = withdraw
             transaction_obj.deposit = deposit
@@ -341,15 +341,13 @@ class CPgames():
             transaction_obj.transaction_id = transaction_id
             transaction_obj.bet_id = bet_id
             transaction_obj.round_id = round_id
-            transaction_obj.request_type = GSoftTransactions.RequestType.wager
+            transaction_obj.request_type = GSoftTransactions.RequestType.result
             transaction_obj.action_type = action_type
             transaction_obj.amount = abs(transfer_balance)
             transaction_obj.bonus_bet_amount = abs(transfer_bonus)
+            transaction_obj.game_status = GSoftTransactions.GameStatus.completed
             transaction_obj.time = timezone.now()
             transaction_obj.save()
-
-            if user is None:
-                return self.parse_to_message(1116), status.HTTP_400_BAD_REQUEST
 
             return self.get_formated_balance(user=user), status.HTTP_200_OK
         except AttributeError:
@@ -357,6 +355,332 @@ class CPgames():
         except TypeError:
             return self.parse_to_message(1110), status.HTTP_400_BAD_REQUEST
 
+
+    def cancel_in_out(self, data) -> Tuple[Dict, int]:
+        to_verify = data.copy()
+        if not self.verify_request(request=to_verify):
+            # Signature error 1111
+            response_data = self.parse_to_message(1111)
+            return response_data, status.HTTP_401_UNAUTHORIZED
+
+        try:
+            msg = json.loads(data.get("message", "{}"))
+            sub_uid: str = msg.get("sub_uid")
+            user, error = self.select_user_for_update(sub_uid=sub_uid)
+            if error is not None:
+                return error, status.HTTP_400_BAD_REQUEST
+            if user is None:
+                return self.parse_to_message(1116), status.HTTP_400_BAD_REQUEST
+
+
+            # 3.4: 1.
+            game_id = msg.get("game_id")
+            bet_id = msg.get("bet_id")
+
+            # CHECK: if the bet already exist
+            # 3.2: 2.
+            qs = GSoftTransactions.objects.filter(
+                callerId=settings.CP_GAMES_ID,
+                user=user,
+                game_id=bet_id,
+            )
+            if qs.filter(request_type=GSoftTransactions.RequestType.rollback).exists() or not qs.exists():
+                return self.get_formated_balance(user=user), status.HTTP_200_OK
+
+            to_rollback = qs.first()
+
+            # CHECK: win_amount is higher or equals to 0
+            # 3.2: 7.
+            deposit = to_rollback.deposit if to_rollback is not None else Decimal(0)
+            withdraw = to_rollback.withdraw if to_rollback is not None else Decimal(0)
+            if withdraw > 0:
+                multipliyer = 1
+            else:
+                multipliyer = -1
+
+            transfer_bonus: Decimal = to_rollback.amount * multipliyer
+            transfer_balance: Decimal = to_rollback.bonus_bet_amount * multipliyer
+
+
+            user.bonus_balance += transfer_bonus # pyright: ignore
+            user.balance += transfer_balance # pyright: ignore
+            user.save()
+
+            transaction_obj = GSoftTransactions()
+            transaction_obj.callerId = settings.CP_GAMES_ID
+            transaction_obj.user = user
+            transaction_obj.deposit = deposit if deposit != 0 else None
+            transaction_obj.withdraw = withdraw if withdraw != 0 else None
+            transaction_obj.game_id = game_id
+            transaction_obj.transaction_id = to_rollback.transaction_id
+            transaction_obj.bet_id = bet_id
+            transaction_obj.round_id = to_rollback.round_id
+            transaction_obj.request_type = GSoftTransactions.RequestType.rollback
+            transaction_obj.action_type = GSoftTransactions.ActionType.rollback
+            transaction_obj.amount = abs(transfer_balance)
+            transaction_obj.bonus_bet_amount = abs(transfer_bonus)
+            transaction_obj.time = timezone.now()
+            transaction_obj.game_status = GSoftTransactions.GameStatus.completed
+            transaction_obj.save()
+
+            return self.get_formated_balance(user=user), status.HTTP_200_OK
+        except AttributeError:
+            return self.parse_to_message(1110), status.HTTP_400_BAD_REQUEST
+        except TypeError:
+            return self.parse_to_message(1110), status.HTTP_400_BAD_REQUEST
+
+
+    # 3.4: Bet
+    def place_bet(self, data) -> Tuple[Dict, int]:
+        to_verify = data.copy()
+        if not self.verify_request(request=to_verify):
+            # Signature error 1111
+            response_data = self.parse_to_message(1111)
+            return response_data, status.HTTP_401_UNAUTHORIZED
+
+        try:
+            msg = json.loads(data.get("message", "{}"))
+            sub_uid: str = msg.get("sub_uid")
+            user, error = self.select_user_for_update(sub_uid=sub_uid)
+            if error is not None:
+                return error, status.HTTP_400_BAD_REQUEST
+            if user is None:
+                return self.parse_to_message(1116), status.HTTP_400_BAD_REQUEST
+
+
+            # 3.4: 1.
+            game_id = msg.get("game_id")
+            bet_info = msg.get("bet_info")
+            bet_id = bet_info.get("bet_id")
+            transaction_id = bet_info.get("transaction_id", bet_id)
+
+            # 3.4: 2.
+            round_id = bet_info.get("round_id")
+            amount = Decimal(bet_info.get("bet_amout", 0))
+
+            # CHECK: if the bet already exist
+            if GSoftTransactions.objects.filter(callerId=settings.CP_GAMES_ID, user=user, bet_id=bet_id).exists():
+                return self.get_formated_balance(user=user), status.HTTP_200_OK
+
+            # CHECK: win_amount is higher or equals to 0
+            # 3.2: 7.
+            balance = cast(Decimal, user.balance) if user.balance else Decimal(0)
+            bonus_balance = cast(Decimal, user.bonus_balance) if user.bonus_balance else Decimal(0)
+            total_balance: Decimal = balance + bonus_balance
+
+            # Check if user  has enought money to bet
+            if total_balance < amount:
+                response_data = self.parse_to_message(1117)
+                return response_data, status.HTTP_400_BAD_REQUEST
+
+            transfer_bonus: Decimal = - min(abs(amount), bonus_balance)
+            transfer_balance = - (abs(amount) + transfer_bonus)
+            withdraw = abs(amount)
+
+            user.bonus_balance += transfer_bonus # pyright: ignore
+            user.balance += transfer_balance # pyright: ignore
+            user.save()
+
+            transaction_obj = GSoftTransactions()
+            transaction_obj.callerId = settings.CP_GAMES_ID
+            transaction_obj.user = user
+            transaction_obj.withdraw = withdraw
+            transaction_obj.game_id = game_id
+            transaction_obj.transaction_id = transaction_id
+            transaction_obj.bet_id = bet_id
+            transaction_obj.round_id = round_id
+            transaction_obj.request_type = GSoftTransactions.RequestType.wager
+            transaction_obj.action_type = GSoftTransactions.ActionType.bet
+            transaction_obj.amount = abs(transfer_balance)
+            transaction_obj.bonus_bet_amount = abs(transfer_bonus)
+            transaction_obj.time = timezone.now()
+            transaction_obj.game_status = GSoftTransactions.GameStatus.pending
+            transaction_obj.save()
+
+            return self.get_formated_balance(user=user), status.HTTP_200_OK
+        except AttributeError:
+            return self.parse_to_message(1110), status.HTTP_400_BAD_REQUEST
+        except TypeError:
+            return self.parse_to_message(1110), status.HTTP_400_BAD_REQUEST
+
+
+    def cancel_bet(self, data) -> Tuple[Dict, int]:
+        to_verify = data.copy()
+        if not self.verify_request(request=to_verify):
+            # Signature error 1111
+            response_data = self.parse_to_message(1111)
+            return response_data, status.HTTP_401_UNAUTHORIZED
+
+        try:
+            msg = json.loads(data.get("message", "{}"))
+            sub_uid: str = msg.get("sub_uid")
+            user, error = self.select_user_for_update(sub_uid=sub_uid)
+            if error is not None:
+                return error, status.HTTP_400_BAD_REQUEST
+            if user is None:
+                return self.parse_to_message(1116), status.HTTP_400_BAD_REQUEST
+
+
+            # 3.4: 1.
+            game_id = msg.get("game_id")
+            bet_info = msg.get("bet_info")
+            bet_id = bet_info.get("bet_id")
+            transaction_id = bet_info.get("transaction_id", bet_id)
+
+            # 3.2: 4.
+            round_id = bet_info.get("round_id")
+
+            # CHECK: if the bet already exist
+            # 3.2: 2.
+            qs = GSoftTransactions.objects.filter(
+                callerId=settings.CP_GAMES_ID,
+                user=user,
+                bet_id=bet_id,
+            )
+            if qs.filter(request_type=GSoftTransactions.RequestType.rollback).exists() or not qs.exists():
+                return self.get_formated_balance(user=user), status.HTTP_200_OK
+
+            to_rollback = qs.first()
+
+            # CHECK: win_amount is higher or equals to 0
+            # 3.2: 7.
+            deposit = to_rollback.deposit if to_rollback is not None else Decimal(0)
+            withdraw = to_rollback.withdraw if to_rollback is not None else Decimal(0)
+            if withdraw > 0:
+                multipliyer = 1
+            else:
+                multipliyer = -1
+
+            transfer_bonus: Decimal = to_rollback.amount * multipliyer
+            transfer_balance: Decimal = to_rollback.bonus_bet_amount * multipliyer
+
+
+            user.bonus_balance += transfer_bonus # pyright: ignore
+            user.balance += transfer_balance # pyright: ignore
+            user.save()
+            to_rollback.game_status = GSoftTransactions.GameStatus.completed
+
+            transaction_obj = GSoftTransactions()
+            transaction_obj.callerId = settings.CP_GAMES_ID
+            transaction_obj.user = user
+            transaction_obj.deposit = deposit if deposit != 0 else None
+            transaction_obj.withdraw = withdraw if withdraw != 0 else None
+            transaction_obj.game_id = game_id
+            transaction_obj.transaction_id = transaction_id
+            transaction_obj.bet_id = bet_id
+            transaction_obj.round_id = round_id
+            transaction_obj.request_type = GSoftTransactions.RequestType.rollback
+            transaction_obj.action_type = GSoftTransactions.ActionType.rollback
+            transaction_obj.amount = abs(transfer_balance)
+            transaction_obj.bonus_bet_amount = abs(transfer_bonus)
+            transaction_obj.game_status = GSoftTransactions.GameStatus.completed
+            transaction_obj.time = timezone.now()
+            transaction_obj.save()
+
+            return self.get_formated_balance(user=user), status.HTTP_200_OK
+        except AttributeError:
+            return self.parse_to_message(1110), status.HTTP_400_BAD_REQUEST
+        except TypeError:
+            return self.parse_to_message(1110), status.HTTP_400_BAD_REQUEST
+
+
+    def settle(self, data) -> Tuple[Dict, int]:
+        to_verify = data.copy()
+        if not self.verify_request(request=to_verify):
+            # Signature error 1111
+            response_data = self.parse_to_message(1111)
+            return response_data, status.HTTP_401_UNAUTHORIZED
+
+        try:
+            msg = json.loads(data.get("message", "{}"))
+            sub_uid: str = msg.get("sub_uid")
+            user, error = self.select_user_for_update(sub_uid=sub_uid)
+            if error is not None:
+                return error, status.HTTP_400_BAD_REQUEST
+            if user is None:
+                return self.parse_to_message(1116), status.HTTP_400_BAD_REQUEST
+
+            # 3.4: 1.
+            game_id = msg.get("game_id")
+            bet_info = json.loads(msg.get("bet_info", "{}"))
+            bet_id = bet_info.get("bet_id")
+            round_id = bet_info.get("round_id")
+            transaction_id = bet_info.get("transaction_id")
+            settle_type = bet_info.get("settle_type")
+
+            bet_amount = Decimal(bet_info.get("bet_amount", 0))
+            payout = Decimal(bet_info.get("win_amount", 0))
+
+            # CHECK: if the bet already exist
+            # 3.2: 2.
+            case_a = settle_type == bet_id and settle_type is not None
+            case_b = settle_type == round_id and settle_type is not None
+
+            qs = GSoftTransactions.objects.filter(
+                callerId=settings.CP_GAMES_ID,
+                user=user,
+                bet_id=bet_id,
+            )
+            if qs.exists():
+                return self.get_formated_balance(user=user), status.HTTP_200_OK
+
+            # CHECK: win_amount is higher or equals to 0
+            # 3.2: 7.
+
+            all_games = qs
+            if case_a:
+                # bet amount
+                all_games = qs.values_list("deposit", "withdraw", "amount", "bonus_bet_amount")
+
+            elif case_b:
+                all_games = GSoftTransactions.objects.filter(
+                    callerId=settings.CP_GAMES_ID,
+                    round_id=round_id
+                )
+                all_games.update(game_status=GSoftTransactions.GameStatus.completed)
+                all_games = qs.values_list("deposit", "withdraw", "amount", "bonus_bet_amount")
+
+            if payout < 0:
+                return self.parse_to_message(1110), status.HTTP_400_BAD_REQUEST
+
+            given_from_bonus = Decimal(0)
+            given_from_balance = Decimal(0)
+            for item in all_games:
+                if item[0] is not None and item[0] > 0:
+                    given_from_bonus -= item[3]
+                    given_from_balance -= item[2]
+                elif item[1] is not None and item[1] > 0:
+                    given_from_bonus += item[3]
+                    given_from_balance += item[2]
+
+            transfer_bonus = min(given_from_bonus, payout)
+            transfer_balance = payout - transfer_bonus
+
+
+            user.bonus_balance += transfer_bonus # pyright: ignore
+            user.balance += transfer_balance # pyright: ignore
+            user.save()
+
+            transaction_obj = GSoftTransactions()
+            transaction_obj.callerId = settings.CP_GAMES_ID
+            transaction_obj.user = user
+            transaction_obj.deposit = payout if payout != 0 else None
+            transaction_obj.game_id = game_id
+            transaction_obj.transaction_id = transaction_id
+            transaction_obj.bet_id = bet_id
+            transaction_obj.round_id = round_id
+            transaction_obj.request_type = GSoftTransactions.RequestType.result
+            transaction_obj.action_type = GSoftTransactions.ActionType.rollback
+            transaction_obj.amount = abs(transfer_balance)
+            transaction_obj.bonus_bet_amount = abs(transfer_bonus)
+            transaction_obj.time = timezone.now()
+            transaction_obj.save()
+
+            return self.get_formated_balance(user=user), status.HTTP_200_OK
+        except AttributeError:
+            return self.parse_to_message(1110), status.HTTP_400_BAD_REQUEST
+        except TypeError:
+            return self.parse_to_message(1110), status.HTTP_400_BAD_REQUEST
 
 
     def save_request(self, request, is_response=False):

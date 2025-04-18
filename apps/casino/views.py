@@ -1336,7 +1336,43 @@ class CPGamesPlacingSettingBetsApiView(APIView):
     def post(self, request) -> Response:
         cp = CPgames()
         cp.save_request(request)
-        data, status = cp.transfer_in_out(request=request)
+        data, status = cp.transfer_in_out(data=request.data)
+        cp.save_request(request=data, is_response=True)
+        return Response(data=data, status=status)
+
+class CPGamesCancelInOutApiView(APIView):
+    @transaction.atomic
+    def post(self, request) -> Response:
+        cp = CPgames()
+        cp.save_request(request)
+        data, status = cp.cancel_in_out(data=request.data)
+        cp.save_request(request=data, is_response=True)
+        return Response(data=data, status=status)
+
+class CPGamesBetApiView(APIView):
+    @transaction.atomic
+    def post(self, request) -> Response:
+        cp = CPgames()
+        cp.save_request(request)
+        data, status = cp.place_bet(data=request.data)
+        cp.save_request(request=data, is_response=True)
+        return Response(data=data, status=status)
+
+class CPGamesCancelBetApiView(APIView):
+    @transaction.atomic
+    def post(self, request) -> Response:
+        cp = CPgames()
+        cp.save_request(request)
+        data, status = cp.cancel_bet(data=request.data)
+        cp.save_request(request=data, is_response=True)
+        return Response(data=data, status=status)
+
+class CPGamesSettleBetApiView(APIView):
+    @transaction.atomic
+    def post(self, request) -> Response:
+        cp = CPgames()
+        cp.save_request(request)
+        data, status = cp.settle(data=request.data)
         cp.save_request(request=data, is_response=True)
         return Response(data=data, status=status)
 
