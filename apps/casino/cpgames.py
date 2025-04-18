@@ -614,7 +614,7 @@ class CPgames():
 
             # 3.4: 1.
             game_id = msg.get("game_id")
-            bet_info = json.loads(msg.get("bet_info", "{}"))
+            bet_info = msg.get("bet_info", "{}")
             bet_id = bet_info.get("bet_id")
             round_id = bet_info.get("round_id")
             transaction_id = bet_info.get("transaction_id")
