@@ -285,6 +285,7 @@ class CPgames():
                 return error, status.HTTP_400_BAD_REQUEST
 
             # 3.2: 1.
+            game_id = msg.get("game_id")
             bet_info = msg.get("bet_info")
             bet_id = bet_info.get("bet_id")
             transaction_id = bet_info.get("transaction_id", bet_id)
@@ -333,8 +334,10 @@ class CPgames():
             user.save()
 
             transaction_obj = GSoftTransactions()
+            transaction_obj.user = user
             transaction_obj.withdraw = withdraw
             transaction_obj.deposit = deposit
+            transaction_obj.game_id = game_id
             transaction_obj.transaction_id = transaction_id
             transaction_obj.bet_id = bet_id
             transaction_obj.round_id = round_id
