@@ -405,6 +405,7 @@ CASINO_25_URL = get_env_var("CASINO_25_URL", "")
 CASINO_25_IMAGE_URL = get_env_var("CASINO_25_IMAGE_URL", "")
 CASINO_25_SSLKEY_PATH = get_env_var("CASINO_25_SSLKEY_PATH", "")
 
+
 CP_GAMES_ID = get_env_var("CP_GAMES_ID")
 CP_GAMES_URL = get_env_var("CP_GAMES_URL")
 CP_GAMES_APP_ID = get_env_var("CP_GAMES_APP_ID")

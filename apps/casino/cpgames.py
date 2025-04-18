@@ -1,11 +1,14 @@
 import json
 import time
 import requests
-from typing import Optional, Dict, List, Union
+from rest_framework import status
+from typing import Optional, Dict, List, Union, Tuple, cast
+from decimal import Decimal
 from hashlib import md5, sha1
 from django.conf import settings
 
 from apps.users.models import Users
+from apps.casino.models import GSoftTransactions
 
 class CPgames():
 
@@ -120,6 +123,40 @@ class CPgames():
         }
 
 
+    def select_user_for_update(self, sub_uid: str) -> Tuple[Optional[Users], Optional[Dict[str, str]]]:
+        """
+        This returns Tuple[Users,  dict(with error)], you can identify its an error if error is not None
+        """
+
+        # CHECK: user exist
+        if not sub_uid:
+            # sub_uid is Empty
+            return None, self.parse_to_message(1004)
+        if not sub_uid.endswith(settings.ENV_POSTFIX):
+            # 1116 player does not exist
+            return None, self.parse_to_message(1116)
+
+        user_id = sub_uid[:-len(settings.ENV_POSTFIX)]
+
+        user = Users.objects.select_for_update().filter(id=user_id).first()
+        if not user:
+            # 1116 player does not exist
+            return None, self.parse_to_message(1116)
+
+        return user, None
+
+
+    def get_formated_balance(self, user: Users) -> Dict[str, Union[str, Dict[str, Union[str, int]]]]:
+        return {
+            **self.BASE_SUCCESS,
+            "data" : {
+                "balance" : str(round(user.balance + user.bonus_balance, 2)),
+                "currency" : "USD",
+                "updated_ms" : int(time.time() * 1000)
+            }
+        }
+
+
     def login_user(self, user: Users) -> bool:
         params: dict[str, Union[str, int]] = self.get_base_params()
 
@@ -230,6 +267,89 @@ class CPgames():
 
     def place_bet(self):
         return self.BASE_SUCCESS
+
+
+    def transfer_in_out(self, request) -> Tuple[Dict, int]:
+        data = request.data.copy()
+        if not self.verify_request(request=data):
+            # Signature error 1111
+            response_data = self.parse_to_message(1111)
+            return response_data, status.HTTP_401_UNAUTHORIZED
+
+        try:
+            msg = request.data.get("message", {})
+            sub_uid: str = msg.get("sub_uid")
+            user, error = self.select_user_for_update(sub_uid=sub_uid)
+            if error is not None and user is None:
+                return error, status.HTTP_400_BAD_REQUEST
+
+            # 3.2: 1.
+            bet_info = msg.get("bet_info")
+            bet_id = msg.get("bet_id")
+            # 3.2: 4.
+            round_id = bet_info.get("parent_bet_id")
+            amount = Decimal(bet_info.get("bet_amout", 0))
+            win_amount = Decimal(bet_info.get("win_amount", 0))
+            transfer_amount = Decimal(bet_info.get("transfer_amount", 0))
+
+            # CHECK: if the bet already exist
+            # 3.2: 2.
+            if GSoftTransactions.objects.filter(callerId=settings.CP_GAMES_ID, game_id=bet_id).exists():
+                return self.BASE_SUCCESS, status.HTTP_200_OK
+
+            # CHECK: win_amount is higher or equals to 0
+            # 3.2: 7.
+            if win_amount < 0:
+                return self.parse_to_message(1110), status.HTTP_400_BAD_REQUEST
+
+            balance = cast(Decimal, user.balance) if user.balance else Decimal(0)
+            bonus_balance = cast(Decimal, user.bonus_balance) if user.bonus_balance else Decimal(0)
+            total_balance: Decimal = balance + bonus_balance
+
+            # Check if user  has enought money to bet
+            if total_balance < amount:
+                response_data = self.parse_to_message(1117)
+                return response_data, status.HTTP_400_BAD_REQUEST
+
+            transfer_bonus = Decimal(0)
+            withdraw = 0
+            deposit = 0
+
+            if transfer_amount < 0:
+                action_type = GSoftTransactions.ActionType.lose
+                transfer_bonus: Decimal = - min(abs(transfer_amount), bonus_balance)
+                transfer_balance = - (abs(transfer_amount) + transfer_bonus)
+                withdraw = abs(transfer_amount)
+            else:
+                deposit = transfer_amount
+                action_type = GSoftTransactions.ActionType.win
+                transfer_balance = transfer_amount
+
+            user.bonus_balance += transfer_bonus # pyright: ignore
+            user.balance += transfer_balance # pyright: ignore
+            user.save()
+
+            transaction_obj = GSoftTransactions()
+            transaction_obj.withdraw = withdraw
+            transaction_obj.deposit = deposit
+            transaction_obj.transaction_id = bet_id
+            transaction_obj.round_id = round_id
+            transaction_obj.request_type = GSoftTransactions.RequestType.wager
+            transaction_obj.action_type = action_type
+            transaction_obj.amount = abs(transfer_balance)
+            transaction_obj.bonus_bet_amount = abs(transfer_bonus)
+            transaction_obj.time = timezone.now()
+            transaction_obj.save()
+
+            if user is None:
+                return self.parse_to_message(1116), status.HTTP_400_BAD_REQUEST
+
+            return self.get_formated_balance(user=user), status.HTTP_200_OK
+        except AttributeError:
+            return self.parse_to_message(1110), status.HTTP_400_BAD_REQUEST
+        except TypeError:
+            return self.parse_to_message(1110), status.HTTP_400_BAD_REQUEST
+
 
 
     def save_request(self, request, is_response=False):

@@ -1,6 +1,7 @@
 import pytz
 from dateutil.parser import parse
 import json
+from typing import cast
 from decimal import Decimal
 from rest_framework.permissions import IsAuthenticated
 import traceback
@@ -23,7 +24,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from apps.casino.custom_pagination import CustomPagination
 from apps.casino.models import (CasinoGameList, CasinoHeaderCategory, CasinoManagement, PlayerFavouriteCasinoGames, Providers,
-    Tournament, TournamentTransaction, UserTournament)
+    Tournament, TournamentTransaction, UserTournament, GSoftTransactions)
 from apps.core.pagination import PageNumberPagination
 from apps.core.permissions import *
 from apps.users.models import (FortunePandasGameList, FortunePandasGameManagement, OffMarketGames,
@@ -1331,15 +1332,13 @@ class CPGamesQueryBalanceApiView(APIView):
 
 
 class CPGamesPlacingSettingBetsApiView(APIView):
+    @transaction.atomic
     def post(self, request) -> Response:
         data = request.data.copy()
         cp = CPgames()
-        if not cp.verify_request(request=data):
-            # Signature error 1111
-            response_data = cp.parse_to_message(1111)
-            return Response(data=response_data, status=status.HTTP_200_OK)
-
-        return Response(data={}, status=status.HTTP_200_OK)
-
+        cp.save_request(request)
+        data, status = cp.transfer_in_out(request=request)
+        cp.save_request(request=data, is_response=True)
+        return Response(data=data, status=status)
 
 
