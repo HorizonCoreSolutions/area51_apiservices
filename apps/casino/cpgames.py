@@ -733,8 +733,15 @@ class CPgames():
         url = self.get_game_url(user=user, game_id=game_id, lang=lang)
 
         response = {
-            "SessionId" : "",
-            "SessionUrl" : url
+            "success": True,
+            "url": {
+                "jsonrpc": "2.0",
+                "id": 1008,
+                "result":{
+                    "SessionId": "",
+                    "SessionUrl": url
+                }
+            }
         }
 
         if response and result:
