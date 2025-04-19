@@ -482,7 +482,7 @@ class CPgames():
             withdraw = abs(amount)
 
             user.bonus_balance = transfer_bonus + Decimal(user.bonus_balance)
-            user.balance = transfer_balance + Deciaml(user.balance)
+            user.balance = transfer_balance + Decimal(user.balance)
             user.save()
 
             transaction_obj = GSoftTransactions()
