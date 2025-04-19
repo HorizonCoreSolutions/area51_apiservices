@@ -19,6 +19,29 @@ class Command(BaseCommand):
     # name_en
     # game_id
     # type
+    change_to_stable = {
+        "SLOTS" : "Slots",
+        "Mini Games" : "Mini Games",
+    }
+    DEMO_GAMES = [
+        "1_16",
+        "1_32",
+        "1_41",
+        "1_53",
+        "1_55",
+        "1_60",
+        "2_1700026",
+        "2_1700029",
+        "2_1700031",
+        "2_1700047",
+        "2_1700049",
+        "2_1700051",
+        "2_1700053",
+        "2_1700054",
+        "2_1700058",
+        "2_1700067",
+        "2_1700071"
+    ]
 
 
     def handle(self, *args, **kwargs):
@@ -29,18 +52,21 @@ class Command(BaseCommand):
         for game in self.games:
             if not game:
                 continue
-            obj, created = CasinoGameList.objects.update_or_create(
+            obj, _ = CasinoGameList.objects.update_or_create(
                 game_id=game.get("game_id"),
                 defaults={
                     "game_name" : game.get("name_en"),
-                    "section_id" : "CPGames",
-                    "vendor_name" : "CPgames"
+                    "section_id" : "cpgames",
+                    "vendor_name" : "CPgames",
+                    "game_category" : self.change_to_stable.get(game.get("type", "SLOTS"), "Slots"),
+                    "is_mobile_supported" : True,
+                    "is_desktop_supported" : True,
+                    "is_free_round_supported" : game.get("game_id") in self.DEMO_GAMES
                 }
             )
-
-            if created:
-                pass
-
+            self.update_or_create_casino_management(obj)
+            obj.save()
+            self.update_or_create_casino_categories()
 
     def update_or_create_casino_management(self, game):
         users = Users.objects.filter(role="admin")
