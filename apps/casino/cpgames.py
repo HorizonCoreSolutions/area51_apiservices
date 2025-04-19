@@ -328,8 +328,8 @@ class CPgames():
                 action_type = GSoftTransactions.ActionType.win
                 transfer_balance = transfer_amount
 
-            user.bonus_balance += transfer_bonus # pyright: ignore
-            user.balance += transfer_balance # pyright: ignore
+            user.bonus_balance = transfer_bonus + Decimal(user.bonus_balance)
+            user.balance = transfer_balance + Decimal(user.balance)
             user.save()
 
             transaction_obj = GSoftTransactions()
@@ -406,8 +406,8 @@ class CPgames():
             transfer_balance: Decimal = to_rollback.bonus_bet_amount * multipliyer
 
 
-            user.bonus_balance += transfer_bonus # pyright: ignore
-            user.balance += transfer_balance # pyright: ignore
+            user.bonus_balance = transfer_bonus + Decimal(user.bonus_balance)
+            user.balance = transfer_balance + Decimal(user.balance)
             user.save()
 
             transaction_obj = GSoftTransactions()
@@ -481,8 +481,8 @@ class CPgames():
             transfer_balance = - (abs(amount) + transfer_bonus)
             withdraw = abs(amount)
 
-            user.bonus_balance += transfer_bonus # pyright: ignore
-            user.balance += transfer_balance # pyright: ignore
+            user.bonus_balance = transfer_bonus + Decimal(user.bonus_balance)
+            user.balance = transfer_balance + Deciaml(user.balance)
             user.save()
 
             transaction_obj = GSoftTransactions()
@@ -559,12 +559,12 @@ class CPgames():
             else:
                 multipliyer = -1
 
-            transfer_bonus: Decimal = to_rollback.amount * multipliyer
-            transfer_balance: Decimal = to_rollback.bonus_bet_amount * multipliyer
+            transfer_bonus: Decimal = Decimal(to_rollback.amount * multipliyer)
+            transfer_balance: Decimal = Decimal(to_rollback.bonus_bet_amount * multipliyer)
 
 
-            user.bonus_balance += transfer_bonus # pyright: ignore
-            user.balance += transfer_balance # pyright: ignore
+            user.bonus_balance = transfer_bonus + Decimal(user.bonus_balance)
+            user.balance = transfer_balance + Decimal(user.balance)
             user.save()
             to_rollback.game_status = GSoftTransactions.GameStatus.completed
 
@@ -626,12 +626,13 @@ class CPgames():
             # CHECK: if the bet already exist
             # 3.2: 2.
             case_a = settle_type == "bet_id"
-            case_b = settle_type == round_id and settle_type is not None
+            case_b = settle_type == "round_id"
 
             qs = GSoftTransactions.objects.filter(
                 callerId=settings.CP_GAMES_ID,
                 user=user,
                 bet_id=bet_id,
+                game_status=GSoftTransactions.GameStatus.completed,
             )
             if qs.exists():
                 return self.get_formated_balance(user=user), status.HTTP_200_OK
@@ -665,12 +666,15 @@ class CPgames():
                     given_from_bonus += Decimal(item[3])
                     given_from_balance += Decimal(item[2])
 
-            transfer_bonus = min(given_from_bonus, payout)
+            if given_from_bonus > 0:
+                transfer_bonus = min(given_from_bonus, payout)
+            else:
+                transfer_bonus = Decimal(0)
             transfer_balance = payout - transfer_bonus
 
 
-            user.bonus_balance += transfer_bonus # pyright: ignore
-            user.balance += transfer_balance # pyright: ignore
+            user.bonus_balance = transfer_bonus + Decimal(user.bonus_balance)
+            user.balance = transfer_balance + Decimal(user.balance)
             user.save()
 
             transaction_obj = GSoftTransactions()
@@ -686,6 +690,7 @@ class CPgames():
             transaction_obj.amount = abs(transfer_balance)
             transaction_obj.bonus_bet_amount = abs(transfer_bonus)
             transaction_obj.time = timezone.now()
+            transaction_obj.game_status = GSoftTransactions.GameStatus.completed
             transaction_obj.save()
 
             return self.get_formated_balance(user=user), status.HTTP_200_OK
