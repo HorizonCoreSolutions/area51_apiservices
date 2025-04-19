@@ -860,9 +860,10 @@ class Casino25APIView(APIView):
             request_type = request.data.get("method")
             tournament_id = request.data.get("tournament_id")
             user_tournament = None
+            game_id = request.data.get("game_id")
+
 
             if tournament_id:
-                game_id = request.data.get("game_id")
                 tournament = Tournament.objects.filter(id=tournament_id).first()
                 user_tournament = UserTournament.objects.filter(user=self.request.user, tournament=tournament).first()
                 if not tournament:
@@ -876,7 +877,11 @@ class Casino25APIView(APIView):
 
             casino = Casino25(user=self.request.user, tournament_id=tournament_id, user_tournament=user_tournament, debug=True, request_data=request.data)
             if request_type == "startgame":
-                success, response = casino.start_game()
+                if CasinoGameList.objects.filter(game_id=game_id, vendor_name="CPgames").exists():
+                    cp = CPgames()
+                    success, response = cp.start_game(request.data)
+                else:
+                    success, response = casino.start_game()
             else:
                 return JsonResponse({"success" : False, "message" : "Please provide valid request method name"}, status=status.HTTP_400_BAD_REQUEST)
             status_code = status.HTTP_200_OK if success else status.HTTP_400_BAD_REQUEST

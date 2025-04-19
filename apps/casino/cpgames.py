@@ -3,7 +3,6 @@ import time
 import requests
 from rest_framework import status
 from django.utils import timezone
-from django.db.models import Q
 from typing import Optional, Dict, List, Union, Tuple, cast
 from decimal import Decimal
 from hashlib import md5, sha1
@@ -719,6 +718,29 @@ class CPgames():
 
         with open(file, 'a') as f:
             f.write(entry)
+
+    def start_game(self, request_param):
+        game_id = request_param.get("game_id")
+        lang = request_param.get("lang", "en")
+        account_id = request_param.get("account_id")
+
+        user = Users.objects.filter(casino_account_id=account_id).first()
+        if not user:
+            return False, {"success": False, "message": "User with given account_id not found"}
+        result = self.login_user(user)
+
+        lang = lang if lang in self.availables_languages else "en"
+        url = self.get_game_url(user=user, game_id=game_id, lang=lang)
+
+        response = {
+            "SessionId" : "",
+            "SessionUrl" : url
+        }
+
+        if response and result:
+            return True, response
+        else:
+            return False, {"success": False, "message": "Game is unavailable, plese try again in a few minutes."}
 
 
     @classmethod

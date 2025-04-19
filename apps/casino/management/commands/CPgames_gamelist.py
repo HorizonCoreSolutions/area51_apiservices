@@ -56,7 +56,7 @@ class Command(BaseCommand):
                 game_id=game.get("game_id"),
                 defaults={
                     "game_name" : game.get("name_en"),
-                    "section_id" : "cpgames",
+                    "section_id" : "CPgames",
                     "vendor_name" : "CPgames",
                     "game_category" : self.change_to_stable.get(game.get("type", "SLOTS"), "Slots"),
                     "is_mobile_supported" : True,
