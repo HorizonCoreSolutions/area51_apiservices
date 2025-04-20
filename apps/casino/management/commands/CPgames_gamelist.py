@@ -57,7 +57,7 @@ class Command(BaseCommand):
                 continue
             game_id = game.get("game_id")
             game_cat = self.change_to_stable.get(game.get("type", "SLOTS"), "Slots")
-            print(f"Game saved: {game.get("name_en")}\nType: {game_cat}\nID: {game_id}")
+            print(f"Game saved: {game.get('name_en')}\nType: {game_cat}\nID: {game_id}")
 
             obj, created = CasinoGameList.objects.update_or_create(
                 game_id=game_id,
