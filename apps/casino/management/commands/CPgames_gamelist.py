@@ -2,8 +2,10 @@ import json
 import time
 import requests
 
-from django.conf import settings
 from django.db.models import Q
+from datetime import timedelta
+from django.conf import settings
+from django.utils import timezone
 from django.core.management.base import BaseCommand
 
 from apps.casino.cpgames import CPgames
@@ -49,24 +51,33 @@ class Command(BaseCommand):
             print("No games where given by the api")
             return
         print(f"TOTAL GAMES: {len(self.games)}")
+        casino_game_ids = []
         for game in self.games:
             if not game:
                 continue
-            obj, _ = CasinoGameList.objects.update_or_create(
-                game_id=game.get("game_id"),
+            game_id = game.get("game_id")
+            game_cat = self.change_to_stable.get(game.get("type", "SLOTS"), "Slots")
+            print(f"Game saved: {game.get("name_en")}\nType: {game_cat}\nID: {game_id}")
+
+            obj, created = CasinoGameList.objects.update_or_create(
+                game_id=game_id,
                 defaults={
                     "game_name" : game.get("name_en"),
                     "section_id" : "CPgames",
                     "vendor_name" : "CPgames",
-                    "game_category" : self.change_to_stable.get(game.get("type", "SLOTS"), "Slots"),
+                    "game_category" : game_cat,
                     "is_mobile_supported" : True,
                     "is_desktop_supported" : True,
-                    "is_free_round_supported" : game.get("game_id") in self.DEMO_GAMES
+                    "is_free_round_supported" : game_id in self.DEMO_GAMES
                 }
             )
+            if created:
+                obj.created = timezone.now() - timedelta(days=4)
             self.update_or_create_casino_management(obj)
             obj.save()
             self.update_or_create_casino_categories()
+
+        CasinoGameList.objects.filter( Q(vendor_name="CPgames") & ~Q(game_id__in=casino_game_ids)).delete()
 
     def update_or_create_casino_management(self, game):
         users = Users.objects.filter(role="admin")
