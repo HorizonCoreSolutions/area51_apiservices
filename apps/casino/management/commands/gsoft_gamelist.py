@@ -5,6 +5,7 @@ from django.core.management.base import BaseCommand
 from apps.casino.models import CasinoGameList, CasinoManagement, Providers
 from apps.users.models import Users
 from requests.auth import HTTPBasicAuth
+from django.db.models import Q
 from django.http.response import HttpResponse
 import time
 from api_services.settings.base import (

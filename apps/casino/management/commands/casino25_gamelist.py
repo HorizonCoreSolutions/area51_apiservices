@@ -75,7 +75,7 @@ class Command(BaseCommand):
                         casino_game_ids.append(game.get("Id"))
                         
                         print(f"GAME {game.get('Name')} saved!!!")
-                    CasinoGameList.objects.filter(~Q(game_id__in=casino_game_ids)).delete()
+                    CasinoGameList.objects.filter(~Q(vendor_name="CPgames") & ~Q(game_id__in=casino_game_ids)).delete()
                     self.update_or_create_casino_categories()
                 else:
                     print("No response from casino25 gamelist")
