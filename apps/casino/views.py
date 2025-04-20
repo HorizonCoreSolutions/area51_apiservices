@@ -881,7 +881,7 @@ class Casino25APIView(APIView):
                     cp = CPgames()
                     success, response = cp.start_game(request.data)
                 else:
-                success, response = casino.start_game()
+                    success, response = casino.start_game()
             else:
                 return JsonResponse({"success" : False, "message" : "Please provide valid request method name"}, status=status.HTTP_400_BAD_REQUEST)
             status_code = status.HTTP_200_OK if success else status.HTTP_400_BAD_REQUEST
