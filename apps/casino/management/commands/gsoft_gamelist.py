@@ -41,7 +41,7 @@ class Command(BaseCommand):
                     if resp.status_code == 200:
                         casino_games = json.loads(resp.text)
                         print(F"TOTAL GAMES = {len(casino_games)}")
-                        CasinoGameList.objects.all().delete()
+                        CasinoGameList.objects.filter(~Q(vendor_name="CPgames")).delete()
                         for game in casino_games:
                             is_support_jackpot = game.get('supportJackpot', "No")
                             gsoft_casino_games={

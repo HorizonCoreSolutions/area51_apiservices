@@ -16,7 +16,7 @@ from django.http import JsonResponse
 from django.db.models import Count
 from django.db import transaction
 from django.utils import timezone
-from django.db.models import F, Window
+from django.db.models import F, Window, Q
 from django.db.models.functions import RowNumber
 
 from rest_framework import status
@@ -69,7 +69,7 @@ class GameList(APIView):
                     if game_list.get("items"):
                         print(game_list.get("items"))
                         live_casino_games = game_list.get("items")
-                    CasinoGameList.objects.all().delete()
+                    CasinoGameList.objects.filter(~Q(vendor_name="CPgames")).delete()
                     CasinoGameList.objects.create(game_list=live_casino_games)
                 else:
                     return HttpResponse(json.dumps(resp.json()), status=resp.status_code)
@@ -881,7 +881,7 @@ class Casino25APIView(APIView):
                     cp = CPgames()
                     success, response = cp.start_game(request.data)
                 else:
-                    success, response = casino.start_game()
+                success, response = casino.start_game()
             else:
                 return JsonResponse({"success" : False, "message" : "Please provide valid request method name"}, status=status.HTTP_400_BAD_REQUEST)
             status_code = status.HTTP_200_OK if success else status.HTTP_400_BAD_REQUEST

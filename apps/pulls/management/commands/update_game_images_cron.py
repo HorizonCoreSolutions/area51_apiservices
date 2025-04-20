@@ -3,6 +3,7 @@ import requests
 import time
 from django.core.management.base import BaseCommand
 from django.conf import settings
+from django.db.models import Q
 from apps.casino.models import GameImages, CasinoGameList
 from apps.users.models import Users
 
@@ -41,7 +42,7 @@ class Command(BaseCommand):
                     live_casino_games["virtual"] = virtual
                     live_casino_games["live_casino"] = live_casino
                     print("Updated Game List", live_casino_games)
-                    CasinoGameList.objects.all().delete()
+                    CasinoGameList.objects.filter(~Q(vendor_name="CPgames")).delete()
                     CasinoGameList.objects.create(game_list=live_casino_games)
                 print('Waiting for 12 hours')
                 time.sleep(43200)
