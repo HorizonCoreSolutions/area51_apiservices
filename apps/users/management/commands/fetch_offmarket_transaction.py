@@ -42,7 +42,7 @@ class Command(BaseCommand):
                                     transaction.save()
                                 elif trx_status == 'Failed':
                                     user = transaction.user
-                                    user.balance = user.balance + Decimal(transaction.amount)
+                                    user.balance = user.balance + (Decimal(transaction.amount) - Decimal(transaction.bonus))
                                     user.save()
                                     refund_transactions(transaction.id)
                                     transaction.status = 'Failed'
