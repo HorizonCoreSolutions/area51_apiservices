@@ -1842,6 +1842,7 @@ class OffMarketDepositView(APIView):
         try:
             user = Users.objects.filter(id=request.user.id).first()
             amount = request.data.get('amount')
+            promo_code = request.data.get(promo_code)
             if user.balance < Decimal(amount):
                     return Response({"message": "Insufficient Funds"}, status.HTTP_400_BAD_REQUEST)
             amount = Decimal(amount)
@@ -1867,6 +1868,14 @@ class OffMarketDepositView(APIView):
                 "customer_username": user_game.username,
             }
 
+            if promo_code is not None:
+                print('promo_code', promo_code)
+                request_payload = {
+                    **request_payload,
+                    "promo_code" : promo_code,
+                    "username" : "Area51 player user"
+                }
+
             headers = {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
@@ -1889,8 +1898,9 @@ class OffMarketDepositView(APIView):
                 deposit.bonus = bonus_amount
                 deposit.save()
                 return Response({"message": "Request Submitted Successfully"}, status.HTTP_200_OK)
-            else:
-                return Response({"message": "Request Not Processed"}, status.HTTP_400_BAD_REQUEST)
+            # TODO: remove this testing
+            print("locate_me_faster: " + response.json().get("message"))
+            return Response({"message": "Request Not Processed"}, status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             print(e)
             return Response({"message": "Something Went Wrong"}, status.HTTP_500_INTERNAL_SERVER_ERROR)
