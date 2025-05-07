@@ -6240,6 +6240,40 @@ class DeletePage(CheckRolesMixin, views.JSONResponseMixin,
             )
 
 
+class TogglePage(CheckRolesMixin, views.JSONResponseMixin,
+                                 views.AjaxResponseMixin, View):
+    allowed_roles = ("admin",)
+
+    # def handle_no_permission(self):
+    #     return HttpResponseRedirect(settings.LOGIN_URL)
+
+    def post_ajax(self, request, *args, **kwargs):
+        page_id = self.request.POST.get("page_id")
+        try:
+            page = CmsPages.objects.get(id=page_id)
+            comp = "enabled" if page.hidden else "disabled"
+            page.hidden = not page.hidden
+            page.save()
+            return self.render_json_response(
+                {
+                    "status": "Success",
+
+                    "message": "Page succesfully "  + comp
+                },
+                status=200
+            )
+
+        except Exception as e:
+            return self.render_json_response(
+                {
+                    "status": "Error",
+
+                    "message": _("Logo not found")
+                },
+                status=404
+            )
+
+
 class EditSocialLinkAjax(CheckRolesMixin, TemplateView, views.JSONResponseMixin, views.AjaxResponseMixin, View):
     template_name = "admin/cms/social/update_link.html"
     allowed_roles = ("admin", "superadmin")

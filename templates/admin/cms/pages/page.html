@@ -116,6 +116,41 @@ function delete_admin_page(page_id){
         });
     }
 
+
+    function toggle_admin_page(page_id, hidden){
+    var text = hidden ? "enable" : "disable";
+    Swal.fire({
+                title: "Are you sure, you want to " + text + " this page?",
+                text: "",
+                icon: "warning",
+                showCancelButton: true,
+                cancelButtonColor: "#343a40",
+                showConfirmButton: true,
+        }).then(function (result) {
+            if(result.isConfirmed){
+                $.ajax("{% url 'admin-panel:toggle-page' %}",{
+                    type: "POST",
+                    dataType: "json",
+                    data: {
+                        page_id: page_id,
+                        csrfmiddlewaretoken: '{{ csrf_token }}'
+                    },
+                    success: function (data) {
+                        Swal.fire({
+                            title: data['status'].toLowerCase(),
+                            text: data["message"],
+                            icon: "success",
+
+                        }).then((result) => {
+                            location.reload();
+                        });
+                    }
+                })
+            }
+        });
+    }
+
+
 $(document).ready(function () {
   $('#AdminPageTable').DataTable({
       searching : true,
@@ -202,8 +237,15 @@ $(document).ready(function () {
                                                             <i class="fa fa-edit" style="color: #1f2d3d;font-size: 20px;"></i>
                                                         </a>
                                                         {% endif %}
+                                                        {% if request.user.role == "admin" or request.user|has_permission:"can_edit_pages" %}
+                                                        <button type="button"
+                                                                class="btn"
+                                                                style="background-color: #{% if page.hidden %}707070{% else %}33a7ff{% endif %}; border-width: 0;"
+                                                                onclick="toggle_admin_page({{ page.id }}, {% if page.hidden %}true{% else %} false {% endif %})">
+                                                            <i style="font-size: 20px; {% if page.hidden %}color: #ffffff;{% endif %}" class="fa fa-eye{% if not page.hidden %}-slash{% endif %}" aria-hidden="true"></i></button>&nbsp;&nbsp;
+                                                        {% endif %}
                                                         {% if request.user.role == "admin" or request.user|has_permission:"can_delete_pages" %}
-                                                        <button type="button" class="btn btn-danger btn-sm " onclick="delete_admin_page({{ page.id }})">
+                                                         <button type="button" class="btn btn-danger btn-sm " onclick="delete_admin_page({{ page.id }})">
                                                             <i style="font-size: 20px;" class="fa fa-trash" aria-hidden="true"></i></button>&nbsp;&nbsp;
                                                         {% endif %}
 
