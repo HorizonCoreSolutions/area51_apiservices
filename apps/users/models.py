@@ -844,6 +844,7 @@ class CmsPages(AbstractBaseModel):
     meta_description = models.TextField(null=True, blank=True)
     json_metadata = models.TextField(null=True, blank=True)
     preview_type = models.CharField(max_length=100, choices=PreviewType, blank=True, null=True, default=PreviewType.none)
+    hidden = models.BooleanField(default=False)
 
     def save(self, *args, **kwargs):
         self.slug = self.title.lower().replace(" " ,"_")
