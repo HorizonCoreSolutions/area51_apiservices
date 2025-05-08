@@ -1842,7 +1842,7 @@ class OffMarketDepositView(APIView):
         try:
             user = Users.objects.filter(id=request.user.id).first()
             amount = request.data.get('amount')
-            promo_code = request.data.get(promo_code)
+            promo_code = request.data.get('promo_code')
             if user.balance < Decimal(amount):
                     return Response({"message": "Insufficient Funds"}, status.HTTP_400_BAD_REQUEST)
             amount = Decimal(amount)
