@@ -1904,6 +1904,10 @@ class OffMarketDepositView(APIView):
                 deposit.save()
                 return Response({"message": "Request Submitted Successfully"}, status.HTTP_200_OK)
             # TODO: remove this testing
+            print("debugggggggggggggg")
+            print("Status:", response.status_code)
+            print("Headers:", response.headers)
+            print("Body:", response.text)
             print("locate_me_faster: " + response.text)
             try:
                 message = response.json().get("message")
