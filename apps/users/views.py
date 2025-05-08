@@ -1904,9 +1904,13 @@ class OffMarketDepositView(APIView):
                 deposit.save()
                 return Response({"message": "Request Submitted Successfully"}, status.HTTP_200_OK)
             # TODO: remove this testing
-            print("locate_me_faster: " + response.json().get("message"))
-            if response.json().get("message") in messages:
-                return Response({"message": response.json().get("message")}, status.HTTP_400_BAD_REQUEST)
+            print("locate_me_faster: " + response.text)
+            try:
+                message = response.json().get("message")
+                if message in messages:
+                    return Response({"message": message}, status.HTTP_400_BAD_REQUEST)
+            except ValueError:
+                return Response({"message": "Request Not Processed"}, status.HTTP_400_BAD_REQUEST)
             return Response({"message": "Request Not Processed"}, status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             print(e)
