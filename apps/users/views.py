@@ -1877,7 +1877,7 @@ class OffMarketDepositView(APIView):
                 request_payload = {
                     **request_payload,
                     "promo_code" : promo_code,
-                    "username" : "a51" + user.username
+                    "username" : encrypt("a51" + user.username)
                     # Usuario de area51
                 }
 
