@@ -1886,6 +1886,14 @@ class OffMarketDepositView(APIView):
                 'Accept': 'application/json',
             }
             response = requests.post(off_market_api_url + 'add_credit', json=request_payload, headers=headers)
+
+            # TODO: remove this testing
+            print("debugggggggggggggg")
+            print("Status:", response.status_code)
+            print("Headers:", response.headers)
+            print("Body:", response.text)
+            print("locate_me_faster: " + response.text)
+
             if response.status_code == status.HTTP_201_CREATED:
                 game = OffMarketGames.objects.filter(code=game_code).first()
                 user.balance = user.balance - Decimal(amount) 
@@ -1904,11 +1912,6 @@ class OffMarketDepositView(APIView):
                 deposit.save()
                 return Response({"message": "Request Submitted Successfully"}, status.HTTP_200_OK)
             # TODO: remove this testing
-            print("debugggggggggggggg")
-            print("Status:", response.status_code)
-            print("Headers:", response.headers)
-            print("Body:", response.text)
-            print("locate_me_faster: " + response.text)
             try:
                 message = response.json().get("message")
                 if message in messages:
