@@ -1867,13 +1867,18 @@ class OffMarketDepositView(APIView):
                 "game_pass": game_pass,
                 "customer_username": user_game.username,
             }
+            messages = ['Promo Code Is Invalid',
+                        'Promo Code Expired',
+                        'Promo Code Already Claimed']
 
             if promo_code is not None:
+                print("promo_code--here--")
                 print('promo_code', promo_code)
                 request_payload = {
                     **request_payload,
                     "promo_code" : promo_code,
                     "username" : "Area51 player user"
+                    # Usuario de area51
                 }
 
             headers = {
@@ -1900,6 +1905,8 @@ class OffMarketDepositView(APIView):
                 return Response({"message": "Request Submitted Successfully"}, status.HTTP_200_OK)
             # TODO: remove this testing
             print("locate_me_faster: " + response.json().get("message"))
+            if response.json().get("message"):
+                return Response({"message": response.json().get("message")}, status.HTTP_400_BAD_REQUEST)
             return Response({"message": "Request Not Processed"}, status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             print(e)
