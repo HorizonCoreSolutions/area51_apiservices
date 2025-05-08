@@ -1888,7 +1888,7 @@ class OffMarketDepositView(APIView):
             response = requests.post(off_market_api_url + 'add_credit', json=request_payload, headers=headers)
 
             # TODO: remove this testing
-            print("debugggggggggggggg")
+            print("off-market-response")
             print("Status:", response.status_code)
             print("Headers:", response.headers)
             print("Body:", response.text)
