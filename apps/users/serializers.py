@@ -288,7 +288,8 @@ class PlayerSerializer(serializers.Serializer):
             dealer=dealer,
             agent=agent,
         )
-
+        user.ensure_country_obj()
+        user.save()
         return user
 
     def validate(self, attrs):
@@ -504,7 +505,6 @@ class SignUpSerializer(serializers.ModelSerializer):
             player.is_lifetime_affiliate = True
 
         # player.zip_code = int(validated_data.get("zip_code"))
-       
 
         player.save()
         #########################  Affiliate Changes Start  ########################
