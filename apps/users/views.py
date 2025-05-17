@@ -382,18 +382,19 @@ class SignUpView(APIViewContext):
         if str(request.data.get('confirm_age')) != "1":
             return Response({"message" : "You must confirm you are 18+, confirm_age != 1"},status=status.HTTP_400_BAD_REQUEST)
         
-        dob = request.data.get('dob')
-        if dob is None:
-            return Response({"message": "You must submit your dob"}, status.HTTP_400_BAD_REQUEST)
-        try:
-            dob_date = dt.strptime(dob, "%Y-%m-%d").date()
-        except ValueError:
-            return Response({"message": "DOB must be formatted YYYY-MM-DD"}, status.HTTP_400_BAD_REQUEST)
-        today = timezone.now().date()
-        age = today.year - dob_date.year - ((today.month, today.day) < (dob_date.month, dob_date.day))
+        # check age
+        # dob = request.data.get('dob')
+        # if dob is None:
+        #     return Response({"message": "You must submit your dob"}, status.HTTP_400_BAD_REQUEST)
+        # try:
+        #     dob_date = dt.strptime(dob, "%Y-%m-%d").date()
+        # except ValueError:
+        #     return Response({"message": "DOB must be formatted YYYY-MM-DD"}, status.HTTP_400_BAD_REQUEST)
+        # today = timezone.now().date()
+        # age = today.year - dob_date.year - ((today.month, today.day) < (dob_date.month, dob_date.day))
 
-        if age < 18:
-            return Response({"message": "You must be 18+ to have an account on this platform"}, status.HTTP_400_BAD_REQUEST)
+        # if age < 18:
+            # return Response({"message": "You must be 18+ to have an account on this platform"}, status.HTTP_400_BAD_REQUEST)
 
         # remove un used
 
@@ -583,7 +584,8 @@ class GetOTPView(APIViewContext):
                     print(user.username)
 
             # Check age
-            if sign_up:
+            # if sign_up:
+            if False:
                 dob = request.data.get('dob')
                 if dob is None:
                     return Response({"message": "You must submit your dob"}, status.HTTP_400_BAD_REQUEST)
