@@ -375,6 +375,17 @@ class Users(AbstractBaseUser, AbstractBaseModel, PermissionsMixin):
 
     objects = UserManager()
 
+    def ensure_country_obj(self):
+        if not self.country:
+            self.country = 'US'
+
+        if not self.country_obj and self.country:
+            try:
+                self.country_obj = Country.objects.get(code_cca2=self.country)
+            except Country.DoesNotExist:
+                print(f"User: {self.username} is not using Country objs")
+
+
     def clean(self):
         from django.core.exceptions import ValidationError
         import re

@@ -377,6 +377,27 @@ class SignUpView(APIViewContext):
     def post(self, request):
         # Skip phone number if one of them does not exist
         data = request.data.copy()
+        if str(request.data.get('tyc')) != "1":
+            return Response({"message" : "You must accept the TYC, tyc != 1"},status=status.HTTP_400_BAD_REQUEST)
+        if str(request.data.get('confirm_age')) != "1":
+            return Response({"message" : "You must confirm you are 18+, confirm_age != 1"},status=status.HTTP_400_BAD_REQUEST)
+        
+        # check age
+        # dob = request.data.get('dob')
+        # if dob is None:
+        #     return Response({"message": "You must submit your dob"}, status.HTTP_400_BAD_REQUEST)
+        # try:
+        #     dob_date = dt.strptime(dob, "%Y-%m-%d").date()
+        # except ValueError:
+        #     return Response({"message": "DOB must be formatted YYYY-MM-DD"}, status.HTTP_400_BAD_REQUEST)
+        # today = timezone.now().date()
+        # age = today.year - dob_date.year - ((today.month, today.day) < (dob_date.month, dob_date.day))
+
+        # if age < 18:
+            # return Response({"message": "You must be 18+ to have an account on this platform"}, status.HTTP_400_BAD_REQUEST)
+
+        # remove un used
+
         if request.data.get('country_code', '') == '' or request.data.get('phone_number', '') == "":
             data.pop('countray_code', None)
             data.pop('phone_number', None)
@@ -561,6 +582,23 @@ class GetOTPView(APIViewContext):
 
                 for user in users_with_same_phone:
                     print(user.username)
+
+            # Check age
+            # if sign_up:
+            if False:
+                dob = request.data.get('dob')
+                if dob is None:
+                    return Response({"message": "You must submit your dob"}, status.HTTP_400_BAD_REQUEST)
+                try:
+                    dob_date = dt.strptime(dob, "%Y-%m-%d").date()
+                except ValueError:
+                    return Response({"message": "DOB must be formatted YYYY-MM-DD"}, status.HTTP_400_BAD_REQUEST)
+                today = timezone.now().date()
+                age = today.year - dob_date.year - ((today.month, today.day) < (dob_date.month, dob_date.day))
+
+                if age < 18:
+                    return Response({"message": "You must be 18+ to have an account on this platform"}, status.HTTP_400_BAD_REQUEST)
+
 
             # Start of the logic
             if sign_up and user_with_same_name.exists():
@@ -1842,6 +1880,7 @@ class OffMarketDepositView(APIView):
         try:
             user = Users.objects.filter(id=request.user.id).first()
             amount = request.data.get('amount')
+            promo_code = request.data.get('promo_code')
             if user.balance < Decimal(amount):
                     return Response({"message": "Insufficient Funds"}, status.HTTP_400_BAD_REQUEST)
             amount = Decimal(amount)
@@ -1866,12 +1905,33 @@ class OffMarketDepositView(APIView):
                 "game_pass": game_pass,
                 "customer_username": user_game.username,
             }
+            messages = ['Promo Code Is Invalid',
+                        'Promo Code Expired',
+                        'Promo Code Already Claimed']
+
+            if promo_code is not None:
+                print("promo_code --here--")
+                print('promo_code', promo_code)
+                request_payload = {
+                    **request_payload,
+                    "promo_code" : promo_code,
+                    "username" : encrypt("a51" + user.username)
+                    # Usuario de area51
+                }
 
             headers = {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
             }
             response = requests.post(off_market_api_url + 'add_credit', json=request_payload, headers=headers)
+
+            # TODO: remove this testing
+            print("off-market-response")
+            print("Status:", response.status_code)
+            print("Headers:", response.headers)
+            print("Body:", response.text)
+            print("locate_me_faster: " + response.text)
+
             if response.status_code == status.HTTP_201_CREATED:
                 game = OffMarketGames.objects.filter(code=game_code).first()
                 user.balance = user.balance - Decimal(amount) 
@@ -1889,8 +1949,14 @@ class OffMarketDepositView(APIView):
                 deposit.bonus = bonus_amount
                 deposit.save()
                 return Response({"message": "Request Submitted Successfully"}, status.HTTP_200_OK)
-            else:
+            # TODO: remove this testing
+            try:
+                message = response.json().get("message")
+                if message in messages:
+                    return Response({"message": message}, status.HTTP_400_BAD_REQUEST)
+            except ValueError:
                 return Response({"message": "Request Not Processed"}, status.HTTP_400_BAD_REQUEST)
+            return Response({"message": "Request Not Processed"}, status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             print(e)
             return Response({"message": "Something Went Wrong"}, status.HTTP_500_INTERNAL_SERVER_ERROR)

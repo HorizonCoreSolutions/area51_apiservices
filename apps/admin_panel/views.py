@@ -676,6 +676,7 @@ class CreatePlayer(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseM
                 player.is_lifetime_affiliate = True
             # player.affliate_expire_date = datetime.datetime.now() + datetime.timedelta(days=DEFAULT_AFFILIATE_DURATION_IN_DAYS)
             # player.is_lifetime_affiliate = True
+            player.ensure_country_obj()
             player.save()
 
             
