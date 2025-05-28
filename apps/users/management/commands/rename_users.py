@@ -6,7 +6,6 @@ class Command(BaseCommand):
     help = "Migrates the old users to the new countries"
 
     def handle(self, *args, **kwargs):
-        usa = Users.objects.get(code_cca2="US")
         for user in Users.objects.all():
             if not user.full_name:
                 continue
