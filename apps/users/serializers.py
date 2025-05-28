@@ -87,7 +87,8 @@ class PlayerSerializer(serializers.Serializer):
     phone_number=serializers.CharField(max_length=255)
     profile_pic=serializers.SerializerMethodField()
     user_id_proof=serializers.SerializerMethodField()
-    full_name=serializers.CharField()
+    first_name=serializers.CharField()
+    last_name=serializers.CharField()
     email=serializers.EmailField(max_length=50)
     is_live_casino_enabled = serializers.SerializerMethodField()
     credit = serializers.SerializerMethodField()
@@ -405,7 +406,7 @@ class SignUpSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Player
-        fields = ["username", "password", "confirm_password", "agent_id","full_name","email","state","dob","phone_number","complete_address","zip_code","profile_pic","user_id_proof","affiliated_by","affiliate_code","affliate_expire_date",'otp',"country_code", "applied_promo_code"]
+        fields = ["username", "password", "confirm_password", "agent_id","first_name","first_name","email","state","dob","phone_number","complete_address","zip_code","profile_pic","user_id_proof","affiliated_by","affiliate_code","affliate_expire_date",'otp',"country_code", "applied_promo_code"]
         extra_kwargs = {
             "password": {"write_only": True},
             "confirm_password": {"write_only": True},
@@ -562,7 +563,8 @@ class GetOtpSerializer(serializers.Serializer):
 class AffiliateSerializer(serializers.Serializer):
     
     username = serializers.CharField(max_length=255, required=True)
-    full_name = serializers.CharField(max_length=255, required=True)
+    first_name = serializers.CharField(max_length=255, required=True)
+    last_name = serializers.CharField(max_length=255, required=True)
     created = serializers.DateTimeField()
     deposit_amount = serializers.SerializerMethodField()
     bonus_amount = serializers.SerializerMethodField()

@@ -498,7 +498,7 @@ Players
                                                 {% if request.user.role == 'agent' %}
                                                     <div class="table-data-feature">
                                                         <a href="#edit-player" data-username="{{ player.username }}" data-dob="{{ player.dob | dob_date }}" data-phone="{{player.phone_number}}" data-zipcode="{{player.zip_code}}"
-                                                        data-email="{{player.email}}" data-full_name="{{player.full_name}}" data-state="{{player.state}}" data-effect="mfp-zoom-in" data-countrycode="{{player.country_code}}"
+                                                        data-email="{{player.email}}" data-first_name="{{player.first_name}}" data-last_name="{{player.last_name}}" data-state="{{player.state}}" data-effect="mfp-zoom-in" data-countrycode="{{player.country_code}}"
                                                         data-zip_code="{{player.zip_code}}" data-address="{{player.complete_address}}" 
                                                         data-profile="{% if player.profile_pic %}{{player.profile_pic.url}}{% endif %}" data-id-proof="{% if player.user_id_proof %}{{player.user_id_proof.url}}{% endif %}"
                                                         class="edit-player-popup item row-button-edit ignore-collapse">
@@ -2076,7 +2076,8 @@ function deletegame(game_id, player_id){
 
                     var formdata=new FormData();
                     formdata.append('username',$("#username-input input").val());
-                    formdata.append('full_name',$("#full_name-input input").val());
+                    formdata.append('first_name',$("#first_name-input input").val());
+                    formdata.append('last_name',$("#last_name-input input").val());
                     // formdata.append('state',$("#state-input input").val());
                     formdata.append('dob',$("#dob-input input").val());
                     formdata.append('email',$("#email-input input").val());
@@ -2131,7 +2132,8 @@ function deletegame(game_id, player_id){
                           
                             var player_username = this.st.el.attr('data-username');
                             var player_email = this.st.el.attr('data-email');
-                            var player_full_name = this.st.el.attr('data-full_name');
+                            var player_first_name = this.st.el.attr('data-first_name');
+                            var player_last_name = this.st.el.attr('data-last_name');
                             var player_dob = this.st.el.attr('data-dob');
                             var player_zipcode = this.st.el.attr('data-zipcode');
                             var country_code = this.st.el.attr('data-countrycode');
@@ -2145,7 +2147,8 @@ function deletegame(game_id, player_id){
                             var id_proof = this.st.el.attr('data-id-proof');
                             $("#edit-player input[name='username']").val(player_username).prop('readonly', true);
                             $("#edit-player input[name='dob']").val(player_dob).prop('readonly', true);
-                            $("#edit-player input[name='full_name']").val(player_full_name);
+                            $("#edit-player input[name='first_name']").val(player_first_name);
+                            $("#edit-player input[name='last_name']").val(player_last_name);
                             $("#edit-player input[name='email']").val(player_email);
                             $("#edit-player input[name='country_code']").val(country_code);
                             $("#edit-player input[name='phone_number']").val(player_phone);
@@ -2189,7 +2192,8 @@ function deletegame(game_id, player_id){
                     event.preventDefault();
                     spinner.show();
                     var username = $("#edit-username-input input").val();
-                    var full_name = $("#full_name-input input").val();
+                    var first_name = $("#first_name-input input").val();
+                    var last_name = $("#last_name-input input").val();
                     // var state = $("#state-input input").val();
                     // var dob = $("#dob-input input").val();
                     // var profile_pic = $("#edit-player #id_profile_pic").prop('files')[0];
@@ -2206,7 +2210,8 @@ function deletegame(game_id, player_id){
                     console.log("confirm password ",confirm_password)
                     var formdata=new FormData();
                     formdata.append('username',username);
-                    formdata.append('full_name',full_name);
+                    formdata.append('first_name',first_name);
+                    formdata.append('last_name',last_name);
                     // formdata.append('state',state);
                     // formdata.append('dob',dob);
                     formdata.append('email',email);

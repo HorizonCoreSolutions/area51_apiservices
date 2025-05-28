@@ -463,7 +463,8 @@ class UserUpdateView(APIViewContext):
                 email = request.data.get("email", player.email)
                 password = request.data.get("password", player.password)
                 phone_number = request.data.get("phone_number", player.phone_number)
-                full_name = request.data.get("full_name", player.full_name)
+                first_name = request.data.get("first_name", player.first_name)
+                last_name = request.data.get("last_name", player.last_name)
                 state = request.data.get("state", player.state)
                 dob = request.data.get("dob", player.dob)
                 zipcode = request.data.get("zip_code", player.zip_code)
@@ -511,7 +512,8 @@ class UserUpdateView(APIViewContext):
                 player.zip_code = zipcode
                 player.password = password
                 player.phone_number = phone_number
-                player.full_name = full_name
+                player.first_name = first_name
+                player.last_name = last_name
                 player.state = state
                 player.dob = dob
                 player.complete_address = complete_address
@@ -815,7 +817,8 @@ class VerifyOTPView(APIView):
                     user.phone_number = user_data.get("phone_number")
                     user.dob = user_data.get("dob")
                     user.state = user_data.get("state")
-                    user.full_name = user_data.get("full_name")
+                    user.first_name = user_data.get("first_name")
+                    user.last_name = user_data.get("last_name")
                     user.complete_address =user_data.get("complete_address")
                     user.email = user_data.get("email", None)
                     # user.user_id_proof=user.data.get("user_id_proof")

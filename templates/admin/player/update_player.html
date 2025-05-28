@@ -24,9 +24,16 @@
                     </div>
                 </div>
                 <div class="form-group create-form-margin" type="date-input" readonly="true">
-                    <span class="font-weight-bold ml-1">{% trans "Full Name" %}</span>
-                    <div class="input-group input-group-rounded " id="full_name-input">
-                        {{ form.full_name }}
+                    <span class="font-weight-bold ml-1">{% trans "First Name" %}</span>
+                    <div class="input-group input-group-rounded " id="first_name-input">
+                        {{ form.first_name }}
+                        <p class="error-msg"></p>
+                    </div>
+                </div>
+                <div class="form-group create-form-margin" type="date-input" readonly="true">
+                    <span class="font-weight-bold ml-1">{% trans "Last Name" %}</span>
+                    <div class="input-group input-group-rounded " id="last_name-input">
+                        {{ form.last_name }}
                         <p class="error-msg"></p>
                     </div>
                 </div>
