@@ -38,7 +38,8 @@ class PlayerModelForm(ModelForm):
     phone_number = forms.CharField(min_length=4,max_length=12,required=True,widget=forms.TextInput(attrs={'class': "au-input--full form-control",'placeholder': _("Enter Mobile No")}))
     complete_address = forms.CharField(required=True,max_length=50,widget=forms.TextInput(attrs={'class': "au-input--full form-control", 'placeholder': _("Enter Complete Address")}))
     password = forms.CharField(max_length=32, widget=forms.PasswordInput(attrs={'class': "au-input--full form-control","id":'id_password', 'placeholder': _("Enter Password"), 'autocomplete': 'new-password'}))
-    full_name=forms.CharField(required=True,max_length=32,widget=forms.TextInput(attrs={'class': "au-input--full form-control", 'placeholder': _("Enter Full Name")}))
+    first_name=forms.CharField(required=True,max_length=32,widget=forms.TextInput(attrs={'class': "au-input--full form-control", 'placeholder': _("Enter First Name")}))
+    last_name=forms.CharField(required=True,max_length=32,widget=forms.TextInput(attrs={'class': "au-input--full form-control", 'placeholder': _("Enter Last Name")}))
     confirm_password = forms.CharField(max_length=32, widget=forms.PasswordInput(attrs={'class': "au-input--full form-control",'id':'id_cnf_password', 'placeholder': _("Confirm Password"), 'autocomplete': 'new-password'}))
     # profile_pic=forms.FileInput(widget=forms.FileInput(attrs={'class': 'form-control','required':'true' ,'id':'id_profile','accept':'image/png,image/jpeg,image/jpg'}))
     # user_id_proof=forms.FileInput(widget=forms.FileInput(attrs={'class': 'form-control','required':'true' ,'id':'id_user_id_proof','accept':'image/png,image/jpeg,image/jpg'}))
@@ -46,7 +47,7 @@ class PlayerModelForm(ModelForm):
 
     class Meta:
         model = Player
-        fields = ("dealer", "agent", "username" , "state" , "dob" , "password","email","country_code","phone_number", "complete_address","full_name", "zip_code","profile_pic")
+        fields = ("dealer", "agent", "username" , "state" , "dob" , "password","email","country_code","phone_number", "complete_address","first_name","last_name", "zip_code","profile_pic")
       
         widgets = {
             'profile_pic': forms.FileInput(attrs={'class': 'form-control-sm','id':'id_profile_pic','required':'true','onchange': 'show_profile_pic(this)','accept':'image/png,image/jpeg,image/jpg'}),

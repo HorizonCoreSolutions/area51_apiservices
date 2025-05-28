@@ -217,7 +217,7 @@
                     
                                                     <td>
                                                         <div class="table-data-feature">
-                                                            <a href="#edit-user" data-username="{{ user.username }}" data-full_name="{{ user.full_name }}" data-effect="mfp-zoom-in" class="edit-user-popup item row-button-edit ignore-collapse">
+                                                            <a href="#edit-user" data-username="{{ user.username }}" data-first_name="{{ user.first_name }}" data-last_name="{{ user.last_name }}" data-effect="mfp-zoom-in" class="edit-user-popup item row-button-edit ignore-collapse">
                                                                 <img src="{% static '/icon/edit.png' %}" width="15" height="15" ></img>
                                                             </a>
                                                         </div>
@@ -485,7 +485,8 @@
 
             var formdata=new FormData();
             formdata.append('username',$("#username-input input").val());
-            formdata.append('full_name',$("#full_name-input input").val());
+            formdata.append('first_name',$("#first_name-input input").val());
+            formdata.append('last_name',$("#last_name-input input").val());
             formdata.append('password',$("#password-input input").val());
             formdata.append('confirm_password',$("#confirm-password-input input").val());
             formdata.append('csrfmiddlewaretoken','{{ csrf_token }}');

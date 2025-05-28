@@ -498,7 +498,8 @@ class CreatePlayer(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseM
             # profile_pic=request.FILES.get("profile_pic","")
             # user_id_proof=request.FILES.get("user_id_proof","")
             # state = request.POST.get("state", "")
-            full_name = request.POST.get("full_name", "")
+            first_name = request.POST.get("first_name", "")
+            last_name = request.POST.get("last_name", "")
             password = request.POST.get("password", "")
             confirm_password = request.POST.get("confirm_password", "")
             
@@ -633,7 +634,8 @@ class CreatePlayer(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseM
             # player.phone_number = phone_number
             # player.zip_code = zip_code
             # player.complete_address = complete_address
-            player.full_name = full_name
+            player.first_name = first_name
+            player.last_name = last_name
             player.dob = dob
             # if profile_pic:     
             #     filename_format = profile_pic.name.split(".")
@@ -762,7 +764,8 @@ class UpdatePlayer(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseM
         user_name = request.POST.get("username", "")
         password = request.POST.get("password", "")
         confirm_password = request.POST.get("confirm_password", "")
-        full_name = request.POST.get("full_name","")
+        first_name = request.POST.get("first_name","")
+        last_name = request.POST.get("last_name","")
         email = request.POST.get("email", "")  
         # country_code = request.POST.get("country_code", "")
         # phone_number = request.POST.get("phone_number","")
@@ -848,7 +851,8 @@ class UpdatePlayer(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseM
             if password!="":
              player.password = make_password(password)
             player.role = "player"
-            player.full_name = full_name
+            player.first_name = first_name
+            player.last_name = last_name
             # player.zip_code = int(zipcode)
             
             # if profile_pic:     
@@ -11229,12 +11233,13 @@ class CreateUserByRole(CheckRolesMixin, views.JSONResponseMixin, views.AjaxRespo
         try:
             role = self.kwargs.get("role", "").lower().replace(" ", "_")
             username = request.POST.get("username", "").lower()
-            full_name = request.POST.get("full_name", "")
+            first_name = request.POST.get("first_name", "")
+            last_name = request.POST.get("last_name", "")
             password = request.POST.get("password", "")
             confirm_password = request.POST.get("confirm_password", "")
             
             pattern = re.compile("[A-Za-z0-9]*$")
-            none_validation = [username, role, full_name, password, confirm_password]
+            none_validation = [username, role, first_name, last_name, password, confirm_password]
             print(role)
             
             if None in none_validation or '' in none_validation:
@@ -11256,7 +11261,8 @@ class CreateUserByRole(CheckRolesMixin, views.JSONResponseMixin, views.AjaxRespo
             
             user = Users.objects.create(
                 username = username,
-                full_name = full_name,
+                first_name = first_name,
+                last_name = last_name,
                 password = make_password(password),
                 timezone = self.request.user.timezone,
                 currency = self.request.user.currency,

@@ -290,6 +290,8 @@ class Users(AbstractBaseUser, AbstractBaseModel, PermissionsMixin):
     email = models.CharField(_("email"),max_length=500, null=True, default=None)
     dob = models.CharField(_("dob"),max_length=500, null=True, default=None)
     full_name = models.CharField(_("full_name"),max_length=350,default=None,null=True)
+    last_name = models.CharField(_("last_name"),max_length=350,default=None,null=True)
+    first_name = models.CharField(_("first_name"),max_length=350,default=None,null=True)
     state = models.CharField(_("state"),max_length=500, null=True, default=None)
     complete_address = models.CharField(_("complete_address"),max_length=500, null=True, default=None)
     phone_number = models.CharField(_("phone number"), max_length=20, null=True, default=None)
