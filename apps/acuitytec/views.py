@@ -42,5 +42,6 @@ class GetVerificationLinkView(APIView):
                 return Response({"message": link[5:]}, status.HTTP_400_BAD_REQUEST)
                 
             return Response({'url' : link}, status=status.HTTP_200_OK)
-        except:
+        except Exception as e:
+            print(e)
             return Response({"message": "Something Went Wrong"}, status.HTTP_500_INTERNAL_SERVER_ERROR)
