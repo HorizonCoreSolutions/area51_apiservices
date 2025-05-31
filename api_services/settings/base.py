@@ -153,6 +153,7 @@ PROJECT_APPS = [
     'apps.admin_panel',
     'apps.casino',
     'apps.payments',
+    'apps.acuitytec',
 ]
 
 MIDDLEWARE = [
