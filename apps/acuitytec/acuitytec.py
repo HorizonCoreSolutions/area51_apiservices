@@ -101,6 +101,7 @@ class AcuityTecAPI:
             # Make the POST request
             payload = {k: v for k, v in payload.items() if v is not None}
 
+            print(payload)
             response = requests.post(self.enpoints['register_user'], data=payload, timeout=30)
             response.raise_for_status()
             
