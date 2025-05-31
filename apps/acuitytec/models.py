@@ -20,6 +20,6 @@ class AcuitytecUser(models.Model):
     is_validated = models.BooleanField(default=False)
     actual_state = models.CharField(blank=True, default=None, null=True, choices=VerificationState.choices, max_length=500)
     
-    login_ip = models.CharField(blank=True, default=None, null=True)
+    login_ip = models.CharField(blank=True, default=None, null=True, max_length=500)
     
     validated_amount = models.PositiveIntegerField(default=0, null=False, blank=False)
