@@ -70,7 +70,7 @@ class AcuityTecAPI:
                                 settings.ENV_POSTFIX,
                                 str(self.user.id),
                             ]),
-            'reg_date': self.user.created,
+            'reg_date': self.user.created.strftime("%Y-%m-%d"),
             'reg_ip_address': reg_ip_address,
         }
         
