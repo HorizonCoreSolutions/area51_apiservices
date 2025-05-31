@@ -1,5 +1,6 @@
 from rest_framework.response import Response
 from rest_framework import status
+from apps.acuitytec.models import AcuitytecUser
 from apps.users.models import Users
 from django.conf import settings
 from apps.acuitytec.acuitytec import AcuityTecAPI
@@ -41,6 +42,12 @@ class GetVerificationLinkView(APIView):
             
             if not hasattr(user, 'acuitytec_account'):
                 res = ac.register_customer(ip)
+                print(res)
+                if res['status'] == 0:
+                    AcuitytecUser.objects.create(
+                        user=user,
+                        login_ip=ip
+                        )
                 if res['status'] == -1:
                     return Response({"message": res['message']}, status.HTTP_400_BAD_REQUEST)
                     
