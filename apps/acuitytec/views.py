@@ -18,8 +18,10 @@ class GetVerificationLinkView(APIView):
             
             document = request.data.get('document')
             language = request.data.get('language')
+            print('ping')
             
             if document is None or language is None:
+                print('bping')
                 return Response({"message": "language or document must not be None"}, status.HTTP_400_BAD_REQUEST)
             
             if not language in ('es', 'en', 'fr'):
@@ -29,7 +31,10 @@ class GetVerificationLinkView(APIView):
             ac = AcuityTecAPI(user=user)
             
             x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+            
+            print('cping')
             if x_forwarded_for:
+                print(x_forwarded_for)
                 ip = x_forwarded_for.split(',')[0].strip()  # client’s real IP
             else:
                 ip = request.META.get('REMOTE_ADDR')
