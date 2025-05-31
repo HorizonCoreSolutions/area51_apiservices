@@ -180,6 +180,7 @@ class AcuityTecAPI:
                 "selected_service": "face"
             }
 
+            print(data)
             response = requests.post(self.enpoints['photo_id'], data=data, timeout=30)
 
             if response.status_code == 200:
