@@ -41,8 +41,11 @@ class GetVerificationLinkView(APIView):
             
             if not hasattr(user, 'acuitytec_account'):
                 ac.register_customer(ip)
+            print('dping')
                 
             link = ac.getLink(document=document, language=language)
+            print(link)
+            print('eping')
             if link.startswith('error'):
                 return Response({"message": link[5:]}, status.HTTP_400_BAD_REQUEST)
                 
