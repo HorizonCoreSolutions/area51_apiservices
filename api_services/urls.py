@@ -84,6 +84,7 @@ urlpatterns = [
     url(r"^logout/", LogoutView.as_view(), name="logout"),
     generate_url(r"users/", include(("apps.users.urls", "apps.users"), namespace="users-api")),
     generate_url(r"betslip/", include(("apps.bets.urls", "apps.bets"), namespace="bets-api")),
+    generate_url(r"acuitytec/", include(("apps.acuitytec.urls", "apps.acuitytec"), namespace="acuitytec-api")),
     url(r"^api-auth/", include("rest_framework.urls", namespace="rest_framework")),
     url(r"^admin/", include(("apps.admin_panel.urls", "apps.admin"), namespace="admin-panel")),
     path("change_language/", change_language, name="change_language"),
