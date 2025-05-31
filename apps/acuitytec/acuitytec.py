@@ -105,11 +105,6 @@ class AcuityTecAPI:
             response = requests.post(self.enpoints['register_user'], data=payload, timeout=30)
             response.raise_for_status()
             
-            AcuitytecUser.objects.create(
-                user=self.user,
-                login_ip=reg_ip_address
-                )
-            
             # Parse JSON response
             return response.json()
             
