@@ -31,6 +31,9 @@ class AcuityTecAPI:
         self.merchant_id = settings.ACUITYTEC_MERCHANT_ID
         self.password = settings.ACUITYTEC_PASSWORD
         
+        print(self.merchant_id)
+        print(self.password)
+        
         self.enpoints = {
             "register_user" : f"{self.base_url}/customerregistration",
             "photo_id" : f"{self.base_url}/photoIdOnlineVerification",
