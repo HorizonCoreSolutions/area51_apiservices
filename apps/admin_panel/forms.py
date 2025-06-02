@@ -34,6 +34,7 @@ class PlayerModelForm(ModelForm):
     email=forms.EmailField(required=True,max_length=32,validators=[], widget=forms.EmailInput(attrs={'class': "au-input--full form-control", 'placeholder': _("Enter Email")}))
     dob = forms.DateField(required=True,widget=forms.DateInput(attrs={'class': "au-input--full form-control", 'type': 'date','placeholder': _("DOB")},format = '%d-%m-%Y'))
     state = forms.CharField(required=True,max_length=32, widget=forms.TextInput(attrs={'class': "au-input--full form-control", 'placeholder': _("Enter State")}))
+    city = forms.CharField(required=True,max_length=32, widget=forms.TextInput(attrs={'class': "au-input--full form-control", 'placeholder': _("Enter City")}))
     country_code = forms.CharField(min_length=1,max_length=5,required=True,widget=forms.TextInput(attrs={'class': "au-input--full form-control",'placeholder': _("Enter Country Code")}))
     phone_number = forms.CharField(min_length=4,max_length=12,required=True,widget=forms.TextInput(attrs={'class': "au-input--full form-control",'placeholder': _("Enter Mobile No")}))
     complete_address = forms.CharField(required=True,max_length=50,widget=forms.TextInput(attrs={'class': "au-input--full form-control", 'placeholder': _("Enter Complete Address")}))
@@ -47,7 +48,7 @@ class PlayerModelForm(ModelForm):
 
     class Meta:
         model = Player
-        fields = ("dealer", "agent", "username" , "state" , "dob" , "password","email","country_code","phone_number", "complete_address","first_name","last_name", "zip_code","profile_pic")
+        fields = ("dealer", "agent", "username" , "state" , "city" , "dob" , "password","email","country_code","phone_number", "complete_address","first_name","last_name", "zip_code","profile_pic")
       
         widgets = {
             'profile_pic': forms.FileInput(attrs={'class': 'form-control-sm','id':'id_profile_pic','required':'true','onchange': 'show_profile_pic(this)','accept':'image/png,image/jpeg,image/jpg'}),

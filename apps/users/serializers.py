@@ -82,6 +82,7 @@ class PlayerSerializer(serializers.Serializer):
     zip_code = serializers.CharField(max_length=255, required=True)
     dob=serializers.DateField()
     state=serializers.CharField(max_length=20)
+    city=serializers.CharField(max_length=20)
     casino_account_id=serializers.CharField(max_length=20)
     complete_address=serializers.CharField(max_length=100)
     phone_number=serializers.CharField(max_length=255)
@@ -406,7 +407,7 @@ class SignUpSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Player
-        fields = ["username", "password", "confirm_password", "agent_id","first_name","first_name","email","state", 'city1',"dob","phone_number","complete_address","zip_code","profile_pic","user_id_proof","affiliated_by","affiliate_code","affliate_expire_date",'otp',"country_code", "applied_promo_code"]
+        fields = ["username", "password", "confirm_password", "agent_id","first_name","first_name","email","state", 'city',"dob","phone_number","complete_address","zip_code","profile_pic","user_id_proof","affiliated_by","affiliate_code","affliate_expire_date",'otp',"country_code", "applied_promo_code"]
         extra_kwargs = {
             "password": {"write_only": True},
             "confirm_password": {"write_only": True},

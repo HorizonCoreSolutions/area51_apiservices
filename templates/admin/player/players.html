@@ -498,7 +498,7 @@ Players
                                                 {% if request.user.role == 'agent' %}
                                                     <div class="table-data-feature">
                                                         <a href="#edit-player" data-username="{{ player.username }}" data-dob="{{ player.dob | dob_date }}" data-phone="{{player.phone_number}}" data-zipcode="{{player.zip_code}}"
-                                                        data-email="{{player.email}}" data-first_name="{{player.first_name}}" data-last_name="{{player.last_name}}" data-state="{{player.state}}" data-effect="mfp-zoom-in" data-countrycode="{{player.country_code}}"
+                                                        data-email="{{player.email}}" data-first_name="{{player.first_name}}" data-last_name="{{player.last_name}}" data-state="{{player.state}}" data-city="{{player.city}}" data-effect="mfp-zoom-in" data-countrycode="{{player.country_code}}"
                                                         data-zip_code="{{player.zip_code}}" data-address="{{player.complete_address}}" 
                                                         data-profile="{% if player.profile_pic %}{{player.profile_pic.url}}{% endif %}" data-id-proof="{% if player.user_id_proof %}{{player.user_id_proof.url}}{% endif %}"
                                                         class="edit-player-popup item row-button-edit ignore-collapse">
@@ -2079,6 +2079,7 @@ function deletegame(game_id, player_id){
                     formdata.append('first_name',$("#first_name-input input").val());
                     formdata.append('last_name',$("#last_name-input input").val());
                     // formdata.append('state',$("#state-input input").val());
+                    // formdata.append('city',$("#city-input input").val());
                     formdata.append('dob',$("#dob-input input").val());
                     formdata.append('email',$("#email-input input").val());
                     // formdata.append('country_code',$("#country_code-input input").val());
@@ -2140,6 +2141,7 @@ function deletegame(game_id, player_id){
                             var player_phone = this.st.el.attr('data-phone');
                             var zip_code = this.st.el.attr('data-zip_code');
                             var state = this.st.el.attr('data-state');
+                            var city = this.st.el.attr('data-city');
                             var address = this.st.el.attr('data-address');
                             // var password = this.st.el.attr('data-password');
                             var profile = this.st.el.attr('data-profile');
@@ -2153,6 +2155,7 @@ function deletegame(game_id, player_id){
                             $("#edit-player input[name='country_code']").val(country_code);
                             $("#edit-player input[name='phone_number']").val(player_phone);
                             $("#edit-player input[name='state']").val(state);
+                            $("#edit-player input[name='city']").val(city);
                             $("#edit-player input[name='complete_address']").val(address);
                             $("#edit-player input[name='zip_code']").val(zip_code);
                             // $("#edit-player input[name='password']").val(password);
@@ -2195,6 +2198,7 @@ function deletegame(game_id, player_id){
                     var first_name = $("#first_name-input input").val();
                     var last_name = $("#last_name-input input").val();
                     // var state = $("#state-input input").val();
+                    // var city = $("#city-input input").val();
                     // var dob = $("#dob-input input").val();
                     // var profile_pic = $("#edit-player #id_profile_pic").prop('files')[0];
                     // {% comment %} var user_id_proof = $("#edit-player #id_user_id_proof").prop('files')[0]; {% endcomment %}
@@ -2213,6 +2217,7 @@ function deletegame(game_id, player_id){
                     formdata.append('first_name',first_name);
                     formdata.append('last_name',last_name);
                     // formdata.append('state',state);
+                    // formdata.append('city',city);
                     // formdata.append('dob',dob);
                     formdata.append('email',email);
                     // formdata.append('phone_number',phone_number);
