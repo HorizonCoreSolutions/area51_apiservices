@@ -230,6 +230,7 @@ CELERY_RESULT_SERIALIZER = "json"
 CELERY_TASK_SERIALIZER = "json"
 CELERY_IMPORTS = (
     "apps.bets.tasks",
+    "apps.acuitytec.tasks",
 )
 CELERY_RESULT_BACKEND = 'django-db'
 
