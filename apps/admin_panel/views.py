@@ -498,6 +498,7 @@ class CreatePlayer(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseM
             # profile_pic=request.FILES.get("profile_pic","")
             # user_id_proof=request.FILES.get("user_id_proof","")
             # state = request.POST.get("state", "")
+            # city = request.POST.get("city", "")
             first_name = request.POST.get("first_name", "")
             last_name = request.POST.get("last_name", "")
             password = request.POST.get("password", "")
@@ -656,6 +657,7 @@ class CreatePlayer(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseM
             #     player.profile_pic = profile_pic
             # player.user_id_proof=user_id_proof
             # player.state= state
+            # player.city = city
             player.agent = request.user
             player.dealer = request.user.dealer
             player.admin = request.user.admin
@@ -772,6 +774,7 @@ class UpdatePlayer(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseM
         # pattern = re.compile("[A-Za-z0-9]*$")
         # address = request.POST.get("address","")
         # state = request.POST.get("state","")
+        # city = request.POST.get("city","")
         # zipcode = request.POST.get("zip_code","")       
         # profile_pic=request.FILES.get("profile_pic","")                      
         player = Player.objects.get(username__iexact=user_name)
@@ -873,6 +876,7 @@ class UpdatePlayer(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseM
                 # player.profile_pic_thumbnail = page_thumbnail_inmemory
                 # player.profile_pic = profile_pic
             # player.state = state
+            # player.city = city
             # player.complete_address = address
             player.email = email
             # player.country_code = country_code

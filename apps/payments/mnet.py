@@ -40,7 +40,7 @@ class MnetPayment:
             "SSN": str(self.user.id)[-4:],
             "Phone": self.user.phone_number,
             "Email": self.user.email,
-            "City": "",
+            "City": self.user.city,
             "Address": self.user.complete_address,
             "ZipCode": self.user.zip_code,
             "DOB": formatted_date_str,
