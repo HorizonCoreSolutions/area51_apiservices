@@ -241,6 +241,7 @@ CELERY_ROUTES = {
     'apps.admin_panel.tasks.newuser_email': {'queue': 'newuser_email_queue'},
     'apps.admin_panel.tasks.queries_email': {'queue': 'queries_email_queue'},
     'apps.admin_panel.tasks.rejection_mail': {'queue': 'offmarket_email_queue'},
+    'apps.acuitytec.tasks.register_pr_update_user': {'queue': 'acuitytec_queue'},
 }
 
 
