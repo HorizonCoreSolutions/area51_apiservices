@@ -15,6 +15,7 @@ from django.utils import timezone
 import requests
 from pyhanko_certvalidator import ValidationError
 
+from apps.acuitytec.tasks import register_pr_update_user
 from apps.admin_panel.tasks import newuser_email, queries_email
 from apps.bets.utils import generate_reference
 from apps.bets.models import CASHBACK, CHARGED
@@ -528,8 +529,20 @@ class UserUpdateView(APIViewContext):
 
                 if player.cashtag!=cashtag:
                     if Player.objects.filter(cashtag=cashtag).exists(): 
-                        return self.Response({"title":"Error","icon":"error","message": "Cashtag Already Exists!"}, status.HTTP_400_BAD_REQUEST) 
+                        return Response({"title":"Error","icon":"error","message": "Cashtag Already Exists!"}, status.HTTP_400_BAD_REQUEST) 
                 player.save()
+                
+                
+                x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+                
+                print('cping')
+                if x_forwarded_for:
+                    print(x_forwarded_for)
+                    ip = x_forwarded_for.split(',')[0].strip()  # client’s real IP
+                else:
+                    ip = request.META.get('REMOTE_ADDR')
+                    
+                register_pr_update_user.delay(ip, timezone.now(), player.id)
                 return Response({"message": "User Updated Successfully"},status.HTTP_200_OK)
             else:
                 return Response({"message": "User not found", },status.HTTP_400_BAD_REQUEST)

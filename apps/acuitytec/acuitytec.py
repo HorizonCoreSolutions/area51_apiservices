@@ -9,6 +9,7 @@ from typing import Dict, Any, Optional
 from apps.acuitytec.models import AcuitytecUser
 from apps.users.models import Users
 from django.conf import settings
+from urllib.parse import urlparse
 
 
 class AcuityTecAPI:
@@ -25,6 +26,7 @@ class AcuityTecAPI:
             merchant_id: Merchant account ID provided by AcuityTec
             password: Merchant password provided by AcuityTec
         """
+        self.site = urlparse(settings.DOMAIN_URL).hostname
         self.base_url = settings.ACUITYTEC_API.rstrip('/')
         self.user = user
         
@@ -72,6 +74,7 @@ class AcuityTecAPI:
                             ]),
             'reg_date': self.user.created.strftime("%Y-%m-%d"),
             'reg_ip_address': reg_ip_address,
+            'site_skin_name' : self.site,
         }
         
         # Add customer information with proper tags
@@ -81,7 +84,7 @@ class AcuityTecAPI:
         # Add optional parameters
         optional_fields = [
             'reg_device_id', 'device_fingerprint', 'source', 'bonus_code',
-            'bonus_submission_date', 'bonus_amount', 'site_skin_name',
+            'bonus_submission_date', 'bonus_amount',
             'how_did_you_hear', 'affiliate_id'
         ]
         
