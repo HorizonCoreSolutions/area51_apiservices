@@ -542,7 +542,7 @@ class UserUpdateView(APIViewContext):
                 else:
                     ip = request.META.get('REMOTE_ADDR')
                     
-                register_pr_update_user.delay(ip, timezone.now(), player.id)
+                register_pr_update_user.delay(ip, timezone.now().isoformat(), player.id)
                 return Response({"message": "User Updated Successfully"},status.HTTP_200_OK)
             else:
                 return Response({"message": "User not found", },status.HTTP_400_BAD_REQUEST)
