@@ -2,8 +2,9 @@
 AcuityTec Customer Registration API Client
 Simple Python implementation for customer registration verification
 """
-import requests
+import time
 import json
+import requests
 from datetime import datetime
 from typing import Dict, Any, Optional
 from apps.acuitytec.models import AcuitytecUser
@@ -196,6 +197,25 @@ class AcuityTecAPI:
                 return 'error' + str(response.status_code)
         except:
             return 'error' + 'Something wrong has happend'
+        
+    
+    @staticmethod
+    def save_request(request, is_response=False):
+        file = "acuitytec_request_log.txt"
+        ts = str(time.time())
+        full_url = request.build_absolute_uri() if not is_response else "response:"
+        from pprint import pformat
+        data = pformat(request.data) if not is_response else pformat(request)
+
+        entry = (
+            f"\n--- {ts} ---\n"
+            f"URL: {full_url}\n"
+            f"DATA:\n{data}\n"
+        )
+
+        with open(file, 'a') as f:
+            f.write(entry)
+
 
 # Example usage
 if __name__ == "__main__":
