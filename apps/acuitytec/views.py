@@ -61,4 +61,6 @@ class CallbackAcuitytecView(APIView):
 
     def post(self, request):
         AcuityTecAPI.save_request(request=request)
+        
+        return Response({"message" : "ok", "status" : 0}, status.HTTP_200_OK)
 
