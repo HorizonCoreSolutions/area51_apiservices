@@ -7,7 +7,7 @@ import json
 import requests
 from datetime import datetime, timedelta
 from typing import Dict, Any, Optional
-from apps.acuitytec.models import AcuitytecUser, VerifycationItem
+from apps.acuitytec.models import AcuitytecUser, VerificationStateChoise, VerifycationItem
 from apps.users.models import VERIFICATION_PENDING, Users
 from django.conf import settings
 from django.utils import timezone
@@ -168,7 +168,11 @@ class AcuityTecAPI:
 
     def getLink(self, document, language):
         try:
-            qs = VerifycationItem.objects.filter(user=self.user, created__gte=timezone.now() - timedelta(hours=24))
+            qs = VerifycationItem.objects.filter(
+                user=self.user,
+                status=VerificationStateChoise.pending,
+                created__gte=timezone.now() - timedelta(hours=24)
+                )
             
             if qs.exists():
                 vi = qs.first()
