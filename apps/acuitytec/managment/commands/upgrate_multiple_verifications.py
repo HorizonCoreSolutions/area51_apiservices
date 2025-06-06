@@ -6,6 +6,10 @@ class Command(BaseCommand):
     help = "Migrates the old users to the new countries"
 
     def handle(self):
+        counter = 0
         for user in Users.objects.all():
-            user.phone_verified = user.is_verified
+            user.phone_verified = 1 if user.is_verified else 0
+            counter += 1 if user.is_verified else 0
             user.save()
+            
+        print(f"{counter} users are phone verified.")
