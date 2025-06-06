@@ -9,6 +9,10 @@ class Command(BaseCommand):
         for user in Users.objects.all():
             print(user.username, end=': ')
             if not user.full_name:
+                user.full_name = ''
+                user.first_name = ''
+                user.last_name = ''
+                user.save()
                 print('has no full_name')
                 print(''.center(40, '='))
                 continue
