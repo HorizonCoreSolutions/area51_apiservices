@@ -200,14 +200,12 @@ class AcuityTecAPI:
                     print("Verification URL:", result["verification_source"])
                     
                     VerifycationItem.objects.create(
-                        user = self.user,
+                        user=self.user,
                         url=result['verification_source'],
                         reference_id=result["reference_id"],
                     )
-                    if user is None:
-                        return 'errorUser must not be null'
-                    user.document_verified = VERIFICATION_PENDING
-                    user.save()
+                    self.user.document_verified = VERIFICATION_PENDING
+                    self.user.save()
                     
                     return result['verification_source']
                 else:
