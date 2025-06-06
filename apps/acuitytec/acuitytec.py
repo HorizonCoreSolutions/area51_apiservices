@@ -168,9 +168,7 @@ class AcuityTecAPI:
 
     def getLink(self, document, language):
         try:
-            print('got here')
-            qs = VerifycationItem.objects.filter(user=user, created__gte=timezone.now() - timedelta(hours=24))
-            print('not here')
+            qs = VerifycationItem.objects.filter(user=self.user, created__gte=timezone.now() - timedelta(hours=24))
             
             if qs.exists():
                 vi = qs.first()
@@ -218,8 +216,7 @@ class AcuityTecAPI:
             else:
                 print("HTTP error:", response.status_code)
                 return 'error' + str(response.status_code)
-        except Exception as e:
-            print(e)
+        except:
             return 'error' + 'Something wrong has happend'
     
     
