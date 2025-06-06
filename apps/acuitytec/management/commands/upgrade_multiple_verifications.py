@@ -9,7 +9,7 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         counter = 0
         if Users.objects.filter(~Q(phone_verified=0)).exists():
-            print("you have already data we suggest to make a more detail migration")
+            print("you already have data. We suggest to create a more detailed migration")
             return
         for user in Users.objects.all():
             user.phone_verified = 1 if user.is_verified else 0
