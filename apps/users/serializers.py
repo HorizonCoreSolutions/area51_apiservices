@@ -111,6 +111,8 @@ class PlayerSerializer(serializers.Serializer):
     is_max_spending_limit_set_by_admin = serializers.SerializerMethodField()
     affiliate_link = serializers.CharField(max_length=250)
     is_active = serializers.BooleanField(default=False)
+    phone_verified = serializers.IntegerField()
+    document_verified = serializers.IntegerField()
     is_verified = serializers.SerializerMethodField()
     no_of_deposit_counts = serializers.IntegerField()
     is_bonus_on_all_deposits = serializers.BooleanField(default=False)
