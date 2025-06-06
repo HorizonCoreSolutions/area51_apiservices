@@ -97,7 +97,7 @@ from apps.users.fortunepandas import FortunePandaAPI
 from .models import ( AdminAdsBanner,CASHBACK_PERCENTAGE, AffiliateRequests, BonusPercentage, ChatHistory, ChatMessage, ChatRoom, CsrQueries, OffMarketGames, OffMarketTransactions, OffmarketWithdrawalRequests,
                     Player, Queue, Staff, SuperAdminSetting, UserGames,
                       Users, CmsContactDetails,ResponsibleGambling,
-                      CmsPages,CashAppDeatils, VerificationStatus
+                      CmsPages,CashAppDeatils
                       )
 from apps.bets.models import  Transactions,SPIN_WHEEL,CREDIT
 from django.db.models import BooleanField, Case, When, Value
@@ -755,7 +755,7 @@ class OTPActionsView(APIView):
                     user: Users = request.user
                     if user.phone_verified == 1:
                         return Response({"message": "User was verified"}, status=status.HTTP_202_ACCEPTED)
-                    user.phone_verified = VerificationStatus.APPROVED
+                    user.phone_verified = VERIFICATION_APPROVED
                     user.save()
 
                     return Response({"message": "User is now verified"}, status.HTTP_200_OK)

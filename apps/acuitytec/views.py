@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from apps.acuitytec.models import AcuitytecUser, VerifycationItem, VerificationStateChoise
 from apps.acuitytec.utils import generate_qr_code_url
-from apps.users.models import Users, VerificationStatus
+from apps.users.models import VERIFICATION_APPROVED, VERIFICATION_FAILED, Users
 from django.conf import settings
 from django.utils import timezone
 from apps.acuitytec.acuitytec import AcuityTecAPI
@@ -101,9 +101,9 @@ class CallbackAcuitytecView(APIView):
         user = vi.user
         
         if result == "verification.declined":
-            user.document_verified = VerificationStatus.FAILED
+            user.document_verified = VERIFICATION_FAILED
         elif result == 'verification.accepted':
-            user.document_verified = VerificationStatus.APPROVED
+            user.document_verified = VERIFICATION_APPROVED
         
         user.save()
         data = {"message": "status updated", "status": 1}
