@@ -168,7 +168,9 @@ class AcuityTecAPI:
 
     def getLink(self, document, language):
         try:
+            print('got here')
             qs = VerifycationItem.objects.filter(user=user, created__gte=timezone.now() - timedelta(hours=24))
+            print('not here')
             
             if qs.exists():
                 vi = qs.first()
