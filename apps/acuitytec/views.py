@@ -19,7 +19,7 @@ class GetVerificationLinkView(APIView):
             if not request.user.is_authenticated:
                 return Response({"message": "The user must be authenticated"}, status.HTTP_400_BAD_REQUEST)
 
-            user = Users.objects.get(id = request.user.id)
+            user = Users.objects.get(id=request.user.id)
 
             document = request.data.get('document')
             language = request.data.get('language')
