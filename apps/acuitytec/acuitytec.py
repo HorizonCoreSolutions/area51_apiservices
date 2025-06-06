@@ -5,11 +5,12 @@ Simple Python implementation for customer registration verification
 import time
 import json
 import requests
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Dict, Any, Optional
-from apps.acuitytec.models import AcuitytecUser
-from apps.users.models import Users
+from apps.acuitytec.models import AcuitytecUser, VerifycationItem
+from apps.users.models import Users, VerificationStatus
 from django.conf import settings
+from django.utils import timezone
 from urllib.parse import urlparse
 
 
@@ -41,6 +42,8 @@ class AcuityTecAPI:
             "register_user" : f"{self.base_url}/customerregistration",
             "photo_id" : f"{self.base_url}/photoIdOnlineVerification",
             }
+        if user is None:
+            raise ValueError('User must not be None')
     
     def register_customer(self,
                          reg_ip_address: str,
@@ -165,6 +168,13 @@ class AcuityTecAPI:
 
     def getLink(self, document, language):
         try:
+            qs = VerifycationItem.objects.filter(user=user, created__gte=timezone.now() - timedelta(hours=24))
+            
+            if qs.exists():
+                vi = qs.first()
+                if not vi is None and vi.url:
+                    return vi.url
+
             data = {
                 "merchant_id": self.merchant_id,
                 "password": self.password,
@@ -188,6 +198,17 @@ class AcuityTecAPI:
                     print("Verification initiated successfully.")
                     print("Reference ID:", result["reference_id"])
                     print("Verification URL:", result["verification_source"])
+                    
+                    VerifycationItem.objects.create(
+                        user = self.user,
+                        url=result['verification_source'],
+                        reference_id=result["reference_id"],
+                    )
+                    if user is None:
+                        return 'errorUser must not be null'
+                    user.document_verified = VerificationStatus.PENDING
+                    user.save()
+                    
                     return result['verification_source']
                 else:
                     print("API responded with error:", result.get("description"))
@@ -197,7 +218,21 @@ class AcuityTecAPI:
                 return 'error' + str(response.status_code)
         except:
             return 'error' + 'Something wrong has happend'
-        
+    
+    
+    @staticmethod
+    def format_response(
+        message: str,
+        extra_message: str,
+        status: int,
+        expiration: Optional[int]
+    ):
+        return {
+            'message' : message,
+            'status' : status,
+            'expiration' : expiration
+        }
+    
     
     @staticmethod
     def save_request(request, is_response=False):
