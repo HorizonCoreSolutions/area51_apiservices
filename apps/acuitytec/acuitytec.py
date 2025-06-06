@@ -8,7 +8,7 @@ import requests
 from datetime import datetime, timedelta
 from typing import Dict, Any, Optional
 from apps.acuitytec.models import AcuitytecUser, VerifycationItem
-from apps.users.models import Users, VerificationStatus
+from apps.users.models import VERIFICATION_PENDING, Users
 from django.conf import settings
 from django.utils import timezone
 from urllib.parse import urlparse
@@ -206,7 +206,7 @@ class AcuityTecAPI:
                     )
                     if user is None:
                         return 'errorUser must not be null'
-                    user.document_verified = VerificationStatus.PENDING
+                    user.document_verified = VERIFICATION_PENDING
                     user.save()
                     
                     return result['verification_source']

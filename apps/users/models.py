@@ -112,14 +112,24 @@ JACKPOT_AMOUNT = 500.00000
 JACKPOT_TIME_LIMIT = 5
 BETSLIP_BONUS_PERCENTAGE = 10.00
 
+# Constants
+VERIFICATION_PENDING = 0
+VERIFICATION_APPROVED = 1
+VERIFICATION_REJECTED = -1
+VERIFICATION_FAILED = -2
+VERIFICATION_CANCELED = -3
+VERIFICATION_EXPIRED = -4
 
-class VerificationStatus(models.IntegerChoices):
-    PENDING = 0, 'Pending'         # Neutral state
-    APPROVED = 1, 'Approved'       # Success
-    REJECTED = -1, 'Rejected'      # Manual rejection
-    FAILED = -2, 'Failed'          # System or process failure
-    CANCELED = -3, 'Canceled'      # User/admin canceled
-    EXPIRED = -4, 'Expired'        # Timeout or expiration
+# Choices tuple
+VERIFICATION_STATUS_CHOICES = (
+    (VERIFICATION_PENDING, 'Pending'),       # Neutral state
+    (VERIFICATION_APPROVED, 'Approved'),     # Success
+    (VERIFICATION_REJECTED, 'Rejected'),     # Manual rejection
+    (VERIFICATION_FAILED, 'Failed'),         # System or process failure
+    (VERIFICATION_CANCELED, 'Canceled'),     # User/admin canceled
+    (VERIFICATION_EXPIRED, 'Expired'),       # Timeout or expiration
+)
+
 
 
 def get_default_country():
@@ -336,8 +346,8 @@ class Users(AbstractBaseUser, AbstractBaseModel, PermissionsMixin):
     referral_code = models.CharField(max_length=500, null=True, blank=True, default=None, unique=True)
     zip_code = models.IntegerField(_("zip_code"), null=True, blank=True, default=None)
     is_verified = models.BooleanField(default=False, null=True)
-    document_verified = models.IntegerField(null=True, blank=True, default=VerificationStatus.PENDING, choices=VerificationStatus.choices)
-    phone_verified = models.IntegerField(null=True, blank=True, default=VerificationStatus.PENDING, choices=VerificationStatus.choices)
+    document_verified = models.IntegerField(null=True, blank=True, default=VERIFICATION_PENDING, choices=VERIFICATION_STATUS_CHOICES)
+    phone_verified = models.IntegerField(null=True, blank=True, default=VERIFICATION_PENDING, choices=VERIFICATION_STATUS_CHOICES)
     country = models.CharField(_("country"), max_length=100, default="US")
     country_obj = models.ForeignKey(
         "users.Country",
