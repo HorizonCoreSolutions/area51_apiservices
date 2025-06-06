@@ -216,7 +216,8 @@ class AcuityTecAPI:
             else:
                 print("HTTP error:", response.status_code)
                 return 'error' + str(response.status_code)
-        except:
+        except Exception as e:
+            print(e)
             return 'error' + 'Something wrong has happend'
     
     
