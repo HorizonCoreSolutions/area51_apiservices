@@ -97,7 +97,7 @@ from apps.users.fortunepandas import FortunePandaAPI
 from .models import ( AdminAdsBanner,CASHBACK_PERCENTAGE, AffiliateRequests, BonusPercentage, ChatHistory, ChatMessage, ChatRoom, CsrQueries, OffMarketGames, OffMarketTransactions, OffmarketWithdrawalRequests,
                     Player, Queue, Staff, SuperAdminSetting, UserGames,
                       Users, CmsContactDetails,ResponsibleGambling,
-                      CmsPages,CashAppDeatils
+                      CmsPages,CashAppDeatils, VerificationStatus
                       )
 from apps.bets.models import  Transactions,SPIN_WHEEL,CREDIT
 from django.db.models import BooleanField, Case, When, Value
@@ -640,7 +640,7 @@ class GetOTPView(APIViewContext):
                     )
                 if request.user.phone_number == data.get("phone_number") and\
                         request.user.country_code == data.get("country_code") and\
-                        request.user.is_verified:
+                        request.user.phone_verified == 1:
                     return Response(
                         {"message": _("You cannot change to the same phone number")},
                         status.HTTP_400_BAD_REQUEST,
@@ -650,7 +650,7 @@ class GetOTPView(APIViewContext):
                         {"message": _("This mobile number already exist")},
                         status.HTTP_400_BAD_REQUEST,
                     )
-
+            
             serializer = self.get_serializer(data=data)
             if serializer.is_valid():
                 response_data = serializer.validated_data
@@ -752,10 +752,10 @@ class OTPActionsView(APIView):
                 if verify_number:
                     if not request.user.is_authenticated:
                         return Response({"message": "To verify a number you should be logged in first"}, status=status.HTTP_400_BAD_REQUEST)
-                    user = request.user
-                    if user.is_verified:
+                    user: Users = request.user
+                    if user.phone_verified == 1:
                         return Response({"message": "User was verified"}, status=status.HTTP_202_ACCEPTED)
-                    user.is_verified = True
+                    user.phone_verified = VerificationStatus.APPROVED
                     user.save()
 
                     return Response({"message": "User is now verified"}, status.HTTP_200_OK)

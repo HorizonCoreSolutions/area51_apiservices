@@ -113,6 +113,15 @@ JACKPOT_TIME_LIMIT = 5
 BETSLIP_BONUS_PERCENTAGE = 10.00
 
 
+class VerificationStatus(models.IntegerChoices):
+    PENDING = 0, 'Pending'         # Neutral state
+    APPROVED = 1, 'Approved'       # Success
+    REJECTED = -1, 'Rejected'      # Manual rejection
+    FAILED = -2, 'Failed'          # System or process failure
+    CANCELED = -3, 'Canceled'      # User/admin canceled
+    EXPIRED = -4, 'Expired'        # Timeout or expiration
+
+
 def get_default_country():
     return Country.objects.get(code_cca2="US").id if Country.objects.filter(code_cca2="US").exists() else None
 
@@ -327,6 +336,8 @@ class Users(AbstractBaseUser, AbstractBaseModel, PermissionsMixin):
     referral_code = models.CharField(max_length=500, null=True, blank=True, default=None, unique=True)
     zip_code = models.IntegerField(_("zip_code"), null=True, blank=True, default=None)
     is_verified = models.BooleanField(default=False, null=True)
+    document_verified = models.IntegerField(null=True, blank=True, default=VerificationStatus.PENDING, choices=VerificationStatus.choices)
+    phone_verified = models.IntegerField(null=True, blank=True, default=VerificationStatus.PENDING, choices=VerificationStatus.choices)
     country = models.CharField(_("country"), max_length=100, default="US")
     country_obj = models.ForeignKey(
         "users.Country",
@@ -373,10 +384,30 @@ class Users(AbstractBaseUser, AbstractBaseModel, PermissionsMixin):
         _("payout balance"), max_digits=15, decimal_places=2, default=0.00, null=False, blank=False
     )
 
+    VERIFICATION_FIELDS = {
+        'document_verified' : 'Document/Passport/Government ID"',
+        'phone_verified' : 'Phone number',
+    }
 
     USERNAME_FIELD = "username"
 
     objects = UserManager()
+    
+    def get_is_verified(self):
+        """
+        Returns True if all given fields are exactly 1.
+        """
+        return all(getattr(self, field, None) == 1 for field in self.VERIFICATION_FIELDS)
+    
+    def set_is_verified(self, value: int):
+        self.is_verified = (value == 1)
+        
+        for field in self.VERIFICATION_FIELDS:
+            setattr(self, field, value)
+        return
+    
+    def verifycation_steps_left(self):
+        return [label for field, label in self.VERIFICATION_FIELDS.items() if getattr(self, field, None) != 1]
 
     def ensure_country_obj(self):
         if not self.country:
@@ -404,6 +435,8 @@ class Users(AbstractBaseUser, AbstractBaseModel, PermissionsMixin):
         return False
 
     def save(self, *args, **kwargs):
+        self.is_verified = (self.phone_verified == 1 and self.document_verified == 1)
+        
         if self.role == "player":
             self.is_staff = False
             self.is_superuser = False

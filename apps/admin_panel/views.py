@@ -465,11 +465,11 @@ class VerifyPlayer(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseM
                     status=status.HTTP_400_BAD_REQUEST
                 )
             
-            if player.is_verified:
-                player.is_verified = False
+            if player.get_is_verified():
+                player.set_is_verified(-1)
                 verify = "unverified"
             else:
-                player.is_verified = True
+                player.set_is_verified(1)
                 verify = "verified"
 
             player.save()
