@@ -38,7 +38,7 @@ class VerifycationItem(AbstractBaseModel):
     status = models.CharField(
         max_length=500,
         choices=VerificationStateChoise.choices,
-        default=VerificationStateChoise.pending.value, # type: ignore
+        default=VerificationStateChoise.pending, # type: ignore
         null=True,
         blank=True,
     )
