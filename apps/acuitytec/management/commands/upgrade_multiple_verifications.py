@@ -1,5 +1,6 @@
 from django.core.management.base import BaseCommand
 from apps.users.models import Users
+from django.db.models import Q
 
 
 class Command(BaseCommand):
@@ -7,6 +8,9 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         counter = 0
+        if Users.objects.filter(~Q(phone_verified=0)).exists():
+            print("you have already data we suggest to make a more detail migration")
+            return
         for user in Users.objects.all():
             user.phone_verified = 1 if user.is_verified else 0
             counter += 1 if user.is_verified else 0
