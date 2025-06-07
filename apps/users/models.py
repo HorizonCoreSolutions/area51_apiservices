@@ -115,6 +115,7 @@ BETSLIP_BONUS_PERCENTAGE = 10.00
 # Constants
 VERIFICATION_PENDING = 0
 VERIFICATION_APPROVED = 1
+VERIFICATION_PROCESSING = 2
 VERIFICATION_REJECTED = -1
 VERIFICATION_FAILED = -2
 VERIFICATION_CANCELED = -3
@@ -124,6 +125,7 @@ VERIFICATION_EXPIRED = -4
 VERIFICATION_STATUS_CHOICES = (
     (VERIFICATION_PENDING, 'Pending'),       # Neutral state
     (VERIFICATION_APPROVED, 'Approved'),     # Success
+    (VERIFICATION_PROCESSING, 'Processing'), # Processing
     (VERIFICATION_REJECTED, 'Rejected'),     # Manual rejection
     (VERIFICATION_FAILED, 'Failed'),         # System or process failure
     (VERIFICATION_CANCELED, 'Canceled'),     # User/admin canceled

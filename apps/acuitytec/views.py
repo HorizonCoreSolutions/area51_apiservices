@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from apps.acuitytec.models import AcuitytecUser, VerifycationItem, VerificationStateChoise
 from apps.acuitytec.utils import generate_qr_code_url
-from apps.users.models import VERIFICATION_APPROVED, VERIFICATION_FAILED, Users
+from apps.users.models import VERIFICATION_APPROVED, VERIFICATION_EXPIRED, VERIFICATION_FAILED, Users
 from django.conf import settings
 from django.utils import timezone
 from apps.acuitytec.acuitytec import AcuityTecAPI
@@ -75,7 +75,7 @@ class CallbackAcuitytecView(APIView):
         qs = VerifycationItem.objects.filter(
             reference_id=reference_id,
             status=VerificationStateChoise.pending,
-            created__gte=timezone.now() - timedelta(hours=24)
+            # created__gte=timezone.now() - timedelta(days=7)
         )
         if not qs.exists():
             print("Someone tried to catch something")
@@ -92,7 +92,8 @@ class CallbackAcuitytecView(APIView):
         transformer = {
             "verification.declined" : VerificationStateChoise.declined,
             "verification.accepted" : VerificationStateChoise.accepted,
-            "verification.pending"  : VerificationStateChoise.pending
+            "verification.pending"  : VerificationStateChoise.pending,
+            "request.timeout" : VerificationStateChoise.expired
         }
         
         vi.status = transformer.get(result, VerificationStateChoise.pending)
@@ -104,6 +105,8 @@ class CallbackAcuitytecView(APIView):
             user.document_verified = VERIFICATION_FAILED
         elif result == 'verification.accepted':
             user.document_verified = VERIFICATION_APPROVED
+        elif result == 'request.timeout':
+            user.document_verified = VERIFICATION_EXPIRED
         
         user.save()
         data = {"message": "status updated", "status": 1}
@@ -125,7 +128,7 @@ class GetVerifycationStatus(APIView):
         ).order_by('-created')
         if not qs.exists():
             status_msg = "You are already verified" if user.document_verified else "Please go to your account settings to request this verification"
-            return Response(AcuityTecAPI.format_response('404: This operation does not exist', status_msg, 400, -1), status.HTTP_404_NOT_FOUND)
+            return Response(AcuityTecAPI.format_response('404: This operation does not exist', status_msg, 404, -1), status.HTTP_404_NOT_FOUND)
         
         res = qs.first()
         if res is None:

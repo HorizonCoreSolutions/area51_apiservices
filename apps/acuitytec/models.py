@@ -11,6 +11,7 @@ class VerificationStateChoise(DjangoChoices):
     accepted = ChoiceItem("ACCEPTED", "accepted")
     declined = ChoiceItem("DECLINED", "declined")
     secure = ChoiceItem("SECURE", "secure")
+    expired = ChoiceItem("EXPIRED", "expired")
 # Create your models here.
 
 class AcuitytecUser(AbstractBaseModel):
