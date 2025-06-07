@@ -8,7 +8,7 @@ import requests
 from datetime import datetime, timedelta
 from typing import Dict, Any, Optional
 from apps.acuitytec.models import AcuitytecUser, VerificationStateChoise, VerifycationItem
-from apps.users.models import VERIFICATION_PENDING, Users
+from apps.users.models import VERIFICATION_PENDING, VERIFICATION_PROCESSING, Users
 from django.conf import settings
 from django.utils import timezone
 from urllib.parse import urlparse
@@ -208,7 +208,7 @@ class AcuityTecAPI:
                         url=result['verification_source'],
                         reference_id=result["reference_id"],
                     )
-                    self.user.document_verified = VERIFICATION_PENDING
+                    self.user.document_verified = VERIFICATION_PROCESSING
                     self.user.save()
                     
                     return result['verification_source']
