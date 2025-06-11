@@ -15,7 +15,7 @@ app.config_from_object("django.conf:settings", namespace="CELERY")
 RETRY_DELAYS = [2 * 3600, 4 * 3600, 8 * 3600, 16 * 3600, 24 * 3600]
 
 @app.task(bind=True, max_retries=5, queue="acuitytec_queue")
-def register_pr_update_user(self, ip, schedule, user_id):
+def register_or_update_user(self, ip, schedule, user_id):
     try:
         # Ensure schedule is a timezone-aware datetime object
         if isinstance(schedule, str):
