@@ -15,7 +15,7 @@ from django.utils import timezone
 import requests
 from pyhanko_certvalidator import ValidationError
 
-from apps.acuitytec.tasks import register_pr_update_user
+from apps.acuitytec.tasks import register_or_update_user
 from apps.admin_panel.tasks import newuser_email, queries_email
 from apps.bets.utils import generate_reference
 from apps.bets.models import CASHBACK, CHARGED
@@ -94,7 +94,7 @@ from apps.users.models import Player, Agent, Dealer, AdminBanner, CmsAboutDetail
 from apps.users.utils import check_otp, create_otp, create_otp_password,encrypt, is_only_one
 from apps.admin_panel.templatetags.navigate import is_active
 from apps.users.fortunepandas import FortunePandaAPI
-from .models import ( AdminAdsBanner,CASHBACK_PERCENTAGE, AffiliateRequests, BonusPercentage, ChatHistory, ChatMessage, ChatRoom, CsrQueries, OffMarketGames, OffMarketTransactions, OffmarketWithdrawalRequests,
+from .models import ( VERIFICATION_APPROVED, AdminAdsBanner,CASHBACK_PERCENTAGE, AffiliateRequests, BonusPercentage, ChatHistory, ChatMessage, ChatRoom, CsrQueries, OffMarketGames, OffMarketTransactions, OffmarketWithdrawalRequests,
                     Player, Queue, Staff, SuperAdminSetting, UserGames,
                       Users, CmsContactDetails,ResponsibleGambling,
                       CmsPages,CashAppDeatils
@@ -463,7 +463,8 @@ class UserUpdateView(APIViewContext):
                 cashtag = request.POST.get("cashtag", None)
                 email = request.data.get("email", player.email)
                 password = request.data.get("password", player.password)
-                phone_number = request.data.get("phone_number", player.phone_number)
+                phone_number = request.data.get("phone_number")
+                country_code = request.data.get("country_code")
                 first_name = request.data.get("first_name", player.first_name)
                 last_name = request.data.get("last_name", player.last_name)
                 state = request.data.get("state", player.state)
@@ -471,7 +472,6 @@ class UserUpdateView(APIViewContext):
                 dob = request.data.get("dob", player.dob)
                 zipcode = request.data.get("zip_code", player.zip_code)
                 complete_address = request.data.get("complete_address", player.complete_address)
-                country_code = request.data.get("country_code", player.country_code)
                 profile_pic =request.data.get("profile_pic", player.profile_pic)
                 cca2 = request.data.get("code_cca2", player.country)
                 if(request.data.get("profile_pic") and not request.data.get("profile_pic").startswith("https")):
@@ -498,12 +498,16 @@ class UserUpdateView(APIViewContext):
                     player.profile_pic = profile_pic
                 if request.data.get("profile_pic", "https").startswith("https"):
                     profile_pic = player.profile_pic
-                if Users.objects.filter(phone_number=phone_number).exclude(username=request.data.get('username')).count() > 0:
-                    return Response({"message": "Phone number belongs to another user.", }, status.HTTP_400_BAD_REQUEST)
+                    
                 # if Users.objects.filter(username=request.data.get("username")).exists():
                 #     return Response({"message": _("User already exists.")}, status.HTTP_400_BAD_REQUEST)
                 if not request.data.get("username") or not request.data.get("email"):
                     return Response("Username or Email must not be null.")
+                if phone_number and country_code:
+                    if Users.objects.filter(phone_number=phone_number).exclude(Q(username=request.data.get('username')) | Q(phone_verified=1)).count() > 0:
+                        return Response({"message": "Phone number belongs to another user.", }, status.HTTP_400_BAD_REQUEST)
+                    player.country_code = country_code
+                    player.phone_number = phone_number
                 if Country.objects.filter(code_cca2=cca2).exists():
                     player.country = cca2
                     player.country_obj = Country.objects.get(code_cca2=cca2)
@@ -513,14 +517,12 @@ class UserUpdateView(APIViewContext):
                 player.email = email
                 player.zip_code = zipcode
                 player.password = password
-                player.phone_number = phone_number
                 player.first_name = first_name
                 player.last_name = last_name
                 player.state = state
                 player.city = city
                 player.dob = dob
                 player.complete_address = complete_address
-                player.country_code = country_code
                 player.profile_pic = profile_pic
                 player.cashtag = cashtag
                 player.clean()
@@ -542,7 +544,7 @@ class UserUpdateView(APIViewContext):
                 else:
                     ip = request.META.get('REMOTE_ADDR')
                     
-                register_pr_update_user.delay(ip, timezone.now().isoformat(), player.id)
+                register_or_update_user.delay(ip, timezone.now().isoformat(), player.id)
                 return Response({"message": "User Updated Successfully"},status.HTTP_200_OK)
             else:
                 return Response({"message": "User not found", },status.HTTP_400_BAD_REQUEST)
