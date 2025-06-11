@@ -69,7 +69,8 @@ class CallbackAcuitytecView(APIView):
         reference_id = request.data.get('reference_id')
         
         if reference_id is None:
-            print("Someone tried to catch something")
+            data = {"message": "The reference is not valid", "reallity": {"message": "status updated", "status": 1}, "status": -1}
+            AcuityTecAPI.save_request(request=data, is_response=True)
             return Response({"message": "status updated", "status": 1}, status.HTTP_200_OK)
         
         qs = VerifycationItem.objects.filter(
@@ -78,31 +79,39 @@ class CallbackAcuitytecView(APIView):
             # created__gte=timezone.now() - timedelta(days=7)
         )
         if not qs.exists():
-            print("Someone tried to catch something")
+            data = {"message": "Verification Item does not exist", "reallity": {"message": "status updated", "status": 1}, "status": -1}
+            AcuityTecAPI.save_request(request=data, is_response=True)
             return Response({"message": "status updated", "status": 1}, status.HTTP_200_OK)
         
         vi = qs.first()
         if vi is None:
-            print("Someone tried to catch something")
+            data = {"message": "VI existed but qs.first() is None", "reallity": {"message": "status updated", "status": 1}, "status": -1}
+            AcuityTecAPI.save_request(request=data, is_response=True)
             return Response({"message": "status updated", "status": 1}, status.HTTP_200_OK)
         
-        data = json.loads(request.data.get('scrubber_response', '{}'))
-        result = data.get('event', 'verification.pending')
-        
-        transformer = {
-            "verification.declined" : VerificationStateChoise.declined,
-            "verification.accepted" : VerificationStateChoise.accepted,
-            "verification.pending"  : VerificationStateChoise.pending,
-            "request.timeout" : VerificationStateChoise.expired
+        try:
+            data = json.loads(request.data.get('scrubber_response', '{}'))
+        except json.JSONDecodeError:
+            return Response({"message": "Invalid scrubber response", "status": 0}, status=status.HTTP_400_BAD_REQUEST)
+
+        result = data.get('event', 'verification.pending').strip().lower()
+
+        status_map = {
+            "verification.declined": VerificationStateChoise.declined,
+            "verification.accepted": VerificationStateChoise.accepted,
+            "verification.pending": VerificationStateChoise.pending,
+            "request.timeout": VerificationStateChoise.expired
         }
-        
-        vi.status = transformer.get(result, VerificationStateChoise.pending)
+
+        vi.status = status_map.get(result, VerificationStateChoise.pending)
         vi.save()
         
         user = vi.user
         newer_exists = VerifycationItem.objects.filter(user=vi.user, created__gte=vi.created).exclude(id=vi.id).exists()
         
         if newer_exists and result in ["verification.declined", 'request.timeout']:
+            data = {"message": "has been declined or time out and a newer request has been made", "reallity": {"message": "status updated", "status": 1}, "status": -1}
+            AcuityTecAPI.save_request(request=data, is_response=True)
             return Response({"message": "status updated", "status": 1}, status=status.HTTP_200_OK)
         
         if result == "verification.declined":
