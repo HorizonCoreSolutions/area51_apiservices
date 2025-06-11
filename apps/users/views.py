@@ -503,11 +503,6 @@ class UserUpdateView(APIViewContext):
                 #     return Response({"message": _("User already exists.")}, status.HTTP_400_BAD_REQUEST)
                 if not request.data.get("username") or not request.data.get("email"):
                     return Response("Username or Email must not be null.")
-                if phone_number and country_code:
-                    if Users.objects.filter(phone_number=phone_number, country_code=country_code).exclude(Q(username=request.data.get('username')) | Q(phone_verified=1)).exists():
-                        return Response({"message": "Phone number belongs to another user."}, status.HTTP_400_BAD_REQUEST)
-                    player.country_code = country_code
-                    player.phone_number = phone_number
                 if Country.objects.filter(code_cca2=cca2).exists():
                     player.country = cca2
                     player.country_obj = Country.objects.get(code_cca2=cca2)
@@ -525,13 +520,21 @@ class UserUpdateView(APIViewContext):
                 player.complete_address = complete_address
                 player.profile_pic = profile_pic
                 player.cashtag = cashtag
-                player.clean()
-
+                
+                if phone_number and country_code:
+                    if Users.objects.filter(phone_number=phone_number, country_code=country_code).exclude(Q(username=request.data.get('username')) | Q(phone_verified=1)).exists():
+                        return Response({"message": "Phone number belongs to another user."}, status.HTTP_400_BAD_REQUEST)
+                    player.country_code = country_code
+                    player.phone_number = phone_number
+                    try:
+                        player.clean()
+                    except ValueError:
+                        return Response({"title":"Error","icon":"error","message": "The number used is not valid"}, status.HTTP_400_BAD_REQUEST)
 
 
                 if player.cashtag!=cashtag:
                     if Player.objects.filter(cashtag=cashtag).exists(): 
-                        return Response({"title":"Error","icon":"error","message": "Cashtag Already Exists!"}, status.HTTP_400_BAD_REQUEST) 
+                        return Response({"title":"Error","icon":"error","message": "Cashtag Already Exists!"}, status.HTTP_400_BAD_REQUEST)
                 player.save()
                 
                 
