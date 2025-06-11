@@ -66,7 +66,7 @@ class CallbackAcuitytecView(APIView):
     def post(self, request):
         AcuityTecAPI.save_request(request=request)
         
-        reference_id = request.data.get('reference_id')
+        reference_id = str(request.data.get('reference_id', '')).strip()
         
         if reference_id is None:
             data = {"message": "The reference is not valid", "reallity": {"message": "status updated", "status": 1}, "status": -1}
