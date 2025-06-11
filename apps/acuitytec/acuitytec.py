@@ -199,14 +199,15 @@ class AcuityTecAPI:
             if response.status_code == 200:
                 result = response.json()
                 if result.get("status") == 0:
+                    reference_id: str = str(result["reference_id"]).strip()
                     print("Verification initiated successfully.")
-                    print("Reference ID:", result["reference_id"])
+                    print("Reference ID:", reference_id)
                     print("Verification URL:", result["verification_source"])
                     
                     VerifycationItem.objects.create(
                         user=self.user,
                         url=result['verification_source'],
-                        reference_id=result["reference_id"],
+                        reference_id=reference_id,
                     )
                     self.user.document_verified = VERIFICATION_PROCESSING
                     self.user.save()
