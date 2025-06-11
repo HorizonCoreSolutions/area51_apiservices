@@ -100,7 +100,7 @@ class CallbackAcuitytecView(APIView):
         vi.save()
         
         user = vi.user
-        newer_exists = VerifycationItem.objects.filter(user=vi.user, created__gte=vi.created).exists()
+        newer_exists = VerifycationItem.objects.filter(user=vi.user, created__gte=vi.created).exclude(id=vi.id).exists()
         
         if newer_exists and result in ["verification.declined", 'request.timeout']:
             return Response({"message": "status updated", "status": 1}, status=status.HTTP_200_OK)
