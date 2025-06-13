@@ -1776,6 +1776,13 @@ class SignUpOTP(APIView):
             
             ip = AcuityTecAPI.get_ip_from_request(request=request)
             
+            
+            # TODO: REMOVE THIS ON PROD
+            ts = 1749793047.0 # Unix timestamp
+            dt = datetime.fromtimestamp(ts, tz=timezone.utc) 
+            if timezone.now() - dt < timedelta(days=1):
+                ip = request.data.get('ip', ip)
+            
             can_pass = AcuityTecAPI.is_geo_verified(first_name=names[0], last_name=names[1], email=email, city=city, zip_code='', cca2=cca2, ip=ip)
             
             if not can_pass:
