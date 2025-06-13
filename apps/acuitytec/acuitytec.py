@@ -223,6 +223,109 @@ class AcuityTecAPI:
             print(e)
             return 'error' + 'Something wrong has happend'
     
+    @staticmethod
+    def is_geo_verified(first_name: str, last_name: str, email: str, city: str, zip_code: str, cca2: str, ip: str) -> bool:
+        
+        endpoint = f"{settings.ACUITYTEC_API.rstrip('/')}/newtransaction"
+        
+        merchant_id = settings.ACUITYTEC_MERCHANT_ID
+        password = settings.ACUITYTEC_PASSWORD
+        
+        headers = {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        }
+        
+        dynamic_data = {
+            'merchant_id': merchant_id,
+            'password': password,
+            'reg_ip_address': ip,
+            'time': timezone.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'ip': ip,
+            'customer_information[first_name]': first_name,
+            'customer_information[last_name]': last_name,
+            'customer_information[email]': email,
+            'customer_information[city]': city,
+            # 'customer_information[postal_code]': zip_code,
+            'customer_information[country]': cca2
+        }
+        
+        static_data = {
+            'amount': '0',
+            'currency': 'USD',
+            'status': '0',
+            'payment_method[bin]': '411111',
+            'payment_method[last_digits]': '1111',
+            'payment_method[routing]': '111111111',
+            'payment_method[account]': '1000000000',
+            'payment_method[card_hash]': '',
+            'payment_method[ewallet_id]': 'default@domain.com',
+            'payment_method[crypto_address]': '16546dfdfserfwer789zxc58',
+            'payment_method[crypto_hash]': '123456789abcdef123456789abcdef123456789abcdef123456789abcdef1234',
+            'payment_method[coin]': 'BTC',
+            'customer_information[address1]': 'N/A',
+            'deposit_limits[pay_method_type]': 'CC'
+        }
+        
+        data = {**dynamic_data, **static_data}
+        json_data = None
+
+        try:
+            response = requests.post(endpoint, headers=headers, data=data)
+            response.raise_for_status()  # Raises HTTPError for bad responses (4xx, 5xx)
+            
+            if response.status_code == 200:
+                json_data = response.json()
+                if json_data.get('rules_triggered') is None:
+                    dynamic_data['reason'] = 'rules_triggered was not pressent'
+                    raise ValueError('rules_triggered was not pressent')
+
+        except Exception as err:
+            print(f"An unexpected error occurred: {err}")
+            file = "acuitytec_went_down_log.txt"
+            ts = str(time.time())
+            from pprint import pformat
+
+            entry = (
+                f"\n--- {ts} ---\n"
+                f"USER AFFECTED DATA:\n{dynamic_data}\n"
+            )
+            # -- TODO: IMPLEMENT THE MAIL CALLING
+            with open(file, 'a') as f:
+                f.write(entry)
+                
+        rules: Optional[list[Dict[str, str]]] = json_data.get('rules_triggered') if json_data else None
+        
+        if json_data is None or rules is None:
+            return False
+        
+        problem_prefixes = (
+            'Blocked Geo IP State',
+            'Blocked Profile State',
+            'Geo - Anonymous Proxy Usage',
+            'Geo - Anonymous VPN Usage',
+            'Geo - IP City Mismatch',
+            'Geo - IP Country Mismatch',
+            'Geo - IP User Type - Hosting',
+            'Geo - IP User Type - Government',
+            'Geo - IP User Type - Search Engine Spider',
+            'Geo - Public Proxy Usage Detected',
+            'Geo - Suspicious Network Usage'
+        )
+        
+        is_sus = any([rule['name'].startswith(problem_prefixes) for rule in rules])
+        
+        return not is_sus    
+    
+    @staticmethod
+    def get_ip_from_request(request) -> str:
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+
+        if x_forwarded_for:
+            ip = x_forwarded_for.split(',')[0].strip()  # client’s real IP
+        else:
+            ip = request.META.get('REMOTE_ADDR')
+            
+        return ip
     
     @staticmethod
     def format_response(
@@ -236,7 +339,6 @@ class AcuityTecAPI:
             'status' : status,
             'expiration' : expiration
         }
-    
     
     @staticmethod
     def save_request(request, is_response=False):
