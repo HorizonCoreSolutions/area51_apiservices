@@ -15,6 +15,7 @@ from django.utils import timezone
 import requests
 from pyhanko_certvalidator import ValidationError
 
+from apps.acuitytec.acuitytec import AcuityTecAPI
 from apps.acuitytec.tasks import register_or_update_user
 from apps.admin_panel.tasks import newuser_email, queries_email
 from apps.bets.utils import generate_reference
@@ -398,6 +399,8 @@ class SignUpView(APIViewContext):
             # return Response({"message": "You must be 18+ to have an account on this platform"}, status.HTTP_400_BAD_REQUEST)
 
         # remove un used
+        
+        # TODO: ADD THE DIVING NAME PART
 
         if request.data.get('country_code', '') == '' or request.data.get('phone_number', '') == "":
             data.pop('countray_code', None)
@@ -1704,63 +1707,109 @@ class SignUpOTP(APIView):
     http_method_names = ["post"]
     def post(self, request):
         try:
-            email = request.data.get("email")
+            email = str(request.data.get("email"))
             username = request.data.get("username")
+            full_name = str(request.data.get('full_name'))
+            city = str(request.data.get('city'))
             # country_code = request.data.get("country_code")
             # phone_number = request.data.get("phone_number")
             #
             # check_phone = True
 
+            if not full_name:
+                return Response({"message": "Full name must not be null"}, status.HTTP_400_BAD_REQUEST)
+            if not city:
+                return Response({"message": "City name must not be null"}, status.HTTP_400_BAD_REQUEST)
             if not email:
                 return Response({"message": "Email must not be null"}, status.HTTP_400_BAD_REQUEST)
             if not username:
                 return Response({"message": "Username must not be null"}, status.HTTP_400_BAD_REQUEST)
             # if not country_code or not phone_number:
             #     check_phone = False
+            if str(request.data.get('tyc')) != "1":
+                return Response({"message" : "You must accept the TYC, tyc != 1"},status=status.HTTP_400_BAD_REQUEST)
+            if str(request.data.get('confirm_age')) != "1":
+                return Response({"message" : "You must confirm you are 18+, confirm_age != 1"},status=status.HTTP_400_BAD_REQUEST)
+            
+            # check age
+            # dob = request.data.get('dob')
+            # if dob is None:
+            #     return Response({"message": "You must submit your dob"}, status.HTTP_400_BAD_REQUEST)
+            # try:
+            #     dob_date = dt.strptime(dob, "%Y-%m-%d").date()
+            # except ValueError:
+            #     return Response({"message": "DOB must be formatted YYYY-MM-DD"}, status.HTTP_400_BAD_REQUEST)
+            # today = timezone.now().date()
+            # age = today.year - dob_date.year - ((today.month, today.day) < (dob_date.month, dob_date.day))
 
+            # if age < 18:
+            #     return Response({"message": "You must be 18+ to have an account on this platform"}, status.HTTP_400_BAD_REQUEST)
 
-            if email:
-                if Users.objects.filter(email=email).exists(): 
-                    return Response({"error": "Email already exists", "status": status.HTTP_400_BAD_REQUEST},status.HTTP_400_BAD_REQUEST)
-                elif Users.objects.filter(username__iexact=username).exists():
-                    return Response({"error": "User already exists", "status": status.HTTP_400_BAD_REQUEST},status.HTTP_400_BAD_REQUEST)
-                # elif check_phone:
-                #     if Users.objects.filter(Q(country_code=country_code), Q(phone_number=phone_number)).exists():
-                #         return Response({"error": "Phone number already exists", "status": status.HTTP_400_BAD_REQUEST},status.HTTP_400_BAD_REQUEST)
-                elif len(username)<4:
-                    return Response({"error": "Username must be atleast 4 characters long", "status": status.HTTP_400_BAD_REQUEST},status.HTTP_400_BAD_REQUEST)
-                else:
-                    generated_otp =  create_otp()
-                    print(generated_otp)
-                    context = {
-                        "otp": generated_otp,
-                        "expiration_time":"10 Mins",
-                        "fe_url": settings.FE_DOMAIN,
-                    }
-                    sg = SendGridAPIClient(settings.SENDGRID_API_KEY)
-                    mail_template = EmailTemplateDetails.objects.filter(category='signup_otp_mail').first()
-                    if mail_template:
-                        mail = Mail(
-                            from_email=settings.SENDGRID_EMAIL,
-                            to_emails= [email]
-                        )
-                        mail.template_id = mail_template.template_id
-                        mail.dynamic_template_data = context
-                        sg.send(mail)
-                        return Response({"message": "Email sent successfully", "status": status.HTTP_200_OK}, status.HTTP_200_OK)
-
-                    html_content = render_to_string("email_signup_template.html", context)
-
-                    message = Mail( 
-                            from_email=settings.SENDGRID_EMAIL,
-                            to_emails=email,
-                            subject="OTP for Email Verification",
-                            html_content=html_content)
-
-                    sg.send(message)
-                    return Response({"message": "Email sent successfully", "status": status.HTTP_200_OK}, status.HTTP_200_OK)
+            if request.data.get('code_cca2'):
+                country = Country.objects.filter(code_cca2=request.data.get('code_cca2').upper()).first()
+                if not country:
+                    return Response({"message" : "code_ccs2 is not valid"},status=status.HTTP_400_BAD_REQUEST)
+                cca2 = country.code_cca2
             else:
-                return Response({"error": "Email not provided", "status": status.HTTP_404_NOT_FOUND},status.HTTP_404_NOT_FOUND)
+                return Response({"message" : "code_ccs2 has not been provided"},status=status.HTTP_400_BAD_REQUEST)
+
+        
+            # TODO: ADD THE DIVING NAME PART
+            
+            pattern = re.compile("[A-Za-z0-9]*$")
+            if not pattern.fullmatch(username):
+                return Response({"message": "Username must be alphanumeric"}, status.HTTP_400_BAD_REQUEST)
+            
+            if Users.objects.filter(email=email).exists(): 
+                return Response({"error": "Email already exists", "status": status.HTTP_400_BAD_REQUEST},status.HTTP_400_BAD_REQUEST)
+            if Users.objects.filter(username__iexact=username).exists():
+                return Response({"error": "User already exists", "status": status.HTTP_400_BAD_REQUEST},status.HTTP_400_BAD_REQUEST)
+            # elif check_phone:
+            #     if Users.objects.filter(Q(country_code=country_code), Q(phone_number=phone_number)).exists():
+            #         return Response({"error": "Phone number already exists", "status": status.HTTP_400_BAD_REQUEST},status.HTTP_400_BAD_REQUEST)
+            if len(username)<4:
+                return Response({"error": "Username must be atleast 4 characters long", "status": status.HTTP_400_BAD_REQUEST},status.HTTP_400_BAD_REQUEST)
+            
+            names = full_name.split(None, 1)
+            if len(names) < 2:
+                return Response({"message": "Invalid name"},status.HTTP_400_BAD_REQUEST)
+            
+            ip = AcuityTecAPI.get_ip_from_request(request=request)
+            
+            can_pass = AcuityTecAPI.is_geo_verified(first_name=names[0], last_name=names[1], email=email, city=city, zip_code='', cca2=cca2, ip=ip)
+            
+            if not can_pass:
+                return Response({"error": "You can only play inside the US.", "status": status.HTTP_400_BAD_REQUEST},status.HTTP_400_BAD_REQUEST)
+            
+            generated_otp = create_otp()
+            print(generated_otp)
+            context = {
+                "otp": generated_otp,
+                "expiration_time":"10 Mins",
+                "fe_url": settings.FE_DOMAIN,
+            }
+            sg = SendGridAPIClient(settings.SENDGRID_API_KEY)
+            mail_template = EmailTemplateDetails.objects.filter(category='signup_otp_mail').first()
+            if mail_template:
+                mail = Mail(
+                    from_email=settings.SENDGRID_EMAIL,
+                    to_emails= [email]
+                )
+                mail.template_id = mail_template.template_id
+                mail.dynamic_template_data = context
+                sg.send(mail)
+                return Response({"message": "Email sent successfully", "status": status.HTTP_200_OK}, status.HTTP_200_OK)
+
+            html_content = render_to_string("email_signup_template.html", context)
+
+            message = Mail( 
+                    from_email=settings.SENDGRID_EMAIL,
+                    to_emails=email,
+                    subject="OTP for Email Verification",
+                    html_content=html_content)
+
+            sg.send(message)
+            return Response({"message": "Email sent successfully", "status": status.HTTP_200_OK}, status.HTTP_200_OK)
         except Exception as e:
             return Response({"message": "Something Went Wrong"}, status.HTTP_500_INTERNAL_SERVER_ERROR)
         
