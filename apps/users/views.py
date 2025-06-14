@@ -200,6 +200,14 @@ class LoginAPIView(APIViewContext):
         if serializer.is_valid():
             response = serializer.validated_data
             user = Users.objects.filter(id=response["user"].pk).first()
+            
+            ip = AcuityTecAPI.get_ip_from_request(request=request)
+            data = AcuityTecAPI.parse_user_to_geo(user=user, ip=ip)
+            
+            result_geo = AcuityTecAPI.is_geo_verified(**data)
+            
+            if result_geo['status'] == -1:
+                return Response(result_geo['message'], status.HTTP_401_UNAUTHORIZED)
                    
             if user.is_currently_active:
                 if user.last_activity_time < timezone.now()-timedelta(minutes=15):  
