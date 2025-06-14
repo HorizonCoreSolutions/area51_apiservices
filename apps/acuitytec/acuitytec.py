@@ -6,7 +6,7 @@ import time
 import json
 import requests
 from datetime import datetime, timedelta
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, Union
 from apps.acuitytec.models import AcuitytecUser, VerificationStateChoise, VerifycationItem
 from apps.users.models import VERIFICATION_PENDING, VERIFICATION_PROCESSING, Users
 from django.conf import settings
@@ -224,7 +224,7 @@ class AcuityTecAPI:
             return 'error' + 'Something wrong has happend'
     
     @staticmethod
-    def is_geo_verified(first_name: str, last_name: str, email: str, city: str, zip_code: str, cca2: str, ip: str) -> bool:
+    def is_geo_verified(first_name: str, last_name: str, email: str, city: str, zip_code: str, cca2: str, ip: str) -> Dict[str, Union[str, int]]:
         
         endpoint = f"{settings.ACUITYTEC_API.rstrip('/')}/newtransaction"
         
@@ -296,25 +296,58 @@ class AcuityTecAPI:
         rules: Optional[list[Dict[str, str]]] = json_data.get('rules_triggered') if json_data else None
         
         if json_data is None or rules is None:
-            return False
+            return {
+                "message" : "The Geo Verification service is not available.",
+                "status" : -1
+            }
         
-        problem_prefixes = (
-            'Blocked Geo IP State',
-            'Blocked Profile State',
-            'Geo - Anonymous Proxy Usage',
-            'Geo - Anonymous VPN Usage',
-            'Geo - IP City Mismatch',
-            'Geo - IP Country Mismatch',
-            'Geo - IP User Type - Hosting',
-            'Geo - IP User Type - Government',
-            'Geo - IP User Type - Search Engine Spider',
-            'Geo - Public Proxy Usage Detected',
-            'Geo - Suspicious Network Usage'
-        )
-        
-        is_sus = any([rule['name'].startswith(problem_prefixes) for rule in rules])
-        
-        return not is_sus    
+        checks = [
+            (
+                (
+                    'Blocked Geo IP State',
+                    'Blocked Profile State',
+                ),
+                "You cannot use this site. The state you are in is not available.",
+            ),
+            (
+                (
+                    'Geo - Anonymous Proxy Usage',
+                    'Geo - Public Proxy Usage Detected',
+                ),
+                "Please disable the proxy to continue playing.",
+            ),
+            (
+                (
+                    'Geo - Anonymous VPN Usage',
+                    'Geo - IP City Mismatch',
+                    'Geo - IP Country Mismatch',
+                ),
+                "Please disable the proxy to continue playing.",
+            ),
+            (
+                (
+                    'Geo - IP User Type - Hosting',
+                    'Geo - IP User Type - Government',
+                    'Geo - IP User Type - Search Engine Spider',
+                    'Geo - Suspicious Network Usage',
+                ),
+                "Please change your network, the current network is not verified.",
+            )
+        ]
+
+        for rule in rules:
+            name = rule.get('name', '')
+            for prefixes, message in checks:
+                if name.startswith(prefixes):
+                    return {
+                        "message": message,
+                        "status": -1
+                    }
+
+        return {
+            "message": "OK",
+            "status": 0
+        }
     
     @staticmethod
     def get_ip_from_request(request) -> str:
