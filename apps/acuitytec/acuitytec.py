@@ -363,18 +363,19 @@ class AcuityTecAPI:
                     'Geo - IP City Mismatch',
                     'Geo - IP Country Mismatch',
                 ),
-                "Please disable the proxy to continue playing.",
-            ),
-            (
-                (
-                    'Geo - IP User Type - Hosting',
-                    'Geo - IP User Type - Government',
-                    'Geo - IP User Type - Search Engine Spider',
-                    'Geo - Suspicious Network Usage',
-                ),
-                "Please change your network, the current network is not verified.",
+                "Please disable the VPN to continue playing.",
             )
         ]
+        # ,
+        #     (
+        #         (
+        #             'Geo - IP User Type - Hosting',
+        #             'Geo - IP User Type - Government',
+        #             'Geo - IP User Type - Search Engine Spider',
+        #             'Geo - Suspicious Network Usage',
+        #         ),
+        #         "Please change your network, the current network is not verified.",
+        #     )
 
         for rule in rules:
             name = rule.get('name', '')
