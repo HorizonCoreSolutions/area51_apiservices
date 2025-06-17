@@ -362,17 +362,19 @@ class AcuityTecAPI:
                     'Geo - Anonymous VPN Usage',
                     'Geo - IP City Mismatch',
                     'Geo - IP Country Mismatch',
+                    'Geo - IP User Type - Hosting',
+                    'Geo - IP User Type - Government',
+                    'Geo - IP User Type - Content Delivery Network',
+                    'Geo - VPN Provider Usage Detected',
                 ),
                 "Please disable the VPN to continue playing.",
             ),
             (
                 (
-                    'Geo - IP User Type - Hosting',
-                    'Geo - IP User Type - Government',
                     'Geo - IP User Type - Search Engine Spider',
                     'Geo - Suspicious Network Usage',
                 ),
-                "Please disable the VPN to continue playing.",
+                "Please disable the VPN to continue playing.|",
             )
         ]
 
