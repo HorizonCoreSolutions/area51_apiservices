@@ -398,8 +398,24 @@ class AcuityTecAPI:
 
         if x_forwarded_for:
             ip = x_forwarded_for.split(',')[-1].strip()  # client’s real IP
+            data = x_forwarded_for
         else:
             ip = request.META.get('REMOTE_ADDR')
+            data = [ip]
+        
+        file = "acuitytec_request_log.txt"
+        ts = str(time.time())
+        from pprint import pformat
+        data = pformat(data)
+
+        entry = (
+            f"\n--- {ts} ---\n"
+            f"URL: USER IP \n"
+            f"DATA:\n{data}\n"
+        )
+
+        with open(file, 'a') as f:
+            f.write(entry)
             
         return ip
     
