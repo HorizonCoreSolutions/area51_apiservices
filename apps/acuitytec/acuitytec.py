@@ -372,7 +372,7 @@ class AcuityTecAPI:
             (
                 (
                     'Geo - IP User Type - Search Engine Spider',
-                    'Geo - Suspicious Network Usage',
+                    # 'Geo - Suspicious Network Usage',
                 ),
                 "Please disable the VPN to continue playing.|",
             )
