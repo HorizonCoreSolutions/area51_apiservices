@@ -1791,7 +1791,7 @@ class SignUpOTP(APIView):
             if timezone.now() - dt < timedelta(days=1):
                 ip = request.data.get('ip', ip)
             
-            result = AcuityTecAPI.is_geo_verified(first_name=names[0], last_name=names[1], email=email, city=city, zip_code='', cca2=cca2, ip=ip)
+            result = AcuityTecAPI.is_geo_verified(first_name=names[0], last_name=names[1], user_name=username, email=email, city=city, id='AREA51-NEW-user', cca2=cca2, ip=ip)
             
             if result['status'] == -1:
                 return Response({"error": result['message'], "status": status.HTTP_400_BAD_REQUEST},status.HTTP_400_BAD_REQUEST)
