@@ -79,6 +79,7 @@ class AcuityTecAPI:
             'reg_date': self.user.created.strftime("%Y-%m-%d"),
             'reg_ip_address': reg_ip_address,
             'site_skin_name' : self.site,
+            'affiliate_id' : 'cr',
         }
         
         # Add customer information with proper tags
@@ -89,7 +90,7 @@ class AcuityTecAPI:
         optional_fields = [
             'reg_device_id', 'device_fingerprint', 'source', 'bonus_code',
             'bonus_submission_date', 'bonus_amount',
-            'how_did_you_hear', 'affiliate_id'
+            'how_did_you_hear'
         ]
         
         for field in optional_fields:
@@ -112,8 +113,19 @@ class AcuityTecAPI:
             response = requests.post(self.enpoints['register_user'], data=payload, timeout=30)
             response.raise_for_status()
             
-            # Parse JSON response
-            return response.json()
+            # Parse JSON response# Parse JSON response
+            data = response.json()
+
+            try:
+                risk = float(data.get('score', 0.0))
+            except (ValueError, TypeError):
+                risk = 0.0
+            
+            return {
+                'error' : True,
+                'message' : f"We detected a VPN. If you're in the US, please disable it to continue." if risk > 35 else 'OK',
+                'status' : -1 if risk > 35 else 0
+            }
             
         except requests.exceptions.RequestException as e:
             return {
@@ -257,140 +269,91 @@ class AcuityTecAPI:
         return {
             'first_name' : names[0],
             'last_name' : names[1],
+            'user_name' : user.username,
             'email' : user.email,
             'city' : user.city,
-            'zip_code' : '',
+            'id' : str(user.id),
             'cca2' : user.country_obj.code_cca2 if user.country_obj else user.country,
             'ip' : ip
         }
         
     @staticmethod
-    def is_geo_verified(first_name: str, last_name: str, email: str, city: str, zip_code: str, cca2: str, ip: str) -> Dict[str, Union[str, int]]:
+    def is_geo_verified(first_name: str, last_name: str, user_name: str, email: str, city: str, id: str, cca2: str, ip: str) -> Dict[str, Union[str, int]]:
         
-        endpoint = f"{settings.ACUITYTEC_API.rstrip('/')}/newtransaction"
+        endpoint = f"{settings.ACUITYTEC_API.rstrip('/')}/customerregistration"
         
         merchant_id = settings.ACUITYTEC_MERCHANT_ID
         password = settings.ACUITYTEC_PASSWORD
         
-        headers = {
-            'Content-Type': 'application/x-www-form-urlencoded'
+        customer_info = {
+            'first_name': first_name,
+            'last_name': last_name,
+            'email': email,
+            'country' : cca2,
+            'city' : city,
         }
         
-        dynamic_data = {
+        # Build the request payload
+        payload = {
+            # Credentials
             'merchant_id': merchant_id,
             'password': password,
-            'reg_ip_address': ip,
-            'time': timezone.now().strftime('%Y-%m-%d %H:%M:%S'),
-            'ip': ip,
-            'customer_information[first_name]': first_name,
-            'customer_information[last_name]': last_name,
-            'customer_information[email]': email,
-            'customer_information[city]': city,
-            # 'customer_information[postal_code]': zip_code,
-            'customer_information[country]': cca2
-        }
-        
-        static_data = {
-            'amount': '0',
-            'currency': 'USD',
-            'status': '0',
-            'payment_method[bin]': '411111',
-            'payment_method[last_digits]': '1111',
-            'payment_method[routing]': '111111111',
-            'payment_method[account]': '1000000000',
-            'payment_method[card_hash]': '',
-            'payment_method[ewallet_id]': 'default@domain.com',
-            'payment_method[crypto_address]': '16546dfdfserfwer789zxc58',
-            'payment_method[crypto_hash]': '123456789abcdef123456789abcdef123456789abcdef123456789abcdef1234',
-            'payment_method[coin]': 'BTC',
-            'customer_information[address1]': 'N/A',
-            'deposit_limits[pay_method_type]': 'CC'
-        }
-        
-        data = {**dynamic_data, **static_data}
-        json_data = None
-
-        try:
-            response = requests.post(endpoint, headers=headers, data=data)
-            response.raise_for_status()  # Raises HTTPError for bad responses (4xx, 5xx)
             
-            if response.status_code == 200:
-                json_data = response.json()
-                if json_data.get('rules_triggered') is None:
-                    dynamic_data['reason'] = 'rules_triggered was not pressent'
-                    raise ValueError('rules_triggered was not pressent')
-
-        except Exception as err:
-            print(f"An unexpected error occurred: {err}")
-            file = "acuitytec_went_down_log.txt"
-            ts = str(time.time())
-            from pprint import pformat
-
-            entry = (
-                f"\n--- {ts} ---\n"
-                f"USER AFFECTED DATA:\n{dynamic_data}\n"
-            )
-            # -- TODO: IMPLEMENT THE MAIL CALLING
-            with open(file, 'a') as f:
-                f.write(entry)
-                
-        rules: Optional[list[Dict[str, str]]] = json_data.get('rules_triggered') if json_data else None
-        
-        if json_data is None or rules is None:
-            return {
-                "message" : "The Geo Verification service is not available.",
-                "status" : -1
-            }
-        
-        checks = [
-            (
-                (
-                    'Blocked Geo IP State',
-                    'Blocked Profile State',
-                ),
-                "You cannot use this site. The state you are in is not available.",
-            ),
-            (
-                (
-                    'Geo - Anonymous Proxy Usage',
-                    'Geo - Public Proxy Usage Detected',
-                ),
-                "Please disable the proxy to continue playing.",
-            ),
-            (
-                (
-                    'Geo - Anonymous VPN Usage',
-                    'Geo - IP City Mismatch',
-                    'Geo - IP Country Mismatch',
-                    'Geo - IP User Type - Hosting',
-                    'Geo - IP User Type - Government',
-                    'Geo - IP User Type - Content Delivery Network',
-                    'Geo - VPN Provider Usage Detected',
-                ),
-                "Please disable the VPN to continue playing.",
-            ),
-            (
-                (
-                    'Geo - IP User Type - Search Engine Spider',
-                    # 'Geo - Suspicious Network Usage',
-                ),
-                "Please disable the VPN to continue playing.|",
-            )
-        ]
-
-        for rule in rules:
-            name = rule.get('name', '')
-            for prefixes, message in checks:
-                if name.startswith(prefixes):
-                    return {
-                        "message": message,
-                        "status": -1
-                    }
-
-        return {
-            "message": "OK",
-            "status": 0
+            # Required fields
+            'user_name': user_name,
+            'user_number':  '-'.join([
+                                settings.ENV_POSTFIX,
+                                str(id),
+                            ]),
+            'reg_date': timezone.now().strftime("%Y-%m-%d"),
+            'reg_ip_address': ip,
+            'site_skin_name' : urlparse(settings.DOMAIN_URL).hostname,
+            'affiliate_id' : 'lg',
         }
+        
+        # Add customer information with proper tags
+        for key, value in customer_info.items():
+            payload[f'customer_information[{key}]'] = value
+        
+        # Set default device ID if not provided
+        if 'reg_device_id' not in payload:
+            payload['reg_device_id'] = '00:00:00:00:00:00'
+        
+        # Set default device fingerprint if not provided
+        if 'device_fingerprint' not in payload:
+            payload['device_fingerprint'] = 'N/A'
+        
+        try:
+            payload = {k: v for k, v in payload.items() if v is not None}
+
+            response = requests.post(endpoint, data=payload, timeout=30)
+            response.raise_for_status()
+            
+            data = response.json()
+
+            try:
+                risk = float(data.get('score', 0.0))
+            except (ValueError, TypeError):
+                risk = 0.0
+            
+            return {
+                'error' : bool(risk > 35),
+                'message' : f"We detected a VPN. If you're in the US, please disable it to continue." if risk > 35 else 'OK',
+                'status' : -1 if risk > 35 else 0
+            }
+            
+        except requests.exceptions.RequestException as e:
+            return {
+                'error': True,
+                'message': f'Request failed: {str(e)}',
+                'status': -1
+            }
+        except json.JSONDecodeError as e:
+            return {
+                'error': True,
+                'message': f'Invalid JSON response: {str(e)}',
+                'status': -1
+            }
     
     @staticmethod
     def get_ip_from_request(request) -> str:
