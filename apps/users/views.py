@@ -1717,15 +1717,21 @@ class SignUpOTP(APIView):
         try:
             email = str(request.data.get("email"))
             username = request.data.get("username")
-            full_name = str(request.data.get('full_name'))
             city = str(request.data.get('city'))
             # country_code = request.data.get("country_code")
             # phone_number = request.data.get("phone_number")
             #
             # check_phone = True
-
-            if not full_name:
-                return Response({"message": "Full name must not be null"}, status.HTTP_400_BAD_REQUEST)
+            
+            first_name = request.data.get('first_name')
+            if not first_name or first_name == '' or first_name == ' ':
+                return Response({'message' : 'first name must not be null.'}, status.HTTP_400_BAD_REQUEST)
+            
+            last_name = request.data.get('last_name')
+            if not last_name or last_name == '' or last_name == ' ':
+                return Response({'message' : 'last name must not be null.'}, status.HTTP_400_BAD_REQUEST)
+            names = [first_name, last_name]
+            
             if not city:
                 return Response({"message": "City name must not be null"}, status.HTTP_400_BAD_REQUEST)
             if not email:
@@ -1778,9 +1784,6 @@ class SignUpOTP(APIView):
             if len(username)<4:
                 return Response({"error": "Username must be atleast 4 characters long", "status": status.HTTP_400_BAD_REQUEST},status.HTTP_400_BAD_REQUEST)
             
-            names = full_name.split(None, 1)
-            if len(names) < 2:
-                return Response({"message": "Invalid name"},status.HTTP_400_BAD_REQUEST)
             
             ip = AcuityTecAPI.get_ip_from_request(request=request)
             
