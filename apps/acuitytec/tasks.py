@@ -43,6 +43,7 @@ def register_or_update_user(self, ip, schedule, user_id):
                 )
                 return
             elif res.get('status') == -1:
+                print(res)
                 raise Exception("AcuityTec registration failed (status -1)")
             return  # Other statuses are ignored
 
@@ -62,6 +63,7 @@ def register_or_update_user(self, ip, schedule, user_id):
                 }
             )
         elif res.get('status') == -1:
+                print(res)
             raise Exception("AcuityTec update failed (status -1)")
 
     except Exception as exc:
