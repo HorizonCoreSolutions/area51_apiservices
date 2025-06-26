@@ -463,6 +463,8 @@ ACUITYTEC_PASSWORD = get_env_var("ACUITYTEC_PASSWORD")
 
 ENV_POSTFIX = get_env_var('ENV_POSTFIX')
 
+# COIN FLOW
+COINFLOW_AUTH=get_env_var('COINFLOW_AUTH')
 
 # settings.py
 USE_X_FORWARDED_HOST = True
