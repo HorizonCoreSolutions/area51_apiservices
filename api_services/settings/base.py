@@ -457,6 +457,7 @@ ENV_POSTFIX = get_env_var('ENV_POSTFIX')
 
 # COIN FLOW
 COINFLOW_AUTH=get_env_var('COINFLOW_AUTH')
+COINFLOW_API_URL=get_env_var('COINFLOW_API_URL')
 
 # settings.py
 USE_X_FORWARDED_HOST = True
