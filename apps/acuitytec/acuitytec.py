@@ -161,15 +161,16 @@ class AcuityTecAPI:
             'dob' : self.user.dob,
             'province' : self.user.state,
             'city' : self.user.city,
+            'address1' : self.user.complete_address,
         }
         
         
         
         # Add optional fields if provided
         optional_fields = [
-            'address1', 'address2', 'city', 'province', 'postal_code',
-            'country', 'phone1', 'phone2', 'dob', 'id_type', 'id_value',
-            'gender', 'marital_status'
+            'address2', 'city', 'province', 'postal_code',
+            'country', 'phone1', 'phone2', 'dob', 'id_type',
+            'id_value', 'gender', 'marital_status'
         ]
         
         for field in optional_fields:
