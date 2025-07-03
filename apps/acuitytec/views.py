@@ -40,16 +40,15 @@ class GetVerificationLinkView(APIView):
             else:
                 ip = request.META.get('REMOTE_ADDR')
 
-            if not hasattr(user, 'acuitytec_account'):
+            if not AcuitytecUser.objects.filter(user=user).exists():
                 res = ac.register_customer(ip)
-                print(res)
-                if res['status'] == 0:
+                if not res['error']:
                     AcuitytecUser.objects.create(
                         user=user,
                         login_ip=ip
                         )
-                if res['status'] == -1:
-                    return Response({"message": res['message']}, status.HTTP_400_BAD_REQUEST)
+                else:
+                    return Response({"message": "This service is down. Please try again in a few minuts."}, status.HTTP_400_BAD_REQUEST)
 
             link = ac.getLink(document=document, language=language)
             if link.startswith('error'):
