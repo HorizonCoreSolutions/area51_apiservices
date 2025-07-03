@@ -133,7 +133,6 @@ VERIFICATION_STATUS_CHOICES = (
 )
 
 
-
 def get_default_country():
     return Country.objects.get(code_cca2="US").id if Country.objects.filter(code_cca2="US").exists() else None
 
