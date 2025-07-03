@@ -109,35 +109,36 @@ class AcuityTecAPI:
             # Make the POST request
             payload = {k: v for k, v in payload.items() if v is not None}
 
-            print(payload)
             response = requests.post(self.enpoints['register_user'], data=payload, timeout=30)
             response.raise_for_status()
             
             # Parse JSON response# Parse JSON response
             data = response.json()
-
-            try:
-                risk = float(data.get('score', 0.0))
-            except (ValueError, TypeError):
-                risk = 0.0
             
+            if data.get('status', -1) != 0:
+                return {
+                    'error' : True,
+                    "message": "This service is down, Please try again in a few minuts.",
+                    "status": -1
+                }
+
             return {
-                'error' : True,
-                'message' : f"We detected a VPN. If you're in the US, please disable it to continue." if risk > 35 else 'OK',
-                'status' : -1 if risk > 35 else 0
+                'error' : False,
+                "message": "OK",
+                "status": 0
             }
             
         except requests.exceptions.RequestException as e:
             return {
                 'error': True,
                 'message': f'Request failed: {str(e)}',
-                'status': -1
+                'status': -2
             }
         except json.JSONDecodeError as e:
             return {
                 'error': True,
                 'message': f'Invalid JSON response: {str(e)}',
-                'status': -1
+                'status': -3
             }
 
     def create_customer_info(self, **optional_info) -> Dict[str, Any]:
@@ -328,32 +329,103 @@ class AcuityTecAPI:
             payload = {k: v for k, v in payload.items() if v is not None}
 
             response = requests.post(endpoint, data=payload, timeout=30)
-            response.raise_for_status()
+            try:
+                response.raise_for_status()
+            except:
+                return {
+                    'error' : True,
+                    'message' : "The Geo service is down, please try again in a few hours.",
+                    'status' : -2
+                }
+                
             
+            # Parse JSON response# Parse JSON response
             data = response.json()
 
             try:
                 risk = float(data.get('score', 0.0))
             except (ValueError, TypeError):
                 risk = 0.0
+                
+            rules: Optional[list[Dict[str, str]]] = data.get('rules_triggered')
+        
+            if data is None or rules is None:
+                return {
+                    "error" : True,
+                    "message" : "The Geo Verification service is not available.",
+                    "status" : -2
+                }
             
+            checks = [
+                (
+                    (
+                        'Blocked Geo IP State',
+                        'Blocked Profile State',
+                    ),
+                    "You cannot use this site. The state you are in is not available.",
+                ),
+                (
+                    (
+                        'Geo - Anonymous Proxy Usage',
+                        'Geo - Public Proxy Usage Detected',
+                    ),
+                    "Please disable the proxy to continue playing.",
+                ),
+                (
+                    (
+                        'Geo - Anonymous VPN Usage',
+                        'Geo - IP City Mismatch',
+                        'Geo - IP Country Mismatch',
+                        'Geo - IP User Type - Hosting',
+                        'Geo - IP User Type - Government',
+                        'Geo - IP User Type - Content Delivery Network',
+                        'Geo - VPN Provider Usage Detected',
+                    ),
+                    "Please disable the VPN to continue playing.",
+                ),
+                (
+                    (
+                        'Geo - IP User Type - Search Engine Spider',
+                        # 'Geo - Suspicious Network Usage',
+                    ),
+                    "Please disable the VPN to continue playing.|",
+                )
+            ]
+
+            for rule in rules:
+                name = rule.get('name', '')
+                for prefixes, message in checks:
+                    if name.startswith(prefixes):
+                        return {
+                            "error" : False,
+                            "message": message,
+                            "status": -1
+                        }
+                
+            if risk > 90:
+                return {
+                        "error" : False,
+                        "message": 'Login has been categorized as risky',
+                        "status": -1
+                    }
+
             return {
-                'error' : bool(risk > 35),
-                'message' : f"We detected a VPN. If you're in the US, please disable it to continue." if risk > 35 else 'OK',
-                'status' : -1 if risk > 35 else 0
+                'error' : False,
+                "message": "OK",
+                "status": 0
             }
             
         except requests.exceptions.RequestException as e:
             return {
                 'error': True,
                 'message': f'Request failed: {str(e)}',
-                'status': -1
+                'status': -2
             }
         except json.JSONDecodeError as e:
             return {
                 'error': True,
                 'message': f'Invalid JSON response: {str(e)}',
-                'status': -1
+                'status': -3
             }
     
     @staticmethod
