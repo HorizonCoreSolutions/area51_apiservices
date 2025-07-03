@@ -389,6 +389,12 @@ class AcuityTecAPI:
                         # 'Geo - Suspicious Network Usage',
                     ),
                     "Please disable the VPN to continue playing.|",
+                ),
+                (
+                    (
+                        'Geo IP is not US',
+                    ),
+                    "Only US players can access our platform.",
                 )
             ]
 
