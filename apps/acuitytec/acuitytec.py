@@ -163,6 +163,8 @@ class AcuityTecAPI:
             'province' : self.user.state,
             'city' : self.user.city,
             'address1' : self.user.complete_address,
+            'postal_code' : self.user.zip_code,
+            'phone1' : self.user.phone_number
         }
         
         
