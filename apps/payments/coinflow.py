@@ -16,6 +16,11 @@ class CoinFlowEndpoints:
     
     @property
     def register_user_attested(self) -> str:
+        '''
+        This end-point requires the following headers:
+            Authorization
+            x-coinflow-auth-user-id
+        '''
         return f'{self._base_url}/api/withdraw/kyc/attested'
 
 
@@ -33,13 +38,19 @@ class CoinFlowClient:
                     auth_user_id: Optional[str]=None,
                     auth_wallet: Optional[str]=None,
                     device_id: Optional[str]=None) -> dict:
+        '''
+        This functions returns the right headers, by default the auth and token
+        headers are enabled, this design had in mind the docs given at:
+        
+        https://docs.coinflow.cash/reference/authentication
+        '''
         header = {
             "accept": "application/json",
         }
         if auth:
             header['Authorization'] = self.coinflow_auth
-        if auth:
-            header['Authorization'] = self.coinflow_auth
+        if content_json:
+            header['content-type'] = "application/json"
         if auth_blockchain:
             header['x-coinflow-auth-blockchain'] = auth_blockchain
         if auth_session_key:
@@ -75,22 +86,36 @@ class CoinFlowClient:
         if user.document_verified != VERIFICATION_APPROVED:
             return BasicReturn(success=False, error='User must be registered on Accuitytec.')
         
+        if user.dob:
+            year, month, day = user.dob.split('-')
+            formatted_date_str = f"{year}{month}{day}"
+        else:
+            formatted_date_str = ''
+        
         payload = {
             "email": user.email,
             "firstName": user.first_name,
             "surName": user.last_name,
             "physicalAddress": user.complete_address,
-            "city": (user.city if user.city else ' ').rjust(1),
+            "city": user.city,
             "state": user.state,
             "ssn": ssn,
-            "dob": user.dob,
-            "country": "a",
-            "zip": "a"
+            "dob": formatted_date_str,
+            "country": user.country_obj.code_cca2 if user.country_obj else 'US',
+            "zip": user.zip_code
         }
         
-        requests.get(
+        for k, v in payload.items():
+            if v is None:
+                return BasicReturn(success=False, error='Please complete your profile before taking any extra steps.')
+            
+            if len(str(v)) < 1:
+                return BasicReturn(success=False, error='Please complete your profile before taking any extra steps.')
+
+        res = requests.get(
             self.endpoits.register_user_attested,
-            headers=self.get_headers(auth_user_id=self.get)
+            json=payload,
+            headers=self.get_headers(auth_user_id=self._get_user_id(user=user))
             )
         
         return BasicReturn(success=True)
