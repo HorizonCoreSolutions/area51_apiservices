@@ -1,5 +1,5 @@
-from typing import Optional
 import requests
+from typing import Optional
 from apps.core.custom_types import BasicReturn
 from apps.users.models import Users, VERIFICATION_PENDING, VERIFICATION_APPROVED, VERIFICATION_PROCESSING, VERIFICATION_REJECTED, VERIFICATION_FAILED, VERIFICATION_CANCELED, VERIFICATION_EXPIRED
 
@@ -59,6 +59,18 @@ class CoinFlowClient:
         result = result.json()
         return result['merchantId']
 
+    def _get_user_id(self, user: Users) -> str:
+        return '-'.join([settings.ENV_POSTFIX, str(user.id),])
+
+    def _get_user_from_id(self, id: str) -> Optional[Users]:
+        if not id.startswith(settings.ENV_POSTFIX):
+            return None
+        try:
+            user_pk = int(id[len(settings.ENV_POSTFIX) + 1:])
+        except ValueError:
+            return None
+        return Users.objects.filter(id=user_pk).first()
+
     def register_user(self, user: Users, ssn: str) -> BasicReturn:
         if user.document_verified != VERIFICATION_APPROVED:
             return BasicReturn(success=False, error='User must be registered on Accuitytec.')
@@ -76,6 +88,9 @@ class CoinFlowClient:
             "zip": "a"
         }
         
-        requests.get(self.endpoits.register_user_attested, headers=self.get_headers())
+        requests.get(
+            self.endpoits.register_user_attested,
+            headers=self.get_headers(auth_user_id=self.get)
+            )
         
         return BasicReturn(success=True)
