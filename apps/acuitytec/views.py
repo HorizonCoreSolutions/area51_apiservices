@@ -2,7 +2,7 @@ from datetime import timedelta
 import json
 from rest_framework.response import Response
 from rest_framework import status
-from apps.acuitytec.models import AcuitytecUser, VerifycationItem, VerificationStateChoise
+from apps.acuitytec.models import AcuitytecUser, VerificationItem, VerificationStateChoise
 from apps.acuitytec.utils import generate_qr_code_url
 from apps.users.models import VERIFICATION_APPROVED, VERIFICATION_EXPIRED, VERIFICATION_FAILED, Users
 from django.conf import settings
@@ -72,7 +72,7 @@ class CallbackAcuitytecView(APIView):
             AcuityTecAPI.save_request(request=data, is_response=True)
             return Response({"message": "status updated", "status": 1}, status.HTTP_200_OK)
         
-        qs = VerifycationItem.objects.filter(
+        qs = VerificationItem.objects.filter(
             reference_id=reference_id,
             status=VerificationStateChoise.pending,
             # created__gte=timezone.now() - timedelta(days=7)
@@ -106,7 +106,7 @@ class CallbackAcuitytecView(APIView):
         vi.save()
         
         user = vi.user
-        newer_exists = VerifycationItem.objects.filter(user=vi.user, created__gte=vi.created).exclude(id=vi.id).exists()
+        newer_exists = VerificationItem.objects.filter(user=vi.user, created__gte=vi.created).exclude(id=vi.id).exists()
         
         if newer_exists and result in ["verification.declined", 'request.timeout']:
             data = {"message": "has been declined or time out and a newer request has been made", "reallity": {"message": "status updated", "status": 1}, "status": -1}
@@ -126,7 +126,7 @@ class CallbackAcuitytecView(APIView):
         return Response({"message": "status updated", "status": 1}, status=status.HTTP_200_OK)
     
     
-class GetVerifycationStatus(APIView):
+class GetVerificationStatus(APIView):
     def post(self, request):
         if not request.user.is_authenticated:
             return Response(AcuityTecAPI.format_response('401: You have not been authenticated', 'Please login to use this function', 401, -1), status.HTTP_401_UNAUTHORIZED)
@@ -134,7 +134,7 @@ class GetVerifycationStatus(APIView):
         
         user: Users = request.user
         
-        qs = VerifycationItem.objects.filter(
+        qs = VerificationItem.objects.filter(
             user=request.user,
             created__gte=timezone.now() - timedelta(days=7)
         ).order_by('-created')
