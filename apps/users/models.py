@@ -417,7 +417,7 @@ class Users(AbstractBaseUser, AbstractBaseModel, PermissionsMixin):
             setattr(self, field, value)
         return
     
-    def verifycation_steps_left(self):
+    def verification_steps_left(self):
         return [label for field, label in self.VERIFICATION_FIELDS.items() if getattr(self, field, None) != 1]
 
     def ensure_country_obj(self):

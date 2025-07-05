@@ -4,11 +4,13 @@ Simple Python implementation for customer registration verification
 """
 import time
 import json
+import base64
 import requests
+from io import BytesIO
 from datetime import datetime, timedelta
 from typing import Dict, Any, Optional, Union
-from apps.acuitytec.models import AcuitytecUser, VerificationStateChoise, VerifycationItem
-from apps.users.models import VERIFICATION_PENDING, VERIFICATION_PROCESSING, Users
+from apps.acuitytec.models import AcuitytecUser, VerificationStateChoise, VerificationItem
+from apps.users.models import VERIFICATION_APPROVED, VERIFICATION_PENDING, VERIFICATION_PROCESSING, Users
 from django.conf import settings
 from django.utils import timezone
 from urllib.parse import urlparse
@@ -41,6 +43,7 @@ class AcuityTecAPI:
         self.enpoints = {
             "register_user" : f"{self.base_url}/customerregistration",
             "photo_id" : f"{self.base_url}/photoIdOnlineVerification",
+            "get_assets" : f"{self.base_url}/photoIdOnlineVerification/assets",
             }
         if user is None:
             raise ValueError('User must not be None')
@@ -184,7 +187,7 @@ class AcuityTecAPI:
 
     def getLink(self, document, language):
         try:
-            qs = VerifycationItem.objects.filter(
+            qs = VerificationItem.objects.filter(
                 user=self.user,
                 status=VerificationStateChoise.pending,
                 created__gte=timezone.now() - timedelta(hours=24)
@@ -220,7 +223,7 @@ class AcuityTecAPI:
                     print("Reference ID:", reference_id)
                     print("Verification URL:", result["verification_source"])
                     
-                    VerifycationItem.objects.create(
+                    VerificationItem.objects.create(
                         user=self.user,
                         url=result['verification_source'],
                         reference_id=reference_id,
@@ -238,7 +241,51 @@ class AcuityTecAPI:
         except Exception as e:
             print(e)
             return 'error' + 'Something wrong has happend'
-    
+
+    def get_user_assets(self, user: Users) -> Optional[dict]:
+        if user.document_verified != VERIFICATION_APPROVED:
+            return None
+        
+        vi = VerificationItem.objects.filter(
+            user=user,
+            status=VerificationStateChoise.accepted
+            ).order_by('-created').first()
+        
+        if vi is None or vi.reference_id is None:
+            return
+        
+        payload = {
+            'merchant_id' : self.merchant_id,
+            'password' : self.password,
+            'reference' : vi.reference_id
+        }
+        
+        mime = 'image/jpeg'
+        
+        res = requests.post(self.enpoints['get_assets'], data=payload)
+        
+        res_data = {
+            'document_type' : vi.document_type
+        }
+        
+        try:
+            res.raise_for_status()
+            data = res.json()
+            docs = data.get('documents')
+            if docs is None:
+                return
+            
+            for k in docs.keys():
+                if k not in ['document_id_front_photo', 'document_id_back_photo']:
+                    continue
+                name = f'{k}.jpeg'
+                res_data[k] =  (name, BytesIO(base64.b64decode(docs.get(k))), mime)
+                
+            return res_data
+        except Exception as e:
+            print(e)
+            return
+
     @staticmethod
     def parse_user_to_geo(user: Users, ip: str):
         

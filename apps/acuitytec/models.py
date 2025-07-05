@@ -12,6 +12,12 @@ class VerificationStateChoise(DjangoChoices):
     declined = ChoiceItem("DECLINED", "declined")
     secure = ChoiceItem("SECURE", "secure")
     expired = ChoiceItem("EXPIRED", "expired")
+    
+    
+class DocumentTypeChoise(DjangoChoices):
+    passport = ChoiceItem('PASSPORT', 'passport')
+    id_card = ChoiceItem('ID_CARD', 'id_card')
+    driving_license = ChoiceItem('DRIVING_LICENSE', 'driving_license')
 # Create your models here.
 
 class AcuitytecUser(AbstractBaseModel):
@@ -30,11 +36,18 @@ class AcuitytecUser(AbstractBaseModel):
     updated = models.DateTimeField(auto_now_add=True)
 
 
-class VerifycationItem(AbstractBaseModel):
+class VerificationItem(AbstractBaseModel):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(Users, on_delete=models.CASCADE, related_name='acuitytec_urls')
     reference_id = models.CharField(max_length=500, blank=True, null=True)
+    document_type = models.CharField(
+        max_length=500, 
+        blank=True,
+        null=True,
+        choices=DocumentTypeChoise.choices,
+        default=DocumentTypeChoise.id_card # type: ignore
+    )
     url = models.URLField(blank=True, null=True)
     status = models.CharField(
         max_length=500,
