@@ -7,7 +7,7 @@ import json
 import requests
 from datetime import datetime, timedelta
 from typing import Dict, Any, Optional, Union
-from apps.acuitytec.models import AcuitytecUser, VerificationStateChoise, VerifycationItem
+from apps.acuitytec.models import AcuitytecUser, VerificationStateChoise, VerificationItem
 from apps.users.models import VERIFICATION_PENDING, VERIFICATION_PROCESSING, Users
 from django.conf import settings
 from django.utils import timezone
@@ -184,7 +184,7 @@ class AcuityTecAPI:
 
     def getLink(self, document, language):
         try:
-            qs = VerifycationItem.objects.filter(
+            qs = VerificationItem.objects.filter(
                 user=self.user,
                 status=VerificationStateChoise.pending,
                 created__gte=timezone.now() - timedelta(hours=24)
@@ -220,7 +220,7 @@ class AcuityTecAPI:
                     print("Reference ID:", reference_id)
                     print("Verification URL:", result["verification_source"])
                     
-                    VerifycationItem.objects.create(
+                    VerificationItem.objects.create(
                         user=self.user,
                         url=result['verification_source'],
                         reference_id=reference_id,
