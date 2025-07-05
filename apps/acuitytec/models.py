@@ -30,11 +30,15 @@ class AcuitytecUser(AbstractBaseModel):
     updated = models.DateTimeField(auto_now_add=True)
 
 
-class VerifycationItem(AbstractBaseModel):
+class VerificationItem(AbstractBaseModel):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(Users, on_delete=models.CASCADE, related_name='acuitytec_urls')
     reference_id = models.CharField(max_length=500, blank=True, null=True)
+    document_type = models.CharField(
+        max_length=500, 
+        blank=True,
+        null=True)
     url = models.URLField(blank=True, null=True)
     status = models.CharField(
         max_length=500,
