@@ -1,5 +1,6 @@
 import requests
 from typing import Optional
+from apps.acuitytec.acuitytec import AcuityTecAPI
 from apps.core.custom_types import BasicReturn
 from apps.users.models import Users, VERIFICATION_PENDING, VERIFICATION_APPROVED, VERIFICATION_PROCESSING, VERIFICATION_REJECTED, VERIFICATION_FAILED, VERIFICATION_CANCELED, VERIFICATION_EXPIRED
 
@@ -81,6 +82,14 @@ class CoinFlowClient:
         except ValueError:
             return None
         return Users.objects.filter(id=user_pk).first()
+    
+    def register_user_with_document(self, user: Users) -> BasicReturn:
+        
+        acuity = AcuityTecAPI(user)
+        acuity.get_user_assets()
+        
+        
+        return BasicReturn(success=False, error='This platform is still on development')
 
     def register_user(self, user: Users, ssn: str) -> BasicReturn:
         if user.document_verified != VERIFICATION_APPROVED:
