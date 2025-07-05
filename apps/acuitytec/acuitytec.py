@@ -242,12 +242,12 @@ class AcuityTecAPI:
             print(e)
             return 'error' + 'Something wrong has happend'
 
-    def get_user_assets(self, user: Users) -> Optional[dict]:
-        if user.document_verified != VERIFICATION_APPROVED:
+    def get_user_assets(self) -> Optional[dict]:
+        if self.user.document_verified != VERIFICATION_APPROVED:
             return None
         
         vi = VerificationItem.objects.filter(
-            user=user,
+            user=self.user,
             status=VerificationStateChoise.accepted
             ).order_by('-created').first()
         
