@@ -1,10 +1,28 @@
 import requests
 from typing import Optional
-from apps.acuitytec.acuitytec import AcuityTecAPI
-from apps.core.custom_types import BasicReturn
-from apps.users.models import Users, VERIFICATION_PENDING, VERIFICATION_APPROVED, VERIFICATION_PROCESSING, VERIFICATION_REJECTED, VERIFICATION_FAILED, VERIFICATION_CANCELED, VERIFICATION_EXPIRED
-
 from django.conf import settings
+from dataclasses import dataclass
+from apps.core.custom_types import BasicReturn
+from apps.acuitytec.acuitytec import AcuityTecAPI
+from apps.acuitytec.models import DocumentTypeChoise
+from apps.users.models import (
+    Users,
+    VERIFICATION_PENDING,
+    VERIFICATION_APPROVED,
+    VERIFICATION_PROCESSING,
+    VERIFICATION_REJECTED,
+    VERIFICATION_FAILED,
+    VERIFICATION_CANCELED,
+    VERIFICATION_EXPIRED
+)
+
+@dataclass
+class CoinFlowConfig:
+    """Configuration for CoinFlow API client"""
+    auth_token: str
+    api_url: str
+    timeout: int = 30
+    max_retries: int = 2
 
 
 class CoinFlowEndpoints:
@@ -15,24 +33,70 @@ class CoinFlowEndpoints:
     def get_merchant(self) -> str:
         return f'{self._base_url}/api/merchant'
     
+    
     @property
     def register_user_attested(self) -> str:
-        '''
-        This end-point requires the following headers:
-            Authorization
-            x-coinflow-auth-user-id
-        '''
+        """
+        End-point for user registration with attestation.
+        Required headers: Authorization, x-coinflow-auth-user-id
+        """
         return f'{self._base_url}/api/withdraw/kyc/attested'
+    
+    @property
+    def register_user_document(self) -> str:
+        """
+        End-point for user document registration.
+        Required headers: Authorization, x-coinflow-auth-user-id
+        """
+        return f'{self._base_url}/api/withdraw/kyc-doc'
+
+
+class CoinFlowAPIError(Exception):
+    """Custom exception for CoinFlow API errors"""
+    
+    def __init__(self, message: str, status_code: Optional[int] = None):
+        super().__init__(message)
+        self.status_code = status_code
 
 
 class CoinFlowClient:
-    def __init__(self):
-        self.coinflow_auth: str = settings.COINFLOW_AUTH
-        self.coinflow_api_url: str = settings.COINFLOW_API_URL.rstrip("")
-        self.endpoits: CoinFlowEndpoints = CoinFlowEndpoints(url=self.coinflow_api_url)
-        self._merchant_id = self._get_merchant_id()
+    # Document type mapping
+    DOCUMENT_TYPE_MAPPING = {
+        DocumentTypeChoise.id_card: 'ID_CARD',
+        DocumentTypeChoise.driving_license: 'DRIVERS',
+        DocumentTypeChoise.passport: 'PASSPORT'
+    }
+    
+    # File field mapping
+    FILE_FIELD_MAPPING = {
+        'document_id_front_photo': 'idFront',
+        'document_id_back_photo': 'idBack',
+    }
+    '''
+    This a compatibility layer for Acuitytec.
+    '''
+    
+    def __init__(self, config: Optional[CoinFlowConfig] = None): 
+        """Initialize CoinFlow client with configuration"""
+        if config:
+            self.config = config
+        else:
+            self.config = CoinFlowConfig(
+                auth_token=settings.COINFLOW_AUTH,
+                api_url=settings.COINFLOW_API_URL
+            )
         
-    def get_headers(self, auth: bool=True,
+        self.endpoints = CoinFlowEndpoints(url=self.config.api_url)
+        self._merchant_id = None
+
+    @property
+    def merchant_id(self) -> str:
+        """Lazy load merchant ID"""
+        if self._merchant_id is None:
+            self._merchant_id = self._fetch_merchant_id()
+        return self._merchant_id
+
+    def _build_headers(self, auth: bool=True,
                     content_json: bool=True,
                     auth_blockchain: Optional[str]=None,
                     auth_session_key: Optional[str]=None,
@@ -49,7 +113,7 @@ class CoinFlowClient:
             "accept": "application/json",
         }
         if auth:
-            header['Authorization'] = self.coinflow_auth
+            header['Authorization'] = self.config.auth_token
         if content_json:
             header['content-type'] = "application/json"
         if auth_blockchain:
@@ -65,35 +129,212 @@ class CoinFlowClient:
             
         return header
 
-    def _get_merchant_id(self) -> str:
-        result = requests.get(self.endpoits.get_merchant, headers=self.get_headers())
-        result.raise_for_status()
-        result = result.json()
-        return result['merchantId']
-
-    def _get_user_id(self, user: Users) -> str:
-        return '-'.join([settings.ENV_POSTFIX, str(user.id),])
-
-    def _get_user_from_id(self, id: str) -> Optional[Users]:
-        if not id.startswith(settings.ENV_POSTFIX):
-            return None
+    def _fetch_merchant_id(self) -> str:
+        """Fetch merchant ID from CoinFlow API"""
         try:
-            user_pk = int(id[len(settings.ENV_POSTFIX) + 1:])
-        except ValueError:
+            response = requests.get(
+                self.endpoints.get_merchant, 
+                headers=self._build_headers(),
+                timeout=self.config.timeout
+            )
+            response.raise_for_status()
+            data = response.json()
+            return data['merchantId']
+        except requests.RequestException as e:
+            # logger.error(f"Failed to fetch merchant ID: {e}")
+            pass
+        except KeyError:
+            # logger.error("Merchant ID not found in response")
+            pass
+        
+        return 'Area51'
+
+    def _generate_user_id(self, user: Users) -> str:
+        """Generate CoinFlow user ID from Django user"""
+        return f"{settings.ENV_POSTFIX}-{user.id}"
+
+    def _parse_user_id(self, coinflow_user_id: str) -> Optional[Users]:
+        """Parse CoinFlow user ID to get Django user"""
+        if not coinflow_user_id.startswith(f"{settings.ENV_POSTFIX}-"):
             return None
-        return Users.objects.filter(id=user_pk).first()
+                
+        try:
+            user_pk = int(coinflow_user_id[len(settings.ENV_POSTFIX) + 1:])
+            return Users.objects.filter(id=user_pk).first()
+        except (ValueError, IndexError):
+            # logger.warning(f"Invalid user ID format: {coinflow_user_id}")
+            return None
+    
+    def _validate_user_verification(self, user: Users) -> BasicReturn:
+        """Validate user verification status"""
+        if user.document_verified != VERIFICATION_APPROVED:
+            return BasicReturn(
+                success=False, 
+                error='User verification must be completed before registration.'
+            )
+        return BasicReturn(success=True)
+        
+    def _make_api_request(self, method: str, url: str, **kwargs) -> requests.Response:
+        """Make API request with proper error handling"""
+        try:
+            response = requests.request(
+                method=method,
+                url=url,
+                timeout=self.config.timeout,
+                **kwargs
+            )
+            response.raise_for_status()
+            return response
+            
+        except requests.ConnectionError as e:
+            # logger.error(f"Network connection error: {e}")
+            raise CoinFlowAPIError(f"Network connection error: {e}")
+        except requests.Timeout as e:
+            # logger.error(f"Request timed out: {e}")
+            raise CoinFlowAPIError(f"Request timed out: {e}")
+        except requests.HTTPError as e:
+            error_message = f"HTTP error {response.status_code}"
+            try:
+                api_error = response.json().get('message', response.text)
+                error_message = f"{error_message}: {api_error}"
+            except (requests.JSONDecodeError, AttributeError):
+                error_message = f"{error_message}: {response.text}"
+            
+            # logger.error(f"HTTP error: {error_message}")
+            raise CoinFlowAPIError(error_message, response.status_code)
+        except requests.RequestException as e:
+            # logger.error(f"Unexpected request error: {e}")
+            raise CoinFlowAPIError(f"An unexpected request error occurred: {e}")
+
+    def _get_user_assets(self, user: Users) -> BasicReturn:
+        """Get user assets from AcuityTec API"""
+        try:
+            acuity = AcuityTecAPI(user)
+            assets = acuity.get_user_assets()
+            
+            if assets is None:
+                return BasicReturn(success=False, error='Please complete all verification steps.')
+            
+            return BasicReturn(success=True, data=assets)
+        except Exception as e:
+            # logger.error(f"Failed to get user assets: {e}")
+            return BasicReturn(success=False, error='Failed to retrieve user verification data.')
     
     def register_user_with_document(self, user: Users) -> BasicReturn:
+        """
+        Register user with document verification to CoinFlow API.
         
-        acuity = AcuityTecAPI(user)
-        acuity.get_user_assets()
+        This method handles the complete document verification process including:
+        - User verification status validation
+        - Document asset retrieval from AcuityTec
+        - Document type validation and mapping
+        - File preparation and upload
+        - API request execution with proper error handling
         
-        
-        return BasicReturn(success=False, error='This platform is still on development')
+        Args:
+            user: Django user instance with completed verification
+            
+        Returns:
+            BasicReturn object with success status and data/error message
+        """
+        try:
+            # Validate user verification status
+            validation_result = self._validate_user_verification(user)
+            if not validation_result.success:
+                return validation_result
+            
+            # Get user assets from AcuityTec
+            res_assets = self._get_user_assets(user)
+            assets = res_assets.data
+            if assets is None:
+                return BasicReturn(success=False, error=res_assets.error)
+            
+            # Extract and validate document type
+            doc_type = assets.pop('document_type', DocumentTypeChoise.id_card)
+            if doc_type is None:
+                return BasicReturn(
+                    success=False, 
+                    error='Document type not found in verification data.'
+                )
+            
+            if doc_type not in self.DOCUMENT_TYPE_MAPPING:
+                return BasicReturn(
+                    success=False, 
+                    error=f'Invalid document type: {doc_type}. Supported types: {list(self.DOCUMENT_TYPE_MAPPING.keys())}'
+                )
+            
+            # Validate required user fields
+            if not user.email:
+                return BasicReturn(
+                    success=False, 
+                    error='User email is required for registration.'
+                )
+            
+            # Build request payload
+            payload = {
+                'country': user.country_obj.code_cca2 if user.country_obj else 'US',
+                'email': user.email,
+                'idType': self.DOCUMENT_TYPE_MAPPING[doc_type],
+                'merchantId': self.merchant_id,
+            }
+            
+            # Build files dictionary for document uploads
+            files = {}
+            for asset_key, asset_value in assets.items():
+                file_key = self.FILE_FIELD_MAPPING.get(asset_key)
+                if file_key and asset_value:
+                    files[file_key] = asset_value
+            
+            if not files:
+                return BasicReturn(
+                    success=False, 
+                    error='No valid document files found. Please ensure document photos are properly uploaded.'
+                )
+            
+            # Log the registration attempt
+            # logger.info(f"Attempting document registration for user {user.id} with document type {doc_type}")
+            
+            # Make API request
+            headers = self._build_headers(
+                auth=True,
+                content_json=False,  # multipart form data for file upload
+                auth_user_id=self._generate_user_id(user)
+            )
+            
+            response = self._make_api_request(
+                method='POST',
+                url=self.endpoints.register_user_document,
+                headers=headers,
+                data=payload,
+                files=files
+            )
+            
+            # Parse response data
+            try:
+                response_data = response.json()
+            except requests.JSONDecodeError:
+                response_data = {"message": "Registration successful"}
+            
+            # logger.info(f"User {user.id} document registration completed successfully")
+            return BasicReturn(
+                success=True, 
+                data=response_data,
+                message="Document registration completed successfully"
+            )
+            
+        except CoinFlowAPIError as e:
+            # logger.error(f"CoinFlow API error during document registration for user {user.id}: {e}")
+            return BasicReturn(success=False, error=str(e))
+        except Exception as e:
+            # logger.error(f"Unexpected error during document registration for user {user.id}: {e}")
+            return BasicReturn(
+                success=False, 
+                error='An unexpected error occurred during registration. Please try again.'
+            )
 
     def register_user(self, user: Users, ssn: str) -> BasicReturn:
         if user.document_verified != VERIFICATION_APPROVED:
-            return BasicReturn(success=False, error='User must be registered on Accuitytec.')
+            return BasicReturn(success=False, error='User must be registered on Acuitytec.')
         
         if user.dob:
             year, month, day = user.dob.split('-')
@@ -122,9 +363,9 @@ class CoinFlowClient:
                 return BasicReturn(success=False, error='Please complete your profile before taking any extra steps.')
 
         res = requests.get(
-            self.endpoits.register_user_attested,
+            self.endpoints.register_user_attested,
             json=payload,
-            headers=self.get_headers(auth_user_id=self._get_user_id(user=user))
+            headers=self._build_headers(auth_user_id=self._generate_user_id(user=user))
             )
         
         return BasicReturn(success=True)
