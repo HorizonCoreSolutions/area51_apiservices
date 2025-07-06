@@ -154,4 +154,32 @@ class MnetTransaction(AbstractBaseModel):
     error_code = models.CharField(max_length=20,null=True,blank=True)
     error_description = models.CharField(max_length=100,null=True,blank=True)
     
-    
+
+class CoinFlowTransaction(AbstractBaseModel):
+    class TransactionType(DjangoChoices):
+        deposit = ChoiceItem("deposit", "DEPOSIT")
+        withdraw = ChoiceItem("withdraw", "WITHDRAW")
+        
+    class StatusType(DjangoChoices):
+        requested = ChoiceItem("requested", "REQUESTED")
+        pending = ChoiceItem("pending", "PENDING")
+        approved = ChoiceItem("approved", "APPROVED")
+        cancelled = ChoiceItem("cancelled", "CANCELLED")
+        rejected = ChoiceItem("rejected", "REJECTED")
+        refund = ChoiceItem("refund", "REFUND")
+        chargeback = ChoiceItem("chargeback", "CHARGEBACK")
+
+    user = models.ForeignKey(Users, on_delete=models.CASCADE, blank=False, null=True)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    transaction_type = models.CharField(max_length=50,choices=TransactionType)
+    status = models.CharField(max_length=50,choices=StatusType, default=StatusType.pending)
+    card_type = models.CharField(max_length=20,null=True,blank=True)
+    card_number = models.CharField(max_length=20,null=True,blank=True)
+    processor_name = models.CharField(max_length=20,null=True,blank=True)
+    transaction_id = models.CharField(max_length=80,null=True,blank=True)
+    trans_note = models.CharField(max_length=80,null=True,blank=True)
+    ip_address = models.CharField(max_length=20,null=True,blank=True)
+    currency = models.CharField(max_length=20,null=True,blank=True)
+    descriptor = models.CharField(max_length=100,null=True,blank=True)
+    error_code = models.CharField(max_length=20,null=True,blank=True)
+    error_description = models.CharField(max_length=100,null=True,blank=True)
