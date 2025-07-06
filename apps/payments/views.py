@@ -28,13 +28,14 @@ from apps.casino.utils import ErrorResponseMsg
 from apps.core.pagination import PageNumberPagination
 from apps.core.permissions import IsAgent, IsPlayer
 from apps.core.rest_any_permissions import AnyPermissions
+from apps.payments.coinflow import CoinFlowClient
 from apps.users.models import Users, Admin, BonusPercentage, PromoCodes
 from apps.casino.custom_pagination import CustomPagination
 from django.db.models import OuterRef, Subquery
 
 from apps.users.utils import send_player_balance_update_notification
 from apps.payments.mnet import MnetPayment
-from .models import (AlchemypayOrder, CoinWithdrawal, MnetTransaction, NowPaymentsTransactions,
+from .models import (AlchemypayOrder, CoinFlowTransaction, CoinWithdrawal, MnetTransaction, NowPaymentsTransactions,
     WithdrawalCurrency, WithdrawalRequests)
 from .serializers import (AlchemypayTransactionsSerializer, CallbackWithdrawalSerializer,
     CreatePaymentQrSerializer, CreatePaymentSerializer, CreateWithdrawalSerializer,
@@ -1502,4 +1503,58 @@ class MnetTransactionView(APIView):
             response = {"msg": "Some Internal error.", "status_code": status.HTTP_500_INTERNAL_SERVER_ERROR}
             return Response(response)
         
+
+# Player can request for coin withdrawal
+class GetCoinFlowLink(APIView):
+    http_method_names = ["post"]
+    permission_classes = [IsPlayer]
+    
+    def post(self, request):
+        if not request.user.is_authenticated:
+            return Response(data={'message' : 'You need to be login to use this endpoint.'})
+        
+        
+        user = request.user
+        cf = CoinFlowClient()
+        
+        data = cf.register_user_with_document(user=user)
+        if data.error:
+            return Response(data={'message' : data.error}, status=status.HTTP_400_BAD_REQUEST)
+        
+        cents = request.data.get('cents', None)
+        
+        if cents is None:
+            return Response(data={'message' : 'You must sent a cent amount.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if not str(cents).isdigit():
+            return Response(data={'message' : 'Cents must be a number.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        cents = int(cents)
+        
+        if cents < 500 or cents > 100000:
+            return Response(data={'message' : 'Cents must be higher than 500 and lower than 100000.'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        link = cf.create_checkout_link(user=user, amount_cents=cents)
+        if link.error:
+            return Response(data={'message' : link.error}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if link.data is None:
+            return Response(data={'message' : 'there is no id'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        idt = link.data.pop('id', None)
+        
+        Transactions.objects.create(
+            user=user,
+            amount=Decimal(cents/100),
+            trans_id=idt
+        )
+        
+        CoinFlowTransaction.objects.create(
+            user=user,
+            amount=Decimal(cents/100),
+            currency='USD',
+            transaction_id=idt
+        )
+        
+        return Response(data=link.data, status=status.HTTP_200_OK)
         

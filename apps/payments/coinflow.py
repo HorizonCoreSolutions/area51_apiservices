@@ -1,4 +1,5 @@
 import requests
+from uuid import uuid4
 from typing import Optional
 from django.conf import settings
 from dataclasses import dataclass
@@ -49,6 +50,14 @@ class CoinFlowEndpoints:
         Required headers: Authorization, x-coinflow-auth-user-id
         """
         return f'{self._base_url}/api/withdraw/kyc-doc'
+    
+    @property
+    def checkout_link(self) -> str:
+        """
+        End-point for creating checkout links.
+        Required headers: Authorization, x-coinflow-auth-user-id
+        """
+        return f'{self._base_url}/api/checkout/link'
 
 
 class CoinFlowAPIError(Exception):
@@ -369,3 +378,139 @@ class CoinFlowClient:
             )
         
         return BasicReturn(success=True)
+    
+    def create_checkout_link(self, 
+                           user: Users,
+                           amount_cents: int,
+                           threeds_preference: str = 'Frictionless',
+                           item_class: str = 'moneyTopUp',
+                           item_id: Optional[str] = None,
+                           item_name: str = 'Sweeptokens',
+                           is_preset_amount: bool = False) -> BasicReturn:
+        """
+        Create a checkout link for user payment processing.
+        
+        This method handles the complete checkout link creation process including:
+        - User profile validation
+        - Parameter validation
+        - Payload construction
+        - API request execution with proper error handling
+        
+        Args:
+            user: Django user instance
+            amount_cents: Amount in cents (e.g., 500 for $5.00)
+            blockchain: Blockchain to use (default: 'eth')
+            currency: Currency code (default: 'USD')
+            threeds_preference: 3DS challenge preference (default: 'Frictionless')
+            item_class: Item class for chargeback protection (default: 'moneyTopUp')
+            item_id: Unique item identifier (optional, auto-generated if not provided)
+            item_name: Item name for display (default: 'Sweeptokens')
+            webhook_url: Webhook URL for callbacks (optional)
+            is_preset_amount: Whether the amount is preset (default: False)
+            
+        Returns:
+            BasicReturn object with success status and checkout link data/error message
+        """
+        try:
+            # Validate user profile
+            profile_validation = self._validate_user_verification(user)
+            if not profile_validation.success:
+                return profile_validation
+            
+            # Generate item ID if not provided
+            if item_id is None:
+                item_id = f"checkout-{user.id}-{uuid4()}"
+            
+            # # Build webhook info
+            # webhook_info = {}
+            # if webhook_url:
+            #     webhook_info['url'] = webhook_url
+            # else:
+            #     # Use default webhook URL from settings if available
+            #     default_webhook = getattr(settings, 'COINFLOW_WEBHOOK_URL', None)
+            #     if default_webhook:
+            #         webhook_info['url'] = default_webhook
+            
+            # Construct checkout payload
+            payload = {
+                "subtotal": {
+                    "currency": 'USD',
+                    "cents": amount_cents
+                },
+                "email": user.email,
+                "blockchain": 'eth',
+                "threeDsChallengePreference": threeds_preference,
+                "customerInfo": {
+                    "firstName": user.first_name,
+                    "lastName": user.last_name
+                },
+                "chargebackProtectionData": [
+                    {
+                        "itemClass": item_class,
+                        "id": item_id,
+                        "rawProductData": {
+                            "Name": item_name
+                        },
+                        "sellingPrice": {
+                            "valueInCurrency": amount_cents,
+                            "currency": 'USD'
+                        },
+                        "quantity": 1,
+                        "topUpAmount": {
+                            "valueInCurrency": amount_cents,
+                            "currency": 'USD'
+                        },
+                        "isPresetAmount": False
+                    }
+                ]
+            }
+            
+            # Log the checkout attempt
+            # logger.info(f"Creating checkout link for user {user.id}, amount: {amount_cents} cents")
+            
+            # Make API request
+            headers = self._build_headers(
+                auth=True,
+                content_json=True,
+                auth_user_id=self._generate_user_id(user)
+            )
+            
+            response = self._make_api_request(
+                method='POST',
+                url=self.endpoints.checkout_link,
+                headers=headers,
+                json=payload
+            )
+            
+            # Parse response data
+            try:
+                response_data = response.json()
+            except requests.JSONDecodeError:
+                return BasicReturn(
+                    success=False,
+                    error='Invalid response format from checkout API.'
+                )
+            
+            # Validate response contains expected data
+            if 'link' not in response_data:
+                return BasicReturn(
+                    success=False,
+                    error='Checkout URL not found in API response.'
+                )
+            
+            # logger.info(f"Checkout link created successfully for user {user.id}")
+            return BasicReturn(
+                success=True,
+                data={**response_data, 'id' : item_id},
+                message="Checkout link created successfully"
+            )
+            
+        except CoinFlowAPIError as e:
+            # logger.error(f"CoinFlow API error during checkout link creation for user {user.id}: {e}")
+            return BasicReturn(success=False, error=str(e))
+        except Exception as e:
+            # logger.error(f"Unexpected error during checkout link creation for user {user.id}: {e}")
+            return BasicReturn(
+                success=False,
+                error='An unexpected error occurred during checkout link creation. Please try again.'
+            )
