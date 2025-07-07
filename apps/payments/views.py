@@ -1543,17 +1543,21 @@ class GetCoinFlowLink(APIView):
         
         idt = link.data.pop('id', None)
         
-        Transactions.objects.create(
-            user=user,
-            amount=Decimal(cents/100),
-            trans_id=idt
-        )
+        # Transactions.objects.create(
+        #     user=user,
+        #     amount=Decimal(cents/100),
+        #     trans_id=idt,
+        #     journal_entry='coinflow testing'
+        #     status='pending_charge',
+        #     prec
+        # )
         
         CoinFlowTransaction.objects.create(
             user=user,
             amount=Decimal(cents/100),
             currency='USD',
-            transaction_id=idt
+            transaction_id=idt,
+            transaction_type=CoinFlowTransaction.TransactionType.deposit
         )
         
         return Response(data=link.data, status=status.HTTP_200_OK)
