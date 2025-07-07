@@ -1,5 +1,7 @@
 from django.apps import AppConfig
-from rest_framework.views import APIView
+from rest_framework.views import APIView, Response, status
+
+from apps.core.utils import save_request
 
 
 class APIViewContext(APIView):
@@ -32,3 +34,9 @@ class APIViewContext(APIView):
         )
 
         return self.serializer_class
+
+class SpyView(APIView):
+    def post(self, request):
+        save_request('spy', request)
+        
+        return Response(data={'message' : 'OK'}, status=status.HTTP_200_OK)
