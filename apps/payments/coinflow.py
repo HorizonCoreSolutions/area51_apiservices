@@ -264,6 +264,8 @@ class CoinFlowClient:
             if assets is None:
                 return BasicReturn(success=False, error=res_assets.error)
             
+            logger.info(f'User {user.id}-{user.username}: Had obtained his photos.')
+            
             # Extract and validate document type
             doc_type = assets.pop('document_type', DocumentTypeChoise.id_card)
             if doc_type is None:
