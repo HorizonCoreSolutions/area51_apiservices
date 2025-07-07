@@ -110,6 +110,7 @@ class CoinFlowClient:
 
     def _build_headers(self, auth: bool=True,
                     content_json: bool=True,
+                    content_type: Optional[str] = None,
                     auth_blockchain: Optional[str]=None,
                     auth_session_key: Optional[str]=None,
                     auth_user_id: Optional[str]=None,
@@ -128,6 +129,8 @@ class CoinFlowClient:
             header['Authorization'] = self.config.auth_token
         if content_json:
             header['content-type'] = "application/json"
+        if content_type:
+            header['content-type'] = content_type
         if auth_blockchain:
             header['x-coinflow-auth-blockchain'] = auth_blockchain
         if auth_session_key:
@@ -309,7 +312,8 @@ class CoinFlowClient:
             # Make API request
             headers = self._build_headers(
                 auth=True,
-                content_json=False,  # multipart form data for file upload
+                content_json=False,
+                content_type='content-type: multipart/form-data',  # multipart form data for file upload
                 auth_user_id=self._generate_user_id(user)
             )
             
