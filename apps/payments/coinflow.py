@@ -313,7 +313,7 @@ class CoinFlowClient:
             headers = self._build_headers(
                 auth=True,
                 content_json=False,
-                content_type='content-type: multipart/form-data',  # multipart form data for file upload
+                content_type='multipart/form-data',  # multipart form data for file upload
                 auth_user_id=self._generate_user_id(user)
             )
             
