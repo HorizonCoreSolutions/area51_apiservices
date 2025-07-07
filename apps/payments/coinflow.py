@@ -4,6 +4,7 @@ from typing import Optional
 from django.conf import settings
 from dataclasses import dataclass
 from apps.core.custom_types import BasicReturn
+from apps.core.file_logger import SimpleLogger
 from apps.acuitytec.acuitytec import AcuityTecAPI
 from apps.acuitytec.models import DocumentTypeChoise
 from apps.users.models import (
@@ -16,6 +17,8 @@ from apps.users.models import (
     VERIFICATION_CANCELED,
     VERIFICATION_EXPIRED
 )
+
+logger = SimpleLogger(name='Coinflow', log_file='logs/coinflow.log').get_logger()
 
 @dataclass
 class CoinFlowConfig:
@@ -150,10 +153,10 @@ class CoinFlowClient:
             data = response.json()
             return data['merchantId']
         except requests.RequestException as e:
-            # logger.error(f"Failed to fetch merchant ID: {e}")
+            logger.error(f"Failed to fetch merchant ID: {e}")
             pass
         except KeyError:
-            # logger.error("Merchant ID not found in response")
+            logger.error("Merchant ID not found in response")
             pass
         
         return 'Area51'
@@ -171,7 +174,7 @@ class CoinFlowClient:
             user_pk = int(coinflow_user_id[len(settings.ENV_POSTFIX) + 1:])
             return Users.objects.filter(id=user_pk).first()
         except (ValueError, IndexError):
-            # logger.warning(f"Invalid user ID format: {coinflow_user_id}")
+            logger.warning(f"Invalid user ID format: {coinflow_user_id}")
             return None
     
     def _validate_user_verification(self, user: Users) -> BasicReturn:
@@ -196,10 +199,10 @@ class CoinFlowClient:
             return response
             
         except requests.ConnectionError as e:
-            # logger.error(f"Network connection error: {e}")
+            logger.error(f"Network connection error: {e}")
             raise CoinFlowAPIError(f"Network connection error: {e}")
         except requests.Timeout as e:
-            # logger.error(f"Request timed out: {e}")
+            logger.error(f"Request timed out: {e}")
             raise CoinFlowAPIError(f"Request timed out: {e}")
         except requests.HTTPError as e:
             error_message = f"HTTP error {response.status_code}"
@@ -209,10 +212,10 @@ class CoinFlowClient:
             except (requests.JSONDecodeError, AttributeError):
                 error_message = f"{error_message}: {response.text}"
             
-            # logger.error(f"HTTP error: {error_message}")
+            logger.error(f"HTTP error: {error_message}")
             raise CoinFlowAPIError(error_message, response.status_code)
         except requests.RequestException as e:
-            # logger.error(f"Unexpected request error: {e}")
+            logger.error(f"Unexpected request error: {e}")
             raise CoinFlowAPIError(f"An unexpected request error occurred: {e}")
 
     def _get_user_assets(self, user: Users) -> BasicReturn:
@@ -226,7 +229,7 @@ class CoinFlowClient:
             
             return BasicReturn(success=True, data=assets)
         except Exception as e:
-            # logger.error(f"Failed to get user assets: {e}")
+            logger.error(f"Failed to get user assets: {e}")
             return BasicReturn(success=False, error='Failed to retrieve user verification data.')
     
     def register_user_with_document(self, user: Users) -> BasicReturn:
@@ -301,7 +304,7 @@ class CoinFlowClient:
                 )
             
             # Log the registration attempt
-            # logger.info(f"Attempting document registration for user {user.id} with document type {doc_type}")
+            logger.info(f"Attempting document registration for user {user.id} with document type {doc_type}")
             
             # Make API request
             headers = self._build_headers(
@@ -324,7 +327,7 @@ class CoinFlowClient:
             except requests.JSONDecodeError:
                 response_data = {"message": "Registration successful"}
             
-            # logger.info(f"User {user.id} document registration completed successfully")
+            logger.info(f"User {user.id} document registration completed successfully")
             return BasicReturn(
                 success=True, 
                 data=response_data,
@@ -332,10 +335,10 @@ class CoinFlowClient:
             )
             
         except CoinFlowAPIError as e:
-            # logger.error(f"CoinFlow API error during document registration for user {user.id}: {e}")
+            logger.error(f"CoinFlow API error during document registration for user {user.id}: {e}")
             return BasicReturn(success=False, error=str(e))
         except Exception as e:
-            # logger.error(f"Unexpected error during document registration for user {user.id}: {e}")
+            logger.error(f"Unexpected error during document registration for user {user.id}: {e}")
             return BasicReturn(
                 success=False, 
                 error='An unexpected error occurred during registration. Please try again.'
@@ -466,7 +469,7 @@ class CoinFlowClient:
             }
             
             # Log the checkout attempt
-            # logger.info(f"Creating checkout link for user {user.id}, amount: {amount_cents} cents")
+            logger.info(f"Creating checkout link for user {user.id}, amount: {amount_cents} cents")
             
             # Make API request
             headers = self._build_headers(
@@ -498,7 +501,7 @@ class CoinFlowClient:
                     error='Checkout URL not found in API response.'
                 )
             
-            # logger.info(f"Checkout link created successfully for user {user.id}")
+            logger.info(f"Checkout link created successfully for user {user.id}")
             return BasicReturn(
                 success=True,
                 data={**response_data, 'id' : item_id},
@@ -506,10 +509,10 @@ class CoinFlowClient:
             )
             
         except CoinFlowAPIError as e:
-            # logger.error(f"CoinFlow API error during checkout link creation for user {user.id}: {e}")
+            logger.error(f"CoinFlow API error during checkout link creation for user {user.id}: {e}")
             return BasicReturn(success=False, error=str(e))
         except Exception as e:
-            # logger.error(f"Unexpected error during checkout link creation for user {user.id}: {e}")
+            logger.error(f"Unexpected error during checkout link creation for user {user.id}: {e}")
             return BasicReturn(
                 success=False,
                 error='An unexpected error occurred during checkout link creation. Please try again.'
