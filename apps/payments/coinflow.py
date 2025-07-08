@@ -298,6 +298,8 @@ class CoinFlowClient:
             # Build files dictionary for document uploads
             files = {}
             for asset_key, asset_value in assets.items():
+                if asset_value[1] is None:
+                    continue
                 file_key = self.FILE_FIELD_MAPPING.get(asset_key)
                 if file_key and asset_value:
                     files[file_key] = asset_value
@@ -305,7 +307,7 @@ class CoinFlowClient:
             if not files:
                 return BasicReturn(
                     success=False, 
-                    error='No valid document files found. Please ensure document photos are properly uploaded.'
+                    error='No valid document files found. If you have completed all verification please contact us.'
                 )
             
             # Log the registration attempt
