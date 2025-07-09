@@ -1517,7 +1517,10 @@ class GetCoinFlowLink(APIView):
         user = request.user
         cf = CoinFlowClient()
         
-        data = cf.register_user(user=user ,ssn=f'{user.id}5')
+        data = cf.register_user_with_document(
+            user=user,
+            # ssn=f'{user.id}5'
+        )
         if data.error:
             return Response(data={'message' : data.error}, status=status.HTTP_400_BAD_REQUEST)
         
