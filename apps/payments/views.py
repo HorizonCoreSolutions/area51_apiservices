@@ -23,7 +23,7 @@ from rest_framework.views import APIView
 from rest_framework import viewsets
 from apps.admin_panel.tasks import ipn_status_transaction_mail
 from apps.bets.models import PENDING, WITHDRAW, Transactions, DEPOSIT
-from apps.bets.utils import validate_date
+from apps.bets.utils import generate_reference, validate_date
 from apps.casino.utils import ErrorResponseMsg
 from apps.core.pagination import PageNumberPagination
 from apps.core.permissions import IsAgent, IsPlayer
@@ -1559,15 +1559,15 @@ class GetCoinFlowLink(APIView):
             user=user,
             merchant='Area51',
             amount=Decimal(cents/100),
-            journal_entry='deposit'
+            journal_entry='deposit',
             status='pending_charge',
             trans_id=idt,
             previous_balance=user.balace,
             new_balance=user.balace,
-            reference=generate_reference(player),
+            reference=generate_reference(request.user),
             # payment_id= This need to be set down after
             txn_id=idt
-            checkout_url=link.data.get('link')
+            checkout_url=link.data.get('link'),
             # timeout= ask for this
             # payment_method=
         )
