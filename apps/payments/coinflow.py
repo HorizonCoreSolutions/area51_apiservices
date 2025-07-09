@@ -56,6 +56,14 @@ class CoinFlowEndpoints:
         return f'{self._base_url}/api/withdraw/kyc-doc'
     
     @property
+    def create_customer(self) -> str:
+        """
+        End-point for user document registration.
+        Required headers: Authorization, x-coinflow-auth-user-id
+        """
+        return f'{self._base_url}/api/customer'
+    
+    @property
     def checkout_link(self) -> str:
         """
         End-point for creating checkout links.
@@ -384,11 +392,52 @@ class CoinFlowClient:
             if len(str(v)) < 1:
                 return BasicReturn(success=False, error='Please complete your profile before taking any extra steps.')
 
-        res = requests.get(
+        res = self._make_api_request(
+            'POST',
             self.endpoints.register_user_attested,
             json=payload,
             headers=self._build_headers(auth_user_id=self._generate_user_id(user=user))
             )
+        
+        return BasicReturn(success=True)
+    
+    def create_customer(self, user: Users, ip: str) -> BasicReturn:
+        
+        if user.dob:
+            year, month, day = user.dob.split('-')
+            formatted_date_str = f"{year}-{month}-{day}"
+        else:
+            formatted_date_str = ''
+        
+        customer_info = {
+            "address": user.complete_address,
+            "city": user.city,
+            "state": user.state,
+            "zip": user.zip_code,
+            "country": user.country_obj.code_cca2 if user.country_obj else 'US',
+            "ip" : ip,
+            "firstName": user.first_name,
+            "surName": user.last_name,
+        }
+        
+        for k, v in customer_info.items():
+            if v is None:
+                return BasicReturn(success=False, error='Please complete your profile before taking any extra steps.')
+            
+            if len(str(v)) < 1:
+                return BasicReturn(success=False, error='Please complete your profile before taking any extra steps.')
+
+        payload = {
+            "customerInfo" : customer_info,
+            "email": user.email,
+        }
+        
+        res = self._make_api_request(
+            'POST',
+            self.endpoints.create_customer,
+            json=payload,
+            headers=self._build_headers(auth_user_id=self._generate_user_id(user=user))
+        )
         
         return BasicReturn(success=True)
     
