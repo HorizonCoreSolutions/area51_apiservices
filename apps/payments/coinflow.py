@@ -99,6 +99,7 @@ class CoinFlowClient:
                 api_url=settings.COINFLOW_API_URL
             )
         
+        self.origins = f'[{settings.PROJECT_DOMAIN}]'
         self.endpoints = CoinFlowEndpoints(url=self.config.api_url)
         self._merchant_id = None
 
@@ -451,6 +452,7 @@ class CoinFlowClient:
                     "cents": amount_cents
                 },
                 "email": user.email,
+                "origins" : self.origins,
                 "webhookInfo": {'transaction_id' : process_id},
                 "blockchain": 'eth',
                 "threeDsChallengePreference": threeds_preference,
