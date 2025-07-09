@@ -29,6 +29,7 @@ class CoinFlowConfig:
     """Configuration for CoinFlow API client"""
     auth_token: str
     api_url: str
+    auth_header: str
     timeout: int = 30
     max_retries: int = 2
 
@@ -107,7 +108,8 @@ class CoinFlowClient:
         else:
             self.config = CoinFlowConfig(
                 auth_token=settings.COINFLOW_AUTH,
-                api_url=settings.COINFLOW_API_URL
+                api_url=settings.COINFLOW_API_URL,
+                auth_header=settings.COINFLOW_AUTH_HEADER,
             )
         
         self.origins = f'[{settings.PROJECT_DOMAIN}]'
@@ -698,7 +700,11 @@ class CoinFlowClient:
             pass
         return BasicReturn(success=False, error='This function is not fully implemented')
 
-    def handle_webhook(self, data) -> BasicReturn:
+    def handle_webhook(self, data, authorization: str) -> BasicReturn:
+        
+        if authorization is None or authorization != self.config.auth_header:
+            return BasicReturn(success=False, error='Auth header does not match.')
+        
         web_hook_options: Dict[str, Callable[..., BasicReturn]] = {
             'KYC' : lambda: BasicReturn(success=True),
             'Purchase' : lambda: self.handle_purchases(data=data),
