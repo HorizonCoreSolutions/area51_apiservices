@@ -1,6 +1,6 @@
 import requests
 from uuid import uuid4
-from typing import Optional
+from typing import Callable, Dict, Optional, TypedDict
 from django.conf import settings
 from dataclasses import dataclass
 from apps.core.custom_types import BasicReturn
@@ -208,15 +208,15 @@ class CoinFlowClient:
             logger.error(f"Request timed out: {e}")
             raise CoinFlowAPIError(f"Request timed out: {e}")
         except requests.HTTPError as e:
-            error_message = f"HTTP error {response.status_code}"
+            error_message = f"HTTP error {response.status_code}" # type: ignore
             try:
-                api_error = response.json().get('message', response.text)
+                api_error = response.json().get('message', response.text) # type: ignore
                 error_message = f"{error_message}: {api_error}"
             except (requests.JSONDecodeError, AttributeError):
-                error_message = f"{error_message}: {response.text}"
+                error_message = f"{error_message}: {response.text}" # type: ignore
             
             logger.error(f"HTTP error: {error_message}")
-            raise CoinFlowAPIError(error_message, response.status_code)
+            raise CoinFlowAPIError(error_message, response.status_code) # type: ignore
         except requests.RequestException as e:
             logger.error(f"Unexpected request error: {e}")
             raise CoinFlowAPIError(f"An unexpected request error occurred: {e}")
@@ -431,7 +431,8 @@ class CoinFlowClient:
             # Generate item ID if not provided
             if item_id is None:
                 item_id = f"checkout-{user.id}-{uuid4()}"
-            
+                
+            process_id = f'{uuid4()}'
             # # Build webhook info
             # webhook_info = {}
             # if webhook_url:
@@ -449,6 +450,7 @@ class CoinFlowClient:
                     "cents": amount_cents
                 },
                 "email": user.email,
+                "idempotencyKey" : process_id,
                 "blockchain": 'eth',
                 "threeDsChallengePreference": threeds_preference,
                 "customerInfo": {
@@ -512,7 +514,7 @@ class CoinFlowClient:
             logger.info(f"Checkout link created successfully for user {user.id}")
             return BasicReturn(
                 success=True,
-                data={**response_data, 'id' : item_id},
+                data={**response_data, 'id' : process_id},
                 message="Checkout link created successfully"
             )
             
@@ -525,3 +527,92 @@ class CoinFlowClient:
                 success=False,
                 error='An unexpected error occurred during checkout link creation. Please try again.'
             )
+
+    def handle_purchases(self, data) -> BasicReturn:
+        l_data = data.get('data', None)
+        if l_data is None:
+            return BasicReturn(success=False, error='The data is none')
+        eventType = l_data.get('eventType', None)
+        if eventType is None:
+            return BasicReturn(success=False, error='The data.eventype is none')
+        eventType = str(eventType)
+        
+
+        if eventType == "Settled":
+            
+            # Payment completed and funds have been sent to the merchant.
+            pass
+        elif eventType == "Card Payment Authorized":
+            # Card issuer authorized the payer's credit card.
+            pass
+        elif eventType == "Card Payment Declined":
+            # Card issuer declined the payer's credit card.
+            pass
+        elif eventType == "Card Payment Suspected Fraud":
+            # Payment rejected due to suspected fraud.
+            pass
+        elif eventType == "Payment Pending Review":
+            # Payment under review, awaiting merchant approval.
+            pass
+        elif eventType == "USDC Payment Received":
+            # Merchant received USDC payment via Solana.
+            pass
+        elif eventType == "Card Payment Chargeback Opened":
+            # Chargeback investigation initiated.
+            pass
+        elif eventType == "Card Payment Chargeback Won":
+            # Chargeback resolved in favor of merchant.
+            pass
+        elif eventType == "Card Payment Chargeback Lost":
+            # Chargeback resolved in favor of cardholder.
+            pass
+        elif eventType == "ACH Initiated":
+            # ACH payment has been started.
+            pass
+        elif eventType == "ACH Batched":
+            # ACH payment accepted and is processing.
+            pass
+        elif eventType == "ACH Returned":
+            # ACH payment marked as returned by the bank.
+            pass
+        elif eventType == "ACH Failed":
+            # ACH payment denied by the bank.
+            pass
+        elif eventType == "PIX Failed":
+            # PIX payment failed during processing.
+            pass
+        elif eventType == "PIX Expiration":
+            # PIX payment expired before completion.
+            pass
+        elif eventType == "Payment Expiration":
+            # Payment expired before completion.
+            pass
+        elif eventType == "Subscription Created":
+            # Subscription purchased and activated.
+            pass
+        elif eventType == "Subscription Canceled":
+            # Subscription cancelled by customer.
+            pass
+        elif eventType == "Subscription Expired":
+            # Subscription plan could not be renewed.
+            pass
+        elif eventType == "Subscription Failure":
+            # Payment failed for subscription.
+            pass
+        elif eventType == "Subscription Concluded":
+            # Subscription duration has ended.
+            pass
+        elif eventType == "Refund":
+            # Payment has been refunded.
+            pass
+        else:
+            # Unknown eventType.
+            pass
+        return BasicReturn(success=False, error='This function is not fully implemented')
+
+    def handle_webhook(self, data):
+        web_hook_options: Dict[str, Callable[..., BasicReturn]] = {
+            'KYC' : lambda: BasicReturn(success=True),
+            'Purchase' : lambda: BasicReturn(success=True),
+            'Withdraw' : lambda: BasicReturn(success=True),
+        }
