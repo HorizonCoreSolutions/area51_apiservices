@@ -1589,6 +1589,9 @@ class WebhookView(APIView):
         save_request('spy', request)
         
         cf = CoinFlowClient()
-        cf.handle_webhook(request.data)
+        data = cf.handle_webhook(request.data)
+        if data.error:
+            save_request('spy', {'data' : data.error}, is_response=True)
+            
         
         return Response(data={'message' : 'OK'}, status=status.HTTP_200_OK)

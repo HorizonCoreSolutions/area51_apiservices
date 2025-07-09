@@ -698,7 +698,7 @@ class CoinFlowClient:
             pass
         return BasicReturn(success=False, error='This function is not fully implemented')
 
-    def handle_webhook(self, data):
+    def handle_webhook(self, data) -> BasicReturn:
         web_hook_options: Dict[str, Callable[..., BasicReturn]] = {
             'KYC' : lambda: BasicReturn(success=True),
             'Purchase' : lambda: self.handle_purchases(data=data),
@@ -707,4 +707,4 @@ class CoinFlowClient:
         
         k = data.get('category', 'Purchase')
         
-        web_hook_options[k]()
+        return web_hook_options[k]()
