@@ -445,14 +445,13 @@ class CoinFlowClient:
             #         webhook_info['url'] = default_webhook
             
             # Construct checkout payload
-            extra_data = {'transaction_id' : process_id}
             payload = {
                 "subtotal": {
                     "currency": 'USD',
                     "cents": amount_cents
                 },
                 "email": user.email,
-                "webhookInfo": {"example": json.dumps(extra_data)},
+                "webhookInfo": {'transaction_id' : process_id},
                 "blockchain": 'eth',
                 "threeDsChallengePreference": threeds_preference,
                 "customerInfo": {
