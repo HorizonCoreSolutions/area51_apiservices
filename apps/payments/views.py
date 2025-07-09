@@ -1562,8 +1562,8 @@ class GetCoinFlowLink(APIView):
             journal_entry='deposit',
             status='pending_charge',
             trans_id=idt,
-            previous_balance=user.balace,
-            new_balance=user.balace,
+            previous_balance=user.balance,
+            new_balance=user.balance,
             reference=generate_reference(request.user),
             # payment_id= This need to be set down after
             txn_id=idt,
