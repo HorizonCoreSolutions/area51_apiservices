@@ -1,3 +1,4 @@
+import json
 import requests
 from uuid import uuid4
 from typing import Callable, Dict, Optional, TypedDict
@@ -444,13 +445,14 @@ class CoinFlowClient:
             #         webhook_info['url'] = default_webhook
             
             # Construct checkout payload
+            extra_data = {'transaction_id' : process_id}
             payload = {
                 "subtotal": {
                     "currency": 'USD',
                     "cents": amount_cents
                 },
                 "email": user.email,
-                "idempotencyKey" : process_id,
+                "webhookInfo": {"example": json.dumps(extra_data)},
                 "blockchain": 'eth',
                 "threeDsChallengePreference": threeds_preference,
                 "customerInfo": {
