@@ -1589,9 +1589,9 @@ class WebhookView(APIView):
         save_request('spy', request)
         
         cf = CoinFlowClient()
-        data = cf.handle_webhook(request.data)
+        data = cf.handle_webhook(request.data, request.headers.get('Authorization'))
         if data.error:
-            save_request('spy', {'data' : data.error}, is_response=True)
+            save_request('spy', {'data' : data.error, 'Authorization' : request.headers.get('Authorization', 'None')}, is_response=True)
             
         
         return Response(data={'message' : 'OK'}, status=status.HTTP_200_OK)
