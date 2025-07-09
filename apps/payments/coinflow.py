@@ -704,3 +704,7 @@ class CoinFlowClient:
             'Purchase' : lambda: self.handle_purchases(data=data),
             'Withdraw' : lambda: BasicReturn(success=True),
         }
+        
+        k = data.get('category', 'Purchase')
+        
+        web_hook_options[k]()
