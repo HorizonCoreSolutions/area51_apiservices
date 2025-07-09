@@ -1557,7 +1557,6 @@ class GetCoinFlowLink(APIView):
         
         Transactions.objects.create(
             user=user,
-            merchant='Area51',
             amount=Decimal(cents/100),
             journal_entry='deposit',
             status='pending_charge',
