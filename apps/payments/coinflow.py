@@ -1,9 +1,12 @@
+from decimal import Decimal
 import json
 import requests
 from uuid import uuid4
 from typing import Callable, Dict, Optional, TypedDict
 from django.conf import settings
 from dataclasses import dataclass
+from django.db.models import Q
+from apps.bets.models import Transactions
 from apps.core.custom_types import BasicReturn
 from apps.core.file_logger import SimpleLogger
 from apps.acuitytec.acuitytec import AcuityTecAPI
@@ -581,21 +584,54 @@ class CoinFlowClient:
             )
 
     def handle_purchases(self, data) -> BasicReturn:
+        
         l_data = data.get('data', None)
         if l_data is None:
             return BasicReturn(success=False, error='The data is none')
+        
         eventType = l_data.get('eventType', None)
         if eventType is None:
             return BasicReturn(success=False, error='The data.eventype is none')
-        eventType = str(eventType)
         
+        eventType = str(eventType)
+        tid = l_data.get('webhookInfo', {}).get('transaction_id')
+        if tid is None:
+            logger.critical('The webhook is not retorning the transacction id, no webhook handling can be done')
+            return BasicReturn(success=False, error='transacction if is not returned on the webhook')
 
+        transaction_qs = Transactions.objects.filter(txn_id=tid)
+        if not transaction_qs.exists():
+            return BasicReturn(success=False, error='transacction was not registered')
+        
+        money = l_data.get('subtotal', {}).get('cents')
+        if money is None:
+            return BasicReturn(success=False, error='Money is none')
+
+        cid = l_data.get('customerId')
+        if cid is None:
+            return BasicReturn(success=False, error='User id was not found on the webhook')
+        
+        user = self._parse_user_id(cid)
+        if user is None:
+            return BasicReturn(success=False, error='User does not exist. Or does not belong to this game instance.')
+        
         if eventType == "Settled":
-            
             # Payment completed and funds have been sent to the merchant.
             pass
         elif eventType == "Card Payment Authorized":
+            transaction = transaction_qs.filter(status='pending_charge').first()
+            if not transaction:
+                return BasicReturn(success=False, error='Deduplication this transaction was already claimed')
             # Card issuer authorized the payer's credit card.
+            transaction.status='charged'
+            transaction.amount=Decimal(money/100)
+            transaction.previous_balance=user.balance
+            old_balance = user.balance
+            new_balance = old_balance + Decimal(money)/100
+            transaction.new_balance = new_balance
+            user.balance = new_balance
+            user.save()
+            transaction.save()
             pass
         elif eventType == "Card Payment Declined":
             # Card issuer declined the payer's credit card.
@@ -665,6 +701,6 @@ class CoinFlowClient:
     def handle_webhook(self, data):
         web_hook_options: Dict[str, Callable[..., BasicReturn]] = {
             'KYC' : lambda: BasicReturn(success=True),
-            'Purchase' : lambda: BasicReturn(success=True),
+            'Purchase' : lambda: self.handle_purchases(data=data),
             'Withdraw' : lambda: BasicReturn(success=True),
         }
