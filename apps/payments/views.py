@@ -28,6 +28,7 @@ from apps.casino.utils import ErrorResponseMsg
 from apps.core.pagination import PageNumberPagination
 from apps.core.permissions import IsAgent, IsPlayer
 from apps.core.rest_any_permissions import AnyPermissions
+from apps.core.utils import save_request
 from apps.payments.coinflow import CoinFlowClient
 from apps.users.models import Users, Admin, BonusPercentage, PromoCodes
 from apps.casino.custom_pagination import CustomPagination
@@ -1513,16 +1514,24 @@ class GetCoinFlowLink(APIView):
         if not request.user.is_authenticated:
             return Response(data={'message' : 'You need to be login to use this endpoint.'})
         
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+
+        if x_forwarded_for:
+            print(x_forwarded_for)
+            ip = x_forwarded_for.split(',')[0].strip()  # client’s real IP
+        else:
+            ip = request.META.get('REMOTE_ADDR')
         
-        user = request.user
+        user: Users = request.user
         cf = CoinFlowClient()
         
-        data = cf.register_user_with_document(
-            user=user,
-            # ssn=f'{user.id}5'
-        )
-        if data.error:
-            return Response(data={'message' : data.error}, status=status.HTTP_400_BAD_REQUEST)
+        # data = cf.register_user_with_document(
+        #     user=user,
+        #     # ssn=f'{user.id}5'
+        # )
+        
+        # if data.error:
+        #     return Response(data={'message' : data.error}, status=status.HTTP_400_BAD_REQUEST)
         
         cents = request.data.get('cents', None)
         
@@ -1546,22 +1555,40 @@ class GetCoinFlowLink(APIView):
         
         idt = link.data.pop('id', None)
         
-        # Transactions.objects.create(
-        #     user=user,
-        #     amount=Decimal(cents/100),
-        #     trans_id=idt,
-        #     journal_entry='coinflow testing'
-        #     status='pending_charge',
-        #     prec
-        # )
+        Transactions.objects.create(
+            user=user,
+            merchant='Area51',
+            amount=Decimal(cents/100),
+            journal_entry='deposit'
+            status='pending_charge',
+            trans_id=idt,
+            previous_balance=user.balace,
+            new_balance=user.balace,
+            reference=generate_reference(player),
+            # payment_id= This need to be set down after
+            txn_id=idt
+            checkout_url=link.data.get('link')
+            # timeout= ask for this
+            # payment_method=
+        )
         
         CoinFlowTransaction.objects.create(
             user=user,
             amount=Decimal(cents/100),
             currency='USD',
             transaction_id=idt,
-            transaction_type=CoinFlowTransaction.TransactionType.deposit
+            transaction_type=CoinFlowTransaction.TransactionType.deposit,
+            status=CoinFlowTransaction.StatusType.pending
         )
         
         return Response(data=link.data, status=status.HTTP_200_OK)
+
+
+class WebhookView(APIView):
+    def post(self, request):
+        save_request('spy', request)
         
+        cf = CoinFlowClient()
+        cf.handle_webhook(request.data)
+        
+        return Response(data={'message' : 'OK'}, status=status.HTTP_200_OK)

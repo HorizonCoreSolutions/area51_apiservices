@@ -37,9 +37,9 @@ from apps.casino.views import (
     GameTransaction,
     GsoftCasinoView
 )
-from apps.core.views import SpyView
 from apps.core.custom_refresh_token import refresh_jwt_token
 from apps.core.urls import generate_url, generate_url_desktop
+from apps.payments.views import WebhookView
 from apps.users.views import (PlayerViewSet,
                               AdminPublicDetailsView,
                               AdminBannerClicksView, GetSocialLinkView,
@@ -86,7 +86,7 @@ urlpatterns = [
     generate_url(r"users/", include(("apps.users.urls", "apps.users"), namespace="users-api")),
     generate_url(r"betslip/", include(("apps.bets.urls", "apps.bets"), namespace="bets-api")),
     generate_url(r"acuitytec/", include(("apps.acuitytec.urls", "apps.acuitytec"), namespace="acuitytec-api")),
-    generate_url(r"coinflow/callback", SpyView.as_view(), name='coinflow-api'),
+    generate_url(r"coinflow/callback", WebhookView.as_view(), name='coinflow-api'),
     url(r"^api-auth/", include("rest_framework.urls", namespace="rest_framework")),
     url(r"^admin/", include(("apps.admin_panel.urls", "apps.admin"), namespace="admin-panel")),
     path("change_language/", change_language, name="change_language"),
