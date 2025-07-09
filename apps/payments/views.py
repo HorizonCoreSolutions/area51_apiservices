@@ -1566,6 +1566,7 @@ class GetCoinFlowLink(APIView):
             reference=generate_reference(request.user),
             # payment_id= This need to be set down after
             txn_id=idt,
+            description='Better info to place here in the future',
             # checkout_url=link.data.get('link'),
             # timeout= ask for this
             # payment_method=
