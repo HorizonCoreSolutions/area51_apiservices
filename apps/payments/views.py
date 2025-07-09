@@ -1566,7 +1566,7 @@ class GetCoinFlowLink(APIView):
             new_balance=user.balace,
             reference=generate_reference(request.user),
             # payment_id= This need to be set down after
-            txn_id=idt
+            txn_id=idt,
             checkout_url=link.data.get('link'),
             # timeout= ask for this
             # payment_method=
