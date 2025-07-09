@@ -589,7 +589,7 @@ class CoinFlowClient:
         if l_data is None:
             return BasicReturn(success=False, error='The data is none')
         
-        eventType = l_data.get('eventType', None)
+        eventType = data.get('eventType', None)
         if eventType is None:
             return BasicReturn(success=False, error='The data.eventype is none')
         
