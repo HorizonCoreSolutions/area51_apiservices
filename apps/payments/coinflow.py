@@ -332,7 +332,6 @@ class CoinFlowClient:
             headers = self._build_headers(
                 auth=True,
                 content_json=False,
-                content_type='multipart/form-data',  # multipart form data for file upload
                 auth_user_id=self._generate_user_id(user)
             )
             
@@ -587,66 +586,70 @@ class CoinFlowClient:
 
     def handle_purchases(self, data) -> BasicReturn:
         
+        # Check if all the variables needed exist
         l_data = data.get('data', None)
         if l_data is None:
             return BasicReturn(success=False, error='The data is none')
-        
         eventType = data.get('eventType', None)
         if eventType is None:
             return BasicReturn(success=False, error='The data.eventype is none')
-        
         eventType = str(eventType)
         tid = l_data.get('webhookInfo', {}).get('transaction_id')
         if tid is None:
             logger.critical('The webhook is not retorning the transacction id, no webhook handling can be done')
             return BasicReturn(success=False, error='transacction if is not returned on the webhook')
-
-        transaction_qs = Transactions.objects.filter(txn_id=tid)
+        transaction_qs = Transactions.objects.filter(txn_id=tid).order_by('-created')
         if not transaction_qs.exists():
             return BasicReturn(success=False, error='transacction was not registered')
-        
         money = l_data.get('subtotal', {}).get('cents')
         if money is None:
             return BasicReturn(success=False, error='Money is none')
-
         cid = l_data.get('customerId')
         if cid is None:
             return BasicReturn(success=False, error='User id was not found on the webhook')
-        
         user = self._parse_user_id(cid)
         if user is None:
             return BasicReturn(success=False, error='User does not exist. Or does not belong to this game instance.')
         
-        if eventType == "Settled":
-            # Payment completed and funds have been sent to the merchant.
-            pass
-        elif eventType == "Card Payment Authorized":
+        
+        if eventType in {"Settled", "Card Payment Authorized", "USDC Payment Received", "ACH Batched"}:
+            # Settled: Payment completed and funds have been sent to the merchant.
+            # CPA: Card issuer authorized the payer's credit card.
+            # UPR: Merchant received USDC payment via Solana.
+            # AB : The ACH has been accepted and it is processing.
             transaction = transaction_qs.filter(status='pending_charge').first()
             if not transaction:
                 return BasicReturn(success=False, error='Deduplication this transaction was already claimed')
-            # Card issuer authorized the payer's credit card.
             transaction.status='charged'
             transaction.amount=Decimal(money/100)
             transaction.previous_balance=user.balance
+            transaction.description = eventType
             old_balance = user.balance
             new_balance = old_balance + Decimal(money)/100
             transaction.new_balance = new_balance
             user.balance = new_balance
             user.save()
             transaction.save()
-            pass
-        elif eventType == "Card Payment Declined":
+        elif eventType in {"Card Payment Declined", "Card Payment Suspected Fraud", "ACH Failed", "ACH Returned"}:
             # Card issuer declined the payer's credit card.
-            pass
-        elif eventType == "Card Payment Suspected Fraud":
             # Payment rejected due to suspected fraud.
-            pass
+            transaction = transaction_qs.filter(status='pending_charge').first()
+            if not transaction:
+                return BasicReturn(success=False, error='Deduplication this transaction was already claimed')
+            # Card issuer authorized the payer's credit card.
+            status = 'failed_reject' if eventType in {"Card Payment Suspected Fraud", "ACH Failed"} else 'failed_charge'
+            transaction.status=status
+            transaction.amount=Decimal(money/100)
+            transaction.previous_balance=user.balance
+            transaction.new_balance = user.balance
+            transaction.save()
         elif eventType == "Payment Pending Review":
             # Payment under review, awaiting merchant approval.
-            pass
-        elif eventType == "USDC Payment Received":
-            # Merchant received USDC payment via Solana.
-            pass
+            transaction = transaction_qs.filter(status='pending_charge').first()
+            if transaction is None:
+                return BasicReturn(success=False, error='The transaction is not on the expected state')
+            transaction.confirms_needed = 1
+            transaction.save()
         elif eventType == "Card Payment Chargeback Opened":
             # Chargeback investigation initiated.
             pass
@@ -659,15 +662,6 @@ class CoinFlowClient:
         elif eventType == "ACH Initiated":
             # ACH payment has been started.
             pass
-        elif eventType == "ACH Batched":
-            # ACH payment accepted and is processing.
-            pass
-        elif eventType == "ACH Returned":
-            # ACH payment marked as returned by the bank.
-            pass
-        elif eventType == "ACH Failed":
-            # ACH payment denied by the bank.
-            pass
         elif eventType == "PIX Failed":
             # PIX payment failed during processing.
             pass
@@ -676,21 +670,6 @@ class CoinFlowClient:
             pass
         elif eventType == "Payment Expiration":
             # Payment expired before completion.
-            pass
-        elif eventType == "Subscription Created":
-            # Subscription purchased and activated.
-            pass
-        elif eventType == "Subscription Canceled":
-            # Subscription cancelled by customer.
-            pass
-        elif eventType == "Subscription Expired":
-            # Subscription plan could not be renewed.
-            pass
-        elif eventType == "Subscription Failure":
-            # Payment failed for subscription.
-            pass
-        elif eventType == "Subscription Concluded":
-            # Subscription duration has ended.
             pass
         elif eventType == "Refund":
             # Payment has been refunded.
