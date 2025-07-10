@@ -327,6 +327,8 @@ class CoinFlowClient:
                     success=False, 
                     error='No valid document files found. If you have completed all verification please contact us.'
                 )
+                
+            logger.info(f'Generated files: {pformat(files)}\nFor user: {user.id}')
             
             # Log the registration attempt
             logger.info(f"Attempting document registration for user {user.id} with document type {doc_type}")
