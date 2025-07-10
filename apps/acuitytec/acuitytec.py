@@ -279,7 +279,9 @@ class AcuityTecAPI:
                 if k not in ['document_id_front_photo', 'document_id_back_photo']:
                     continue
                 name = f'{k}.jpeg'
-                res_data[k] =  (name, BytesIO(base64.b64decode(docs.get(k))), mime)
+                file_img = BytesIO(base64.b64decode(docs.get(k)))
+                file_img.seek(0)
+                res_data[k] =  (name, file_img, mime)
                 
             return res_data
         except Exception as e:
