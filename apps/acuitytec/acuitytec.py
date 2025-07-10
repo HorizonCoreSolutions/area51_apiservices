@@ -5,11 +5,13 @@ Simple Python implementation for customer registration verification
 import time
 import json
 import base64
+from uuid import uuid4
 import requests
 from io import BytesIO
 from datetime import datetime, timedelta
-from typing import Dict, Any, Optional, Union
+from typing import Dict, Any, Optional, Tuple, Union
 from apps.acuitytec.models import AcuitytecUser, VerificationStateChoise, VerificationItem
+from apps.core.custom_types import BasicReturn
 from apps.users.models import VERIFICATION_APPROVED, VERIFICATION_PENDING, VERIFICATION_PROCESSING, Users
 from django.conf import settings
 from django.utils import timezone
@@ -242,9 +244,9 @@ class AcuityTecAPI:
             print(e)
             return 'error' + 'Something wrong has happend'
 
-    def get_user_assets(self) -> Optional[dict]:
+    def get_user_assets(self) -> BasicReturn:
         if self.user.document_verified != VERIFICATION_APPROVED:
-            return None
+            return BasicReturn(success=False, error=f"The verification state on the user profile is {self.user.document_verified}")
         
         vi = VerificationItem.objects.filter(
             user=self.user,
@@ -252,7 +254,7 @@ class AcuityTecAPI:
             ).order_by('-created').first()
         
         if vi is None or vi.reference_id is None:
-            return
+            return BasicReturn(success=False, error=f"There is no VerificationItem even when user is document_verified")
         
         payload = {
             'merchant_id' : self.merchant_id,
@@ -273,7 +275,8 @@ class AcuityTecAPI:
             data = res.json()
             docs = data.get('documents')
             if docs is None:
-                return
+                return BasicReturn(success=False, error=f"Acuitytec has no documents for reference id: {vi.reference_id}")
+        
             
             for k in docs.keys():
                 if k not in ['document_id_front_photo', 'document_id_back_photo']:
@@ -283,10 +286,11 @@ class AcuityTecAPI:
                 file_img.seek(0)
                 res_data[k] =  (name, file_img, mime)
                 
-            return res_data
+            return BasicReturn(success=True, data=res_data)
         except Exception as e:
-            print(e)
-            return
+            trace_back = uuid4()
+            print(f'TracebackID: {trace_back}\n{e}')
+            return BasicReturn(success=False, error=f"Unspected error traceback id: {trace_back}")
 
     @staticmethod
     def parse_user_to_geo(user: Users, ip: str):
