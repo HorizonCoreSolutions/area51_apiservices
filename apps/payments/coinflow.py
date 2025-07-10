@@ -240,12 +240,9 @@ class CoinFlowClient:
         """Get user assets from AcuityTec API"""
         try:
             acuity = AcuityTecAPI(user)
-            assets = acuity.get_user_assets()
+            result = acuity.get_user_assets()
             
-            if assets is None:
-                return BasicReturn(success=False, error='Please complete all verification steps.')
-            
-            return BasicReturn(success=True, data=assets)
+            return result
         except Exception as e:
             logger.error(f"Failed to get user assets: {e}")
             return BasicReturn(success=False, error='Failed to retrieve user verification data.')
@@ -280,7 +277,7 @@ class CoinFlowClient:
             
             assets = res_assets.data
             if assets is None:
-                return BasicReturn(success=False, error=res_assets.error)
+                return res_assets
             
             logger.info(f'User {user.id}-{user.username}: Had obtained his photos.')
             
@@ -635,9 +632,10 @@ class CoinFlowClient:
             user.balance = new_balance
             user.save()
             transaction.save()
-        elif eventType in {"Card Payment Declined", "Card Payment Suspected Fraud", "ACH Failed", "ACH Returned"}:
+        elif eventType in {"Card Payment Declined", "Card Payment Suspected Fraud", "ACH Failed", "ACH Returned", "PIX Failed"}:
             # Card issuer declined the payer's credit card.
             # Payment rejected due to suspected fraud.
+            # PIX payment failed during processing.
             transaction = transaction_qs.filter(status='pending_charge').first()
             if not transaction:
                 return BasicReturn(success=False, error='Deduplication this transaction was already claimed')
@@ -658,26 +656,21 @@ class CoinFlowClient:
         elif eventType == "Card Payment Chargeback Opened":
             # Chargeback investigation initiated.
             pass
-        elif eventType == "Card Payment Chargeback Won":
-            # Chargeback resolved in favor of merchant.
-            pass
         elif eventType == "Card Payment Chargeback Lost":
             # Chargeback resolved in favor of cardholder.
+            pass
+        elif eventType == "Refund":
+            # Payment has been refunded.
+            pass
+        elif eventType == "Card Payment Chargeback Won":
+            # Chargeback resolved in favor of merchant.
             pass
         elif eventType == "ACH Initiated":
             # ACH payment has been started.
             pass
-        elif eventType == "PIX Failed":
-            # PIX payment failed during processing.
-            pass
-        elif eventType == "PIX Expiration":
+        elif eventType in ["PIX Expiration", "Payment Expiration"]:
             # PIX payment expired before completion.
-            pass
-        elif eventType == "Payment Expiration":
             # Payment expired before completion.
-            pass
-        elif eventType == "Refund":
-            # Payment has been refunded.
             pass
         else:
             # Unknown eventType.
