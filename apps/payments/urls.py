@@ -6,7 +6,7 @@ from .views import (AlchemyPayCallback, AlchemyPayCryptoFiatQuery, AlchemyPayCry
     ConvertCoins, CreateAlchemyPayOrder, CreateNowPaymentsTestWithdrawal, CreatePaymentAPIView,
     CreatePaymentQrAPIView, CreateTransaction, CreateWithdrawalCoinpayments, GetBalance,
     GetBasicInfo, GetCallbackAddress, GetCoinFlowLink, GetConversionInfo, GetDepositAddress, GetExchangeRates,
-    GetIsValidAddress, GetRecentUsedAddress, GetTxnInfo, GetWithdrawalHistory, GetWithdrawalInfo,
+    GetIsValidAddress, GetRecentUsedAddress, GetTxnInfo, GetWithdrawalHistory, GetWithdrawalInfo, TestCoinflow,
     ipn_callback, MinAmountView, MnetCallback, MnetTransactionView, NotificationsView,
     NowPaymentsTransaction, NowPaymentsTransactionsAPI, PayoutVerification, QrCodePayment,
     RequestCoinWithdrawal, WithdrawalAPIView, WithdrawalCurrencyAPI)
@@ -52,4 +52,5 @@ urlpatterns = [
     path(r"mnet-callback/", MnetCallback.as_view(), name="mnet-callback"),
     path(r"mnet-transactions/", MnetTransactionView.as_view(), name="mnet-transactions"),
     path(r"coinflow-link/", GetCoinFlowLink.as_view(), name="coinflow-link"),
+    path(r'test-coinflow', TestCoinflow.as_view(), name='testing-coinflow')
 ]
