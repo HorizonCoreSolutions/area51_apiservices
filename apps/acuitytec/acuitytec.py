@@ -279,6 +279,8 @@ class AcuityTecAPI:
         
             
             for k in docs.keys():
+                if docs.get(k) is None:
+                    continue
                 if k not in ['document_id_front_photo', 'document_id_back_photo']:
                     continue
                 name = f'{k}.jpeg'
