@@ -318,6 +318,8 @@ class CoinFlowClient:
             for asset_key, asset_value in assets.items():
                 if asset_value[1] is None:
                     continue
+                else:
+                    asset_value[1].seek(0)
                 file_key = self.FILE_FIELD_MAPPING.get(asset_key)
                 if file_key and asset_value:
                     files[file_key] = asset_value
