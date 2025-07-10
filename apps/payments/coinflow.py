@@ -230,7 +230,7 @@ class CoinFlowClient:
             except (requests.JSONDecodeError, AttributeError):
                 error_message = f"{error_message}: {response.text}" # type: ignore
             
-            logger.error(f"HTTP error: {error_message}")
+            logger.error(f"HTTP error: {error_message}\n{e}")
             raise CoinFlowAPIError(error_message, response.status_code) # type: ignore
         except requests.RequestException as e:
             logger.error(f"Unexpected request error: {e}")
