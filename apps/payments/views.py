@@ -1595,3 +1595,20 @@ class WebhookView(APIView):
             
         
         return Response(data={'message' : 'OK'}, status=status.HTTP_200_OK)
+    
+class TestCoinflow(APIView):
+    '''
+    This endpoint is meant to test new ideas
+    something i should have created a long time ago
+    so this can be use by my coworkers to at least in teory play the game
+    '''
+    def post(self, request):
+        save_request('coinflow_testing', request)
+        
+        cf = CoinFlowClient()
+        data = cf.register_user_with_document(user=request.user)
+        if data.error:
+            save_request('coinflow_testing', {'data' : data.error}, is_response=True)
+            
+        return Response(data={'message' : 'OK'}, status=status.HTTP_200_OK)
+    
