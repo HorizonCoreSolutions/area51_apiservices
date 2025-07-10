@@ -275,6 +275,9 @@ class CoinFlowClient:
             
             # Get user assets from AcuityTec
             res_assets = self._get_user_assets(user)
+            from pprint import pformat
+            logger.info(pformat(res_assets))
+            
             assets = res_assets.data
             if assets is None:
                 return BasicReturn(success=False, error=res_assets.error)
