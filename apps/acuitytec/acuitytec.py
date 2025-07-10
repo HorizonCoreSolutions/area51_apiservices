@@ -290,7 +290,7 @@ class AcuityTecAPI:
         except Exception as e:
             trace_back = uuid4()
             print(f'TracebackID: {trace_back}\n{e}')
-            return BasicReturn(success=False, error=f"Unspected error traceback id: {trace_back}")
+            return BasicReturn(success=False, error=f"Unspected error traceback id: {trace_back}", data=e)
 
     @staticmethod
     def parse_user_to_geo(user: Users, ip: str):
