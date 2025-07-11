@@ -95,7 +95,7 @@ from apps.users.models import Player, Agent, Dealer, AdminBanner, CmsAboutDetail
 from apps.users.utils import check_otp, create_otp, create_otp_password,encrypt, is_only_one
 from apps.admin_panel.templatetags.navigate import is_active
 from apps.users.fortunepandas import FortunePandaAPI
-from .models import ( VERIFICATION_APPROVED, AdminAdsBanner,CASHBACK_PERCENTAGE, AffiliateRequests, BonusPercentage, ChatHistory, ChatMessage, ChatRoom, CsrQueries, OffMarketGames, OffMarketTransactions, OffmarketWithdrawalRequests,
+from .models import ( VERIFICATION_APPROVED, VERIFICATION_PENDING, VERIFICATION_PROCESSING, AdminAdsBanner,CASHBACK_PERCENTAGE, AffiliateRequests, BonusPercentage, ChatHistory, ChatMessage, ChatRoom, CsrQueries, OffMarketGames, OffMarketTransactions, OffmarketWithdrawalRequests,
                     Player, Queue, Staff, SuperAdminSetting, UserGames,
                       Users, CmsContactDetails,ResponsibleGambling,
                       CmsPages,CashAppDeatils
@@ -532,6 +532,7 @@ class UserUpdateView(APIViewContext):
                 player.complete_address = complete_address
                 player.profile_pic = profile_pic
                 player.cashtag = cashtag
+                player.document_verified = VERIFICATION_PROCESSING if player.document_verified == VERIFICATION_PROCESSING else VERIFICATION_PENDING
                 
                 if phone_number and country_code:
                     # if Users.objects.filter(phone_number=phone_number, country_code=country_code).exclude(Q(username=request.data.get('username')) | Q(phone_verified=1)).exists():
