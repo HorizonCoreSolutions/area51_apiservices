@@ -30,7 +30,7 @@ from apps.core.permissions import IsAgent, IsPlayer
 from apps.core.rest_any_permissions import AnyPermissions
 from apps.core.utils import save_request
 from apps.payments.coinflow import CoinFlowClient
-from apps.users.models import Users, Admin, BonusPercentage, PromoCodes
+from apps.users.models import VERIFICATION_APPROVED, Users, Admin, BonusPercentage, PromoCodes
 from apps.casino.custom_pagination import CustomPagination
 from django.db.models import OuterRef, Subquery
 
@@ -1512,7 +1512,16 @@ class GetCoinFlowLink(APIView):
     
     def post(self, request):
         if not request.user.is_authenticated:
-            return Response(data={'message' : 'You need to be login to use this endpoint.'})
+            return Response(data={'message' : 'You need to be login to use this endpoint.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        user: Users = request.user
+        country = user.country_obj.code_cca2 if user.country_obj else user.country
+        
+        if request.user.document_verified != VERIFICATION_APPROVED:
+            return Response(data={'message' : 'Please finish up all the verification steps.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if country != 'US':
+            return Response(data={'message' : 'This feature is only enabled for the USA players.'}, status=status.HTTP_400_BAD_REQUEST)
         
         x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
 
@@ -1522,7 +1531,6 @@ class GetCoinFlowLink(APIView):
         else:
             ip = request.META.get('REMOTE_ADDR')
         
-        user: Users = request.user
         cf = CoinFlowClient()
         
         # data = cf.register_user_with_document(
