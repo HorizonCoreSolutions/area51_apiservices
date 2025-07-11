@@ -1521,7 +1521,7 @@ class GetCoinFlowLink(APIView):
             return Response(data={'message' : 'Please finish up all the verification steps.'}, status=status.HTTP_400_BAD_REQUEST)
         
         if country != 'US':
-            return Response(data={'message' : 'This feature is only enabled for the USA players.'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(data={'message' : 'Please update your information. We only accept US documents.'}, status=status.HTTP_400_BAD_REQUEST)
         
         x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
 
