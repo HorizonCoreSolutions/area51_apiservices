@@ -2,9 +2,9 @@ from datetime import timedelta
 import json
 from rest_framework.response import Response
 from rest_framework import status
-from apps.acuitytec.models import AcuitytecUser, VerificationItem, VerificationStateChoise
+from apps.acuitytec.models import AcuitytecUser, DocumentTypeChoise, VerificationItem, VerificationStateChoise
 from apps.acuitytec.utils import generate_qr_code_url
-from apps.users.models import VERIFICATION_APPROVED, VERIFICATION_EXPIRED, VERIFICATION_FAILED, Users
+from apps.users.models import VERIFICATION_APPROVED, VERIFICATION_EXPIRED, VERIFICATION_FAILED, Country, Users
 from django.conf import settings
 from django.utils import timezone
 from apps.acuitytec.acuitytec import AcuityTecAPI
@@ -103,9 +103,35 @@ class CallbackAcuitytecView(APIView):
         }
 
         vi.status = status_map.get(result, VerificationStateChoise.pending)
-        vi.save()
-        
         user = vi.user
+        # update user information
+        if result == "verification.accepted":
+            document = data.get('verification_data', {}).get('document', {})
+            names = document.get('name', {})
+            country = data.get('country', user.country_obj.code_cca2 if user.country_obj else (user.country if user.country else 'US'))
+            first_name = names.get('first_name', user.first_name).strip().title()
+            last_name = names.get('last_name', user.last_name).strip().title()
+            
+            doc_type = document.get('selected_type', ['id_card'])[0]
+            
+            user.country = country
+            user.first_name = first_name
+            user.last_name = last_name
+            user.full_name = first_name + ' ' + last_name
+            
+            if country:
+                qs = Country.objects.filter(code_cca2=country).first()
+                if qs:
+                    user.country_obj = qs # type: ignore
+                    
+            map_types = {
+                "passport" : DocumentTypeChoise.passport,
+                "id_card" : DocumentTypeChoise.id_card,
+                "driving_license" : DocumentTypeChoise.driving_license
+            }
+            vi.document_type = map_types.get(doc_type, 'id_card')
+
+        vi.save()
         newer_exists = VerificationItem.objects.filter(user=vi.user, created__gte=vi.created).exclude(id=vi.id).exists()
         
         if newer_exists and result in ["verification.declined", 'request.timeout']:
