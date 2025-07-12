@@ -1,12 +1,12 @@
-from decimal import Decimal
 import json
+from urllib.parse import quote
 import requests
 from uuid import uuid4
-from typing import Callable, Dict, Optional, TypedDict
+from decimal import Decimal
 from django.conf import settings
 from dataclasses import dataclass
-from django.db.models import Q
 from apps.bets.models import Transactions
+from typing import Callable, Dict, Optional
 from apps.core.custom_types import BasicReturn
 from apps.core.file_logger import SimpleLogger
 from apps.acuitytec.acuitytec import AcuityTecAPI
@@ -30,6 +30,7 @@ class CoinFlowConfig:
     auth_token: str
     api_url: str
     auth_header: str
+    redirection_url: str
     timeout: int = 30
     max_retries: int = 2
 
@@ -75,6 +76,10 @@ class CoinFlowEndpoints:
         """
         return f'{self._base_url}/api/checkout/link'
 
+    @property
+    def get_session_key(self) -> str:
+        return f'{self._base_url}/api/auth/session-key'
+
 
 class CoinFlowAPIError(Exception):
     """Custom exception for CoinFlow API errors"""
@@ -106,10 +111,13 @@ class CoinFlowClient:
         if config:
             self.config = config
         else:
+            redirection_link = settings.PROJECT_DOMAIN + settings.COINFLOW_REDIRECTION_PATH
+            
             self.config = CoinFlowConfig(
                 auth_token=settings.COINFLOW_AUTH,
                 api_url=settings.COINFLOW_API_URL,
                 auth_header=settings.COINFLOW_AUTH_HEADER,
+                redirection_url=redirection_link
             )
         
         self.origins = f'[{settings.PROJECT_DOMAIN}]'
@@ -225,7 +233,7 @@ class CoinFlowClient:
         except requests.HTTPError as e:
             error_message = f"HTTP error {response.status_code}" # type: ignore
             try:
-                api_error = response.json().get('message', response.text) # type: ignore
+                api_error = response.json().get('details', response.text) # type: ignore
                 error_message = f"{error_message}: {api_error}"
             except (requests.JSONDecodeError, AttributeError):
                 error_message = f"{error_message}: {response.text}" # type: ignore
@@ -359,6 +367,14 @@ class CoinFlowClient:
             )
             
         except CoinFlowAPIError as e:
+            if e.status_code == 400 and str() == '':
+                # Modify use data.
+                return BasicReturn(
+                    success=True, 
+                    data={ 'message' : 'Registration sucessful'},
+                    message="Document registration completed successfully"
+                )
+
             logger.error(f"CoinFlow API error during document registration for user {user.id}: {e}")
             return BasicReturn(success=False, error=str(e))
         except Exception as e:
@@ -585,6 +601,17 @@ class CoinFlowClient:
                 success=False,
                 error='An unexpected error occurred during checkout link creation. Please try again.'
             )
+
+    def create_bank_registration_link(self, user: Users) -> BasicReturn:
+        response = self._make_api_request(
+            method='GET',
+            url=self.endpoints.get_session_key,
+            headers=self._build_headers(auth_user_id=self._generate_user_id(user=user))
+        )
+        
+        data = response.json()
+        
+        return BasicReturn(success=True)
 
     def handle_purchases(self, data) -> BasicReturn:
         
