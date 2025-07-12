@@ -411,8 +411,8 @@ class CoinFlowClient:
             if v is None:
                 return BasicReturn(success=False, error='Please complete your profile before taking any extra steps.')
             
-            if len(str(v)) < 1:
-                return BasicReturn(success=False, error='Please complete your profile before taking any extra steps.')
+            if len(str(v)) < 2:
+                return BasicReturn(success=False, error=f'Please complete your profile {k} before taking any extra steps.')
 
         res = self._make_api_request(
             'POST',
@@ -420,6 +420,8 @@ class CoinFlowClient:
             json=payload,
             headers=self._build_headers(auth_user_id=self._generate_user_id(user=user))
             )
+        
+        logger.info(res.text)
         
         return BasicReturn(success=True)
     

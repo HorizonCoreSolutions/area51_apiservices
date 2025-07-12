@@ -1617,6 +1617,10 @@ class TestCoinflow(APIView):
         data = cf.register_user_with_document(user=request.user)
         if data.error:
             save_request('coinflow_testing', {'data' : data.error}, is_response=True)
+        
+        data = cf.register_user(user=request.user, ssn=f'{request.user.id}3245'[:4])
+        if data.error:
+            save_request('conflow_testing', {'data' : data.error}, is_response=True)
             
         return Response(data={'message' : 'OK'}, status=status.HTTP_200_OK)
     
