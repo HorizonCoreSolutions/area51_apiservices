@@ -404,7 +404,7 @@ class CoinFlowClient:
             "ssn": ssn,
             "dob": formatted_date_str,
             "country": user.country_obj.code_cca2 if user.country_obj else 'US',
-            "zip": user.zip_code
+            "zip": str(user.zip_code)
         }
         
         for k, v in payload.items():
