@@ -353,7 +353,7 @@ class Users(AbstractBaseUser, AbstractBaseModel, PermissionsMixin):
     is_verified = models.BooleanField(default=False, null=True)
     document_verified = models.IntegerField(null=True, blank=True, default=VERIFICATION_PENDING, choices=VERIFICATION_STATUS_CHOICES)
     phone_verified = models.IntegerField(null=True, blank=True, default=VERIFICATION_PENDING, choices=VERIFICATION_STATUS_CHOICES)
-    coinflow_state = models.CharField(null=False, blank=False, default=str(CoinflowAuthState.pending), choices=CoinflowAuthState.choices)
+    coinflow_state = models.CharField(max_length=5, null=False, blank=False, default=str(CoinflowAuthState.pending), choices=CoinflowAuthState.choices)
     country = models.CharField(_("country"), max_length=100, default="US")
     country_obj = models.ForeignKey(
         "users.Country",
