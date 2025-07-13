@@ -1,10 +1,12 @@
 import json
 from urllib.parse import quote
 import requests
+from hashlib import sha256
 from uuid import uuid4
 from decimal import Decimal
 from django.conf import settings
 from dataclasses import dataclass
+from apps.users.utils import redis_client
 from apps.bets.models import Transactions
 from typing import Callable, Dict, Optional
 from apps.core.custom_types import BasicReturn
@@ -13,6 +15,7 @@ from apps.acuitytec.acuitytec import AcuityTecAPI
 from apps.acuitytec.models import DocumentTypeChoise
 from apps.users.models import (
     Users,
+    CoinflowAuthState,
     VERIFICATION_PENDING,
     VERIFICATION_APPROVED,
     VERIFICATION_PROCESSING,
@@ -79,6 +82,14 @@ class CoinFlowEndpoints:
     @property
     def get_session_key(self) -> str:
         return f'{self._base_url}/api/auth/session-key'
+    
+    @property
+    def get_totals(self) -> str:
+        return f'{self._base_url}/api/checkout/totals/'
+    
+    @property
+    def get_withdrawers(self) -> str:
+        return f'{self._base_url}/api/withdraw'
 
 
 class CoinFlowAPIError(Exception):
@@ -414,14 +425,16 @@ class CoinFlowClient:
             if len(str(v)) < 2:
                 return BasicReturn(success=False, error=f'Please complete your profile {k} before taking any extra steps.')
 
-        res = self._make_api_request(
-            'POST',
-            self.endpoints.register_user_attested,
-            json=payload,
-            headers=self._build_headers(auth_user_id=self._generate_user_id(user=user))
-            )
-        
-        logger.info(res.text)
+        try:
+            res = self._make_api_request(
+                'POST',
+                self.endpoints.register_user_attested,
+                json=payload,
+                headers=self._build_headers(auth_user_id=self._generate_user_id(user=user))
+                )
+            logger.info(res.text)
+        except CoinFlowAPIError as e:
+            pass
         
         return BasicReturn(success=True)
     
@@ -464,6 +477,33 @@ class CoinFlowClient:
         )
         
         return BasicReturn(success=True)
+    
+    def get_session_auth(self, user: Users) -> BasicReturn:
+        key = sha256(f'coinflow-session-key:{user.id}'.encode()).hexdigest()
+        session_cache = redis_client.get(key)
+        if not session_cache is None:
+            return BasicReturn(success=True, data=session_cache)
+        
+        
+        try:
+            response = self._make_api_request(
+                'GET',
+                url=self.endpoints.get_session_key,
+                headers=self._build_headers(auth_user_id=self._generate_user_id(user=user))
+            )
+            
+            data = response.json()
+            session_key = data.get('key')
+            # 12h * 60m * 60s = 43_200
+            redis_client.set(key, session_key, ex=43200)
+            return BasicReturn(success=True, data=session_key)
+        
+        except json.JSONDecodeError as e:
+            logger.critical(f'JSON error: >> this data cannot be parsed: {e}')
+            return BasicReturn(success=False, error='This service is down, please try again later')
+        except CoinFlowAPIError as e:
+            logger.critical(f'HTTP error: >> cannot get session key: {e}')
+            return BasicReturn(success=False, error='This service is down, please try again later')
     
     def create_checkout_link(self, 
                            user: Users,
@@ -605,15 +645,98 @@ class CoinFlowClient:
             )
 
     def create_bank_registration_link(self, user: Users) -> BasicReturn:
-        response = self._make_api_request(
-            method='GET',
-            url=self.endpoints.get_session_key,
-            headers=self._build_headers(auth_user_id=self._generate_user_id(user=user))
-        )
+
+        key_data = self.get_session_auth(user=user)
+        if key_data.error:
+            return key_data
         
-        data = response.json()
+        url = quote(self.config.redirection_url, safe="")
+        data = f'https://sandbox.coinflow.cash/solana/withdraw/{self.merchant_id}?sessionKey={key_data.data}&bankAccountLinkRedirect={url}'
+        return BasicReturn(success=True, data=data)
+    
+    def get_totals(self, cents: int) -> BasicReturn:
         
-        return BasicReturn(success=True)
+        try:
+            payload = {
+                'subtotal' : {
+                    "currency": "USD",
+                    "cents": 3000
+                }
+            }
+            
+            res = self._make_api_request(
+                method='POST',
+                url=self.endpoints.get_totals + self.merchant_id,
+                headers=self._build_headers(),
+                data=payload
+            )
+            res = res.json()
+        except CoinFlowAPIError as e:
+            logger.critical(f'Error: >> could not create totals: {e}')
+            return BasicReturn(success=False, error='Could not generate an estimation total right now. Please try again later.')
+
+        totals = {}
+        
+        for method in ["card", "ach"]:
+            if method not in res:
+                continue
+            entry = res[method]
+            totals[method] = {
+                "subtotal": round(entry["subtotal"]["cents"] / 100, 2),
+                "creditCardFees": round(entry["creditCardFees"]["cents"] / 100, 2),
+                "chargebackProtectionFees": round(entry["chargebackProtectionFees"]["cents"] / 100, 2),
+                "gasFees": round(entry["gasFees"]["cents"] / 100, 2),
+                "total": round(entry["total"]["cents"] / 100, 2)
+            }
+            
+            totals['bonus'] = cents *  50
+        
+        return BasicReturn(success=True, data=totals)
+    
+    def get_cards_banks(self, user: Users) -> BasicReturn:
+        try:
+            data = self._make_api_request(
+                method='GET',
+                url=self.endpoints.get_withdrawers,
+                headers=self._build_headers(auth_user_id=self._generate_user_id(user))
+            ).json()
+        except CoinFlowAPIError as e:
+            return BasicReturn(success=False, error='Withdraws are not available right now. Please try again later.')
+        
+        withdrawer = data.get("withdrawer", {})
+
+        TTL_SECONDS = 1800
+
+        result = {
+            "cards": [],
+            "bankAccounts": []
+        }
+
+        # Process cards
+        for card in withdrawer.get("cards", []):
+            card_id = str(uuid4())
+            redis_client.setex(f"card:{card_id}", TTL_SECONDS, json.dumps(card))
+            result["cards"].append({
+                "cardId": card_id,
+                "type": card.get("type"),
+                "last4": card.get("last4"),
+                "disbursementStatus": card.get("disbursementStatus"),
+                "createdAt": card.get("createdAt")
+            })
+
+        # Process bank accounts
+        for bank in withdrawer.get("bankAccounts", []):
+            bank_id = str(uuid4())
+            redis_client.setex(f"bank:{bank_id}", TTL_SECONDS, json.dumps(bank))
+            result["bankAccounts"].append({
+                "bankId": bank_id,
+                "alias": bank.get("alias"),
+                "last4": bank.get("last4"),
+                "rtpEligible": bank.get("rtpEligible")
+            })
+        
+        
+        return BasicReturn(success=True, data=result)
 
     def handle_purchases(self, data) -> BasicReturn:
         
