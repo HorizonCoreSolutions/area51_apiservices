@@ -21,6 +21,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import viewsets
+from apps.users.utils import redis_client
 from apps.admin_panel.tasks import ipn_status_transaction_mail
 from apps.bets.models import PENDING, WITHDRAW, Transactions, DEPOSIT
 from apps.bets.utils import generate_reference, validate_date
@@ -1624,3 +1625,80 @@ class TestCoinflow(APIView):
             
         return Response(data={'message' : 'OK'}, status=status.HTTP_200_OK)
     
+class GetBankRegistrationLink(APIView):
+    permission_class = [IsPlayer]
+    def post(self, request):
+        
+        cf = CoinFlowClient()
+        data = cf.create_bank_registration_link(user=request.user)
+        if data.error:
+            return Response(data={'message' : data.error}, status=status.HTTP_400_BAD_REQUEST)        
+        
+        return Response(data={'message' : data.data})
+    
+class CoinflowTotals(APIView):
+    def post(self, request):
+        
+        cents = request.data.get('cents')
+        if cents is None:
+            return Response(data={'message' : 'Please use the @cents value to get the total'}, status=status.HTTP_400_BAD_REQUEST)
+        cents = str(cents)
+        
+        if not cents.isdigit():
+            return Response(data={'message' : '@cents should be an integer'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        cents = int(cents)
+        if cents < 500 or cents > 20000:
+            return Response(data={'message' : '@cents min depossit of 500 cents. Max depossit is 20000 cents'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        cf = CoinFlowClient()
+        data = cf.get_totals(cents=cents)
+        if data.error:
+            return Response(data={'message' : data.error}, status=status.HTTP_400_BAD_REQUEST)        
+        
+        return Response(data={'message' : data.data})
+    
+class CoinflowBanks(APIView):
+    permission_class = [IsPlayer]
+    def post(self, request):
+        cf = CoinFlowClient()
+        data = cf.get_cards_banks(request.user)
+        if data.error:
+            return Response(data={'message' : data.error}, status=status.HTTP_400_BAD_REQUEST)        
+        
+        return Response(data={'message' : data.data})
+    
+class CoinflowWithdraws(APIView):
+    permission_class = [IsPlayer]
+    def post(self, request):
+        card = request.data.get('cardId')
+        bank = request.data.get('bankId')
+        
+        
+        cents = request.data.get('cents')
+        if cents is None:
+            return Response(data={'message' : 'Please use the @cents value to get the total'}, status=status.HTTP_400_BAD_REQUEST)
+        cents = str(cents)
+        
+        if not cents.isdigit():
+            return Response(data={'message' : '@cents should be an integer'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        cents = int(cents)
+        if cents < 500 or cents > 20000:
+            return Response(data={'message' : '@cents min depossit of 500 cents. Max depossit is 20000 cents'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        
+        if card is None and bank is None:
+            return Response(data={'message' : 'Please use @cardId or @bankId'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if card and bank:
+            return Response(data={'message' : 'Please only use @cardId or @bankId'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        prefix = 'card:' if card else 'bank:'
+        token = card if card else bank
+        data = redis_client.get(prefix+token)
+        
+        if not data:
+            return Response(data={'message' : 'Please use and available card, For security reasons once started a transaction this id only last 30 min'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        return Response(data={'message' : 'HTTP error 400: Not enough founds'}, status=status.HTTP_400_BAD_REQUEST)

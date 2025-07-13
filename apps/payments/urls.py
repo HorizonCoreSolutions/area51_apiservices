@@ -2,9 +2,9 @@ from django.conf.urls import url
 from django.urls import path
 
 from .views import (AlchemyPayCallback, AlchemyPayCryptoFiatQuery, AlchemyPayCryptoQuery,
-    AlchemyPayFiatQuery, Alchemypaytest, AlchemypayTransactionView, CancelWithdrawalCoinpayments,
+    AlchemyPayFiatQuery, Alchemypaytest, AlchemypayTransactionView, CancelWithdrawalCoinpayments, CoinflowBanks, CoinflowTotals, CoinflowWithdraws,
     ConvertCoins, CreateAlchemyPayOrder, CreateNowPaymentsTestWithdrawal, CreatePaymentAPIView,
-    CreatePaymentQrAPIView, CreateTransaction, CreateWithdrawalCoinpayments, GetBalance,
+    CreatePaymentQrAPIView, CreateTransaction, CreateWithdrawalCoinpayments, GetBalance, GetBankRegistrationLink,
     GetBasicInfo, GetCallbackAddress, GetCoinFlowLink, GetConversionInfo, GetDepositAddress, GetExchangeRates,
     GetIsValidAddress, GetRecentUsedAddress, GetTxnInfo, GetWithdrawalHistory, GetWithdrawalInfo, TestCoinflow,
     ipn_callback, MinAmountView, MnetCallback, MnetTransactionView, NotificationsView,
@@ -52,5 +52,10 @@ urlpatterns = [
     path(r"mnet-callback/", MnetCallback.as_view(), name="mnet-callback"),
     path(r"mnet-transactions/", MnetTransactionView.as_view(), name="mnet-transactions"),
     path(r"coinflow-link/", GetCoinFlowLink.as_view(), name="coinflow-link"),
-    path(r'test-coinflow', TestCoinflow.as_view(), name='testing-coinflow')
+    path(r'test-coinflow', TestCoinflow.as_view(), name='testing-coinflow'),
+    path(r"coinflow-bank-link/", GetBankRegistrationLink.as_view(), name="coinflow-link"),
+    path(r"coinflow-totals/", CoinflowTotals.as_view(), name="coinflow-totals"),
+    path(r"coinflow-banks/", CoinflowBanks.as_view(), name="coinflow-banks"),
+    path(r"coinflow-withdraws/", CoinflowWithdraws.as_view(), name="coinflow-withdraws"),
+
 ]
