@@ -246,7 +246,7 @@ class CoinFlowClient:
             try:
                 api_error = response.json().get('details', response.text) # type: ignore
                 error_message = f"{error_message}: {api_error}"
-            except (requests.JSONDecodeError, AttributeError):
+            except (json.JSONDecodeError, AttributeError):
                 error_message = f"{error_message}: {response.text}" # type: ignore
             
             logger.error(f"HTTP error: {error_message}\n{e}")
@@ -367,7 +367,7 @@ class CoinFlowClient:
             # Parse response data
             try:
                 response_data = response.json()
-            except requests.JSONDecodeError:
+            except json.JSONDecodeError:
                 response_data = {"message": "Registration successful"}
             
             logger.info(f"User {user.id} document registration completed successfully")
@@ -614,7 +614,7 @@ class CoinFlowClient:
             # Parse response data
             try:
                 response_data = response.json()
-            except requests.JSONDecodeError:
+            except json.JSONDecodeError:
                 return BasicReturn(
                     success=False,
                     error='Invalid response format from checkout API.'
