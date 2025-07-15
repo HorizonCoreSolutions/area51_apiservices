@@ -482,6 +482,7 @@ class CoinFlowClient:
         key = sha256(f'coinflow-session-key:{user.id}'.encode()).hexdigest()
         session_cache = redis_client.get(key)
         if not session_cache is None:
+            logger.debug(f'coinflow-session-key:{user.id} - cache hit for session')
             return BasicReturn(success=True, data=session_cache)
         
         
@@ -493,6 +494,7 @@ class CoinFlowClient:
             )
             
             data = response.json()
+            logger.debug(f'coinflow-session-key:{user.id} - session created')
             session_key = data.get('key')
             # 12h * 60m * 60s = 43_200
             redis_client.set(key, session_key, ex=43200)
