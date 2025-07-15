@@ -667,12 +667,12 @@ class CoinFlowClient:
                     "cents": cents
                 }
             }
-            res = self._make_api_request(
-                method='POST',
+            res = requests.post(
                 url=self.endpoints.get_totals + self.merchant_id,
                 headers=self._build_headers(auth=False, auth_session_key=data.data),
                 data=payload
             )
+            print(res.text)
             res = res.json()
         except CoinFlowAPIError as e:
             logger.critical(f'Error: >> could not create totals: {e}')
