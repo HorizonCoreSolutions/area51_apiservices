@@ -672,7 +672,7 @@ class CoinFlowClient:
                 res = res.json()
             except Exception as e:
                 print('find meeee')
-                print(res)
+                logger.critical(res)
                 res = {}
                 
                 print(e)
