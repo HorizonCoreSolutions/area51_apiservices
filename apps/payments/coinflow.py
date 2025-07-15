@@ -660,7 +660,7 @@ class CoinFlowClient:
             payload = {
                 'subtotal' : {
                     "currency": "USD",
-                    "cents": 3000
+                    "cents": cents
                 }
             }
             
