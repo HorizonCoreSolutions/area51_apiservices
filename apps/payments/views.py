@@ -1637,6 +1637,7 @@ class GetBankRegistrationLink(APIView):
         return Response(data={'message' : data.data})
     
 class CoinflowTotals(APIView):
+    permission_class = [IsPlayer]
     def post(self, request):
         
         cents = request.data.get('cents')
@@ -1652,7 +1653,7 @@ class CoinflowTotals(APIView):
             return Response(data={'message' : '@cents min depossit of 500 cents. Max depossit is 20000 cents'}, status=status.HTTP_400_BAD_REQUEST)
         
         cf = CoinFlowClient()
-        data = cf.get_totals(cents=cents)
+        data = cf.get_totals(cents=cents, user=request.user)
         if data.error:
             return Response(data={'message' : data.error}, status=status.HTTP_400_BAD_REQUEST)        
         
