@@ -1657,7 +1657,7 @@ class CoinflowTotals(APIView):
         if data.error:
             return Response(data={'message' : data.error}, status=status.HTTP_400_BAD_REQUEST)        
         
-        return Response(data={'message' : data.data})
+        return Response(data=data.data)
     
 class CoinflowBanks(APIView):
     permission_class = [IsPlayer]
