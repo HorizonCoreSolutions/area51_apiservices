@@ -480,10 +480,10 @@ class CoinFlowClient:
     
     def get_session_auth(self, user: Users) -> BasicReturn:
         key = sha256(f'coinflow-session-key:{user.id}'.encode()).hexdigest()
-        session_cache = redis_client.get(key)
-        if not session_cache is None:
-            logger.debug(f'coinflow-session-key:{user.id} - cache hit for session')
-            return BasicReturn(success=True, data=session_cache)
+        # session_cache = redis_client.get(key)
+        # if not session_cache is None:
+            # logger.debug(f'coinflow-session-key:{user.id} - cache hit for session')
+            # return BasicReturn(success=True, data=session_cache)
         
         
         try:
