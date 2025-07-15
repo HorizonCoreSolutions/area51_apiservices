@@ -671,7 +671,10 @@ class CoinFlowClient:
                 )
                 res = res.json()
             except Exception as e:
+                print('find meeee')
+                print(res)
                 res = {}
+                
                 print(e)
         except CoinFlowAPIError as e:
             logger.critical(f'Error: >> could not create totals: {e}')
