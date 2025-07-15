@@ -654,7 +654,11 @@ class CoinFlowClient:
         data = f'https://sandbox.coinflow.cash/solana/withdraw/{self.merchant_id}?sessionKey={key_data.data}&bankAccountLinkRedirect={url}'
         return BasicReturn(success=True, data=data)
     
-    def get_totals(self, cents: int) -> BasicReturn:
+    def get_totals(self, user: Users, cents: int) -> BasicReturn:
+        
+        data = self.get_session_auth(user)
+        if data.error:
+            return data
         
         try:
             payload = {
@@ -663,19 +667,13 @@ class CoinFlowClient:
                     "cents": cents
                 }
             }
-            try:
-                res = requests.post(
-                    url=self.endpoints.get_totals + self.merchant_id,
-                    headers=self._build_headers(),
-                    data=payload
-                )
-                res = res.json()
-            except Exception as e:
-                print('find meeee')
-                logger.critical(res.text)
-                res = {}
-                
-                print(e)
+            res = self._make_api_request(
+                method='POST',
+                url=self.endpoints.get_totals + self.merchant_id,
+                headers=self._build_headers(auth=False, auth_session_key=data.data),
+                data=payload
+            )
+            res = res.json()
         except CoinFlowAPIError as e:
             logger.critical(f'Error: >> could not create totals: {e}')
             return BasicReturn(success=False, error='Could not generate an estimation total right now. Please try again later.')
