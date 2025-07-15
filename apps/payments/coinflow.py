@@ -663,14 +663,16 @@ class CoinFlowClient:
                     "cents": cents
                 }
             }
-            
-            res = self._make_api_request(
-                method='POST',
-                url=self.endpoints.get_totals + self.merchant_id,
-                headers=self._build_headers(),
-                data=payload
-            )
-            res = res.json()
+            try:
+                res = requests.post(
+                    url=self.endpoints.get_totals + self.merchant_id,
+                    headers=self._build_headers(),
+                    data=payload
+                )
+                res = res.json()
+            except Exception as e:
+                res = {}
+                print(e)
         except CoinFlowAPIError as e:
             logger.critical(f'Error: >> could not create totals: {e}')
             return BasicReturn(success=False, error='Could not generate an estimation total right now. Please try again later.')
