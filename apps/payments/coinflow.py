@@ -46,6 +46,13 @@ class CoinFlowEndpoints:
     def get_merchant(self) -> str:
         return f'{self._base_url}/api/merchant'
     
+    @property
+    def register_user(self) -> str:
+        """
+        End-point for user registration with attestation.
+        Required headers: Authorization, x-coinflow-auth-user-id
+        """
+        return f'{self._base_url}/api/withdraw/kyc'
     
     @property
     def register_user_attested(self) -> str:
@@ -395,7 +402,7 @@ class CoinFlowClient:
                 error='An unexpected error occurred during registration. Please try again.'
             )
 
-    def register_user(self, user: Users, ssn: str) -> BasicReturn:
+    def register_user_attested(self, user: Users, ssn: str) -> BasicReturn:
         if user.document_verified != VERIFICATION_APPROVED:
             return BasicReturn(success=False, error='User must be registered on Acuitytec.')
         
@@ -437,7 +444,71 @@ class CoinFlowClient:
             pass
         
         return BasicReturn(success=True)
-    
+
+    def register_user(self, user: Users, ssn: int) -> BasicReturn:
+        
+        if user.dob:
+            year, month, day = user.dob.split('-')
+            formatted_date_str = f"{year}{month}{day}"
+        else:
+            formatted_date_str = ''
+        
+        customer_info = {
+            "email" : user.email,
+            "firstName": user.first_name,
+            "surName": user.last_name,
+            "physicalAddress": user.complete_address,
+            "city": user.city,
+            "state": user.state,
+            "zip": user.zip_code,
+            "country": user.country_obj.code_cca2 if user.country_obj else 'US',
+            "dob" : formatted_date_str,
+            "ssn" : str(ssn)
+        }
+        
+        for k, v in customer_info.items():
+            if v is None:
+                return BasicReturn(success=False, error='Please complete your profile before taking any extra steps.')
+            
+            if len(str(v)) < 1:
+                return BasicReturn(success=False, error=f'Please complete your profile before taking any extra steps. ({k})')
+        
+        payload = {
+            "merchantId" : self.merchant_id,
+            "redirectLink" : f"{settings.PROJECT_DOMAIN.rstrip('/')}/profile",
+            "info" : customer_info
+        }
+        
+        try:
+            logger.info(f"User {user.username}-{user.id}: Started KYC Coinflow")
+            res = requests.post(
+                url=self.endpoints.register_user,
+                json=payload,
+                headers=self._build_headers(auth_user_id=self._generate_user_id(user=user)),
+            )
+            if not res.status_code in {200, 451}:
+                logger.warning(f"User {user.username}-{user.id}: KYC endpoint is not receiving the status spected. Status: {res.status_code}")
+                return BasicReturn(success=False, error="This service is down.")
+            
+            data = res.json()
+            res_data = {}
+            if res.status_code == 200:
+                user.coinflow_state = str(CoinflowAuthState.verified)
+                res_data = {'message' : 'Users succesfully verified'}
+            
+            if res.status_code == 451:
+                link = data.get('verificationLink')
+                user.coinflow_state = str(CoinflowAuthState.created)
+                res_data = {'link' : link, 'message': "Please complete aditional verification."}
+            user.save()
+            return BasicReturn(success=True, data=res_data)
+        except json.JSONDecodeError:
+            logger.critical(f'Registration of user {user.username}-{user.id}: had an error loading the json on endpoint: {self.endpoints.register_user}')
+            return BasicReturn(success=False, error="Coinflow service is not loading the json")
+        except Exception as e:
+            logger.critical(f"User {user.username}-{user.id}: Error while user KYC: {e}")
+            return BasicReturn(success=False, error="This service is down.")
+
     def create_customer(self, user: Users, ip: str) -> BasicReturn:
         
         if user.dob:
@@ -675,7 +746,6 @@ class CoinFlowClient:
                 headers=self._build_headers(auth=False, auth_session_key=data.data),
                 json=payload
             )
-            print(res.text)
             res = res.json()
         except CoinFlowAPIError as e:
             logger.critical(f'Error: >> could not create totals: {e}')

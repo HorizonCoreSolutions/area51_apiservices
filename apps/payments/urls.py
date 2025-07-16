@@ -2,7 +2,7 @@ from django.conf.urls import url
 from django.urls import path
 
 from .views import (AlchemyPayCallback, AlchemyPayCryptoFiatQuery, AlchemyPayCryptoQuery,
-    AlchemyPayFiatQuery, Alchemypaytest, AlchemypayTransactionView, CancelWithdrawalCoinpayments, CoinflowBanks, CoinflowTotals, CoinflowWithdraws,
+    AlchemyPayFiatQuery, Alchemypaytest, AlchemypayTransactionView, CancelWithdrawalCoinpayments, CoinflowBanks, CoinflowRegisterUserView, CoinflowTotals, CoinflowWithdraws,
     ConvertCoins, CreateAlchemyPayOrder, CreateNowPaymentsTestWithdrawal, CreatePaymentAPIView,
     CreatePaymentQrAPIView, CreateTransaction, CreateWithdrawalCoinpayments, GetBalance, GetBankRegistrationLink,
     GetBasicInfo, GetCallbackAddress, GetCoinFlowLink, GetConversionInfo, GetDepositAddress, GetExchangeRates,
@@ -57,5 +57,6 @@ urlpatterns = [
     path(r"coinflow-totals/", CoinflowTotals.as_view(), name="coinflow-totals"),
     path(r"coinflow-banks/", CoinflowBanks.as_view(), name="coinflow-banks"),
     path(r"coinflow-withdraws/", CoinflowWithdraws.as_view(), name="coinflow-withdraws"),
+    path(r"coinflow-registration/", CoinflowRegisterUserView.as_view(), name="coinflow-registration"),
 
 ]

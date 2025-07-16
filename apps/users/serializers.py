@@ -129,8 +129,19 @@ class PlayerSerializer(serializers.Serializer):
     registered_tournament_count = serializers.SerializerMethodField()
     fortune_pandas_balance = serializers.DecimalField(max_digits=15, decimal_places=2, default=0.00)
     mnet_url = serializers.SerializerMethodField()
-
+    coinflow_state = serializers.SerializerMethodField()
     country = serializers.SerializerMethodField()
+
+
+    @staticmethod
+    def get_coinflow_state(obj):
+        trans_layer ={
+            'PNDG' : 0,
+            'CRTD' : 1,
+            'VRFD' : 2
+        }
+        return trans_layer[obj.coinflow_state]
+
 
     def get_country(self, obj):
         lang = self.context.get("lang_code", "en")
