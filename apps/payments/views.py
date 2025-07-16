@@ -1619,7 +1619,7 @@ class TestCoinflow(APIView):
         if data.error:
             save_request('coinflow_testing', {'data' : data.error}, is_response=True)
         
-        data = cf.register_user(user=request.user, ssn=f'{request.user.id}3245'[:4])
+        data = cf.register_user_attested(user=request.user, ssn=f'{request.user.id}3245'[:4])
         if data.error:
             save_request('conflow_testing', {'data' : data.error}, is_response=True)
             
@@ -1703,3 +1703,27 @@ class CoinflowWithdraws(APIView):
             return Response(data={'message' : 'Please use and available card, For security reasons once started a transaction this id only last 30 min'}, status=status.HTTP_400_BAD_REQUEST)
         
         return Response(data={'message' : 'HTTP error 400: Not enough founds'}, status=status.HTTP_400_BAD_REQUEST)
+    
+class CoinflowRegisterUserView(APIView):
+    permission_class = [IsPlayer]
+    def post(self, request):
+        
+        ssn = request.data.get('ssn', None)
+        if not ssn:
+            return Response(data={"message" : "Please ingres the 4 last digist of you ssn"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        ssn = str(ssn[-4:])
+        
+        if not ssn.isdigit():
+            return Response(data={"message" : "Please insert a valid ssn number, only the last 4 digist are needed."}, status=status.HTTP_400_BAD_REQUEST)
+        ssn = int(ssn)
+        cf = CoinFlowClient()
+        data = cf.register_user(user=request.use, ssn=ssn)
+        if data.error:
+            return Response(data={"message" : data.error}, status=status.HTTP_400_BAD_REQUEST)
+        
+        link = data.data.get('link')
+        if link:
+            return Response(data=data.data, status=status.HTTP_206_PARTIAL_CONTENT)
+        
+        return Response(data=data.data, status=status.HTTP_201_CREATED)
