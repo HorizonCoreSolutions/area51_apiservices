@@ -905,6 +905,44 @@ class CoinFlowClient:
             pass
         return BasicReturn(success=False, error='This function is not fully implemented')
 
+    def handle_kyc(self, data) -> BasicReturn:
+        # Check if all the variables needed exist
+        l_data = data.get('data', None)
+        if l_data is None:
+            return BasicReturn(success=False, error='The data is none')
+        eventType = data.get('eventType', None)
+        if eventType is None:
+            return BasicReturn(success=False, error='The data.eventype is none')
+        eventType = str(eventType)
+        blockchain = l_data.get('blockchain', {}).get('transaction_id')
+        if blockchain is None:
+            logger.critical('The webhook is not retorning the transacction id, no webhook handling can be done')
+            return BasicReturn(success=False, error='transacction if is not returned on the webhook')
+        if blockchain != 'user':
+            return BasicReturn(success=False, error='This edge case is not registered.')
+        
+        wallet = l_data.get('wallet')
+        if wallet is None:
+            return BasicReturn(success=False, error='User id was not found on the webhook')       
+        auth_id = None
+        if wallet.startswith(self.merchant_id):
+            auth_id = wallet[len(self.merchant_id) + 1:]
+        if auth_id is None:
+            return BasicReturn(success=False, error='User id is not valid')
+        
+        user = self._parse_user_id(auth_id)
+            
+        if user is None:
+            return BasicReturn(success=False, error='User does not exist. Or does not belong to this game instance.')
+        
+        if eventType == 'KYC Success':
+            user.coinflow_state = str(CoinflowAuthState.verified)
+        elif eventType == 'KYC Created':
+            user.coinflow_state = str(CoinflowAuthState.created)
+            
+        user.save()
+        return BasicReturn(success=True)
+
     def handle_webhook(self, data, authorization: str) -> BasicReturn:
         
         if authorization is None or authorization != self.config.auth_header:

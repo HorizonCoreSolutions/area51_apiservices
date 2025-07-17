@@ -31,7 +31,7 @@ from apps.core.permissions import IsAgent, IsPlayer
 from apps.core.rest_any_permissions import AnyPermissions
 from apps.core.utils import save_request
 from apps.payments.coinflow import CoinFlowClient
-from apps.users.models import VERIFICATION_APPROVED, Users, Admin, BonusPercentage, PromoCodes
+from apps.users.models import VERIFICATION_APPROVED, CoinflowAuthState, Users, Admin, BonusPercentage, PromoCodes
 from apps.casino.custom_pagination import CustomPagination
 from django.db.models import OuterRef, Subquery
 
@@ -1717,6 +1717,9 @@ class CoinflowRegisterUserView(APIView):
         if not ssn.isdigit():
             return Response(data={"message" : "Please insert a valid ssn number, only the last 4 digist are needed."}, status=status.HTTP_400_BAD_REQUEST)
         ssn = int(ssn)
+        
+        if request.user.coinflow_state in {CoinflowAuthState.verified}:
+            return Response(data={"message" : "This user is already verified."}, status=status.HTTP_200_OK)
         cf = CoinFlowClient()
         data = cf.register_user(user=request.use, ssn=ssn)
         if data.error:
