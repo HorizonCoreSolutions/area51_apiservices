@@ -937,6 +937,8 @@ class CoinFlowClient:
         
         if eventType == 'KYC Success':
             user.coinflow_state = str(CoinflowAuthState.verified)
+        elif eventType == 'KYC Failure':
+            user.coinflow_state = str(CoinflowAuthState.pending)
         elif eventType == 'KYC Created':
             user.coinflow_state = str(CoinflowAuthState.created)
             
