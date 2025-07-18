@@ -476,7 +476,9 @@ class CoinFlowClient:
         payload = {
             "merchantId" : self.merchant_id,
             "redirectLink" : f"{settings.PROJECT_DOMAIN.rstrip('/')}/profile",
-            "info" : customer_info
+            "info" : customer_info,
+            "email" : user.email,
+            "country" : user.country_obj.code_cca2 if user.country_obj else 'US'
         }
         
         try:
