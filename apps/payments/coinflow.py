@@ -487,6 +487,7 @@ class CoinFlowClient:
                 headers=self._build_headers(auth_user_id=self._generate_user_id(user=user)),
             )
             if not res.status_code in {200, 451}:
+                logger.debug(res.text)
                 logger.warning(f"User {user.username}-{user.id}: KYC endpoint is not receiving the status spected. Status: {res.status_code}")
                 return BasicReturn(success=False, error="This service is down.")
             
