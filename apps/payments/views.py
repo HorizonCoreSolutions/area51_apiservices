@@ -1721,7 +1721,7 @@ class CoinflowRegisterUserView(APIView):
         if request.user.coinflow_state in {CoinflowAuthState.verified}:
             return Response(data={"message" : "This user is already verified."}, status=status.HTTP_200_OK)
         cf = CoinFlowClient()
-        data = cf.register_user(user=request.use, ssn=ssn)
+        data = cf.register_user(user=request.user, ssn=ssn)
         if data.error:
             return Response(data={"message" : data.error}, status=status.HTTP_400_BAD_REQUEST)
         
