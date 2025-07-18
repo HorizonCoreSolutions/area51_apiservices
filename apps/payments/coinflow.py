@@ -502,7 +502,7 @@ class CoinFlowClient:
             if res.status_code == 451:
                 link = data.get('verificationLink')
                 user.coinflow_state = str(CoinflowAuthState.created)
-                res_data = {'link' : link, 'message': "Please complete aditional verification."}
+                res_data = {'url' : link, 'message': "Please complete aditional verification."}
             user.save()
             return BasicReturn(success=True, data=res_data)
         except json.JSONDecodeError:
