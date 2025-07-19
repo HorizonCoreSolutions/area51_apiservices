@@ -570,8 +570,9 @@ class CoinFlowClient:
             data = response.json()
             logger.debug(f'coinflow-session-key:{user.id} - session created')
             session_key = data.get('key')
-            # 12h * 60m * 60s = 43_200
-            redis_client.set(key, session_key, ex=43200)
+            # Old: 12h * 60m * 60s = 43_200
+            # Session key reduced to one hour
+            redis_client.set(key, session_key, ex=3600)
             return BasicReturn(success=True, data=session_key)
         
         except json.JSONDecodeError as e:
@@ -823,17 +824,22 @@ class CoinFlowClient:
         l_data = data.get('data', None)
         if l_data is None:
             return BasicReturn(success=False, error='The data is none')
+        
         eventType = data.get('eventType', None)
         if eventType is None:
             return BasicReturn(success=False, error='The data.eventype is none')
+        
         eventType = str(eventType)
+        
         tid = l_data.get('webhookInfo', {}).get('transaction_id')
         if tid is None:
             logger.critical('The webhook is not retorning the transacction id, no webhook handling can be done')
             return BasicReturn(success=False, error='transacction if is not returned on the webhook')
+        
         transaction_qs = Transactions.objects.filter(txn_id=tid).order_by('-created')
         if not transaction_qs.exists():
             return BasicReturn(success=False, error='transacction was not registered')
+        
         money = l_data.get('subtotal', {}).get('cents')
         if money is None:
             return BasicReturn(success=False, error='Money is none')
@@ -848,32 +854,50 @@ class CoinFlowClient:
         if eventType in {"Settled", "Card Payment Authorized", "USDC Payment Received", "ACH Batched"}:
             # Settled: Payment completed and funds have been sent to the merchant.
             # CPA: Card issuer authorized the payer's credit card.
-            # UPR: Merchant received USDC payment via Solana.
+            # Card Payment Authorized: Card issuer authorized the payer's credit card.
+            # USDC Payment Received: Merchant received USDC payment via Solana.
             # AB : The ACH has been accepted and it is processing.
             transaction = transaction_qs.filter(status='pending_charge').first()
             if not transaction:
                 return BasicReturn(success=False, error='Deduplication this transaction was already claimed')
+            
             transaction.status='charged'
-            transaction.amount=Decimal(money/100)
+            transaction.amount=Decimal(money) / 100
             transaction.previous_balance=user.balance
             transaction.description = eventType
+            
             old_balance = user.balance
-            new_balance = old_balance + Decimal(money)/100
+            new_balance = old_balance + Decimal(money) / 100
             transaction.new_balance = new_balance
             user.balance = new_balance
+            
             user.save()
             transaction.save()
+            logger.info(f'Successfully processed payment for user {user.id}, amount: ${transaction.amount}, new balance: ${new_balance}')
+            return BasicReturn(success=True, message=f'Payment processed successfully. New balance: ${new_balance}')
+            
         elif eventType in {"Card Payment Declined", "Card Payment Suspected Fraud", "ACH Failed", "ACH Returned", "PIX Failed"}:
-            # Card issuer declined the payer's credit card.
-            # Payment rejected due to suspected fraud.
-            # PIX payment failed during processing.
+            # Failed payments - mark transaction as failed
+            # Card Payment Declined: Card issuer declined the payer's credit card.
+            # Card Payment Suspected Fraud: Payment rejected due to suspected fraud.
+            # ACH Failed: ACH payment failed during processing.
+            # ACH Returned: ACH payment was returned by bank.
+            # PIX Failed: PIX payment failed during processing.
+            
             transaction = transaction_qs.filter(status='pending_charge').first()
             if not transaction:
                 return BasicReturn(success=False, error='Deduplication this transaction was already claimed')
-            # Card issuer authorized the payer's credit card.
-            status = 'failed_reject' if eventType in {"Card Payment Suspected Fraud", "ACH Failed"} else 'failed_charge'
+            
+            # Determine failure type based on event
+            if eventType == "Card Payment Suspected Fraud":
+                status = 'failed_fraud'
+            elif eventType in {"ACH Failed", "ACH Returned"}:
+                status = 'failed_reject'  # Use existing status from model
+            else:
+                status = 'failed_charge'
+            
             transaction.status=status
-            transaction.amount=Decimal(money/100)
+            transaction.amount=Decimal(money) / 100
             transaction.previous_balance=user.balance
             transaction.new_balance = user.balance
             transaction.save()
@@ -882,30 +906,165 @@ class CoinFlowClient:
             transaction = transaction_qs.filter(status='pending_charge').first()
             if transaction is None:
                 return BasicReturn(success=False, error='The transaction is not on the expected state')
+            
+            transaction.status = 'pending_review'
             transaction.confirms_needed = 1
             transaction.save()
+            logger.info(f'Payment pending review for user {user.id}, transaction: {tid}')
+            return BasicReturn(success=True, message='Payment is pending review')
         elif eventType == "Card Payment Chargeback Opened":
-            # Chargeback investigation initiated.
-            pass
+            # Chargeback investigation initiated - reverse the payment
+            transaction = transaction_qs.filter(status='charged').first()
+            if not transaction:
+                # Check if there's already a chargeback for this transaction
+                existing_chargeback = transaction_qs.filter(status__in=['chargeback_opened', 'chargeback_disputed']).exists()
+                if existing_chargeback:
+                    return BasicReturn(success=True, message='Chargeback already processed')
+                return BasicReturn(success=False, error='No charged transaction found for chargeback')
+            
+            # Only proceed if user has sufficient balance
+            if user.balance < transaction.amount:
+                pre_balance = user.balance
+                user.balance = 0
+                logger.warning(f'Insufficient balance for chargeback - User {user.id}, required: ${transaction.amount}, available: ${user.balance}. ONLY available mony has been taken please contact the user')
+                # Still create the transaction record but don't modify balance
+                chargeback_transaction = Transactions.objects.create(
+                    txn_id=f"{tid}_chargeback",
+                    user=user,
+                    amount=-pre_balance,
+                    status='chargeback_opened',
+                    previous_balance=pre_balance,
+                    new_balance=user.balance,  # No balance change due to insufficient funds
+                    description=f"Chargeback opened for transaction {tid} - Insufficient balance",
+                    journal_entry="CHARGEBACK",
+                    reference=f"CHARGEBACK_{tid}_{user.id}"
+                )
+                transaction.status = 'chargeback_disputed'
+                user.save()
+                transaction.save()
+                return BasicReturn(success=True, message='Chargeback noted - insufficient balance to deduct')
+            
+            # Create a new transaction record for the chargeback
+            chargeback_transaction = Transactions.objects.create(
+                txn_id=f"{tid}_chargeback",
+                user=user,
+                amount=-transaction.amount,  # Negative amount for chargeback
+                status='chargeback_opened',
+                previous_balance=user.balance,
+                new_balance=user.balance - transaction.amount,
+                description=f"Chargeback opened for transaction {tid}",
+                journal_entry="CHARGEBACK",
+                reference=f"CHARGEBACK_{tid}_{user.id}"
+            )
+            
+            # Update user balance
+            user.balance -= transaction.amount
+            user.save()
+            
+            # Update original transaction status
+            transaction.status = 'chargeback_disputed'
+            transaction.save()
+            
+            logger.warning(f'Chargeback opened for user {user.id}, amount: ${transaction.amount}')
+            return BasicReturn(success=True, message='Chargeback processed - funds deducted')
+
         elif eventType == "Card Payment Chargeback Lost":
-            # Chargeback resolved in favor of cardholder.
-            pass
+            # Chargeback resolved in favor of cardholder - funds remain deducted
+            transaction = transaction_qs.filter(status='chargeback_disputed').first()
+            if transaction:
+                transaction.status = 'chargeback_lost'
+                transaction.description = eventType
+                transaction.save()
+            
+            logger.warning(f'Chargeback lost for user {user.id}, transaction: {tid}')
+            return BasicReturn(success=True, message='Chargeback lost - funds remain deducted')
+
         elif eventType == "Refund":
-            # Payment has been refunded.
-            pass
+            # Payment has been refunded - deduct funds from user balance
+            transaction = transaction_qs.filter(status='charged').first()
+            if not transaction:
+                return BasicReturn(success=False, error='No charged transaction found for refund')
+            
+            # Create a new transaction record for the refund
+            refund_transaction = Transactions.objects.create(
+                txn_id=f"{tid}_refund",
+                user=user,
+                amount=-transaction.amount,  # Negative amount for refund
+                status='refunded',
+                previous_balance=user.balance,
+                new_balance=user.balance - transaction.amount,
+                description=f"Refund for transaction {tid}",
+                journal_entry="REFUND",
+                reference=f"REFUND_{tid}_{user.id}"
+            )
+            
+            # Update user balance
+            user.balance -= transaction.amount
+            user.save()
+            
+            # Update original transaction status
+            transaction.status = 'refunded'
+            transaction.save()
+            
+            logger.info(f'Refund processed for user {user.id}, amount: ${transaction.amount}')
+            return BasicReturn(success=True, message='Refund processed successfully')
         elif eventType == "Card Payment Chargeback Won":
-            # Chargeback resolved in favor of merchant.
-            pass
+            # Chargeback resolved in favor of merchant - restore funds
+            transaction = transaction_qs.filter(status='chargeback_disputed').first()
+            if not transaction:
+                return BasicReturn(success=False, error='No disputed chargeback transaction found')
+            
+            # Create a new transaction record for the chargeback win
+            win_transaction = Transactions.objects.create(
+                txn_id=f"{tid}_chargeback_won",
+                user=user,
+                amount=abs(transaction.amount),  # Restore the original amount
+                status='chargeback_won',
+                previous_balance=user.balance,
+                new_balance=user.balance + abs(transaction.amount),
+                description=f"Chargeback won for transaction {tid}",
+                journal_entry="CHARGEBACK_WON",
+                reference=f"CHARGEBACK_WON_{tid}_{user.id}"
+            )
+            
+            # Update user balance
+            user.balance += abs(transaction.amount)
+            user.save()
+            
+            # Update original transaction status
+            transaction.status = 'chargeback_won'
+            transaction.save()
+            
+            logger.info(f'Chargeback won for user {user.id}, amount restored: ${abs(transaction.amount)}')
+            return BasicReturn(success=True, message='Chargeback won - funds restored')
         elif eventType == "ACH Initiated":
-            # ACH payment has been started.
-            pass
+            # ACH payment has been started - update status to processing
+            transaction = transaction_qs.filter(status='pending_charge').first()
+            if transaction:
+                transaction.status = 'processing_ach'
+                transaction.description = eventType
+                transaction.save()
+            
+            logger.info(f'ACH payment initiated for user {user.id}, transaction: {tid}')
+            return BasicReturn(success=True, message='ACH payment initiated')
         elif eventType in ["PIX Expiration", "Payment Expiration"]:
-            # PIX payment expired before completion.
-            # Payment expired before completion.
-            pass
+            # Payment expired before completion - mark as expired
+            transaction = transaction_qs.filter(status='pending_charge').first()
+            if transaction:
+                transaction.status = 'expired'
+                transaction.amount = Decimal(money) / 100
+                transaction.previous_balance = user.balance
+                transaction.new_balance = user.balance  # No balance change for expired payments
+                transaction.description = eventType
+                transaction.save()
+            
+            logger.info(f'Payment expired for user {user.id}, transaction: {tid}')
+            return BasicReturn(success=True, message='Payment expiration processed')
+
         else:
-            # Unknown eventType.
-            pass
+            # Unknown eventType - log and return error
+            logger.warning(f'Unknown event type received: {eventType} for transaction {tid}')
+            return BasicReturn(success=False, error=f'Unknown event type: {eventType}')
         return BasicReturn(success=False, error='This function is not fully implemented')
 
     def handle_kyc(self, data) -> BasicReturn:
@@ -954,7 +1113,7 @@ class CoinFlowClient:
             return BasicReturn(success=False, error='Auth header does not match.')
         
         web_hook_options: Dict[str, Callable[..., BasicReturn]] = {
-            'KYC' : lambda: BasicReturn(success=True),
+            'KYC' : lambda: self.handle_kyc(data=data),
             'Purchase' : lambda: self.handle_purchases(data=data),
             'Withdraw' : lambda: BasicReturn(success=True),
         }

@@ -31,15 +31,29 @@ PENDING = "pending"
 ROLLBACK = "rollback"
 
 SPIN_WHEEL = 'spin_wheel'
+# STATUSES = (
+#     ("pending_charge", _("Pending Charge")),
+#     ("failed_charge", _("Failed Charge")),
+#     ("charged", _("Charged")),
+#     ("pending_pay", _("Pending Pay")),
+#     ("failed_reject", _("Failed Reject")),
+# )
+
 STATUSES = (
     ("pending_charge", _("Pending Charge")),
     ("failed_charge", _("Failed Charge")),
     ("charged", _("Charged")),
     ("pending_pay", _("Pending Pay")),
     ("failed_reject", _("Failed Reject")),
+    ("chargeback_opened", _("Chargeback Opened")),
+    ("chargeback_disputed", _("Chargeback Disputed")),
+    ("chargeback_lost", _("Chargeback Lost")),
+    ("chargeback_won", _("Chargeback Won")),
+    ("refunded", _("Refunded")),
+    ("processing_ach", _("Processing ACH")),
+    ("expired", _("Expired")),
+    ("pending_review", _("Pending Review")),
 )
-
-
 
 
 class Transactions(AbstractBaseModel):
