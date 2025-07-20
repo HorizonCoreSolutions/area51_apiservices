@@ -1,11 +1,12 @@
 import json
-from urllib.parse import quote
 import requests
-from hashlib import sha256
 from uuid import uuid4
+from hashlib import sha256
 from decimal import Decimal
+from urllib.parse import quote
 from django.conf import settings
 from dataclasses import dataclass
+from django.db import transaction
 from apps.users.utils import redis_client
 from apps.bets.models import Transactions
 from typing import Callable, Dict, Optional
@@ -818,6 +819,7 @@ class CoinFlowClient:
         
         return BasicReturn(success=True, data=result)
 
+    @transaction.atomic
     def handle_purchases(self, data) -> BasicReturn:
         
         # Check if all the variables needed exist
@@ -1067,6 +1069,7 @@ class CoinFlowClient:
             return BasicReturn(success=False, error=f'Unknown event type: {eventType}')
         return BasicReturn(success=False, error='This function is not fully implemented')
 
+    @transaction.atomic
     def handle_kyc(self, data) -> BasicReturn:
         # Check if all the variables needed exist
         l_data = data.get('data', None)
