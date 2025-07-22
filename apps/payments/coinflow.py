@@ -854,7 +854,6 @@ class CoinFlowClient:
             logger.critical(f'Error: >> could not create totals: {e}')
             return BasicReturn(success=False, data={
                 "message" : "Withdraw created.",
-                ""
             })
 
         totals = {}
