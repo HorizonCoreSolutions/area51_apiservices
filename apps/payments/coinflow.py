@@ -944,7 +944,7 @@ class CoinFlowClient:
         money = l_data.get('subtotal', {}).get('cents')
         if money is None:
             return BasicReturn(success=False, error='Money is none')
-        cid = l_data.get('customerId')
+        cid = l_data.get('customerId').split("ʬ")[-1]
         if cid is None:
             return BasicReturn(success=False, error='User id was not found on the webhook')
         user = self._parse_user_id(cid)
