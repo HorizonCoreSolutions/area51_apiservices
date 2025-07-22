@@ -820,6 +820,7 @@ class CoinFlowClient:
             user=user,
             amount=(Decimal(cents) / 100),
             currency='USD',
+            transaction_id=str(uuid4()),
             transaction_type=CoinFlowTransaction.TransactionType.withdraw,
             status=CoinFlowTransaction.StatusType.requested,
             pre_balance=actual_balance,
