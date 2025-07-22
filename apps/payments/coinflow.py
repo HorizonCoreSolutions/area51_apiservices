@@ -587,7 +587,7 @@ class CoinFlowClient:
                            user: Users,
                            amount_cents: int,
                            threeds_preference: str = 'Frictionless',
-                           item_class: str = 'moneyTopUp',
+                           item_class: str = 'gameOfSkill',
                            item_id: Optional[str] = None,
                            item_name: str = 'Sweeptokens',
                            is_preset_amount: bool = False) -> BasicReturn:
@@ -654,7 +654,7 @@ class CoinFlowClient:
                 "chargebackProtectionData": [
                     {
                         "productName": "Gold_Coins",
-                        "productType": "gameOfSkill",
+                        "productType": item_class,
                         "quantity": 1,
                         "rawProductData": {
                             "example": "{\"description\": \"gold coins to be used on any game on my sweepstakes site\"}"
