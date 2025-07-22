@@ -39,7 +39,7 @@ from apps.users.utils import send_player_balance_update_notification
 from apps.payments.mnet import MnetPayment
 from .models import (AlchemypayOrder, CoinFlowTransaction, CoinWithdrawal, MnetTransaction, NowPaymentsTransactions,
     WithdrawalCurrency, WithdrawalRequests)
-from .serializers import (AlchemypayTransactionsSerializer, CallbackWithdrawalSerializer,
+from .serializers import (AlchemypayTransactionsSerializer, CallbackWithdrawalSerializer, CoinflowTransactionsSerializer,
     CreatePaymentQrSerializer, CreatePaymentSerializer, CreateWithdrawalSerializer,
     CreateWithdrawalSerializerCoinpayments, MnetTransactionsSerializer,
     NowPaymentsTransactionsSerializer, RequestCoinWithdrawalSerializer)
@@ -1716,3 +1716,75 @@ class CoinflowRegisterUserView(APIView):
             return Response(data=data.data, status=status.HTTP_206_PARTIAL_CONTENT)
         
         return Response(data=data.data, status=status.HTTP_201_CREATED)
+    
+
+class CoinflowTransactionView(APIView):
+    http_method_name = ["get"]
+    permission_classes = (IsPlayer,)
+    pagination_class = CustomPagination
+
+    def get(self, request, **kwargs):
+        from apps.bets.utils import validate_date
+        try:
+            player = Users.objects.filter(id=request.user.id).first()
+            if player:
+                transaction_filter_dict = {}
+                from_date = self.request.query_params.get("from_date", None)
+                to_date = self.request.query_params.get("to_date", None)
+                activity_type = self.request.query_params.get("activity_type", None)
+                search = self.request.query_params.get("search", None) 
+                if activity_type:
+                    transaction_filter_dict["status"] = activity_type
+                timezone_offset = self.request.query_params.get("timezone_offset", None)
+                if from_date and validate_date(from_date):
+                    from_date = datetime.strptime(
+                        from_date + " 00:00:00", "%Y-%m-%d %H:%M:%S"
+                    )
+                    if timezone_offset:
+                        timezone_offset = float(timezone_offset)
+                        if timezone_offset < 0:
+                            transaction_filter_dict[
+                                "created__gte"
+                            ] = from_date + timedelta(
+                                minutes=(-(timezone_offset) * 60)
+                            )
+                        else:
+                            transaction_filter_dict[
+                                "created__gte"
+                            ] = from_date - timedelta(minutes=(timezone_offset * 60))
+                    else:
+                        transaction_filter_dict["created__date__gte"] = from_date
+
+                if to_date and validate_date(to_date):
+                    to_date = datetime.strptime(
+                        to_date + " 23:59:59", "%Y-%m-%d %H:%M:%S"
+                    )
+                    if timezone_offset:
+                        timezone_offset = float(timezone_offset)
+                        if timezone_offset < 0:
+                            transaction_filter_dict[
+                                "created__lte"
+                            ] = to_date + timedelta(minutes=(-(timezone_offset) * 60))
+                        else:
+                            transaction_filter_dict[
+                                "created__lte"
+                            ] = to_date - timedelta(minutes=(timezone_offset * 60))
+           
+                coinflow_transactions = CoinFlowTransaction.objects.filter(user=player).order_by("-created")
+                coinflow_transactions = coinflow_transactions.filter(**transaction_filter_dict).order_by("-created")
+                paginator = self.pagination_class()
+                try:
+                    result_page = paginator.paginate_queryset(coinflow_transactions, request)
+                except Exception as e:
+                    print(e)
+                    return Response({"msg": "Something went Wrong", "status_code": status.HTTP_400_BAD_REQUEST})
+                serializer =  CoinflowTransactionsSerializer(result_page, many=True)
+                return paginator.get_paginated_response(serializer.data)
+
+            else:
+                return Response({"msg": "user not found", "status_code":status.HTTP_404_NOT_FOUND})
+        except Exception as e:
+            print(f"error in fetching data {e}.")
+            response = {"msg": "Some Internal error.", "status_code": status.HTTP_500_INTERNAL_SERVER_ERROR}
+            return Response(response)
+    
