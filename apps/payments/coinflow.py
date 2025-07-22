@@ -107,12 +107,7 @@ class CoinFlowEndpoints:
 class CoinFlowAPIError(Exception):
     """Custom exception for CoinFlow API errors"""
     
-    def __init__(self, message: str, status_coprint('checkpont 
-print('checkpont 
-print('checkpont 
-print('checkpont 
-print('checkpont 
-print('checkpont de: Optional[int] = None):
+    def __init__(self, message: str, status_code: Optional[int] = None):
         super().__init__(message)
         self.status_code = status_code
 
