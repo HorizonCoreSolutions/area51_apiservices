@@ -1516,13 +1516,13 @@ class GetCoinFlowLink(APIView):
             return Response(data={'message' : 'You need to be login to use this endpoint.'}, status=status.HTTP_400_BAD_REQUEST)
         
         user: Users = request.user
-        country = user.country_obj.code_cca2 if user.country_obj else user.country
         
         if request.user.document_verified != VERIFICATION_APPROVED:
             return Response(data={'message' : 'Please finish up all the verification steps.'}, status=status.HTTP_400_BAD_REQUEST)
         
-        if country != 'US':
-            return Response(data={'message' : 'Please update your information. We only accept US documents.'}, status=status.HTTP_400_BAD_REQUEST)
+        # country = user.country_obj.code_cca2 if user.country_obj else user.country
+        # if country != 'US':
+        #     return Response(data={'message' : 'Please update your information. We only accept US documents.'}, status=status.HTTP_400_BAD_REQUEST)
         
         x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
 
