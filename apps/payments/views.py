@@ -1676,10 +1676,7 @@ class CoinflowWithdraws(APIView):
         if not data:
             return Response(data={'message' : 'Please use and available card, For security reasons once started a transaction this id only last 30 min'}, status=status.HTTP_400_BAD_REQUEST)
         
-        print(data)
-        print(type(data))
-        print('checkpont alfa')
-        data = json.loads(str(data))
+        data = json.loads(data.decode())
         cf = CoinFlowClient()
         user = request.user
         if not user.is_authenticated:
