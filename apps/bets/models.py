@@ -17,6 +17,7 @@ from apps.core.models import AbstractBaseModel
 from apps.users.models import Users,CashAppDeatils
 
 
+# Journal Entryes
 CHARGED = "Charged"
 FAILED_CHARGE = "Failed Charge"
 DEBIT = "debit"

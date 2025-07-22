@@ -1702,6 +1702,13 @@ class CoinflowWithdraws(APIView):
         if not data:
             return Response(data={'message' : 'Please use and available card, For security reasons once started a transaction this id only last 30 min'}, status=status.HTTP_400_BAD_REQUEST)
         
+        data = json.loads(str(data))
+        cf = CoinFlowClient()
+        user = request.user
+        if not user.is_authenticated:
+            return Response(data={'message' : 'Please use and available card, For security reasons once started a transaction this id only last 30 min'}, status=status.HTTP_400_BAD_REQUEST)
+        # result = cf.create_transaction_withdraw(user, data, prefix, cents)
+        
         return Response(data={'message' : 'HTTP error 400: Not enough founds'}, status=status.HTTP_400_BAD_REQUEST)
     
 class CoinflowRegisterUserView(APIView):

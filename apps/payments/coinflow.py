@@ -99,6 +99,9 @@ class CoinFlowEndpoints:
     def get_withdrawers(self) -> str:
         return f'{self._base_url}/api/withdraw'
 
+    @property
+    def payout_user_coinflow(self) -> str:
+        return f'{self._base_url}api/merchant/withdraws/payout/delegated'
 
 class CoinFlowAPIError(Exception):
     """Custom exception for CoinFlow API errors"""
@@ -554,11 +557,11 @@ class CoinFlowClient:
         return BasicReturn(success=True)
     
     def get_session_auth(self, user: Users) -> BasicReturn:
-        key = sha256(f'coinflow-session-key:{user.id}'.encode()).hexdigest()
-        session_cache = redis_client.get(key)
-        if not session_cache is None:
-            logger.debug(f'coinflow-session-key:{user.id} - cache hit for session')
-            return BasicReturn(success=True, data=session_cache)
+        # key = sha256(f'coinflow-session-key:{user.id}'.encode()).hexdigest()
+        # session_cache = redis_client.get(key)
+        # if not session_cache is None:
+        #     logger.debug(f'coinflow-session-key:{user.id} - cache hit for session')
+        #     return BasicReturn(success=True, data=session_cache)
         
         
         try:
@@ -569,11 +572,11 @@ class CoinFlowClient:
             )
             
             data = response.json()
-            logger.debug(f'coinflow-session-key:{user.id} - session created')
+            # logger.debug(f'coinflow-session-key:{user.id} - session created')
             session_key = data.get('key')
             # Old: 12h * 60m * 60s = 43_200
             # Session key reduced to one hour
-            redis_client.set(key, session_key, ex=3600)
+            # redis_client.set(key, session_key, ex=3600)
             return BasicReturn(success=True, data=session_key)
         
         except json.JSONDecodeError as e:
@@ -723,7 +726,51 @@ class CoinFlowClient:
         data = f'https://sandbox.coinflow.cash/solana/withdraw/{self.merchant_id}?sessionKey={key_data.data}&bankAccountLinkRedirect={url}'
         return BasicReturn(success=True, data=data)
 
-    def create_transaction_withdraw(self, user: Users):
+    @transaction.atomic
+    def create_transaction_withdraw(self, user: Users, data: dict, type: str, cents: int):
+        
+        user = Users.objects.select_for_update().get(id=user.id)
+        if (user.balance * 100) < cents:
+            return BasicReturn(
+                success=False,
+                error="You have insufficient funds for this transaction."
+            )
+            
+        actual_balance = user.balance
+        new_balance    = actual_balance - (Decimal(cents) / 100)
+        user.balance = new_balance
+        
+        Transactions.objects.create(
+            user=user,
+            amount=(Decimal(cents) / 100),
+            status=
+        )
+        
+        payload = {
+            "amount": { "cents": cents },
+            "speed": "card" if type.startswith("card") else "same_day",
+            "account": data.get("token"),
+            "userId": self._generate_user_id(user),
+            "waitForConfirmation": True,
+            "idempotencyKey": str(uuid4())
+        }
+
+        res: Optional[requests.Response] = None
+        counter = 0
+        while counter < 3:
+            counter+=1
+            res = requests.post(
+                self.endpoints.payout_user_coinflow,
+                json=payload,
+                headers=self._build_headers())
+            if res.status_code != 503:
+                break
+        if res is None:
+            return
+        
+        if res.status_code == 451:
+            data = res.json()
+            return data
         return
 
     def get_totals(self, user: Users, cents: int) -> BasicReturn:
@@ -990,7 +1037,7 @@ class CoinFlowClient:
                 previous_balance=user.balance,
                 new_balance=user.balance - transaction.amount,
                 description=f"Refund for transaction {tid}",
-                journal_entry="REFUND",
+                journal_entry="debit",
                 reference=f"REFUND_{tid}_{user.id}"
             )
             
