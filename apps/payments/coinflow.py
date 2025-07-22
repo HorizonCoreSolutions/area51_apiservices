@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from django.db import transaction
 from apps.users.utils import redis_client
 from apps.bets.models import Transactions
-from typing import Callable, Dict, Optional
+from typing import Callable, Dict, Optional, Tuple
 from apps.core.custom_types import BasicReturn
 from apps.core.file_logger import SimpleLogger
 from apps.acuitytec.acuitytec import AcuityTecAPI
@@ -645,7 +645,7 @@ class CoinFlowClient:
                 "email": user.email,
                 # "origins" : self.origins,
                 "webhookInfo": {'transaction_id' : process_id},
-                "blockchain": 'eth',
+                # "blockchain": 'eth',
                 "threeDsChallengePreference": threeds_preference,
                 "customerInfo": {
                     "firstName": user.first_name,
@@ -653,21 +653,12 @@ class CoinFlowClient:
                 },
                 "chargebackProtectionData": [
                     {
-                        "itemClass": item_class,
-                        "id": item_id,
-                        "rawProductData": {
-                            "Name": item_name
-                        },
-                        "sellingPrice": {
-                            "valueInCurrency": amount_cents,
-                            "currency": 'USD'
-                        },
+                        "productName": "Gold_Coins",
+                        "productType": "gameOfSkill",
                         "quantity": 1,
-                        "topUpAmount": {
-                            "valueInCurrency": amount_cents,
-                            "currency": 'USD'
+                        "rawProductData": {
+                            "example": "{\"description\": \"gold coins to be used on any game on my sweepstakes site\"}"
                         },
-                        "isPresetAmount": False
                     }
                 ]
             }
@@ -731,7 +722,10 @@ class CoinFlowClient:
         url = quote(self.config.redirection_url, safe="")
         data = f'https://sandbox.coinflow.cash/solana/withdraw/{self.merchant_id}?sessionKey={key_data.data}&bankAccountLinkRedirect={url}'
         return BasicReturn(success=True, data=data)
-    
+
+    def create_transaction_withdraw(self, user: Users):
+        return
+
     def get_totals(self, user: Users, cents: int) -> BasicReturn:
         
         data = self.get_session_auth(user)
