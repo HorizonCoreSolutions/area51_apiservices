@@ -852,9 +852,7 @@ class CoinFlowClient:
             res = res.json()
         except CoinFlowAPIError as e:
             logger.critical(f'Error: >> could not create totals: {e}')
-            return BasicReturn(success=False, data={
-                "message" : "Withdraw created.",
-            })
+            return BasicReturn(success=False, error='Could not generate an estimation total right now. Please try again later.')
 
         totals = {}
         
