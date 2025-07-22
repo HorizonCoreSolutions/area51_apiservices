@@ -7,6 +7,7 @@ from urllib.parse import quote
 from django.conf import settings
 from dataclasses import dataclass
 from django.db import transaction
+from apps.payments.models import CoinFlowTransaction
 from apps.users.utils import redis_client
 from apps.bets.models import Transactions
 from typing import Callable, Dict, Optional, Tuple
@@ -628,7 +629,7 @@ class CoinFlowClient:
             if item_id is None:
                 item_id = f"checkout-{user.id}-{uuid4()}"
                 
-            process_id = f'{uuid4()}'
+            transaction_id = f'{uuid4()}'
             # # Build webhook info
             # webhook_info = {}
             # if webhook_url:
@@ -647,7 +648,7 @@ class CoinFlowClient:
                 },
                 "email": user.email,
                 # "origins" : self.origins,
-                "webhookInfo": {'transaction_id' : process_id},
+                "webhookInfo": {'transaction_id' : transaction_id},
                 # "blockchain": 'eth',
                 "threeDsChallengePreference": threeds_preference,
                 "customerInfo": {
@@ -698,11 +699,21 @@ class CoinFlowClient:
                     success=False,
                     error='Checkout URL not found in API response.'
                 )
+
+            CoinFlowTransaction.objects.create(
+                user=user,
+                amount=Decimal(amount_cents) / 100,
+                currency='USD',
+                transaction_id=transaction_id,
+                transaction_type=CoinFlowTransaction.TransactionType.deposit,
+                account_type=CoinFlowTransaction.AccountType.card,
+                status=CoinFlowTransaction.StatusType.requested
+            )
             
             logger.info(f"Checkout link created successfully for user {user.id}")
             return BasicReturn(
                 success=True,
-                data={**response_data, 'id' : process_id},
+                data={**response_data, 'id' : transaction_id},
                 message="Checkout link created successfully"
             )
             
@@ -727,7 +738,7 @@ class CoinFlowClient:
         return BasicReturn(success=True, data=data)
 
     @transaction.atomic
-    def create_transaction_withdraw(self, user: Users, data: dict, type: str, cents: int):
+    def create_transaction_withdraw(self, user: Users, data: dict, type: str, cents: int, ip: str) -> BasicReturn:
         
         user = Users.objects.select_for_update().get(id=user.id)
         if (user.balance * 100) < cents:
@@ -735,16 +746,11 @@ class CoinFlowClient:
                 success=False,
                 error="You have insufficient funds for this transaction."
             )
-            
+        
+        idpk = str(uuid4())
         actual_balance = user.balance
         new_balance    = actual_balance - (Decimal(cents) / 100)
         user.balance = new_balance
-        
-        Transactions.objects.create(
-            user=user,
-            amount=(Decimal(cents) / 100),
-            status=
-        )
         
         payload = {
             "amount": { "cents": cents },
@@ -752,7 +758,7 @@ class CoinFlowClient:
             "account": data.get("token"),
             "userId": self._generate_user_id(user),
             "waitForConfirmation": True,
-            "idempotencyKey": str(uuid4())
+            "idempotencyKey": idpk
         }
 
         res: Optional[requests.Response] = None
@@ -766,12 +772,64 @@ class CoinFlowClient:
             if res.status_code != 503:
                 break
         if res is None:
-            return
+            logger.critical("Coinflow api response is outbonded request.post(*) -> None")
+            return BasicReturn(success=False, error="This service is down, please try again later. If the problem persist contact support.")
         
         if res.status_code == 451:
+            logger.info(f"User: {user.id}-{user.username} had access to withdraw but did not had coinflow verification enabled.")
             data = res.json()
-            return data
-        return
+            link = data.get("verificationLink")
+            return BasicReturn(success=False, error="User hadn't the full account info.", data={
+                "message" : "Please complete the verification to use this service.",
+                "url"     : link,
+                "status"  : 451
+            })
+            
+        if res.status_code == 409:
+            return BasicReturn(success=True, data={"message" : "The withdraw has already been created.", "status" : 200})
+        
+        if res.status_code == 400:
+            try:
+                data=res.json()
+            except:
+                logger.warning("Coinflow data coudnt been deserialized")
+                data={}
+            serial = data.get("serialized", "No_serial_found")
+            logs = data.get('logs', [])
+            error = "non_indentified_error"
+            for log in logs:
+                if log.startswith("Program log: Error:"):
+                    error=log[19:]
+            
+            logger.warning(f"Error {error} | for user {user.id}-{user.username}: {idpk} = {serial}")
+            return BasicReturn(success=True, data={"message" : "This service is not enabled right now, please try again later.", "status" : 200})
+        
+        if res.status_code != 200:
+            logger.critical("Coinflow API is not working propertly")
+            logger.warning(f"data {res.text}")
+            return BasicReturn(success=False, error="This service is down, please try again later. If the problem persist contact support.")
+            
+        data = res.json()
+        
+        signature = data.get("signature")
+        if signature is None:
+            logger.critical("Coinflow API is not working propertly. There is not signature")
+            logger.warning(f"data \n{data}")
+            return BasicReturn(success=False, error="This service is down, please try again later. If the problem persist contact support.")
+    
+        CoinFlowTransaction.objects.create(
+            user=user,
+            amount=(Decimal(cents) / 100),
+            currency='USD',
+            transaction_type=CoinFlowTransaction.TransactionType.withdraw,
+            status=CoinFlowTransaction.StatusType.requested,
+            pre_balance=actual_balance,
+            post_balance=new_balance,
+            ip_address=ip,
+            signature=signature,
+            account_type= CoinFlowTransaction.AccountType.card if type.startswith("card") else CoinFlowTransaction.AccountType.bank
+        )
+        return BasicReturn(success=True, data={})
 
     def get_totals(self, user: Users, cents: int) -> BasicReturn:
         
@@ -795,7 +853,10 @@ class CoinFlowClient:
             res = res.json()
         except CoinFlowAPIError as e:
             logger.critical(f'Error: >> could not create totals: {e}')
-            return BasicReturn(success=False, error='Could not generate an estimation total right now. Please try again later.')
+            return BasicReturn(success=False, data={
+                "message" : "Withdraw created.",
+                ""
+            })
 
         totals = {}
         
@@ -879,7 +940,7 @@ class CoinFlowClient:
             logger.critical('The webhook is not retorning the transacction id, no webhook handling can be done')
             return BasicReturn(success=False, error='transacction if is not returned on the webhook')
         
-        transaction_qs = Transactions.objects.filter(txn_id=tid).order_by('-created')
+        transaction_qs = CoinFlowTransaction.objects.filter(transaction_id=tid).order_by('-created')
         if not transaction_qs.exists():
             return BasicReturn(success=False, error='transacction was not registered')
         
@@ -893,25 +954,29 @@ class CoinFlowClient:
         if user is None:
             return BasicReturn(success=False, error='User does not exist. Or does not belong to this game instance.')
         
+        STATUSES_IN_PROGRESS = [
+            CoinFlowTransaction.StatusType.pending,
+            CoinFlowTransaction.StatusType.requested,
+            CoinFlowTransaction.StatusType.processing,
+        ]
         
-        if eventType in {"Settled", "Card Payment Authorized", "USDC Payment Received", "ACH Batched"}:
+        if eventType in {"Settled", "Card Payment Authorized", "USDC Payment Received"}:
             # Settled: Payment completed and funds have been sent to the merchant.
             # CPA: Card issuer authorized the payer's credit card.
             # Card Payment Authorized: Card issuer authorized the payer's credit card.
             # USDC Payment Received: Merchant received USDC payment via Solana.
-            # AB : The ACH has been accepted and it is processing.
-            transaction = transaction_qs.filter(status='pending_charge').first()
+            transaction = transaction_qs.filter(status__in=STATUSES_IN_PROGRESS).first()
             if not transaction:
                 return BasicReturn(success=False, error='Deduplication this transaction was already claimed')
             
-            transaction.status='charged'
-            transaction.amount=Decimal(money) / 100
-            transaction.previous_balance=user.balance
-            transaction.description = eventType
-            
             old_balance = user.balance
             new_balance = old_balance + Decimal(money) / 100
-            transaction.new_balance = new_balance
+            
+            transaction.status=CoinFlowTransaction.StatusType.approved
+            transaction.amount=Decimal(money) / 100
+            transaction.pre_balance=old_balance
+            transaction.post_balance = new_balance
+            
             user.balance = new_balance
             
             user.save()
@@ -927,85 +992,75 @@ class CoinFlowClient:
             # ACH Returned: ACH payment was returned by bank.
             # PIX Failed: PIX payment failed during processing.
             
-            transaction = transaction_qs.filter(status='pending_charge').first()
+            transaction = transaction_qs.filter(status__in=STATUSES_IN_PROGRESS).first()
             if not transaction:
                 return BasicReturn(success=False, error='Deduplication this transaction was already claimed')
             
             # Determine failure type based on event
+            status = CoinFlowTransaction.StatusType.failed
             if eventType == "Card Payment Suspected Fraud":
-                status = 'failed_fraud'
-            elif eventType in {"ACH Failed", "ACH Returned"}:
-                status = 'failed_reject'  # Use existing status from model
-            else:
-                status = 'failed_charge'
+                status = CoinFlowTransaction.StatusType.failed_fraud
             
             transaction.status=status
             transaction.amount=Decimal(money) / 100
-            transaction.previous_balance=user.balance
-            transaction.new_balance = user.balance
+            transaction.pre_balance=user.balance
+            transaction.post_balance = user.balance
             transaction.save()
-        elif eventType == "Payment Pending Review":
-            # Payment under review, awaiting merchant approval.
-            transaction = transaction_qs.filter(status='pending_charge').first()
-            if transaction is None:
-                return BasicReturn(success=False, error='The transaction is not on the expected state')
-            
-            transaction.status = 'pending_review'
-            transaction.confirms_needed = 1
-            transaction.save()
-            logger.info(f'Payment pending review for user {user.id}, transaction: {tid}')
-            return BasicReturn(success=True, message='Payment is pending review')
+
         elif eventType == "Card Payment Chargeback Opened":
             # Chargeback investigation initiated - reverse the payment
-            transaction = transaction_qs.filter(status='charged').first()
+            transaction = transaction_qs.filter(status=CoinFlowTransaction.StatusType.approved).first()
             if not transaction:
                 # Check if there's already a chargeback for this transaction
-                existing_chargeback = transaction_qs.filter(status__in=['chargeback_opened', 'chargeback_disputed']).exists()
+                existing_chargeback = CoinFlowTransaction.objects.filter(status__in=[
+                    CoinFlowTransaction.StatusType.chargeback_won,
+                    CoinFlowTransaction.StatusType.chargeback_lost,
+                    CoinFlowTransaction.StatusType.chargeback_opened,
+                    ]).exists()
                 if existing_chargeback:
                     return BasicReturn(success=True, message='Chargeback already processed')
                 return BasicReturn(success=False, error='No charged transaction found for chargeback')
             
+            pre_balance = user.balance
+            
             # Only proceed if user has sufficient balance
             if user.balance < transaction.amount:
-                pre_balance = user.balance
                 user.balance = 0
                 logger.warning(f'Insufficient balance for chargeback - User {user.id}, required: ${transaction.amount}, available: ${user.balance}. ONLY available mony has been taken please contact the user')
-                # Still create the transaction record but don't modify balance
-                chargeback_transaction = Transactions.objects.create(
-                    txn_id=f"{tid}_chargeback",
+                
+                chargeback_transaction = CoinFlowTransaction.objects.create(
                     user=user,
-                    amount=-pre_balance,
-                    status='chargeback_opened',
-                    previous_balance=pre_balance,
-                    new_balance=user.balance,  # No balance change due to insufficient funds
-                    description=f"Chargeback opened for transaction {tid} - Insufficient balance",
-                    journal_entry="CHARGEBACK",
-                    reference=f"CHARGEBACK_{tid}_{user.id}"
+                    currency='USD',
+                    amount=pre_balance,
+                    transaction_id=tid,
+                    pre_balance=pre_balance,
+                    post_balance=user.balance,
+                    status=CoinFlowTransaction.StatusType.chargeback_opened,
+                    transaction_type=CoinFlowTransaction.TransactionType.withdraw,
+                    error_description=f"Insufficient balance for chargeback - User {user.id}, required: ${transaction.amount}, available: ${pre_balance}, Left to remove: ${transaction.amount - pre_balance}",
                 )
                 transaction.status = 'chargeback_disputed'
                 user.save()
                 transaction.save()
                 return BasicReturn(success=True, message='Chargeback noted - insufficient balance to deduct')
             
-            # Create a new transaction record for the chargeback
-            chargeback_transaction = Transactions.objects.create(
-                txn_id=f"{tid}_chargeback",
-                user=user,
-                amount=-transaction.amount,  # Negative amount for chargeback
-                status='chargeback_opened',
-                previous_balance=user.balance,
-                new_balance=user.balance - transaction.amount,
-                description=f"Chargeback opened for transaction {tid}",
-                journal_entry="CHARGEBACK",
-                reference=f"CHARGEBACK_{tid}_{user.id}"
-            )
             
             # Update user balance
             user.balance -= transaction.amount
-            user.save()
+            chargeback_transaction = CoinFlowTransaction.objects.create(
+                user=user,
+                currency='USD',
+                transaction_id=tid,
+                pre_balance=pre_balance,
+                post_balance=user.balance,
+                amount=transaction.amount,
+                status=CoinFlowTransaction.StatusType.chargeback_opened,
+                transaction_type=CoinFlowTransaction.TransactionType.withdraw,
+            )
             
             # Update original transaction status
-            transaction.status = 'chargeback_disputed'
+            transaction.status = CoinFlowTransaction.StatusType.chargeback
+            user.save()
             transaction.save()
             
             logger.warning(f'Chargeback opened for user {user.id}, amount: ${transaction.amount}')
@@ -1013,32 +1068,58 @@ class CoinFlowClient:
 
         elif eventType == "Card Payment Chargeback Lost":
             # Chargeback resolved in favor of cardholder - funds remain deducted
-            transaction = transaction_qs.filter(status='chargeback_disputed').first()
+            transaction = transaction_qs.filter(status=CoinFlowTransaction.StatusType.chargeback_opened).first()
             if transaction:
-                transaction.status = 'chargeback_lost'
-                transaction.description = eventType
+                transaction.status = CoinFlowTransaction.StatusType.chargeback_lost
                 transaction.save()
             
             logger.warning(f'Chargeback lost for user {user.id}, transaction: {tid}')
             return BasicReturn(success=True, message='Chargeback lost - funds remain deducted')
 
+        elif eventType == "Card Payment Chargeback Won":
+            # Chargeback resolved in favor of merchant
+            transaction = transaction_qs.filter(status=CoinFlowTransaction.StatusType.chargeback_opened).first()
+            if not transaction:
+                return BasicReturn(success=False, error='No disputed chargeback transaction found')
+            # Update user balance
+            user.balance += abs(transaction.amount)
+            
+            transaction.amount = Decimal(0)
+            transaction.post_balance = transaction.pre_balance
+            transaction.status = CoinFlowTransaction.StatusType.chargeback_won
+            
+            user.save()
+            transaction.save()
+            
+            logger.info(f'Chargeback won for user {user.id}, amount restored: ${abs(transaction.amount)}')
+            return BasicReturn(success=True, message='Chargeback won - funds restored')
+        
         elif eventType == "Refund":
             # Payment has been refunded - deduct funds from user balance
-            transaction = transaction_qs.filter(status='charged').first()
-            if not transaction:
+            transaction_any = transaction_qs.first()
+            transaction = transaction_qs.filter(status=CoinFlowTransaction.StatusType.approved).first()
+            if transaction is None and transaction_any is None:
                 return BasicReturn(success=False, error='No charged transaction found for refund')
             
+            if transaction_any:
+                transaction_any.status = CoinFlowTransaction.StatusType.refund
+                transaction_any.save()
+                return BasicReturn(success=True, message='Refund processed successfully')
+            
+            if transaction is None:
+                return BasicReturn(success=False, error='No charged transaction found for refund')
+                
+            
             # Create a new transaction record for the refund
-            refund_transaction = Transactions.objects.create(
-                txn_id=f"{tid}_refund",
+            refund_transaction = CoinFlowTransaction.objects.create(
                 user=user,
-                amount=-transaction.amount,  # Negative amount for refund
-                status='refunded',
-                previous_balance=user.balance,
-                new_balance=user.balance - transaction.amount,
-                description=f"Refund for transaction {tid}",
-                journal_entry="debit",
-                reference=f"REFUND_{tid}_{user.id}"
+                currency='USD',
+                transaction_id=tid,
+                amount=transaction.amount,
+                status=CoinFlowTransaction.StatusType.refunded,
+                pre_balance=user.balance,
+                post_balance=user.balance - transaction.amount,
+                transaction_type=CoinFlowTransaction.TransactionType.withdraw
             )
             
             # Update user balance
@@ -1046,59 +1127,41 @@ class CoinFlowClient:
             user.save()
             
             # Update original transaction status
-            transaction.status = 'refunded'
+            transaction.status = CoinFlowTransaction.StatusType.refunded
             transaction.save()
             
             logger.info(f'Refund processed for user {user.id}, amount: ${transaction.amount}')
             return BasicReturn(success=True, message='Refund processed successfully')
-        elif eventType == "Card Payment Chargeback Won":
-            # Chargeback resolved in favor of merchant - restore funds
-            transaction = transaction_qs.filter(status='chargeback_disputed').first()
-            if not transaction:
-                return BasicReturn(success=False, error='No disputed chargeback transaction found')
-            
-            # Create a new transaction record for the chargeback win
-            win_transaction = Transactions.objects.create(
-                txn_id=f"{tid}_chargeback_won",
-                user=user,
-                amount=abs(transaction.amount),  # Restore the original amount
-                status='chargeback_won',
-                previous_balance=user.balance,
-                new_balance=user.balance + abs(transaction.amount),
-                description=f"Chargeback won for transaction {tid}",
-                journal_entry="CHARGEBACK_WON",
-                reference=f"CHARGEBACK_WON_{tid}_{user.id}"
-            )
-            
-            # Update user balance
-            user.balance += abs(transaction.amount)
-            user.save()
-            
-            # Update original transaction status
-            transaction.status = 'chargeback_won'
-            transaction.save()
-            
-            logger.info(f'Chargeback won for user {user.id}, amount restored: ${abs(transaction.amount)}')
-            return BasicReturn(success=True, message='Chargeback won - funds restored')
-        elif eventType == "ACH Initiated":
+        
+        elif eventType in {"ACH Initiated", "ACH Batched"}:
             # ACH payment has been started - update status to processing
-            transaction = transaction_qs.filter(status='pending_charge').first()
+            transaction = transaction_qs.filter(status=CoinFlowTransaction.StatusType.requested).first()
             if transaction:
-                transaction.status = 'processing_ach'
-                transaction.description = eventType
+                transaction.status = CoinFlowTransaction.StatusType.processing
                 transaction.save()
             
             logger.info(f'ACH payment initiated for user {user.id}, transaction: {tid}')
             return BasicReturn(success=True, message='ACH payment initiated')
+        
+        elif eventType == "Payment Pending Review":
+            # Payment under review, awaiting merchant approval.
+            transaction = transaction_qs.filter(status__in=STATUSES_IN_PROGRESS).first()
+            if transaction is None:
+                return BasicReturn(success=False, error='The transaction is not on the expected state')
+            
+            transaction.confimation_needed = True
+            transaction.save()
+            logger.info(f'Payment pending review for user {user.id}, transaction: {tid}')
+            return BasicReturn(success=True, message='Payment is pending review')
+        
         elif eventType in ["PIX Expiration", "Payment Expiration"]:
             # Payment expired before completion - mark as expired
-            transaction = transaction_qs.filter(status='pending_charge').first()
+            transaction = transaction_qs.filter(status__in=STATUSES_IN_PROGRESS).first()
             if transaction:
-                transaction.status = 'expired'
+                transaction.status = CoinFlowTransaction.StatusType.expired
                 transaction.amount = Decimal(money) / 100
-                transaction.previous_balance = user.balance
-                transaction.new_balance = user.balance  # No balance change for expired payments
-                transaction.description = eventType
+                transaction.pre_balance = user.balance
+                transaction.post_balance = user.balance
                 transaction.save()
             
             logger.info(f'Payment expired for user {user.id}, transaction: {tid}')
@@ -1150,6 +1213,9 @@ class CoinFlowClient:
             
         user.save()
         return BasicReturn(success=True)
+
+    def handle_withdraw(self, data) -> BasicReturn:
+        return BasicReturn(success=True                                                                                                                            )
 
     def handle_webhook(self, data, authorization: str) -> BasicReturn:
         

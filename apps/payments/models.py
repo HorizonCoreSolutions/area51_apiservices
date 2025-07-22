@@ -157,29 +157,60 @@ class MnetTransaction(AbstractBaseModel):
 
 class CoinFlowTransaction(AbstractBaseModel):
     class TransactionType(DjangoChoices):
-        deposit = ChoiceItem("deposit", "DEPOSIT")
-        withdraw = ChoiceItem("withdraw", "WITHDRAW")
+        deposit = ChoiceItem("deposit", _("Deposit"))
+        withdraw = ChoiceItem("withdraw", _("Withdraw"))
+        
+    class AccountType(DjangoChoices):
+        card = ChoiceItem("card", _("Card"))
+        bank = ChoiceItem("bank", _("Bank"))
         
     class StatusType(DjangoChoices):
-        requested = ChoiceItem("requested", "REQUESTED")
-        pending = ChoiceItem("pending", "PENDING")
-        approved = ChoiceItem("approved", "APPROVED")
-        cancelled = ChoiceItem("cancelled", "CANCELLED")
-        rejected = ChoiceItem("rejected", "REJECTED")
-        refund = ChoiceItem("refund", "REFUND")
-        chargeback = ChoiceItem("chargeback", "CHARGEBACK")
+        # Common statuses
+        requested = ChoiceItem("requested", _("Requested"))
+        pending = ChoiceItem("pending", _("Pending"))
+        processing = ChoiceItem("processing", _("Processing"))
+        approved = ChoiceItem("approved", _("Approved"))
+        cancelled = ChoiceItem("cancelled", _("Cancelled"))
+        rejected = ChoiceItem("rejected", _("Rejected"))
+        expired = ChoiceItem("expired", _("Expired"))
+
+        # Payment outcomes
+        charged = ChoiceItem("charged", _("Charged"))
+        # this item was once accepted
+        refunded = ChoiceItem("refunded", _("Refunded"))
+        # this has never been accepted
+        refund = ChoiceItem("refund", _("Refund"))
+        failed = ChoiceItem("failed", _("Failed"))
+        failed_fraud = ChoiceItem("failed_fraud", _("Failed Fraud"))
+        paid_out = ChoiceItem("paid_out", _("Paid Out"))
+
+        # Chargeback flow
+        chargeback = ChoiceItem("chargeback", _("Chargeback"))
+        chargeback_opened = ChoiceItem("chargeback_opened", _("Chargeback Opened"))
+        chargeback_won = ChoiceItem("chargeback_won", _("Chargeback Won"))
+        chargeback_lost = ChoiceItem("chargeback_lost", _("Chargeback Lost"))
+
+
+    transaction_id = models.CharField(max_length=80,null=True,blank=True)
+    signature = models.CharField(max_length=100,null=True,blank=True)
 
     user = models.ForeignKey(Users, on_delete=models.CASCADE, blank=False, null=True)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
+    currency = models.CharField(max_length=20,null=True,blank=True)
+    ip_address = models.CharField(max_length=20,null=True,blank=True)
+    
+    pre_balance = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    post_balance = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    
     transaction_type = models.CharField(max_length=50,choices=TransactionType)
     status = models.CharField(max_length=50,choices=StatusType, default=StatusType.pending)
-    card_type = models.CharField(max_length=20,null=True,blank=True)
-    card_number = models.CharField(max_length=20,null=True,blank=True)
+    account_type = models.CharField(max_length=20, choices=AccountType,null=True,blank=True)
+    
+    confimation_needed = models.BooleanField(default=False)
+    
     processor_name = models.CharField(max_length=20,null=True,blank=True)
-    transaction_id = models.CharField(max_length=80,null=True,blank=True)
     trans_note = models.CharField(max_length=80,null=True,blank=True)
-    ip_address = models.CharField(max_length=20,null=True,blank=True)
-    currency = models.CharField(max_length=20,null=True,blank=True)
     descriptor = models.CharField(max_length=100,null=True,blank=True)
+    
     error_code = models.CharField(max_length=20,null=True,blank=True)
-    error_description = models.CharField(max_length=100,null=True,blank=True)
+    error_description = models.CharField(max_length=500,null=True,blank=True)

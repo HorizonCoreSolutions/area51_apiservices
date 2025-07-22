@@ -29,7 +29,7 @@ from apps.casino.utils import ErrorResponseMsg
 from apps.core.pagination import PageNumberPagination
 from apps.core.permissions import IsAgent, IsPlayer
 from apps.core.rest_any_permissions import AnyPermissions
-from apps.core.utils import save_request
+from apps.core.utils import get_user_ip_from_request, save_request
 from apps.payments.coinflow import CoinFlowClient
 from apps.users.models import VERIFICATION_APPROVED, CoinflowAuthState, Users, Admin, BonusPercentage, PromoCodes
 from apps.casino.custom_pagination import CustomPagination
@@ -1564,32 +1564,6 @@ class GetCoinFlowLink(APIView):
         
         idt = link.data.pop('id', None)
         
-        Transactions.objects.create(
-            user=user,
-            amount=Decimal(cents/100),
-            journal_entry='deposit',
-            status='pending_charge',
-            trans_id=idt,
-            previous_balance=user.balance,
-            new_balance=user.balance,
-            reference=generate_reference(request.user),
-            # payment_id= This need to be set down after
-            txn_id=idt,
-            description='Better info to place here in the future',
-            # checkout_url=link.data.get('link'),
-            # timeout= ask for this
-            # payment_method=
-        )
-        
-        CoinFlowTransaction.objects.create(
-            user=user,
-            amount=Decimal(cents/100),
-            currency='USD',
-            transaction_id=idt,
-            transaction_type=CoinFlowTransaction.TransactionType.deposit,
-            status=CoinFlowTransaction.StatusType.pending
-        )
-        
         return Response(data=link.data, status=status.HTTP_200_OK)
 
 
@@ -1707,7 +1681,12 @@ class CoinflowWithdraws(APIView):
         user = request.user
         if not user.is_authenticated:
             return Response(data={'message' : 'Please use and available card, For security reasons once started a transaction this id only last 30 min'}, status=status.HTTP_400_BAD_REQUEST)
-        # result = cf.create_transaction_withdraw(user, data, prefix, cents)
+        
+        ip = get_user_ip_from_request(request)
+        result = cf.create_transaction_withdraw(user, data, prefix, cents, ip)
+        
+        if result.data:
+            return Response(data=result.data, status=result.data.get("status"))
         
         return Response(data={'message' : 'HTTP error 400: Not enough founds'}, status=status.HTTP_400_BAD_REQUEST)
     
