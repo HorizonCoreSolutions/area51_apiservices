@@ -744,8 +744,7 @@ class CoinFlowClient:
         if (user.balance * 100) < cents:
             return BasicReturn(
                 success=False,
-                error="You have insufficient funds for this transaction."
-            )
+                error="You have insufficient funds for this transaction.")
         
         idpk = str(uuid4())
         actual_balance = user.balance
