@@ -8,7 +8,7 @@ from rest_framework import serializers
 from rest_framework.response import Response
 from rest_framework import status
 
-from .models import AlchemypayOrder, CoinWithdrawal, MnetTransaction, NowPaymentsTransactions
+from .models import AlchemypayOrder, CoinFlowTransaction, CoinWithdrawal, MnetTransaction, NowPaymentsTransactions
 from apps.users.models import PromoCodes, Users
 from apps.bets.models import Transactions, DEPOSIT, ROLLBACK, CHARGED, WITHDRAW
 from apps.casino.utils import ErrorResponseMsg
@@ -251,5 +251,11 @@ class AlchemypayTransactionsSerializer(serializers.ModelSerializer):
 class MnetTransactionsSerializer(serializers.ModelSerializer):
     class Meta:
         model = MnetTransaction
+        fields = ("id", "transaction_id", "created", "amount", "transaction_type", "status" )
+    
+
+class CoinflowTransactionsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CoinFlowTransaction
         fields = ("id", "transaction_id", "created", "amount", "transaction_type", "status" )
     
