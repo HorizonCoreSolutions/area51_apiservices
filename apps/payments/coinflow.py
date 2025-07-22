@@ -746,6 +746,7 @@ class CoinFlowClient:
                 success=False,
                 error="You have insufficient funds for this transaction.")
         
+        print('checkpont a')
         idpk = str(uuid4())
         actual_balance = user.balance
         new_balance    = actual_balance - (Decimal(cents) / 100)
@@ -760,6 +761,7 @@ class CoinFlowClient:
             "idempotencyKey": idpk
         }
 
+        print('checkpont b')
         res: Optional[requests.Response] = None
         counter = 0
         while counter < 3:
@@ -774,6 +776,7 @@ class CoinFlowClient:
             logger.critical("Coinflow api response is outbonded request.post(*) -> None")
             return BasicReturn(success=False, error="This service is down, please try again later. If the problem persist contact support.")
         
+        print('checkpont c')
         if res.status_code == 451:
             logger.info(f"User: {user.id}-{user.username} had access to withdraw but did not had coinflow verification enabled.")
             data = res.json()
@@ -784,6 +787,7 @@ class CoinFlowClient:
                 "status"  : 451
             })
             
+        print('checkpont d')
         if res.status_code == 409:
             return BasicReturn(success=True, data={"message" : "The withdraw has already been created.", "status" : 200})
         
@@ -799,11 +803,13 @@ class CoinFlowClient:
             for log in logs:
                 if log.startswith("Program log: Error:"):
                     error=log[19:]
+            print('checkpont e')
             
             logger.warning(f"Error {error} | for user {user.id}-{user.username}: {idpk} = {serial}")
             return BasicReturn(success=True, data={"message" : "This service is not enabled right now, please try again later.", "status" : 200})
         
         if res.status_code != 200:
+            print('checkpont f')
             logger.critical("Coinflow API is not working propertly")
             logger.warning(f"data {res.text}")
             return BasicReturn(success=False, error="This service is down, please try again later. If the problem persist contact support.")
