@@ -24,6 +24,8 @@ def get_env_var(var_name: str, default: Any = None, cast: Optional[Type] = None)
         logger.critical(error_msg)
         raise ImproperlyConfigured(error_msg)
 
+    if value is None:
+        logger.warning(f"Set the {var_name} environment variable")
     result = try_cast(value, cast)
     return result
 
