@@ -101,6 +101,17 @@ class CoinFlowEndpoints:
         return f'{self._base_url}/api/withdraw'
 
     @property
+    def get_withdrawal(self) -> str:
+        """
+        End-point for user document registration.
+        
+        Required headers: Authorization, x-coinflow-auth-user-id
+        
+        Format the url: signature = signature
+        """
+        return f'{self._base_url}/api/merchant/withdraws/{{signature}}'
+
+    @property
     def payout_user_coinflow(self) -> str:
         return f'{self._base_url}/api/merchant/withdraws/payout/delegated'
 
