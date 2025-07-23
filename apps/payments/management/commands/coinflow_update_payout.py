@@ -16,6 +16,7 @@ class Command(BaseCommand):
     
     def handle(self, *args, **kwargs):
         try:
+            logger.info(" Payout Update Service: STARTED ".center(40, "-"))
             endpoint = CoinFlowEndpoints(settings.COINFLOW_API_URL)
             while True:
                 print(f'Payout update started at {datetime.now()}')
