@@ -597,6 +597,9 @@ class CoinFlowClient:
         except CoinFlowAPIError as e:
             logger.critical(f'HTTP error: >> cannot get session key: {e}')
             return BasicReturn(success=False, error='This service is down, please try again later')
+
+    def build_payout_headers(self) -> dict:
+        return self._build_headers()
     
     def create_checkout_link(self, 
                            user: Users,
