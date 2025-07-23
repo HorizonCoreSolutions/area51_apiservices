@@ -18,11 +18,14 @@ class Command(BaseCommand):
         try:
             endpoint = CoinFlowEndpoints(settings.COINFLOW_API_URL)
             while True:
+                print(f'Payout update started at {datetime.now()}')
                 cf = CoinFlowClient()
+                updated = 0
                 one_week_ago = timezone.now() - timedelta(days=7)
                 transactions = CoinFlowTransaction.objects.filter(
                     transaction_type = CoinFlowTransaction.TransactionType.withdraw,
                     status = CoinFlowTransaction.StatusType.requested,)
+                print(f'Total transactions to update: {transactions.count()}')
                 for transaction in transactions:
                     res = requests.get(
                         endpoint.get_withdrawal.format(signature=transaction.signature),
@@ -32,6 +35,8 @@ class Command(BaseCommand):
                         break
                     if res.status_code == 404:
                         transaction.status = CoinFlowTransaction.StatusType.cancelled
+                        updated+=1
+                        continue
                     try:
                         data = res.json()
                         withdrawal = data.get("withdrawal", {})
@@ -42,12 +47,16 @@ class Command(BaseCommand):
                         
                         if status == "completed":
                             transaction.status =  CoinFlowTransaction.StatusType.paid_out
+                            updated+=1
                         if status == "failed":
                             transaction.status =  CoinFlowTransaction.StatusType.failed
+                            updated+=1
                         transaction.save()
                     except:
                         logger.critical(f"Data for Signature couldn't be deserialized {transaction.signature}")
-                print(datetime.now())
+                
+                print(f'Total transactions updated: {updated}')
+                print(f'Payout update ended at {datetime.now()}')
                 print('Sleep for 4 hours')
                 time.sleep(60*60*4)      
         except Exception as e:
