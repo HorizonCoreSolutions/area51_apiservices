@@ -869,7 +869,7 @@ class CoinFlowClient:
                 "total": round(entry["total"]["cents"] / 100, 2)
             }
             
-            totals['bonus'] = cents *  50
+            totals['bonus'] = cents * (settings.BONUS_MULTIPLIER / 100)
         
         return BasicReturn(success=True, data=totals)
     
@@ -969,6 +969,9 @@ class CoinFlowClient:
             old_balance = user.balance
             new_balance = old_balance + Decimal(money) / 100
             
+            bonus = (Decimal(money) * settings.BONUS_MULTIPLIER) / 100
+            user.bonus_balance += bonus
+            
             transaction.status=CoinFlowTransaction.StatusType.approved
             transaction.amount=Decimal(money) / 100
             transaction.pre_balance=old_balance
@@ -1003,6 +1006,7 @@ class CoinFlowClient:
             transaction.pre_balance=user.balance
             transaction.post_balance = user.balance
             transaction.save()
+            return BasicReturn(success=False, error=f'Payment was cancel due to {eventType}')
 
         elif eventType == "Card Payment Chargeback Opened":
             # Chargeback investigation initiated - reverse the payment
@@ -1019,6 +1023,9 @@ class CoinFlowClient:
                 return BasicReturn(success=False, error='No charged transaction found for chargeback')
             
             pre_balance = user.balance
+            bonus = transaction.amount * settings.BONUS_MULTIPLIER
+            pre_bonus = user.bonus_balance
+            user.bonus_balance = pre_bonus - min(pre_bonus, bonus)
             
             # Only proceed if user has sufficient balance
             if user.balance < transaction.amount:
@@ -1079,7 +1086,10 @@ class CoinFlowClient:
             if not transaction:
                 return BasicReturn(success=False, error='No disputed chargeback transaction found')
             # Update user balance
+            bonus = transaction.amount * settings.BONUS_MULTIPLIER
+            user.bonus_balance += Decimal(bonus)
             user.balance += abs(transaction.amount)
+            
             
             transaction.amount = Decimal(0)
             transaction.post_balance = transaction.pre_balance
@@ -1118,6 +1128,9 @@ class CoinFlowClient:
                 post_balance=user.balance - transaction.amount,
                 transaction_type=CoinFlowTransaction.TransactionType.withdraw
             )
+            
+            bonus = transaction.amount * settings.BONUS_MULTIPLIER
+            user.bonus_balance -= min(user.bonus_balance, Decimal(bonus))
             
             # Update user balance
             user.balance -= transaction.amount

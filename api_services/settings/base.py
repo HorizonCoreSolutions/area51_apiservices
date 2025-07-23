@@ -34,6 +34,11 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
+# ENTERPRICE Logic
+
+ENV_POSTFIX = get_env_var('ENV_POSTFIX')
+BONUS_MULTIPLIER:int = get_env_var('BONUS_MULTIPLIER', cast=int)
+
 # Application definition
 
 DEFAULT_APPS = [
@@ -67,7 +72,7 @@ CACHES = {
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient"
         },
-        "KEY_PREFIX": "example"
+        "KEY_PREFIX": get_env_var('ENV_POSTFIX', "AREAFO")
     }
 }
 
@@ -453,8 +458,6 @@ ACUITYTEC_API = get_env_var("ACUITYTEC_API")
 ACUITYTEC_MERCHANT_ID = get_env_var("ACUITYTEC_MERCHANT_ID")
 ACUITYTEC_PASSWORD = get_env_var("ACUITYTEC_PASSWORD")
 ACUITYTEC_EXCEPTIONS = str(get_env_var("ACUITYTEC_EXCEPTIONS", '')).split(',')
-
-ENV_POSTFIX = get_env_var('ENV_POSTFIX')
 
 # COIN FLOW
 COINFLOW_AUTH=get_env_var('COINFLOW_AUTH')
