@@ -805,6 +805,7 @@ class CoinFlowClient:
             return BasicReturn(success=False, data={"message" : "This service is down, please try again later. If the problem persist contact support.", "status" : 400})
             
         if res.status_code == 409:
+            user.save()
             logger.info(f"Duplication of ")
             return BasicReturn(success=True, data={"message" : "The withdraw has already been created.", "status" : 200})
         
@@ -830,6 +831,7 @@ class CoinFlowClient:
             return BasicReturn(success=False, error="This service is down, please try again later. If the problem persist contact support.")
             
         data = res.json()
+        user.save()
         
         signature = data.get("signature")
         if signature is None:
