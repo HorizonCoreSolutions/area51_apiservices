@@ -755,7 +755,9 @@ class CoinFlowClient:
     def create_transaction_withdraw(self, user: Users, data: dict, type: str, cents: int, ip: str) -> BasicReturn:
         
         user = Users.objects.select_for_update().get(id=user.id)
+        logger.debug(f"User: {user.id}-{user.username} initiated a transaction for ${round(cents/100, 2)}")
         if (user.balance * 100) < cents:
+            logger.info(f"User: {user.id}-{user.username} has balance: {user.balance} tried to remove {round(cents/100, 2)}")
             return BasicReturn(
                 success=False,
                 error="You have insufficient funds for this transaction.")
@@ -797,8 +799,13 @@ class CoinFlowClient:
                 "url"     : link,
                 "status"  : 451
             })
+
+        if res.status_code == 503:
+            logger.critical(f"{idpk} - for cents {cents} failed 3 times")
+            return BasicReturn(success=False, data={"message" : "This service is down, please try again later. If the problem persist contact support.", "status" : 400})
             
         if res.status_code == 409:
+            logger.info(f"Duplication of ")
             return BasicReturn(success=True, data={"message" : "The withdraw has already been created.", "status" : 200})
         
         if res.status_code == 400:
@@ -843,6 +850,7 @@ class CoinFlowClient:
             signature=signature,
             account_type= CoinFlowTransaction.AccountType.card if type.startswith("card") else CoinFlowTransaction.AccountType.bank
         )
+        logger.info(f"User {user.id}-{user.username} succesfully created a ${round(Decimal(cents) / 100, 2)} withdraw")
         return BasicReturn(success=True, data={})
 
     def get_totals(self, user: Users, cents: int) -> BasicReturn:
