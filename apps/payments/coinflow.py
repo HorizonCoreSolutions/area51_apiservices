@@ -491,7 +491,7 @@ class CoinFlowClient:
         
         payload = {
             "merchantId" : self.merchant_id,
-            "redirectLink" : f"{settings.PROJECT_DOMAIN.rstrip('/')}/profile",
+            "redirectLink" : self.config.redirection_url,
             "info" : customer_info,
             "email" : user.email,
             "country" : user.country_obj.code_cca2 if user.country_obj else 'US'
@@ -747,7 +747,7 @@ class CoinFlowClient:
         if key_data.error:
             return key_data
         
-        url = quote(self.config.redirection_url, safe="")
+        url = quote(f"{settings.PROJECT_DOMAIN.rstrip('/')}/wallet", safe="")
         data = f'https://sandbox.coinflow.cash/solana/withdraw/{self.merchant_id}?sessionKey={key_data.data}&bankAccountLinkRedirect={url}'
         return BasicReturn(success=True, data=data)
 
