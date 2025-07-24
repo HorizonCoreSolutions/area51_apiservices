@@ -7,13 +7,12 @@ from urllib.parse import quote
 from django.conf import settings
 from dataclasses import dataclass
 from django.db import transaction
-from apps.payments.models import CoinFlowTransaction
 from apps.users.utils import redis_client
-from apps.bets.models import Transactions
-from typing import Callable, Dict, Optional, Tuple
+from typing import Callable, Dict, Optional
 from apps.core.custom_types import BasicReturn
 from apps.core.file_logger import SimpleLogger
 from apps.acuitytec.acuitytec import AcuityTecAPI
+from apps.payments.models import CoinFlowTransaction
 from apps.acuitytec.models import DocumentTypeChoise
 from apps.users.models import (
     Users,
