@@ -7,8 +7,10 @@ import time
 
 import requests
 from apps.core.file_logger import SimpleLogger
+from django.db import transaction as db_transaction
 from apps.payments.models import CoinFlowTransaction
 from apps.payments.coinflow import CoinFlowEndpoints, CoinFlowClient
+from apps.users.models import Users
 
 logger = SimpleLogger(name='Coinflow', log_file='logs/coinflow.log').get_logger()
 
@@ -19,18 +21,27 @@ class Command(BaseCommand):
             logger.info(" Payout Update Service: STARTED ".center(40, "-"))
             endpoint = CoinFlowEndpoints(settings.COINFLOW_API_URL)
             while True:
-                print(f'Payout update started at {datetime.now()}')
+                logger.info(f'Payout update started at {datetime.now()}')
                 cf = CoinFlowClient()
                 updated = 0
                 one_week_ago = timezone.now() - timedelta(days=7)
                 transactions = CoinFlowTransaction.objects.filter(
                     transaction_type = CoinFlowTransaction.TransactionType.withdraw,
                     status = CoinFlowTransaction.StatusType.requested,)
-                print(f'Total transactions to update: {transactions.count()}')
+                logger.info(f'Total transactions to update: {transactions.count()}')
                 for transaction in transactions:
-                    res = requests.get(
-                        endpoint.get_withdrawal.format(signature=transaction.signature),
-                        headers=cf.build_payout_headers())
+                    user = transaction.user
+                    if user is None:
+                        logger.warning(f"Transaction {transaction.id} has no user.")
+                        continue
+                    try:
+                        res = requests.get(
+                            endpoint.get_withdrawal.format(signature=transaction.signature),
+                            headers=cf.build_payout_headers()
+                        )
+                    except Exception as req_err:
+                        logger.error(f"Request failed for transaction {transaction.id}: {req_err}")
+                        continue
                     if res.status_code not in {200, 404}:
                         logger.critical(f"Transaction get withdrawal give unespected code {res.status_code}, for signature:{transaction.signature}")
                         break
@@ -48,17 +59,23 @@ class Command(BaseCommand):
                         
                         if status == "completed":
                             transaction.status =  CoinFlowTransaction.StatusType.paid_out
+                            transaction.save()
                             updated+=1
                         if status == "failed":
-                            transaction.status =  CoinFlowTransaction.StatusType.failed
-                            updated+=1
-                        transaction.save()
+                            with db_transaction.atomic():
+                                user_locked = Users.objects.select_for_update().get(id=user.id)
+                                user_locked.balance += transaction.amount
+                                user_locked.save()
+                                
+                                transaction.status =  CoinFlowTransaction.StatusType.failed
+                                transaction.save()
+                                updated+=1
                     except:
                         logger.critical(f"Data for Signature couldn't be deserialized {transaction.signature}")
                 
-                print(f'Total transactions updated: {updated}')
-                print(f'Payout update ended at {datetime.now()}')
+                logger.info(f'Total transactions updated: {updated}')
+                logger.info(f'Payout update ended at {datetime.now()}')
                 print('Sleep for 4 hours')
                 time.sleep(60*60*4)      
         except Exception as e:
-            print(e)
+            logger.exception(e)
