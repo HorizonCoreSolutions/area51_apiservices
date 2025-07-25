@@ -1,7 +1,7 @@
 from django.apps import AppConfig
 from rest_framework.views import APIView, Response, status
 
-from apps.core.utils import save_request
+from apps.core.utils.network import save_request
 
 
 class APIViewContext(APIView):

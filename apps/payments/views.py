@@ -29,7 +29,7 @@ from apps.casino.utils import ErrorResponseMsg
 from apps.core.pagination import PageNumberPagination
 from apps.core.permissions import IsAgent, IsPlayer
 from apps.core.rest_any_permissions import AnyPermissions
-from apps.core.utils import get_user_ip_from_request, save_request
+from apps.core.utils.network import get_user_ip_from_request, save_request
 from apps.payments.coinflow import CoinFlowClient
 from apps.users.models import VERIFICATION_APPROVED, CoinflowAuthState, Users, Admin, BonusPercentage, PromoCodes
 from apps.casino.custom_pagination import CustomPagination
@@ -1790,4 +1790,8 @@ class CoinflowTransactionView(APIView):
             print(f"error in fetching data {e}.")
             response = {"msg": "Some Internal error.", "status_code": status.HTTP_500_INTERNAL_SERVER_ERROR}
             return Response(response)
-    
+
+
+class CoinflowCancelTransaction(APIView):
+    def post(self, request):
+        pass
