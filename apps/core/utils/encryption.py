@@ -1,6 +1,6 @@
 import base64
 import binascii
-from typing import Tuple
+from typing import Optional, Tuple
 from os import urandom
 from django.conf import settings
 from cryptography.hazmat.primitives import padding
@@ -19,13 +19,20 @@ def encrypt_combined(number: int, uid: str) -> str:
     ciphertext = encryptor.update(padded) + encryptor.finalize()
     return base64.urlsafe_b64encode(iv + ciphertext).decode()
 
-def decrypt_combined(encoded: str) -> Tuple[int, str]:
-    raw = base64.urlsafe_b64decode(encoded.encode())
-    iv, ciphertext = raw[:16], raw[16:]
-    cipher = Cipher(algorithms.AES(KEY), modes.CBC(iv), backend=default_backend())
-    decryptor = cipher.decryptor()
-    padded = decryptor.update(ciphertext) + decryptor.finalize()
-    unpadder = padding.PKCS7(128).unpadder()
-    text = unpadder.update(padded) + unpadder.finalize()
-    number_str, uuid_str = text.decode().split("::")
-    return int(number_str), uuid_str
+def decrypt_combined(encoded: str) -> Optional[Tuple[int, str]]:
+    try:
+        raw = base64.urlsafe_b64decode(encoded.encode())
+        if len(raw) < 17:
+            return None
+
+        iv, ciphertext = raw[:16], raw[16:]
+        cipher = Cipher(algorithms.AES(KEY), modes.CBC(iv), backend=default_backend())
+        decryptor = cipher.decryptor()
+        padded = decryptor.update(ciphertext) + decryptor.finalize()
+        unpadder = padding.PKCS7(128).unpadder()
+        text = unpadder.update(padded) + unpadder.finalize()
+
+        number_str, uuid_str = text.decode().split("::", 1)
+        return int(number_str), uuid_str
+    except (ValueError, binascii.Error, UnicodeDecodeError):
+        return None
