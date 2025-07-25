@@ -107,6 +107,7 @@ class CallbackAcuitytecView(APIView):
         # update user information
         if result == "verification.accepted":
             document = data.get('verification_data', {}).get('document', {})
+            document_number = data.get('additional_data', {}).get('document',{}).get('proof', {}).get("document_number", None)
             names = document.get('name', {})
             country = data.get('country', user.country_obj.code_cca2 if user.country_obj else (user.country if user.country else 'US'))
             first_name = names.get('first_name', user.first_name).strip().title()
@@ -118,6 +119,9 @@ class CallbackAcuitytecView(APIView):
             user.first_name = first_name
             user.last_name = last_name
             user.full_name = first_name + ' ' + last_name
+            
+            if document_number:
+                user.document_number = document_number
             
             if country:
                 qs = Country.objects.filter(code_cca2=country).first()
