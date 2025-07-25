@@ -14,7 +14,7 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 import datetime
 import os
 
-from apps.core.utils import get_env_var
+from apps.core.utils.enviroment import get_env_var
 
 from corsheaders.defaults import default_headers
 
