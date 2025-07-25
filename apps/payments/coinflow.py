@@ -448,17 +448,32 @@ class CoinFlowClient:
             if len(str(v)) < 2:
                 return BasicReturn(success=False, error=f'Please complete your profile {k} before taking any extra steps.')
 
-        try:
-            res = self._make_api_request(
-                'POST',
-                self.endpoints.register_user_attested,
-                json=payload,
-                headers=self._build_headers(auth_user_id=self._generate_user_id(user=user))
-                )
-            logger.info(res.text)
-        except CoinFlowAPIError as e:
-            pass
+        res = requests.post(
+            url=self.endpoints.register_user_attested,
+            json=payload,
+            headers=self._build_headers(auth_user_id=self._generate_user_id(user=user))
+            )
         
+        if res.status_code == 400:
+            try:
+                data = res.json()
+                details = data.get("details")
+                if details.startswith('KYC verification already exists'):
+                    user.coinflow_state = str(CoinflowAuthState.verified)
+                    user.save()
+                return BasicReturn(success=True)
+            except Exception:
+                logger.error(f'User: {user.id}-{user.username} had a 400 error unjsonable on attested coinflow')
+                return BasicReturn(success=False, error="This service is down, please try again later.")
+        
+        if res.status_code != 200:
+            logger.warning("User attested endpoint did not recived expected info.")
+            return BasicReturn(success=True)
+        else:
+            user.coinflow_state = str(CoinflowAuthState.verified)
+            user.save()
+            logger.info(f"User {user.id}-{user.username} attested info had status {res.status_code}")
+    
         return BasicReturn(success=True)
 
     def register_user(self, user: Users, ssn: int) -> BasicReturn:
