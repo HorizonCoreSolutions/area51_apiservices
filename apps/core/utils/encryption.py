@@ -1,4 +1,5 @@
 import base64
+import binascii
 from typing import Tuple
 from os import urandom
 from django.conf import settings
@@ -6,7 +7,7 @@ from cryptography.hazmat.primitives import padding
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.backends import default_backend
 
-KEY = base64.urlsafe_b64decode(settings.AES_SECRET_KEY)
+KEY = binascii.unhexlify(settings.AES_SECRET_KEY) 
 
 def encrypt_combined(number: int, uid: str) -> str:
     text = f"{number}::{uid}"
