@@ -7,6 +7,7 @@ from urllib.parse import quote
 from django.conf import settings
 from dataclasses import dataclass
 from django.db import transaction
+from apps.core.utils.encryption import decrypt_combined, encrypt_combined
 from apps.users.utils import redis_client
 from typing import Callable, Dict, Optional
 from apps.core.custom_types import BasicReturn
@@ -713,7 +714,7 @@ class CoinFlowClient:
                     error='Checkout URL not found in API response.'
                 )
 
-            CoinFlowTransaction.objects.create(
+            transaction = CoinFlowTransaction.objects.create(
                 user=user,
                 amount=Decimal(amount_cents) / 100,
                 currency='USD',
@@ -724,9 +725,11 @@ class CoinFlowClient:
             )
             
             logger.info(f"Checkout link created successfully for user {user.id}")
+            token = encrypt_combined(transaction.id, transaction_id)
+            
             return BasicReturn(
                 success=True,
-                data={**response_data, 'id' : transaction_id},
+                data={**response_data, "cancelationToken" : token},
                 message="Checkout link created successfully"
             )
             
@@ -853,6 +856,23 @@ class CoinFlowClient:
         )
         logger.info(f"User {user.id}-{user.username} succesfully created a ${round(Decimal(cents) / 100, 2)} withdraw")
         return BasicReturn(success=True, data={})
+
+    def cancel_delete_unused_transaction(self, user: Users, token: str) -> None:
+        data = decrypt_combined(token)
+        if data is None:
+            return
+        internal_id, transaction_id = data
+        obj = CoinFlowTransaction.objects.filter(
+            id=internal_id,
+            user=user,
+            transaction_id=transaction_id,
+        ).first()
+        if obj is None:
+            return
+        obj.status = CoinFlowTransaction.StatusType.cancelled
+        obj.is_deleted = True
+        obj.save()
+        return
 
     def get_totals(self, user: Users, cents: int) -> BasicReturn:
         
@@ -999,6 +1019,7 @@ class CoinFlowClient:
             transaction.amount=Decimal(money) / 100
             transaction.pre_balance=old_balance
             transaction.post_balance = new_balance
+            transaction.is_deleted = False
             
             user.balance = new_balance
             
