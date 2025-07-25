@@ -37,7 +37,7 @@ ALLOWED_HOSTS = ['*']
 # ENTERPRICE Logic
 
 ENV_POSTFIX = get_env_var('ENV_POSTFIX')
-AES_SECRET_KEY=get_env_var('AES_SECRET_KEY')
+AES_SECRET_KEY=get_env_var('AES_SECRET_KEY') # This should be random len(AES_SECRET_KEY) = 64
 BONUS_MULTIPLIER:int = get_env_var('BONUS_MULTIPLIER', cast=int)
 
 # Application definition
