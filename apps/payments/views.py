@@ -1731,7 +1731,7 @@ class CoinflowTransactionView(APIView):
         try:
             player = Users.objects.filter(id=request.user.id).first()
             if player:
-                transaction_filter_dict = {}
+                transaction_filter_dict = {"is_deleted" : False}
                 from_date = self.request.query_params.get("from_date", None)
                 to_date = self.request.query_params.get("to_date", None)
                 activity_type = self.request.query_params.get("activity_type", None)
@@ -1793,5 +1793,12 @@ class CoinflowTransactionView(APIView):
 
 
 class CoinflowCancelTransaction(APIView):
-    def post(self, request):
-        pass
+    permission_classes = (IsPlayer,)
+    def post(self, request) -> Response:
+        token = request.data.get("token")
+        if not token:
+            return Response({"message" : "Please use the token to cancel any of you checkouts"}, status=status.HTTP_400_BAD_REQUEST)
+        token = str(token)
+        cf = CoinFlowClient()
+        cf.cancel_delete_unused_transaction(request.user, token)
+        return Response({"message" : "ok"}, status=status.HTTP_200_OK)
