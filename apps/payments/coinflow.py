@@ -418,9 +418,11 @@ class CoinFlowClient:
                 error='An unexpected error occurred during registration. Please try again.'
             )
 
-    def register_user_attested(self, user: Users, ssn: str) -> BasicReturn:
+    def register_user_attested(self, user: Users) -> BasicReturn:
         if user.document_verified != VERIFICATION_APPROVED:
             return BasicReturn(success=False, error='User must be registered on Acuitytec.')
+        if user.coinflow_state == CoinflowAuthState.verified:
+            return BasicReturn(success=True)
         
         if user.dob:
             year, month, day = user.dob.split('-')
@@ -435,7 +437,7 @@ class CoinFlowClient:
             "physicalAddress": user.complete_address,
             "city": user.city,
             "state": user.state,
-            "ssn": ssn,
+            "ssn": ("0000" + str(user.document_number if user.document_number else user.id))[-4:],
             "dob": formatted_date_str,
             "country": user.country_obj.code_cca2 if user.country_obj else 'US',
             "zip": str(user.zip_code)
