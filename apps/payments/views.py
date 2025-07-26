@@ -1524,14 +1524,6 @@ class GetCoinFlowLink(APIView):
         # if country != 'US':
         #     return Response(data={'message' : 'Please update your information. We only accept US documents.'}, status=status.HTTP_400_BAD_REQUEST)
         
-        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-
-        if x_forwarded_for:
-            print(x_forwarded_for)
-            ip = x_forwarded_for.split(',')[0].strip()  # client’s real IP
-        else:
-            ip = request.META.get('REMOTE_ADDR')
-        
         cf = CoinFlowClient()
         
         # data = cf.register_user_with_document(
@@ -1604,6 +1596,9 @@ class GetBankRegistrationLink(APIView):
     def post(self, request):
         
         cf = CoinFlowClient()
+        registration_result = cf.register_user_attested(request.user)
+        if registration_result.error:
+            return Response(data={'message' : registration_result.error}, status=status.HTTP_400_BAD_REQUEST)  
         data = cf.create_bank_registration_link(user=request.user)
         if data.error:
             return Response(data={'message' : data.error}, status=status.HTTP_400_BAD_REQUEST)        
@@ -1637,6 +1632,9 @@ class CoinflowBanks(APIView):
     permission_class = [IsPlayer]
     def post(self, request):
         cf = CoinFlowClient()
+        registration_result = cf.register_user_attested(request.user)
+        if registration_result.error:
+            return Response(data={'message' : registration_result.error}, status=status.HTTP_400_BAD_REQUEST)  
         data = cf.get_cards_banks(request.user)
         if data.error:
             return Response(data={'message' : data.error}, status=status.HTTP_400_BAD_REQUEST)        
@@ -1682,6 +1680,9 @@ class CoinflowWithdraws(APIView):
         if not user.is_authenticated:
             return Response(data={'message' : 'Please use and available card, For security reasons once started a transaction this id only last 30 min'}, status=status.HTTP_400_BAD_REQUEST)
         
+        registration_result = cf.register_user_attested(user)
+        if registration_result.error:
+            return Response(data={'message' : registration_result.error}, status=status.HTTP_400_BAD_REQUEST)  
         ip = get_user_ip_from_request(request)
         result = cf.create_transaction_withdraw(user, data, prefix, cents, ip)
         

@@ -459,8 +459,9 @@ class CoinFlowClient:
         if res.status_code == 400:
             try:
                 data = res.json()
-                details = data.get("details")
+                details = data.get("details", "")
                 if details.startswith('KYC verification already exists'):
+                    logger.warning(f"Verification already existed for user {user.id}-{user.username}.")
                     user.coinflow_state = str(CoinflowAuthState.verified)
                     user.save()
                 return BasicReturn(success=True)
@@ -470,7 +471,7 @@ class CoinFlowClient:
         
         if res.status_code != 200:
             logger.warning("User attested endpoint did not recived expected info.")
-            return BasicReturn(success=True)
+            return BasicReturn(success=False, error="This service is down, please try again later.")
         else:
             user.coinflow_state = str(CoinflowAuthState.verified)
             user.save()
@@ -742,7 +743,7 @@ class CoinFlowClient:
             )
             
             logger.info(f"Checkout link created successfully for user {user.id}")
-            token = encrypt_combined(transaction.id, transaction_id)
+            token = encrypt_combined(transaction.id, transaction_id) # type: ignore
             
             return BasicReturn(
                 success=True,
