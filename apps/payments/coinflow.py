@@ -1329,7 +1329,7 @@ class CoinFlowClient:
             transaction.save()
             return BasicReturn(success=True)
         elif eventType == "Withdraw Failure":
-            user_locked = Users.objects.select_for_update().get(id=transaction.user.id)
+            user_locked = Users.objects.select_for_update().get(id=transaction.user.id) #type: ignore
             user_locked.balance += transaction.amount
             user_locked.save()
             
