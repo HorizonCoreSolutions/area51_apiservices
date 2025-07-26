@@ -12,7 +12,8 @@ class Command(BaseCommand):
                 print(f'{user.username.ljust(20, " ")}: is already on country obj -> {user.country_obj.name}')
                 continue
             old = user.country
-            user.country_obj = Country.objects.get(code_cca2=user.country) if Country.objects.get(code_cca2=user.country)  else usa
+            obj_country = Country.objects.filter(code_cca2=user.country).first()
+            user.country_obj = obj_country or usa
             user.country = user.country_obj.code_cca2
             user.save()
 
