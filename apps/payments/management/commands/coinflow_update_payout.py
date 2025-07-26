@@ -68,6 +68,8 @@ class Command(BaseCommand):
                                 user_locked.save()
                                 
                                 transaction.status =  CoinFlowTransaction.StatusType.failed
+                                transaction.pre_balance = user_locked.balance
+                                transaction.post_balance= user_locked.balance
                                 transaction.save()
                                 updated+=1
                     except:

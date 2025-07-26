@@ -1255,10 +1255,10 @@ class CoinFlowClient:
         if eventType is None:
             return BasicReturn(success=False, error='The data.eventype is none')
         eventType = str(eventType)
-        blockchain = l_data.get('blockchain', {}).get('transaction_id')
+        blockchain = l_data.get('blockchain')
         if blockchain is None:
-            logger.critical('The webhook is not retorning the transacction id, no webhook handling can be done')
-            return BasicReturn(success=False, error='transacction if is not returned on the webhook')
+            logger.critical('The webhook is not returning the user id, no webhook handling can be done')
+            return BasicReturn(success=False, error='user id is not present on the webhook')
         if blockchain != 'user':
             return BasicReturn(success=False, error='This edge case is not registered.')
         
@@ -1280,14 +1280,66 @@ class CoinFlowClient:
             user.coinflow_state = str(CoinflowAuthState.verified)
         elif eventType == 'KYC Failure':
             user.coinflow_state = str(CoinflowAuthState.pending)
-        elif eventType == 'KYC Created':
+        elif eventType == 'KYC Created' and user.coinflow_state == str(CoinflowAuthState.pending):
             user.coinflow_state = str(CoinflowAuthState.created)
             
         user.save()
         return BasicReturn(success=True)
 
+    @transaction.atomic
     def handle_withdraw(self, data) -> BasicReturn:
-        return BasicReturn(success=True                                                                                                                            )
+        l_data = data.get('data', None)
+        if l_data is None:
+            return BasicReturn(success=False, error='The data is none')
+        eventType = data.get('eventType', None)
+        if eventType is None:
+            return BasicReturn(success=False, error='The data.eventype is none')
+        eventType = str(eventType)
+        signature = l_data.get('signature')
+        if signature is None:
+            logger.critical('The webhook is not returning the signature, no webhook handling can be done')
+            return BasicReturn(success=False, error='signature is not present on the webhook')
+        
+        STATUS_PROCESSING = [
+            CoinFlowTransaction.StatusType.requested,
+            CoinFlowTransaction.StatusType.pending,
+        ]
+        
+        transaction_qs = CoinFlowTransaction.objects.filter(
+            transaction_type=CoinFlowTransaction.TransactionType.withdraw,
+            status__in=STATUS_PROCESSING,
+            signature=signature,
+        ).order_by('-created')
+        if not transaction_qs.exists():
+            return BasicReturn(success=False, error='Withdraw was not registered')
+        
+        transaction = transaction_qs.first()
+        if not transaction:
+            return BasicReturn(success=False, error='Deduplication this Withdraw was already claimed')
+        
+        if eventType == "Withdraw Pending":
+            if transaction.status == CoinFlowTransaction.StatusType.pending:
+                return BasicReturn(success=False, error='Deduplication this Withdraw was already claimed')
+            transaction.status = CoinFlowTransaction.StatusType.pending
+            transaction.save()
+            return BasicReturn(success=True)
+            
+        elif eventType == "Withdraw Success":
+            transaction.status = CoinFlowTransaction.StatusType.paid_out
+            transaction.save()
+            return BasicReturn(success=True)
+        elif eventType == "Withdraw Failure":
+            user_locked = Users.objects.select_for_update().get(id=transaction.user.id)
+            user_locked.balance += transaction.amount
+            user_locked.save()
+            
+            transaction.status =  CoinFlowTransaction.StatusType.failed
+            transaction.pre_balance = user_locked.balance
+            transaction.post_balance= user_locked.balance
+            transaction.save()
+            return BasicReturn(success=True)
+        
+        return BasicReturn(success=True)
 
     def handle_webhook(self, data, authorization: str) -> BasicReturn:
         
@@ -1297,7 +1349,7 @@ class CoinFlowClient:
         web_hook_options: Dict[str, Callable[..., BasicReturn]] = {
             'KYC' : lambda: self.handle_kyc(data=data),
             'Purchase' : lambda: self.handle_purchases(data=data),
-            'Withdraw' : lambda: BasicReturn(success=True),
+            'Withdraw' : lambda: self.handle_withdraw(data=data),
         }
         
         k = data.get('category', 'Purchase')
