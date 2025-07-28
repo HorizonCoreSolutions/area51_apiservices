@@ -679,7 +679,7 @@ class CoinFlowClient:
                     "cents": amount_cents
                 },
                 "email": user.email,
-                # "origins" : self.origins,
+                "origins" : self.origins,
                 "webhookInfo": {'transaction_id' : transaction_id},
                 # "blockchain": 'eth',
                 "threeDsChallengePreference": threeds_preference,
