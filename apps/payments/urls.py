@@ -59,6 +59,6 @@ urlpatterns = [
     path(r"coinflow-withdraws/", CoinflowWithdraws.as_view(), name="coinflow-withdraws"),
     path(r"coinflow-registration/", CoinflowRegisterUserView.as_view(), name="coinflow-registration"),
     path(r"coinflow-transactions", CoinflowTransactionView.as_view(), name="coinflow-transactions"),
-    path(r"coinflow-cancel-transactions", CoinflowCancelTransaction.as_view(), name="coinflow-transactions"),
+    path(r"coinflow-cancel-transactions/", CoinflowCancelTransaction.as_view(), name="coinflow-transactions"),
 
 ]
