@@ -52,6 +52,7 @@ class AcuityTecAPI:
     
     def register_customer(self,
                          reg_ip_address: str,
+                         check_info: bool=False,
                          **optional_params) -> Dict[str, Any]:
         """
         Register a customer and get risk assessment
@@ -68,7 +69,24 @@ class AcuityTecAPI:
             Dictionary containing the API response
         """
         customer_info = self.create_customer_info()
-        
+        if check_info:
+            for k, v in customer_info.items():
+                if v is None:
+                    print(f"User did not have their profile compleated. {k}")
+                    return {
+                        'error' : True,
+                        "message": f"Please complete your profile ({self.normalize(k)}) before taking any extra steps.",
+                        "status": -1
+                    }
+                    
+                if len(str(v)) < 2:
+                    print(f"{k} value is less than 2 characters, {v}")
+                    return {
+                        'error' : True,
+                        "message": "Please complete your profile {k} before taking any extra steps.",
+                        "status": -1
+                    }
+                
         # Build the request payload
         payload = {
             # Credentials
@@ -186,6 +204,14 @@ class AcuityTecAPI:
                 customer_info[field] = optional_info[field]
         
         return customer_info
+    
+    def normalize(self, k: str):
+        {
+            'province': 'state',
+            'address1': 'complete_address',
+            'postal_code': 'zip_code',
+            'phone1': 'phone_number',
+        }.get(k, k).replace('_', ' ')
 
     def getLink(self, document, language):
         try:

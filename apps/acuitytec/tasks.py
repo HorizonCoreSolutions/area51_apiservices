@@ -69,7 +69,7 @@ def register_or_update_user(self, ip, schedule, user_id):
 
     except Exception as exc:
         retry_count = self.request.retries
-        if retry_count > 5:
+        if retry_count > 3:
             return
         delay = RETRY_DELAYS[retry_count] if retry_count < len(RETRY_DELAYS) else RETRY_DELAYS[-1]
         raise self.retry(exc=exc, countdown=delay)
