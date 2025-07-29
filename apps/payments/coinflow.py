@@ -885,6 +885,7 @@ class CoinFlowClient:
         internal_id, transaction_id = data
         obj = CoinFlowTransaction.objects.filter(
             id=internal_id,
+            status=CoinFlowTransaction.StatusType.requested,
             user=user,
             transaction_id=transaction_id,
         ).first()
