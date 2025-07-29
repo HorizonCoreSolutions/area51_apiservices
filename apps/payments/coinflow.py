@@ -154,7 +154,7 @@ class CoinFlowClient:
                 redirection_url=redirection_link
             )
         
-        self.origins = f'["{settings.PROJECT_DOMAIN}"]'
+        self.origins = [settings.PROJECT_DOMAIN]
         self.endpoints = CoinFlowEndpoints(url=self.config.api_url)
         self._merchant_id = None
 
