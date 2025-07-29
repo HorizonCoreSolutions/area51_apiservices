@@ -445,9 +445,11 @@ class CoinFlowClient:
         
         for k, v in payload.items():
             if v is None:
+                logger.info(f"User did not have their profile compleated. {k}")
                 return BasicReturn(success=False, error='Please complete your profile before taking any extra steps.')
             
             if len(str(v)) < 2:
+                logger.info(f"{k} value is less than 2 characters, {v}")
                 return BasicReturn(success=False, error=f'Please complete your profile {k} before taking any extra steps.')
 
         res = requests.post(
