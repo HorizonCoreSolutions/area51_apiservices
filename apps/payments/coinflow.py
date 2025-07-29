@@ -770,7 +770,8 @@ class CoinFlowClient:
             return key_data
         
         url = quote(f"{settings.PROJECT_DOMAIN.rstrip('/')}/wallet", safe="")
-        data = f'https://sandbox.coinflow.cash/solana/withdraw/{self.merchant_id}?sessionKey={key_data.data}&bankAccountLinkRedirect={url}'
+        env = 'sandbox.' if settings.ENV_POSTFIX == "BETA" else ''
+        data = f'https://{env}coinflow.cash/solana/withdraw/{self.merchant_id}?sessionKey={key_data.data}&bankAccountLinkRedirect={url}'
         return BasicReturn(success=True, data=data)
 
     @transaction.atomic
@@ -890,7 +891,7 @@ class CoinFlowClient:
         if obj is None:
             return
         obj.status = CoinFlowTransaction.StatusType.cancelled
-        obj.is_deleted = True
+        obj.is_deleted = False
         obj.save()
         return
 
