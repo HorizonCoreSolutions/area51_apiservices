@@ -213,7 +213,7 @@ class AcuityTecAPI:
             'phone1': 'phone_number',
         }.get(k, k).replace('_', ' ')
 
-    def getLink(self, document, language):
+    def getLink(self, language):
         document = ("0000" + str(self.user.id))[-4:]
         try:
             qs = VerificationItem.objects.filter(
