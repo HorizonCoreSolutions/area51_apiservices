@@ -214,6 +214,7 @@ class AcuityTecAPI:
         }.get(k, k).replace('_', ' ')
 
     def getLink(self, document, language):
+        document = ("0000" + str(self.user.id))[-4:]
         try:
             qs = VerificationItem.objects.filter(
                 user=self.user,
