@@ -50,12 +50,14 @@ class GetVerificationLinkView(APIView):
                     return Response({"message": res.get("message", "This service is down. Please try again in a few minuts.")}, status.HTTP_400_BAD_REQUEST)
                 else:
                     return Response({"message": "This service is down. Please try again in a few minuts."}, status.HTTP_400_BAD_REQUEST)
-
+            user.refresh_from_db()
+            if user.document_verified == VERIFICATION_APPROVED:
+                return Response({'url' : "", 'is_verified': True}, status=status.HTTP_200_OK)
             link = ac.getLink(language=language)
             if link.startswith('error'):
                 return Response({"message": link[5:]}, status.HTTP_400_BAD_REQUEST)
 
-            return Response({'url' : link}, status=status.HTTP_200_OK)
+            return Response({'url' : link, 'is_verified': False}, status=status.HTTP_200_OK)
         except Exception as e:
             print(e)
             return Response({"message": "Something Went Wrong"}, status.HTTP_500_INTERNAL_SERVER_ERROR)
