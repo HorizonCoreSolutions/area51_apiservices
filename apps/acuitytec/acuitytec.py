@@ -187,7 +187,7 @@ class AcuityTecAPI:
             'city' : self.user.city,
             'address1' : self.user.complete_address,
             'postal_code' : self.user.zip_code,
-            'phone1' : self.user.phone_number
+            'phone1' : (self.user.country_code if self.user.country_code else '') + str(self.user.phone_number if self.user.phone_number else '')
         }
         
         
