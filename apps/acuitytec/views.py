@@ -21,11 +21,10 @@ class GetVerificationLinkView(APIView):
 
             user = Users.objects.get(id=request.user.id)
 
-            document = request.data.get('document')
             language = request.data.get('language')
 
-            if document is None or language is None:
-                return Response({"message": "language or document must not be None"}, status.HTTP_400_BAD_REQUEST)
+            if language is None:
+                return Response({"message": "language must not be None"}, status.HTTP_400_BAD_REQUEST)
 
             if not language in ('es', 'en', 'fr'):
                 return Response({"message": "language must be one of the following us, es, fr"}, status.HTTP_400_BAD_REQUEST)
@@ -52,7 +51,7 @@ class GetVerificationLinkView(APIView):
                 else:
                     return Response({"message": "This service is down. Please try again in a few minuts."}, status.HTTP_400_BAD_REQUEST)
 
-            link = ac.getLink(document=document, language=language)
+            link = ac.getLink(language=language)
             if link.startswith('error'):
                 return Response({"message": link[5:]}, status.HTTP_400_BAD_REQUEST)
 
