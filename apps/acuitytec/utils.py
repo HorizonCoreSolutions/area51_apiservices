@@ -19,7 +19,7 @@ def generate_qr_code_url(data: str, size: str = "150x150") -> str:
 
 
 
-def cache_ips(func):
+def cache_ips_geo(func):
     """This is a wrapper to cache the is_geo_verified 
     Args:
         func (is_geo_verified): 
