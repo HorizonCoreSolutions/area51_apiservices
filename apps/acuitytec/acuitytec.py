@@ -206,17 +206,6 @@ class AcuityTecAPI:
         
         return customer_info
 
-    @classmethod
-    def create_cache_ips(cls, func):
-        def wrapper(self, *args, **kwargs) -> Dict[str, Union[str, int]]:
-            print("this has been wrapper")
-            
-            return {
-                'error' : False,
-                "message": "OK",
-                "status": 0
-            }
-    
     def normalize(self, k: str):
         {
             'province': 'state',
@@ -334,6 +323,17 @@ class AcuityTecAPI:
             return BasicReturn(success=False, error=f"Unspected error traceback id: {trace_back}", data=e)
 
     @staticmethod
+    def cache_ips(func):
+        def wrapper(self, *args, **kwargs) -> Dict[str, Union[str, int]]:
+            print("this has been wrapper")
+            
+            return {
+                'error' : False,
+                "message": "OK",
+                "status": 0
+            }
+    
+    @staticmethod
     def parse_user_to_geo(user: Users, ip: str):
         
         def sync_names(first_name=None, last_name=None, full_name=None):
@@ -375,8 +375,8 @@ class AcuityTecAPI:
             'ip' : ip
         }
     
+    @cache_ips
     @staticmethod
-    @create_cache_ips
     def is_geo_verified(first_name: str, last_name: str, user_name: str, email: str, city: str, id: str, cca2: str, ip: str) -> Dict[str, Union[str, int]]:
         
         endpoint = f"{settings.ACUITYTEC_API.rstrip('/')}/customerregistration"
