@@ -540,19 +540,19 @@ class AcuityTecAPI:
             ip = request.META.get('REMOTE_ADDR')
             data = [ip]
         
-        file = "acuitytec_request_log.txt"
-        ts = str(time.time())
-        from pprint import pformat
-        data = pformat(data)
+        # file = "acuitytec_request_log.txt"
+        # ts = str(time.time())
+        # from pprint import pformat
+        # data = pformat(data)
 
-        entry = (
-            f"\n--- {ts} ---\n"
-            f"URL: USER IP \n"
-            f"DATA:\n{data}\n"
-        )
+        # entry = (
+        #     f"\n--- {ts} ---\n"
+        #     f"URL: USER IP \n"
+        #     f"DATA:\n{data}\n"
+        # )
 
-        with open(file, 'a') as f:
-            f.write(entry)
+        # with open(file, 'a') as f:
+        #     f.write(entry)
             
         return ip
     
