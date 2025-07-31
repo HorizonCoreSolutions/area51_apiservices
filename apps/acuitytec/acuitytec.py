@@ -190,8 +190,6 @@ class AcuityTecAPI:
             'phone1' : (self.user.country_code if self.user.country_code else '') + str(self.user.phone_number if self.user.phone_number else '')
         }
         
-        
-        
         # Add optional fields if provided
         optional_fields = [
             'address2', 'city', 'province', 'postal_code',
@@ -199,11 +197,25 @@ class AcuityTecAPI:
             'id_value', 'gender', 'marital_status'
         ]
         
+        if customer_info['phone1'] == '' or len(customer_info['phone1']) < 4:
+            del customer_info['phone1']
+        
         for field in optional_fields:
             if field in optional_info:
                 customer_info[field] = optional_info[field]
         
         return customer_info
+
+    @classmethod
+    def create_cache_ips(cls, func):
+        def wrapper(self, *args, **kwargs) -> Dict[str, Union[str, int]]:
+            print("this has been wrapper")
+            
+            return {
+                'error' : False,
+                "message": "OK",
+                "status": 0
+            }
     
     def normalize(self, k: str):
         {
@@ -362,8 +374,9 @@ class AcuityTecAPI:
             'cca2' : user.country_obj.code_cca2 if user.country_obj else user.country,
             'ip' : ip
         }
-        
+    
     @staticmethod
+    @create_cache_ips
     def is_geo_verified(first_name: str, last_name: str, user_name: str, email: str, city: str, id: str, cca2: str, ip: str) -> Dict[str, Union[str, int]]:
         
         endpoint = f"{settings.ACUITYTEC_API.rstrip('/')}/customerregistration"
@@ -427,11 +440,14 @@ class AcuityTecAPI:
             data = response.json()
 
             try:
-                risk = float(data.get('score', 0.0))
+                risk = float(data.get('score', 0.1))
             except (ValueError, TypeError):
-                risk = 0.0
+                risk = 0.1
                 
             rules: Optional[list[Dict[str, str]]] = data.get('rules_triggered')
+            
+            if risk == 0:
+                rules = rules or []
         
             if data is None or rules is None:
                 return {
@@ -489,6 +505,7 @@ class AcuityTecAPI:
                         return {
                             "error" : False,
                             "message": message,
+                            "rule" : name,
                             "status": -1
                         }
                 
@@ -496,12 +513,14 @@ class AcuityTecAPI:
                 return {
                         "error" : False,
                         "message": 'Login has been categorized as risky',
+                        "rule" : "risk score > 90",
                         "status": -1
                     }
 
             return {
                 'error' : False,
                 "message": "OK",
+                "rule" : "",
                 "status": 0
             }
             
