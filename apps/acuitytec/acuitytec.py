@@ -10,7 +10,7 @@ import requests
 from io import BytesIO
 from datetime import datetime, timedelta
 from typing import Dict, Any, Optional, Tuple, Union
-from apps.acuitytec.models import AcuitytecUser, VerificationStateChoise, VerificationItem
+from apps.acuitytec.models import AcuitytecUser, IPLog, VerificationStateChoise, VerificationItem
 from apps.core.custom_types import BasicReturn
 from apps.users.models import VERIFICATION_APPROVED, VERIFICATION_PENDING, VERIFICATION_PROCESSING, Users
 from django.conf import settings
@@ -324,14 +324,33 @@ class AcuityTecAPI:
 
     @staticmethod
     def cache_ips(func):
+        """This is a wrapper to cache the is_geo_verified 
+        Args:
+            func (is_geo_verified): 
+        """
         def wrapper(*args, **kwargs) -> Dict[str, Union[str, int]]:
-            print("this has been wrapper")
+            ip = kwargs.get('ip')
             
-            return {
-                'error' : False,
-                "message": "OK",
-                "status": 0
-            }
+            if not ip:
+                raise ValueError("ip must be provided as a keyword argument: ip='1.1.1.1'")
+            
+            ip_obj = IPLog.objects.filter(ip=ip).first()
+            
+            if ip_obj is None:
+                res = func(*args, **kwargs)
+                status = res.get('status')
+                if status not in {0, -1}:
+                    return res
+                ip_obj = IPLog.use_or_create(
+                    ip=ip,
+                    defaults={
+                        "status": status,
+                        "error_name" : res.pop("rule"),
+                        "display_message" : res.get('message')
+                    }
+                )
+            return ip_obj.parse_geo()
+        
         return wrapper
     
     @staticmethod
@@ -376,7 +395,7 @@ class AcuityTecAPI:
             'ip' : ip
         }
     
-    @cache_ips.__func__
+    @cache_ips.__func__ #type: ignore
     @staticmethod
     def is_geo_verified(first_name: str, last_name: str, user_name: str, email: str, city: str, id: str, cca2: str, ip: str) -> Dict[str, Union[str, int]]:
         
