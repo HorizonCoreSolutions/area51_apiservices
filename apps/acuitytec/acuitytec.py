@@ -324,7 +324,7 @@ class AcuityTecAPI:
 
     @staticmethod
     def cache_ips(func):
-        def wrapper(self, *args, **kwargs) -> Dict[str, Union[str, int]]:
+        def wrapper(*args, **kwargs) -> Dict[str, Union[str, int]]:
             print("this has been wrapper")
             
             return {
@@ -332,6 +332,7 @@ class AcuityTecAPI:
                 "message": "OK",
                 "status": 0
             }
+        return wrapper
     
     @staticmethod
     def parse_user_to_geo(user: Users, ip: str):
@@ -375,7 +376,7 @@ class AcuityTecAPI:
             'ip' : ip
         }
     
-    @cache_ips
+    @cache_ips.__func__
     @staticmethod
     def is_geo_verified(first_name: str, last_name: str, user_name: str, email: str, city: str, id: str, cca2: str, ip: str) -> Dict[str, Union[str, int]]:
         
