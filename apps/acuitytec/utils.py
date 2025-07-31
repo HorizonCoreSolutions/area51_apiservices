@@ -1,3 +1,4 @@
+from functools import wraps
 from typing import Dict, Union
 from urllib.parse import quote_plus
 
@@ -18,23 +19,31 @@ def generate_qr_code_url(data: str, size: str = "150x150") -> str:
     return f"https://api.qrserver.com/v1/create-qr-code/?size={size}&data={encoded_data}"
 
 
-
-def cache_ips_geo(func):
-    """This is a wrapper to cache the is_geo_verified 
+def cache_ips_geo(logger):
+    """This is a logger wrapper register the cache on is_geo_verified 
     Args:
-        func (is_geo_verified): 
+        logger (any type of logger compatible with logger): 
     """
-    def wrapper(*args, **kwargs) -> Dict[str, Union[str, int]]:
-        ip = kwargs.get('ip')
-        if not ip:
-            raise ValueError("ip must be provided as a keyword argument: ip='1.1.1.1'")
-        
-        ip_obj = IPLog.objects.filter(ip=ip).first()
-        
-        if ip_obj is None:
+    def decorator(func):
+        """This is a wrapper to cache the is_geo_verified 
+        Args:
+            func (is_geo_verified): 
+        """
+        @wraps(func)
+        def wrapper(*args, **kwargs) -> Dict[str, Union[str, int]]:
+            ip = kwargs.get('ip')
+            if not ip:
+                raise ValueError("ip must be provided as a keyword argument: ip='1.1.1.1'")
+            
+            ip_obj = IPLog.objects.filter(ip=ip).first()
+            
+            if ip_obj:
+                logger.info(f"Cache hit for {ip}")
+                return ip_obj.parse_geo()
             res = func(*args, **kwargs)
             status = res.get('status')
             if status not in {0, -1}:
+                logger.warning(res.get("message"))
                 return res
             ip_obj = IPLog.use_or_create(
                 ip=ip,
@@ -44,6 +53,7 @@ def cache_ips_geo(func):
                     "display_message" : res.get('message')
                 }
             )
-        return ip_obj.parse_geo()
-    
-    return wrapper
+            logger.info(f"Cache created for {ip}")
+            return ip_obj.parse_geo()
+        return wrapper
+    return decorator

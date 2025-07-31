@@ -13,11 +13,13 @@ from typing import Dict, Any, Optional, Union
 from apps.acuitytec.models import VerificationStateChoise, VerificationItem
 from apps.acuitytec.utils import cache_ips_geo
 from apps.core.custom_types import BasicReturn
+from apps.core.file_logger import SimpleLogger
 from apps.users.models import VERIFICATION_APPROVED, VERIFICATION_PENDING, VERIFICATION_PROCESSING, Users
 from django.conf import settings
 from django.utils import timezone
 from urllib.parse import urlparse
 
+logger = SimpleLogger(name='Acuitytec', log_file='logs/acuitytec.log').get_logger()
 
 class AcuityTecAPI:
     """
@@ -366,7 +368,7 @@ class AcuityTecAPI:
         }
     
     @staticmethod
-    @cache_ips_geo
+    @cache_ips_geo(logger)
     def is_geo_verified(first_name: str, last_name: str, user_name: str, email: str, city: str, id: str, cca2: str, ip: str) -> Dict[str, Union[str, int]]:
         
         endpoint = f"{settings.ACUITYTEC_API.rstrip('/')}/customerregistration"
