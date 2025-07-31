@@ -8,10 +8,10 @@ import base64
 from uuid import uuid4
 import requests
 from io import BytesIO
-from datetime import datetime, timedelta
-from typing import Dict, Any, Optional, Tuple, Union
-from apps.acuitytec.models import AcuitytecUser, IPLog, VerificationStateChoise, VerificationItem
-from apps.acuitytec.utils import cache_ips
+from datetime import timedelta
+from typing import Dict, Any, Optional, Union
+from apps.acuitytec.models import VerificationStateChoise, VerificationItem
+from apps.acuitytec.utils import cache_ips_geo
 from apps.core.custom_types import BasicReturn
 from apps.users.models import VERIFICATION_APPROVED, VERIFICATION_PENDING, VERIFICATION_PROCESSING, Users
 from django.conf import settings
@@ -365,8 +365,8 @@ class AcuityTecAPI:
             'ip' : ip
         }
     
-    @cache_ips
     @staticmethod
+    @cache_ips_geo
     def is_geo_verified(first_name: str, last_name: str, user_name: str, email: str, city: str, id: str, cca2: str, ip: str) -> Dict[str, Union[str, int]]:
         
         endpoint = f"{settings.ACUITYTEC_API.rstrip('/')}/customerregistration"
