@@ -1,3 +1,4 @@
+from typing import Dict, Optional, Union
 import uuid
 from django.db import models
 from django.utils import timezone
@@ -56,3 +57,29 @@ class VerificationItem(AbstractBaseModel):
         null=True,
         blank=True,
     )
+
+
+class IPLog(AbstractBaseModel):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    ip = models.GenericIPAddressField(unique=True)
+    status = models.IntegerField()
+    error_name = models.CharField(max_length=255)
+    display_message = models.TextField()
+
+    def __str__(self):
+        return f"{self.ip} ({self.error_name})"
+    
+    def parse_geo(self) -> Dict[str, Union[str, int]]:
+        return {
+            "error" : False,
+            "message": self.display_message,
+            "status": self.status
+        }
+    
+    @classmethod
+    def use_or_create(cls, ip: str, defaults: Dict[str, Union[str, int]]) -> "IPLog":
+        obj, _ = cls.objects.get_or_create(
+            ip=ip,
+            defaults=defaults
+        )
+        return obj
