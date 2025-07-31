@@ -1537,25 +1537,25 @@ class GetCoinFlowLink(APIView):
         cents = request.data.get('cents', None)
         
         if cents is None:
-            return Response(data={'message' : 'You must sent a cent amount.'}, status=status.HTTP_400_BAD_REQUEST)
-        
+            return Response(data={'message': 'You must sent a cent amount.'}, status=status.HTTP_400_BAD_REQUEST)
+
         if not str(cents).isdigit():
-            return Response(data={'message' : 'Cents must be a number.'}, status=status.HTTP_400_BAD_REQUEST)
-        
+            return Response(data={'message': 'Cents must be a number.'}, status=status.HTTP_400_BAD_REQUEST)
+
         cents = int(cents)
-        
+
         if cents < 500 or cents > 100000:
-            return Response(data={'message' : 'Cents must be higher than 500 and lower than 100000.'}, status=status.HTTP_400_BAD_REQUEST)
-            
+            return Response(data={'message': 'Cents must be higher than 500 and lower than 100000.'}, status=status.HTTP_400_BAD_REQUEST)
+
         res = cf.register_user_attested(user=user)
-        if res.error:
-            return Response(data={"message" : "Please compleate any other verification step left."}, status=status.HTTP_400_BAD_REQUEST)
+        # if res.error:
+        #     return Response(data={"message" : "Please compleate any other verification step left."}, status=status.HTTP_400_BAD_REQUEST)
         link = cf.create_checkout_link(user=user, amount_cents=cents)
         if link.error:
-            return Response(data={'message' : link.error}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(data={'message': link.error}, status=status.HTTP_400_BAD_REQUEST)
         
         if link.data is None:
-            return Response(data={'message' : 'there is no id'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(data={'message': 'there is no id'}, status=status.HTTP_400_BAD_REQUEST)
         
         idt = link.data.pop('id', None)
         
