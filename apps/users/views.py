@@ -55,6 +55,7 @@ from apps.casino.custom_pagination import CustomPagination
 
 from apps.core.permissions import IsAdmin, IsAgent, IsDealer, IsManager, IsPlayer, IsSuperAdmin
 from apps.core.rest_any_permissions import AnyPermissions
+from apps.core.utils.network import get_user_ip_from_request
 from apps.core.views import APIViewContext
 from django.db import transaction
 
@@ -109,6 +110,8 @@ TWILIO_AUTH_TOKEN = settings.TWILIO_AUTH_TOKEN
 TWILIO_VERIFY_SERVICE_SID = settings.TWILIO_VERIFY_SERVICE_SID
 from django.contrib.postgres.fields import JSONField
 from django.db.models import OuterRef, Subquery
+from typing import Optional, Tuple
+
 class PlayerViewSet(viewsets.ModelViewSet):
     queryset = Users.objects.filter(role="player").order_by("-id")
     serializer_class = PlayerSerializer
@@ -463,107 +466,99 @@ class SignUpView(APIViewContext):
 
 '''User Update Api'''
 class UserUpdateView(APIViewContext):
-    permission_classes = (AllowAny,)
+    permission_classes = (IsAuthenticated,)
     http_method_names = ["post"]
+
+    def decode_base64_image(self, base64_string: str) -> Tuple[str, ContentFile]:
+        format, imgstr = base64_string.split(';base64,')
+        ext = format.split('/')[-1]
+        img_data = base64.b64decode(imgstr)
+        return format, ContentFile(img_data, name=f'temp.{ext}')
+
+    def create_thumbnail(self, image_file, filename: str, ext: str):
+        thumbnail = Image.open(image_file)
+        thumbnail.thumbnail((500, 400))
+        buffer = BytesIO()
+        fmt = 'JPEG' if ext.lower() == 'jpg' else ext.upper()
+        thumbnail.save(buffer, format=fmt, filename=filename)
+        return InMemoryUploadedFile(buffer, 'FileField', filename, fmt, sys.getsizeof(buffer), None)
 
     def post(self, request):
         try:
-            id = request.data.get('id', None)
-            player=Users.objects.get(username__iexact=request.data.get("username"))
-            if player:
-                username = username=request.data.get("username")
-                cashtag = request.POST.get("cashtag", None)
-                email = request.data.get("email", player.email)
-                password = request.data.get("password", player.password)
-                phone_number = request.data.get("phone_number", None)
-                country_code = request.data.get("country_code", None)
-                first_name = request.data.get("first_name", player.first_name)
-                last_name = request.data.get("last_name", player.last_name)
-                state = request.data.get("state", player.state)
-                city = request.data.get("city", player.city)
-                dob = request.data.get("dob", player.dob)
-                zipcode = request.data.get("zip_code", player.zip_code)
-                complete_address = request.data.get("complete_address", player.complete_address)
-                profile_pic =request.data.get("profile_pic", player.profile_pic)
-                cca2 = request.data.get("code_cca2", player.country)
-                if(request.data.get("profile_pic") and not request.data.get("profile_pic").startswith("https")):
-                    userb64_profile_pic = request.data.get("profile_pic")
-                    format, imgstr = userb64_profile_pic.split(';base64,')
-                    ext = format.split('/')[-1]
-                    profile_pic = ContentFile(base64.b64decode(imgstr),name='temp.' + ext)
-                    if profile_pic:
-                        filename_format = profile_pic.name.split(".")
-                        name, format = filename_format[-2], filename_format[-1]
-                        filename = f"{name}{uuid.uuid4()}.{format}"
-                        profile_thumbnail = Image.open(profile_pic)
-                        profile_thumbnail.thumbnail((500, 400))
-                        profile_thumbnail_io = BytesIO()
-                        format = 'JPEG' if format.lower() == 'jpg' else format.upper()
-                        profile_thumbnail.save(profile_thumbnail_io, format=format, filename=filename)
-                        page_thumbnail_inmemory = InMemoryUploadedFile(profile_thumbnail_io,
-                                                                 'FileField',
-                                                                 filename,
-                                                                 format,
-                                                                 sys.getsizeof(profile_thumbnail_io), None)
-                    profile_pic.name = filename
-                    #   user.profile_pic_thumbnail = page_thumbnail_inmemory
-                    player.profile_pic = profile_pic
-                if request.data.get("profile_pic", "https").startswith("https"):
-                    profile_pic = player.profile_pic
-                    
-                # if Users.objects.filter(username=request.data.get("username")).exists():
-                #     return Response({"message": _("User already exists.")}, status.HTTP_400_BAD_REQUEST)
-                if not request.data.get("username") or not request.data.get("email"):
-                    return Response("Username or Email must not be null.")
-                if Country.objects.filter(code_cca2=cca2).exists():
-                    player.country = cca2
-                    player.country_obj = Country.objects.get(code_cca2=cca2)
-
-
-                player.username = username
-                player.email = email
-                player.zip_code = zipcode
-                player.password = password
-                player.first_name = first_name
-                player.last_name = last_name
-                player.state = state
-                player.city = city
-                player.dob = dob
-                player.complete_address = complete_address
-                player.profile_pic = profile_pic
-                player.cashtag = cashtag
-                player.document_verified = VERIFICATION_PROCESSING if player.document_verified == VERIFICATION_PROCESSING else VERIFICATION_PENDING
-                
-                if phone_number and country_code:
-                    # if Users.objects.filter(phone_number=phone_number, country_code=country_code).exclude(Q(username=request.data.get('username')) | Q(phone_verified=1)).exists():
-                    #     return Response({"message": "Phone number belongs to another user."}, status.HTTP_400_BAD_REQUEST)
-                    player.country_code = country_code
-                    player.phone_number = phone_number
-                    try:
-                        player.clean()
-                    except ValueError:
-                        return Response({"title":"Error","icon":"error","message": "The number used is not valid"}, status.HTTP_400_BAD_REQUEST)
-
-
-                if player.cashtag!=cashtag:
-                    if Player.objects.filter(cashtag=cashtag).exists(): 
-                        return Response({"title":"Error","icon":"error","message": "Cashtag Already Exists!"}, status.HTTP_400_BAD_REQUEST)
-                player.save()
-                
-                
-                x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-                
-                print('cping')
-                if x_forwarded_for:
-                    print(x_forwarded_for)
-                    ip = x_forwarded_for.split(',')[0].strip()  # client’s real IP
-                else:
-                    ip = request.META.get('REMOTE_ADDR')
-                    
-                register_or_update_user.delay(ip, timezone.now().isoformat(), player.id)
-                return Response({"message": "User Updated Successfully"},status.HTTP_200_OK)
-            else:
+            player = request.user
+            if not player:
                 return Response({"message": "User not found", },status.HTTP_400_BAD_REQUEST)
+            
+            if player.document_verified == VERIFICATION_APPROVED:
+                return Response({"message": "User Updated Successfully."},status.HTTP_200_OK)
+            
+            # Handle user personal data
+            cca2 = request.data.get("code_cca2", player.country) or "US"
+            phone_number = request.data.get("phone_number")
+            country_code = request.data.get("country_code")
+            cashtag = request.data.get("cashtag")
+            
+            # Handle profile picture
+            profile_pic_data = request.data.get("profile_pic")
+            profile_pic = player.profile_pic
+            
+            if(profile_pic_data and not profile_pic_data.startswith("https")):
+                format, profile_pic = self.decode_base64_image(profile_pic_data)
+                filename_format = profile_pic.name.split(".")
+                name, format = filename_format[-2], filename_format[-1]
+                filename = f"{name}{uuid.uuid4()}.{format}"
+                profile_pic.name = filename
+                player.profile_pic = profile_pic
+                # page_thumbnail_inmemory = self.create_thumbnail(image_file=profile_pic, filename=filename, ext=format)
+                # user.profile_pic_thumbnail = page_thumbnail_inmemory
+                
+            if request.data.get("profile_pic", "https").startswith("https"):
+                profile_pic = player.profile_pic
+                
+            if Country.objects.filter(code_cca2=cca2).exists():
+                player.country = cca2
+                player.country_obj = Country.objects.get(code_cca2=cca2)
+            
+            if phone_number and country_code:
+                # if Users.objects.filter(phone_number=phone_number, country_code=country_code).exclude(Q(username=request.data.get('username')) | Q(phone_verified=1)).exists():
+                #     return Response({"message": "Phone number belongs to another user."}, status.HTTP_400_BAD_REQUEST)
+                player.country_code = country_code
+                player.phone_number = phone_number
+                try:
+                    player.clean()
+                except ValueError:
+                    return Response({"title":"Error","icon":"error","message": "The number used is not valid"}, status.HTTP_400_BAD_REQUEST)
+
+
+            if cashtag and player.cashtag!=cashtag:
+                if Player.objects.filter(cashtag=cashtag).exists(): 
+                    return Response({"title":"Error","icon":"error","message": "Cashtag Already Exists!"}, status.HTTP_400_BAD_REQUEST)
+
+            update_fields = {
+                "first_name": request.data.get("first_name"),
+                "last_name": request.data.get("last_name"),
+                "email": request.data.get("email"),
+                "zip_code": request.data.get("zip_code"),
+                "state": request.data.get("state"),
+                "city": request.data.get("city"),
+                "dob": request.data.get("dob"),
+                "complete_address": request.data.get("complete_address"),
+                "profile_pic": profile_pic,
+                "cashtag": cashtag,
+            }
+
+            for field, value in update_fields.items():
+                if value is not None:
+                    setattr(player, field, value)
+            
+            # player.document_verified = VERIFICATION_PROCESSING if player.document_verified == VERIFICATION_PROCESSING else VERIFICATION_PENDING
+            
+            player.save()
+            
+            # ip = get_user_ip_from_request(request=request)
+            # register_or_update_user.delay(ip, timezone.now().isoformat(), player.id)
+            return Response({"message": "User Updated Successfully"},status.HTTP_200_OK)
+            
         except Exception as e:
             print(f"Error in update-user-details : {e}")
             return Response({"message": "something went wrong", },status.HTTP_500_INTERNAL_SERVER_ERROR)
