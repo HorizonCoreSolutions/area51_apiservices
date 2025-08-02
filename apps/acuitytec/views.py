@@ -2,6 +2,7 @@ from datetime import timedelta
 import json
 from rest_framework.response import Response
 from rest_framework import status
+from apps.acuitytec.acuitytec import sync_names
 from apps.acuitytec.models import AcuitytecUser, DocumentTypeChoise, VerificationItem, VerificationStateChoise
 from apps.acuitytec.utils import generate_qr_code_url
 from apps.users.models import VERIFICATION_APPROVED, VERIFICATION_EXPIRED, VERIFICATION_FAILED, Country, Users
@@ -113,15 +114,21 @@ class CallbackAcuitytecView(APIView):
             document_number = data.get('additional_data', {}).get('document',{}).get('proof', {}).get("document_number", None)
             names = document.get('name', {})
             country = data.get('country', user.country_obj.code_cca2 if user.country_obj else (user.country if user.country else 'US'))
-            first_name = names.get('first_name', user.first_name).strip().title()
-            last_name = names.get('last_name', user.last_name).strip().title()
+            first_name = names.get('first_name', user.first_name or '').strip().title()
+            last_name = names.get('last_name', user.last_name or '').strip().title()
+            full_name = names.get('full_name', '').strip().title()
+
+            first_name = None if first_name == '' else first_name
+            last_name = None if last_name == '' else last_name
+
+            names, full_name = sync_names(first_name=first_name, last_name=last_name, full_name=full_name)
             
             doc_type = document.get('selected_type', ['id_card'])[0]
             
             user.country = country
-            user.first_name = first_name
-            user.last_name = last_name
-            user.full_name = first_name + ' ' + last_name
+            user.first_name = names[0]
+            user.last_name = names[1]
+            user.full_name = full_name
             
             if document_number:
                 user.document_number = document_number

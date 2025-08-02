@@ -21,6 +21,32 @@ from urllib.parse import urlparse
 
 logger = SimpleLogger(name='Acuitytec', log_file='logs/acuitytec.log').get_logger()
 
+def sync_names(first_name=None, last_name=None, full_name=None):
+    # Normalize empty strings to None
+    first_name = first_name or None
+    last_name = last_name or None
+    full_name = full_name or None
+
+    # Case 1: full_name exists and others do not
+    if full_name and not first_name and not last_name:
+        names = full_name.strip().split(None, 1)
+        first_name = names[0]
+        last_name = names[1] if len(names) > 1 else ''
+    
+    # Case 2: first_name or last_name exists but full_name does not
+    elif (first_name or last_name) and not full_name:
+        full_name = f"{first_name or ''} {last_name or ''}".strip()
+    
+    # Case 3: all are present or some conflict; prefer full_name
+    elif full_name:
+        names = full_name.strip().split(None, 1)
+        first_name = names[0]
+        last_name = names[1] if len(names) > 1 else ''
+
+    # Create names tuple
+    names = (first_name or '', last_name or '')
+    return names, full_name
+
 class AcuityTecAPI:
     """
     AcuityTec API Client for Customer Registration
@@ -327,34 +353,7 @@ class AcuityTecAPI:
     
     @staticmethod
     def parse_user_to_geo(user: Users, ip: str):
-        
-        def sync_names(first_name=None, last_name=None, full_name=None):
-            # Normalize empty strings to None
-            first_name = first_name or None
-            last_name = last_name or None
-            full_name = full_name or None
-
-            # Case 1: full_name exists and others do not
-            if full_name and not first_name and not last_name:
-                names = full_name.strip().split(None, 1)
-                first_name = names[0]
-                last_name = names[1] if len(names) > 1 else ''
-            
-            # Case 2: first_name or last_name exists but full_name does not
-            elif (first_name or last_name) and not full_name:
-                full_name = f"{first_name or ''} {last_name or ''}".strip()
-            
-            # Case 3: all are present or some conflict; prefer full_name
-            elif full_name:
-                names = full_name.strip().split(None, 1)
-                first_name = names[0]
-                last_name = names[1] if len(names) > 1 else ''
-
-            # Create names tuple
-            names = (first_name or '', last_name or '')
-            return names, full_name
-        
-        names, full_name = sync_names(user.first_name, user.last_name, user.full_name)
+        names, full_name = sync_names(user.first_name, user.last_name, '')
         
         return {
             'first_name' : names[0],
