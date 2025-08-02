@@ -1544,8 +1544,8 @@ class GetCoinFlowLink(APIView):
 
         cents = int(cents)
 
-        if cents < 500 or cents > 100000:
-            return Response(data={'message': 'Cents must be higher than 500 and lower than 100000.'}, status=status.HTTP_400_BAD_REQUEST)
+        if cents < 500 or cents > 500000:
+            return Response(data={'message': 'Cents must be higher than 500 and lower than 500000.'}, status=status.HTTP_400_BAD_REQUEST)
 
         res = cf.register_user_attested(user=user)
         # if res.error:
