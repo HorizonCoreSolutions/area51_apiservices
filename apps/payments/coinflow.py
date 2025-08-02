@@ -790,19 +790,21 @@ class CoinFlowClient:
         DAY_SHIFT_HOURS = 5
 
         # 1. Get today at midnight (timezone-aware)
-        today = timezone.now().date()
-        start_of_day = timezone.make_aware(datetime.combine(today, time.min))
+        # Get timezone-aware "today at midnight"
+        start_of_day = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
 
-        # 2. Add forward shift
+        # Shift forward by N hours (e.g. day starts at 5 AM)
         shifted_start = start_of_day + timedelta(hours=DAY_SHIFT_HOURS)
         
         qs = CoinFlowTransaction.objects.filter(
+            user=user,
             transaction_type = CoinFlowTransaction.TransactionType.withdraw,
             status__in=WITHDRAW_STATUS,
             created__gte = shifted_start
         ).exists()
 
         if qs:
+            logger.info(f"User: {user.id}-{user.username} tried more than one transaction")
             return BasicReturn(
                 success=False,
                 data={
