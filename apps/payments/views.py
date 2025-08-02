@@ -1621,8 +1621,8 @@ class CoinflowTotals(APIView):
             return Response(data={'message' : '@cents should be an integer'}, status=status.HTTP_400_BAD_REQUEST)
         
         cents = int(cents)
-        if cents < 500 or cents > 20000:
-            return Response(data={'message' : '@cents min depossit of 500 cents. Max depossit is 20000 cents'}, status=status.HTTP_400_BAD_REQUEST)
+        if cents < 500 or cents > 50000:
+            return Response(data={'message' : '@cents min depossit of 500 cents. Max depossit is 50000 cents'}, status=status.HTTP_400_BAD_REQUEST)
         
         cf = CoinFlowClient()
         data = cf.get_totals(cents=cents, user=request.user)
@@ -1660,8 +1660,8 @@ class CoinflowWithdraws(APIView):
             return Response(data={'message' : '@cents should be an integer'}, status=status.HTTP_400_BAD_REQUEST)
         
         cents = int(cents)
-        if cents < 500 or cents > 20000:
-            return Response(data={'message' : '@cents min depossit of 500 cents. Max depossit is 20000 cents'}, status=status.HTTP_400_BAD_REQUEST)
+        if cents < 500 or cents > 50000:
+            return Response(data={'message' : '@cents min depossit of 500 cents. Max depossit is 50000 cents'}, status=status.HTTP_400_BAD_REQUEST)
         
         
         if card is None and bank is None:
