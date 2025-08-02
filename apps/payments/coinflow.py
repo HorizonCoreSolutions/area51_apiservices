@@ -891,7 +891,6 @@ class CoinFlowClient:
         ).first()
         if obj is None:
             return
-        obj.status = CoinFlowTransaction.StatusType.cancelled
         obj.is_deleted = False
         obj.save()
         return
