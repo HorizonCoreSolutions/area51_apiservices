@@ -114,9 +114,9 @@ class CallbackAcuitytecView(APIView):
             document_number = data.get('additional_data', {}).get('document',{}).get('proof', {}).get("document_number", None)
             names = document.get('name', {})
             country = data.get('country', user.country_obj.code_cca2 if user.country_obj else (user.country if user.country else 'US'))
-            first_name = names.get('first_name', user.first_name or '').strip().title()
-            last_name = names.get('last_name', user.last_name or '').strip().title()
-            full_name = names.get('full_name', '').strip().title()
+            first_name = (names.get('first_name') or user.first_name or '').strip().title()
+            last_name = (names.get('last_name') or user.last_name or '').strip().title()
+            full_name = (names.get('full_name') or '').strip().title()
 
             first_name = None if first_name == '' else first_name
             last_name = None if last_name == '' else last_name
