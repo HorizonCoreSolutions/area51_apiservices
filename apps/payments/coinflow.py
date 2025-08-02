@@ -1,12 +1,13 @@
 import json
 import requests
 from uuid import uuid4
-from hashlib import sha256
 from decimal import Decimal
 from urllib.parse import quote
 from django.conf import settings
-from dataclasses import dataclass
 from django.db import transaction
+from dataclasses import dataclass
+from django.utils import timezone
+from datetime import datetime, timedelta, time
 from apps.core.utils.encryption import decrypt_combined, encrypt_combined
 from apps.users.utils import redis_client
 from typing import Callable, Dict, Optional
@@ -776,6 +777,40 @@ class CoinFlowClient:
 
     @transaction.atomic
     def create_transaction_withdraw(self, user: Users, data: dict, type: str, cents: int, ip: str) -> BasicReturn:
+        
+        # Only generate one per day:
+                
+        WITHDRAW_STATUS = [
+            CoinFlowTransaction.StatusType.requested,
+            CoinFlowTransaction.StatusType.paid_out,
+            CoinFlowTransaction.StatusType.pending,
+            CoinFlowTransaction.StatusType.failed,
+        ]
+        
+        DAY_SHIFT_HOURS = 5
+
+        # 1. Get today at midnight (timezone-aware)
+        today = timezone.now().date()
+        start_of_day = timezone.make_aware(datetime.combine(today, time.min))
+
+        # 2. Add forward shift
+        shifted_start = start_of_day + timedelta(hours=DAY_SHIFT_HOURS)
+        
+        qs = CoinFlowTransaction.objects.filter(
+            transaction_type = CoinFlowTransaction.TransactionType.withdraw,
+            status__in=WITHDRAW_STATUS,
+            created__gte = shifted_start
+        ).exists()
+
+        if qs:
+            return BasicReturn(
+                success=False,
+                data={
+                    'message' : 'Only one transaction per day',
+                    'status' : 400
+                }
+            )
+        
         
         user = Users.objects.select_for_update().get(id=user.id)
         logger.debug(f"User: {user.id}-{user.username} initiated a transaction for ${round(cents/100, 2)}")
