@@ -86,7 +86,7 @@ class AcuityTecAPI:
                     print(f"{k} value is less than 2 characters, {v}")
                     return {
                         'error' : True,
-                        "message": "Please complete your profile {k} before taking any extra steps.",
+                        "message": f"Please complete your profile {k} before taking any extra steps.",
                         "status": -1
                     }
                 
