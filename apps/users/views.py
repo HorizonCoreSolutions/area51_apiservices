@@ -1977,6 +1977,7 @@ class OffMarketDepositView(APIView):
             game_code = request.data.get('game_code')
             game = OffMarketGames.objects.filter(code = game_code).first()
             user_game = UserGames.objects.filter(game=game,user=user).first()
+            a_username = encrypt(user.username)
             game_user = encrypt(game.game_user)
             game_pass = encrypt(game.game_pass)
             deposit_id = ('#'+user.username + str(random.randint(1000000, 9999999))).upper()
@@ -1992,6 +1993,7 @@ class OffMarketDepositView(APIView):
                 "game_user": game_user,
                 "game_pass": game_pass,
                 "customer_username": user_game.username,
+                "area51_username" : a_username,
             }
             messages = ['Promo Code Is Invalid',
                         'Promo Code Expired',

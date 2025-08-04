@@ -10146,6 +10146,7 @@ class OffMarketCreditAjaxView(CheckRolesMixin, views.JSONResponseMixin, views.Aj
             game = OffMarketGames.objects.filter(id = game_id).first()
             game_code = game.code
             user_game = UserGames.objects.filter(game=game,user=user).first()
+            a_username = encrypt(user.username)
             game_user = encrypt(game.game_user)
             game_pass = encrypt(game.game_pass)
             # instead of following random payment_id, taking input from user for payment id
@@ -10161,6 +10162,7 @@ class OffMarketCreditAjaxView(CheckRolesMixin, views.JSONResponseMixin, views.Aj
                 "game_user": game_user,
                 "game_pass": game_pass,
                 "customer_username": user_game.username,
+                "area51_username" : a_username,
             }
 
             headers = {
