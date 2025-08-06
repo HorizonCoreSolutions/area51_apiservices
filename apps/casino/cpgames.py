@@ -88,12 +88,6 @@ class CPgames():
 
         self.econfig: ApiCPGamesConfig = e_config
 
-        self.config = config
-        self.config['api_domain'] = config.get(
-            'api_domain', settings.CP_GAMES_URL)
-        self.config['appid'] = config.get('appid', settings.CP_GAMES_APP_ID)
-        self.config['secret'] = config.get('secret', settings.CP_GAMES_SECRET)
-
         self.session = requests.Session()
         self.availables_languages: list[str] = [
             "en", "th", "vi", "pt", "es", "bn", "ko", "id", "fr", "tr"]
@@ -264,7 +258,7 @@ class CPgames():
             "time": int(time.time())
         }
 
-        url = self.config.get("api_domain", "") + "api/get_game_url"
+        url = app.api_url + "api/get_game_url"
         result = self.__execute_api(params=params, url=url, app=app)
 
         if result.get("code") != 0:
