@@ -1322,9 +1322,9 @@ class CPGamesQueryBalanceApiView(APIView):
 
         try:
             message = json.loads(request.data.get("message"))
-            sub_uid = message.get("sub_uid")
-
-            response_data = cp.get_user_balance(sub_uid)
+            sub_uid = message.get("sub_uid") 
+            app_id = str(request.data.get('appid', ''))
+            response_data = cp.get_user_balance(sub_uid, app_id=app_id)
             cp.save_request(request=response_data, is_response=True)
             return Response(data=response_data, status=status.HTTP_200_OK)
         except Exception as e:
@@ -1380,5 +1380,3 @@ class CPGamesSettleBetApiView(APIView):
         data, status = cp.settle(data=request.data)
         cp.save_request(request=data, is_response=True)
         return Response(data=data, status=status)
-
-
