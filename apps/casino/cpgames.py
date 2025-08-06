@@ -650,24 +650,25 @@ class CPgames():
                 bet_id=bet_id,
             )
             if qs.filter(request_type=GSoftTransactions.RequestType.rollback).exists() or not qs.exists():
-                return self.get_formated_balance(user=user), status.HTTP_200_OK
+                return self.get_formated_balance(user=user, app=app), status.HTTP_200_OK
 
             to_rollback = qs.first()
+            if not to_rollback:
+                return self.get_formated_balance(user=user, app=app), status.HTTP_200_OK
 
             # CHECK: win_amount is higher or equals to 0
             # 3.2: 7.
-            deposit = to_rollback.deposit if to_rollback is not None else Decimal(
-                0)
-            withdraw = to_rollback.withdraw if to_rollback is not None else Decimal(
-                0)
+            deposit = Decimal(to_rollback.deposit or 0)
+            withdraw = Decimal(to_rollback.withdraw or 0)
             if withdraw > 0:
                 multipliyer = 1
             else:
                 multipliyer = -1
 
-            transfer_bonus: Decimal = Decimal(to_rollback.amount * multipliyer)
+            transfer_bonus: Decimal = Decimal(
+                to_rollback.amount or 0) * multipliyer
             transfer_balance: Decimal = Decimal(
-                to_rollback.bonus_bet_amount * multipliyer)
+                to_rollback.bonus_bet_amount or 0) * multipliyer
 
             user.bonus_balance = transfer_bonus + Decimal(user.bonus_balance)
             user.balance = transfer_balance + Decimal(user.balance)
@@ -691,7 +692,7 @@ class CPgames():
             transaction_obj.time = timezone.now()
             transaction_obj.save()
 
-            return self.get_formated_balance(user=user), status.HTTP_200_OK
+            return self.get_formated_balance(user=user, app=app), status.HTTP_200_OK
         except AttributeError as e:
             print("grep here")
             print(e)
@@ -741,7 +742,8 @@ class CPgames():
                 game_status=GSoftTransactions.GameStatus.completed,
             )
             if qs.exists():
-                return self.get_formated_balance(user=user), status.HTTP_200_OK
+                return self.get_formated_balance(user=user,
+                                                 app=app), status.HTTP_200_OK
 
             # CHECK: win_amount is higher or equals to 0
             # 3.2: 7.
@@ -801,7 +803,7 @@ class CPgames():
             transaction_obj.game_status = GSoftTransactions.GameStatus.completed
             transaction_obj.save()
 
-            return self.get_formated_balance(user=user), status.HTTP_200_OK
+            return self.get_formated_balance(user=user, app=app), status.HTTP_200_OK
         except AttributeError as e:
             print("grep here")
             print(e)
@@ -836,7 +838,17 @@ class CPgames():
         user = Users.objects.filter(casino_account_id=account_id).first()
         if not user:
             return False, {"success": False, "message": "User with given account_id not found"}
-        result = self.login_user(user)
+
+        app = None
+        for lapp in self.econfig.apps:
+            if not lapp.is_real_play == fake_game:
+                app = lapp
+                break
+        if app is None:
+            return False, {"success": False,
+                           "message": "Not app available was found"}}
+
+        result = self.login_user(user, app=app)
 
         lang = lang if lang in self.availables_languages else "en"
         url = self.get_game_url(user=user,
