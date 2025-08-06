@@ -830,7 +830,7 @@ class CPgames():
         game_id = request_param.get("game_id")
         lang = request_param.get("lang", "en")
         account_id = request_param.get("account_id")
-        fake_game = bool(request_param.get('GC'))
+        fake_game = not bool(request_param.get('GC'))
 
         user = Users.objects.filter(casino_account_id=account_id).first()
         if not user:
