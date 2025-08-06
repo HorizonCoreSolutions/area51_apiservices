@@ -844,9 +844,9 @@ class CPgames():
             if not lapp.is_real_play == fake_game:
                 app = lapp
                 break
+
         if app is None:
-            return False, {"success": False,
-                           "message": "Not app available was found"}}
+            return False, {"success": False, "message": "Not app available was found"}
 
         result = self.login_user(user, app=app)
 
