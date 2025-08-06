@@ -265,8 +265,8 @@ class CPgames():
         result = self.__execute_api(params=params, url=url, app=app)
 
         if result.get("code") != 0:
-            raise RuntimeError(f"API error: {result.get('code')} {
-                               result.get('msg')}")
+            data = f"API error: {result.get('code')} {result.get('msg')}"
+            raise RuntimeError(data)
 
         return result.get("data", "")
 
