@@ -99,9 +99,9 @@ class CPgames():
             "en", "th", "vi", "pt", "es", "bn", "ko", "id", "fr", "tr"]
 
     def __execute_api(self,
+                      app: AppConfig,
                       params: Optional[dict] = None,
-                      url: str = "",
-                      app: AppConfig) -> dict:
+                      url: str = "",) -> dict:
         if params is None:
             params = {}
         response = None
@@ -170,7 +170,10 @@ class CPgames():
             "game_key": "hog"
         }
 
-    def select_user_for_update(self, sub_uid: str) -> Tuple[Optional[Users], Optional[Dict[str, str]]]:
+    def select_user_for_update(self,
+                               sub_uid: str
+                               ) -> Tuple[Optional[Users],
+                                          Optional[Dict[str, str]]]:
         """
         This returns Tuple[Users,  dict(with error)],
         you can identify its an error if error is not None
