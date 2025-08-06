@@ -2,6 +2,7 @@ from dataclasses import dataclass
 import json
 import time
 import requests
+from decimal import Decimal
 from rest_framework import status
 from django.utils import timezone
 from typing import Optional, Dict, List, Union, Tuple, cast
@@ -25,12 +26,11 @@ class AppConfig:
 
 class ApiCPGamesConfig:
     """This config should be use to create multiple Apps"""
-    __slots__ = ('apps', 'support_real_play')
+    __slots__ = ('apps', 'has_fake_game')
 
     def __init__(self, apps: Optional[List[AppConfig]] = None):
-        self.apps: Optional[List[AppConfig]] = apps
 
-        if self.apps is None:
+        if apps is None or len(apps) < 1:
             real_money = AppConfig(
                 app_id=settings.CP_GAMES_APP_ID_SC,
                 api_url=settings.CP_GAMES_URL,
@@ -46,9 +46,10 @@ class ApiCPGamesConfig:
                 secret_key=settings.CP_GAMES_SECRET_GC,
                 is_real_play=False
             )
-            self.apps = [real_money, fake_money]
+            apps = [real_money, fake_money]
 
-        self.support_real_play = any([app.is_real_play for app in self.apps])
+        self.apps: List[AppConfig] = apps
+        self.has_fake_game = not all([app.is_real_play for app in self.apps])
 
 
 class CPgames():
@@ -85,7 +86,7 @@ class CPgames():
         if e_config is None:
             e_config = ApiCPGamesConfig()
 
-        self.econfig = e_config
+        self.econfig: ApiCPGamesConfig = e_config
 
         self.config = config
         self.config['api_domain'] = config.get(
@@ -97,7 +98,10 @@ class CPgames():
         self.availables_languages: list[str] = [
             "en", "th", "vi", "pt", "es", "bn", "ko", "id", "fr", "tr"]
 
-    def __execute_api(self, params: Optional[dict] = None, url: str = "") -> dict:
+    def __execute_api(self,
+                      params: Optional[dict] = None,
+                      url: str = "",
+                      app: AppConfig) -> dict:
         if params is None:
             params = {}
         response = None
@@ -109,7 +113,7 @@ class CPgames():
             # generate the token
             data = {
                 **params,
-                "token": self.__generate_hash(params=params),
+                "token": self.__generate_hash(params=params, app=app),
             }
 
             response = self.session.post(url=url, data=data)
@@ -122,7 +126,8 @@ class CPgames():
                     return {"code": 503, "msg": "Sorry, the service you're trying to access is currently unavailable. Please try again later."}
             return {"code": 500, "msg": "Sorry, there was a problem with the server response."}
 
-    def __generate_hash(self, params: Optional[Dict[str, str]]) -> str:
+    def __generate_hash(self, params: Optional[Dict[str, str]],
+                        app: AppConfig) -> str:
         if params is None:
             params = {}
 
@@ -130,15 +135,16 @@ class CPgames():
         param_keys: List[str] = list(params.keys())
         param_keys = sorted(param_keys)
 
-        # Only hash the values where are different than None or 0 (sorted by name)
-        data = "&".join([f"{p}={params.get(p)}" for p in param_keys if params.get(
+        # Only hash the values where are different than None or 0
+        # (sorted by name)
+        d = "&".join([f"{p}={params.get(p)}" for p in param_keys if params.get(
             p) not in [None, "0", 0] and (p != "token")])
         # (except secret, always at the end)
-        s_key = self.config.get("secret")
-        data += f"&secret={s_key}"
+        s_key = app.secret_key
+        d += f"&secret={s_key}"
 
         # Following the docs: strtoupper(sha1(md5(string)))
-        return sha1(md5(data.encode()).hexdigest().encode()).hexdigest().upper()
+        return sha1(md5(d.encode()).hexdigest().encode()).hexdigest().upper()
 
     @staticmethod
     def get_username(user: Users) -> str:
@@ -158,15 +164,16 @@ class CPgames():
         return qs.first() if qs else None
 
     @staticmethod
-    def get_base_params() -> Dict[str, Union[str, int]]:
+    def get_base_params(app: AppConfig) -> Dict[str, Union[str, int]]:
         return {
-            "appid": settings.CP_GAMES_APP_ID,
+            "appid": app.app_id,
             "game_key": "hog"
         }
 
     def select_user_for_update(self, sub_uid: str) -> Tuple[Optional[Users], Optional[Dict[str, str]]]:
         """
-        This returns Tuple[Users,  dict(with error)], you can identify its an error if error is not None
+        This returns Tuple[Users,  dict(with error)],
+        you can identify its an error if error is not None
         """
 
         # CHECK: user exist
@@ -186,18 +193,27 @@ class CPgames():
 
         return user, None
 
-    def get_formated_balance(self, user: Users) -> Dict[str, Union[str, Dict[str, Union[str, int]]]]:
+    def get_formated_balance(self,
+                             user: Users,
+                             app: AppConfig
+                             ) -> Dict[str,
+                                       Union[str, Dict[str, Union[str, int]]]]:
+        balance = 0
+        if app.is_real_play:
+            balance = user.balance or 0
+        else:
+            balance = user.bonus_balance or 0
         return {
             **self.BASE_SUCCESS,
             "data": {
-                "balance": str(round(user.balance + user.bonus_balance, 2)),
-                "currency": "USD",
+                "balance": str(round(Decimal(balance), 2)),
+                "currency": app.currency,
                 "updated_ms": int(time.time() * 1000)
             }
         }
 
-    def login_user(self, user: Users) -> bool:
-        params: dict[str, Union[str, int]] = self.get_base_params()
+    def login_user(self, user: Users, app: AppConfig) -> bool:
+        params: dict[str, Union[str, int]] = self.get_base_params(app=app)
 
         params = {
             **params,
@@ -207,19 +223,32 @@ class CPgames():
         }
         # Request example：
         # https://{api_domain}/api/login
-        url = self.config.get("api_domain", "") + "api/login"
+        url = app.api_url + "api/login"
         # Request subject:
         # appid=appidtest001&game_key=hog&sub_uid=1001&user_name=&time=1401248256&token=xxxx
 
-        response = self.__execute_api(params=params, url=url)
+        response = self.__execute_api(params=params, url=url, app=app)
 
         if response.get("code") != 0:
             print(response.get("code"))
 
         return response.get("code") == 0
 
-    def get_game_url(self, user: Users, game_id: str, lang: str = "en") -> str:
-        params = self.get_base_params()
+    def get_game_url(self,
+                     user: Users,
+                     game_id: str,
+                     lang: str = "en",
+                     fake_game: bool = False) -> str:
+        if not self.econfig.has_fake_game and fake_game:
+            return settings.PROJECT_DOMAIN
+        app = None
+        for lapp in self.econfig.apps:
+            if lapp.is_real_play == fake_game:
+                app = lapp
+        if app is None:
+            return settings.PROJECT_DOMAIN
+
+        params = self.get_base_params(app=app)
 
         # The currency is set in the CP appid
         # there are a few apps you can chose from
@@ -233,7 +262,7 @@ class CPgames():
         }
 
         url = self.config.get("api_domain", "") + "api/get_game_url"
-        result = self.__execute_api(params=params, url=url)
+        result = self.__execute_api(params=params, url=url, app=app)
 
         if result.get("code") != 0:
             raise RuntimeError(f"API error: {result.get('code')} {
@@ -251,15 +280,16 @@ class CPgames():
         },...
         ]
         '''
-        params = self.get_base_params()
+        app = self.econfig.apps[0]
+        params = self.get_base_params(app=app)
         params = {
             **params,
             "game_key": "hog",
             "time": int(time.time()),
         }
 
-        url = self.config.get("api_domain", "") + "api/game_list"
-        result = self.__execute_api(params=params, url=url)
+        url = app.api_url + "api/game_list"
+        result = self.__execute_api(params=params, url=url, app=app)
 
         if result.get("code") != 0:
             return []
@@ -269,15 +299,33 @@ class CPgames():
     def get_games_on_db(self):
         return
 
-    def verify_request(self, request: dict) -> bool:
+    def verify_request(self, request: dict) -> Optional[AppConfig]:
         token = request.get("token")
         if not token:
-            return False
+            return
 
-        result_token = self.__generate_hash(params=request)
-        return result_token == token
+        app_id = request.get('appid', '')
+        app = None
+        for lapp in self.econfig.apps:
+            if lapp.app_id == app_id:
+                app = lapp
+                continue
+        if app is None:
+            return
 
-    def get_user_balance(self, user_sub: Optional[str]) -> Dict[str, Union[str, Dict[str, str]]]:
+        result_token = self.__generate_hash(params=request, app=app)
+        return app if result_token == token else None
+
+    # This is only meant for external use only
+    def get_user_balance(self, user_sub: Optional[str], app_id: str) -> Dict[str, Union[str, Dict[str, str]]]:
+        app = None
+        for lapp in self.econfig.apps:
+            if lapp.app_id == app_id:
+                app = lapp
+                continue
+        if app is None:
+            return self.parse_to_message(1113)
+
         if not user_sub:
             return self.parse_to_message(1004)
         if not user_sub.endswith(settings.ENV_POSTFIX):
@@ -291,17 +339,23 @@ class CPgames():
 
         user = user.first()
 
+        balance = 0
+        if app.is_real_play:
+            balance = user.balance or 0
+        else:
+            balance = user.bonus_balance or 0
         return {
             **self.BASE_SUCCESS,
             "data": {
-                "balance": user.balance + user.bonus_balance,
-                "currency": "USD",
+                "balance": str(round(Decimal(balance), 2)),
+                "currency": app.currency,
             }
         }
 
     def transfer_in_out(self, data) -> Tuple[Dict, int]:
         to_verify = data.copy()
-        if not self.verify_request(request=to_verify):
+        app = self.verify_request(request=to_verify)
+        if not app:
             # Signature error 1111
             response_data = self.parse_to_message(1111)
             return response_data, status.HTTP_401_UNAUTHORIZED
@@ -329,45 +383,51 @@ class CPgames():
 
             # CHECK: if the bet already exist
             # 3.2: 2.
-            if GSoftTransactions.objects.filter(callerId=settings.CP_GAMES_ID, user=user, bet_id=bet_id).exists():
-                return self.get_formated_balance(user=user), status.HTTP_200_OK
+            if GSoftTransactions.objects.filter(callerId=settings.CP_GAMES_ID,
+                                                user=user,
+                                                bet_id=bet_id).exists():
+                return self.get_formated_balance(user=user, app=app), status.HTTP_200_OK
 
             # CHECK: win_amount is higher or equals to 0
             # 3.2: 7.
             if win_amount < 0:
                 return self.parse_to_message(1110), status.HTTP_400_BAD_REQUEST
 
-            balance = cast(
-                Decimal, user.balance) if user.balance else Decimal(0)
-            bonus_balance = cast(
-                Decimal, user.bonus_balance) if user.bonus_balance else Decimal(0)
-            total_balance: Decimal = balance + bonus_balance
+            balance = None
+            if app.is_real_play:
+                balance = user.balance or 0
+            else:
+                balance = user.bonus_balance or 0
+
+            balance = Decimal(balance)  # type: ignore
 
             # Check if user  has enought money to bet
-            if total_balance < amount:
+            if balance < amount:
                 response_data = self.parse_to_message(1117)
                 return response_data, status.HTTP_400_BAD_REQUEST
 
-            transfer_bonus = Decimal(0)
             withdraw = 0
             deposit = 0
 
             if transfer_amount < 0:
-                action_type = GSoftTransactions.ActionType.lose
-                transfer_bonus: Decimal = - \
-                    min(abs(transfer_amount), bonus_balance)
-                transfer_balance = - (abs(transfer_amount) + transfer_bonus)
                 withdraw = abs(transfer_amount)
+                action_type = GSoftTransactions.ActionType.lose
             else:
                 deposit = transfer_amount
                 action_type = GSoftTransactions.ActionType.win
-                transfer_balance = transfer_amount
-
-            user.bonus_balance = transfer_bonus + Decimal(user.bonus_balance)
-            user.balance = transfer_balance + Decimal(user.balance)
-            user.save()
 
             transaction_obj = GSoftTransactions()
+            transfer_balance = transfer_amount
+
+            if app.is_real_play:
+                user.balance = transfer_balance + Decimal(user.balance)
+                transaction_obj.amount = abs(transfer_balance)
+            else:
+                user.bonus_balance = transfer_balance + \
+                    Decimal(user.bonus_balance or 0)
+                transaction_obj.bonus_bet_amount = abs(transfer_balance)
+            user.save()
+
             transaction_obj.callerId = settings.CP_GAMES_ID
             transaction_obj.user = user
             transaction_obj.withdraw = withdraw
@@ -378,13 +438,12 @@ class CPgames():
             transaction_obj.round_id = round_id
             transaction_obj.request_type = GSoftTransactions.RequestType.result
             transaction_obj.action_type = action_type
-            transaction_obj.amount = abs(transfer_balance)
-            transaction_obj.bonus_bet_amount = abs(transfer_bonus)
             transaction_obj.game_status = GSoftTransactions.GameStatus.completed
             transaction_obj.time = timezone.now()
             transaction_obj.save()
 
-            return self.get_formated_balance(user=user), status.HTTP_200_OK
+            return (self.get_formated_balance(user=user, app=app),
+                    status.HTTP_200_OK)
         except AttributeError as e:
             print("grep here")
             print(e)
@@ -396,7 +455,8 @@ class CPgames():
 
     def cancel_in_out(self, data) -> Tuple[Dict, int]:
         to_verify = data.copy()
-        if not self.verify_request(request=to_verify):
+        app = self.verify_request(request=to_verify)
+        if not app:
             # Signature error 1111
             response_data = self.parse_to_message(1111)
             return response_data, status.HTTP_401_UNAUTHORIZED
@@ -421,27 +481,32 @@ class CPgames():
                 user=user,
                 game_id=bet_id,
             )
-            if qs.filter(request_type=GSoftTransactions.RequestType.rollback).exists() or not qs.exists():
-                return self.get_formated_balance(user=user), status.HTTP_200_OK
+            has_rolled = qs.filter(
+                request_type=GSoftTransactions.RequestType.rollback)
+            if has_rolled.exists() or not qs.exists():
+                return self.get_formated_balance(user=user, app=app), status.HTTP_200_OK
 
             to_rollback = qs.first()
+            if to_rollback is None:
+                return self.get_formated_balance(user=user, app=app), status.HTTP_200_OK
 
             # CHECK: win_amount is higher or equals to 0
             # 3.2: 7.
-            deposit = to_rollback.deposit if to_rollback is not None else Decimal(
-                0)
-            withdraw = to_rollback.withdraw if to_rollback is not None else Decimal(
-                0)
+            deposit = to_rollback.deposit or Decimal(0)
+            withdraw = to_rollback.withdraw or Decimal(0)
             if withdraw > 0:
                 multipliyer = 1
             else:
                 multipliyer = -1
 
-            transfer_bonus: Decimal = to_rollback.amount * multipliyer
-            transfer_balance: Decimal = to_rollback.bonus_bet_amount * multipliyer
+            transfer_bonus: Decimal = Decimal(
+                to_rollback.amount or 0) * multipliyer
+            transfer_balance: Decimal = Decimal(
+                to_rollback.bonus_bet_amount or 0) * multipliyer
 
-            user.bonus_balance = transfer_bonus + Decimal(user.bonus_balance)
-            user.balance = transfer_balance + Decimal(user.balance)
+            user.bonus_balance = transfer_bonus + \
+                Decimal(user.bonus_balance or 0)
+            user.balance = transfer_balance + Decimal(user.balance or 0)
             user.save()
 
             transaction_obj = GSoftTransactions()
@@ -461,7 +526,7 @@ class CPgames():
             transaction_obj.game_status = GSoftTransactions.GameStatus.completed
             transaction_obj.save()
 
-            return self.get_formated_balance(user=user), status.HTTP_200_OK
+            return self.get_formated_balance(user=user, app=app), status.HTTP_200_OK
         except AttributeError:
             return self.parse_to_message(1110), status.HTTP_400_BAD_REQUEST
         except TypeError:
@@ -471,7 +536,8 @@ class CPgames():
 
     def place_bet(self, data) -> Tuple[Dict, int]:
         to_verify = data.copy()
-        if not self.verify_request(request=to_verify):
+        app = self.verify_request(request=to_verify)
+        if not app:
             # Signature error 1111
             response_data = self.parse_to_message(1111)
             return response_data, status.HTTP_401_UNAUTHORIZED
@@ -496,31 +562,37 @@ class CPgames():
             amount = Decimal(bet_info.get("bet_amount", 0))
 
             # CHECK: if the bet already exist
-            if GSoftTransactions.objects.filter(callerId=settings.CP_GAMES_ID, user=user, bet_id=bet_id).exists():
-                return self.get_formated_balance(user=user), status.HTTP_200_OK
+            if GSoftTransactions.objects.filter(callerId=settings.CP_GAMES_ID,
+                                                user=user,
+                                                bet_id=bet_id).exists():
+                return self.get_formated_balance(
+                    user=user, app=app), status.HTTP_200_OK
 
             # CHECK: win_amount is higher or equals to 0
             # 3.2: 7.
-            balance = cast(
-                Decimal, user.balance) if user.balance else Decimal(0)
-            bonus_balance = cast(
-                Decimal, user.bonus_balance) if user.bonus_balance else Decimal(0)
-            total_balance: Decimal = balance + bonus_balance
+            if app.is_real_play:
+                balance = Decimal(user.balance or 0)
+            else:
+                balance = Decimal(user.bonus_balance or 0)
 
             # Check if user  has enought money to bet
-            if total_balance < amount:
+            if balance < amount:
                 response_data = self.parse_to_message(1117)
                 return response_data, status.HTTP_400_BAD_REQUEST
 
-            transfer_bonus = - min(abs(amount), bonus_balance)
-            transfer_balance = - (abs(amount) + transfer_bonus)
+            transfer_balance = - abs(amount)
             withdraw = abs(amount)
 
-            user.bonus_balance = transfer_bonus + Decimal(user.bonus_balance)
-            user.balance = transfer_balance + Decimal(user.balance)
+            transaction_obj = GSoftTransactions()
+
+            if app.is_real_play:
+                user.balance = transfer_balance + balance
+                transaction_obj.amount = abs(transfer_balance)
+            else:
+                transaction_obj.bonus_bet_amount = abs(transfer_balance)
+                user.bonus_balance = transfer_balance + balance
             user.save()
 
-            transaction_obj = GSoftTransactions()
             transaction_obj.callerId = settings.CP_GAMES_ID
             transaction_obj.user = user
             transaction_obj.withdraw = withdraw
@@ -530,13 +602,11 @@ class CPgames():
             transaction_obj.round_id = round_id
             transaction_obj.request_type = GSoftTransactions.RequestType.wager
             transaction_obj.action_type = GSoftTransactions.ActionType.bet
-            transaction_obj.amount = abs(transfer_balance)
-            transaction_obj.bonus_bet_amount = abs(transfer_bonus)
             transaction_obj.time = timezone.now()
             transaction_obj.game_status = GSoftTransactions.GameStatus.pending
             transaction_obj.save()
 
-            return self.get_formated_balance(user=user), status.HTTP_200_OK
+            return self.get_formated_balance(user=user, app=app), status.HTTP_200_OK
         except AttributeError as e:
             print("grep here")
             print(e)
@@ -548,7 +618,8 @@ class CPgames():
 
     def cancel_bet(self, data) -> Tuple[Dict, int]:
         to_verify = data.copy()
-        if not self.verify_request(request=to_verify):
+        app = self.verify_request(request=to_verify)
+        if not app:
             # Signature error 1111
             response_data = self.parse_to_message(1111)
             return response_data, status.HTTP_401_UNAUTHORIZED
@@ -632,7 +703,8 @@ class CPgames():
 
     def settle(self, data) -> Tuple[Dict, int]:
         to_verify = data.copy()
-        if not self.verify_request(request=to_verify):
+        app = self.verify_request(request=to_verify)
+        if not app:
             # Signature error 1111
             response_data = self.parse_to_message(1111)
             return response_data, status.HTTP_401_UNAUTHORIZED
@@ -759,6 +831,7 @@ class CPgames():
         game_id = request_param.get("game_id")
         lang = request_param.get("lang", "en")
         account_id = request_param.get("account_id")
+        fake_game = bool(request_param.get('GC'))
 
         user = Users.objects.filter(casino_account_id=account_id).first()
         if not user:
@@ -766,7 +839,10 @@ class CPgames():
         result = self.login_user(user)
 
         lang = lang if lang in self.availables_languages else "en"
-        url = self.get_game_url(user=user, game_id=game_id, lang=lang)
+        url = self.get_game_url(user=user,
+                                game_id=game_id,
+                                lang=lang,
+                                fake_game=fake_game)
 
         response = {
             "success": True,
