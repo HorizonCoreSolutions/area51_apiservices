@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 import json
 import time
 import requests
@@ -10,6 +11,45 @@ from django.conf import settings
 
 from apps.users.models import Users
 from apps.casino.models import GSoftTransactions
+
+
+@dataclass
+class AppConfig:
+    """Main configuration for App CPgames"""
+    app_id: str
+    api_url: str
+    currency: str
+    secret_key: str
+    is_real_play: bool
+
+
+class ApiCPGamesConfig:
+    """This config should be use to create multiple Apps"""
+    __slots__ = ('apps', 'support_real_play')
+
+    def __init__(self, apps: Optional[List[AppConfig]]):
+        self.apps: Optional[List[AppConfig]] = apps
+
+        if self.apps is None:
+            real_money = AppConfig(
+                        app_id=settings.CP_GAMES_APP_ID_SC,
+                        api_url=settings.CP_GAMES_URL,
+                        currency='SC',
+                        secret_key=settings.CP_GAMES_SECRET_SC,
+                        is_real_play=True
+                    )
+
+            fake_money = AppConfig(
+                        app_id=settings.CP_GAMES_APP_ID_GC,
+                        api_url=settings.CP_GAMES_URL,
+                        currency='GC',
+                        secret_key=settings.CP_GAMES_SECRET_GC,
+                        is_real_play=False
+                    )
+            self.apps = [real_money, fake_money]
+
+        self.support_real_play = any([app.is_real_play for app in self.apps])
+
 
 class CPgames():
 
@@ -753,4 +793,3 @@ class CPgames():
     @classmethod
     def parse_to_message(cls, code: int):
         return {"msg" : cls.ERRORS.get(code, 1199), "code": code if code in cls.ERRORS.keys() else 1199}
-
