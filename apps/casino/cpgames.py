@@ -27,7 +27,7 @@ class ApiCPGamesConfig:
     """This config should be use to create multiple Apps"""
     __slots__ = ('apps', 'support_real_play')
 
-    def __init__(self, apps: Optional[List[AppConfig]]):
+    def __init__(self, apps: Optional[List[AppConfig]] = None):
         self.apps: Optional[List[AppConfig]] = apps
 
         if self.apps is None:
@@ -78,9 +78,14 @@ class CPgames():
         "msg": "success",
     }
 
-    def __init__(self, config: Optional[dict] = None):
+    def __init__(self, config: Optional[dict] = None,
+                 e_config: Optional[ApiCPGamesConfig] = None):
         if config is None:
             config = {}
+        if e_config is None:
+            e_config = ApiCPGamesConfig()
+
+        self.econfig = e_config
 
         self.config = config
         self.config['api_domain'] = config.get(
