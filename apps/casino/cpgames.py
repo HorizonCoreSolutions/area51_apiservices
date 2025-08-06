@@ -838,7 +838,7 @@ class CPgames():
 
         app = None
         for lapp in self.econfig.apps:
-            if not lapp.is_real_play == fake_game:
+            if (not lapp.is_real_play) == fake_game:
                 app = lapp
                 break
 
