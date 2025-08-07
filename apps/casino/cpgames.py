@@ -795,7 +795,7 @@ class CPgames():
             transaction_obj.bet_id = bet_id
             transaction_obj.round_id = round_id
             transaction_obj.request_type = GSoftTransactions.RequestType.result
-            transaction_obj.action_type = GSoftTransactions.ActionType.rollback
+            transaction_obj.action_type = GSoftTransactions.ActionType.win
             transaction_obj.amount = abs(transfer_balance)
             transaction_obj.bonus_bet_amount = abs(transfer_bonus)
             transaction_obj.time = timezone.now()
