@@ -408,9 +408,11 @@ class CPgames():
 
             if transfer_amount < 0:
                 withdraw = abs(transfer_amount)
+                rt = GSoftTransactions.RequestType.wager
                 action_type = GSoftTransactions.ActionType.lose
             else:
                 deposit = transfer_amount
+                rt = GSoftTransactions.RequestType.result
                 action_type = GSoftTransactions.ActionType.win
 
             transaction_obj = GSoftTransactions()
@@ -433,7 +435,7 @@ class CPgames():
             transaction_obj.transaction_id = transaction_id
             transaction_obj.bet_id = bet_id
             transaction_obj.round_id = round_id
-            transaction_obj.request_type = GSoftTransactions.RequestType.result
+            transaction_obj.request_type = rt
             transaction_obj.action_type = action_type
             transaction_obj.game_status = GSoftTransactions.GameStatus.completed
             transaction_obj.time = timezone.now()
