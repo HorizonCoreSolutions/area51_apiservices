@@ -1,4 +1,5 @@
 from django.db import models
+from decimal import Decimal
 from apps.core.models import AbstractBaseModel
 from apps.users.models import Users
 from django.db import models
