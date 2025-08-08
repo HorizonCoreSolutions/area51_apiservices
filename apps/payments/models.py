@@ -197,6 +197,7 @@ class CoinFlowTransaction(AbstractBaseModel):
 
     user = models.ForeignKey(Users, on_delete=models.CASCADE, blank=False, null=True)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
+    subtotal = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal(0))
     currency = models.CharField(max_length=20,null=True,blank=True)
     ip_address = models.CharField(max_length=20,null=True,blank=True)
     
