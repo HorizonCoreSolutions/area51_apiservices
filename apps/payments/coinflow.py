@@ -1042,8 +1042,10 @@ class CoinFlowClient:
         if not transaction_qs.exists():
             return BasicReturn(success=False, error='transacction was not registered')
         
-        money = l_data.get('subtotal', {}).get('cents')
-        if money is None:
+        money = l_data.get('total', {}).get('cents')
+        subtotal = l_data.get('subtotal', {}).get('cents')
+
+        if money is None or subtotal is None:
             return BasicReturn(success=False, error='Money is none')
         cid = l_data.get('customerId').split("ʬ")[-1]
         if cid is None:
@@ -1075,6 +1077,7 @@ class CoinFlowClient:
             
             transaction.status=CoinFlowTransaction.StatusType.approved
             transaction.amount=Decimal(money) / 100
+            transaction.subtotal=Decimal(subtotal) / 100
             transaction.pre_balance=old_balance
             transaction.post_balance = new_balance
             transaction.is_deleted = False
