@@ -95,9 +95,10 @@ class GamePoolBetsSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_amount(obj):
+        amount = obj.amount or 0
         if obj.request_type == GSoftTransactions.RequestType.wager:
-            return -obj.amount
-        return obj.amount
+            return -amount
+        return amount
 
     @staticmethod
     def get_request_type(obj):
