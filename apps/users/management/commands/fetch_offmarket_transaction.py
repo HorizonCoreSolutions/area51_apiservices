@@ -22,6 +22,7 @@ class Command(BaseCommand):
                     secret_key = settings.OFF_MARKET_SECRETKEY
                     off_market_api_url = settings.OFFMARKET_API_URL
                     pending_transaction = OffMarketTransactions.objects.filter(status='Pending',transaction_type='DEPOSIT')
+                    print("Loop started")
                     for transaction in pending_transaction:
                         try:
                             params = {
