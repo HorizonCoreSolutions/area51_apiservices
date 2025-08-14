@@ -8,10 +8,11 @@ import random
 import requests
 from rest_framework import status
 from decimal import Decimal
+import logging
 
 from apps.users.utils import refund_transactions
 
-
+logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
@@ -22,7 +23,7 @@ class Command(BaseCommand):
                     secret_key = settings.OFF_MARKET_SECRETKEY
                     off_market_api_url = settings.OFFMARKET_API_URL
                     pending_transaction = OffMarketTransactions.objects.filter(status='Pending',transaction_type='DEPOSIT')
-                    print("Loop started")
+                    logger.info("Loop started")
                     for transaction in pending_transaction:
                         try:
                             params = {
@@ -50,7 +51,7 @@ class Command(BaseCommand):
                                     transaction.save()    
                         except Exception as e:
                                 print(e)
-                    print("Sleeping for 10 minutes")
+                    logger.info("Sleeping for 10 minutes")
                     time.sleep(60*10)             
                 except Exception as e:
                     print("ERROR : ",e)  
