@@ -1,5 +1,6 @@
 from datetime import timedelta,timezone,datetime
 import json
+import sys
 from django.core.management.base import BaseCommand
 from django.conf import settings
 from apps.users.models import OffMarketGames, OffMarketTransactions
@@ -12,8 +13,16 @@ import logging
 
 from apps.users.utils import refund_transactions
 
-logger = logging.getLogger(__name__)
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+logger = logging.getLogger("fetch_offmarket_transaction")
+logger.setLevel(logging.INFO)
 
+handler = logging.StreamHandler(sys.stdout)  # stdout is captured by supervisor
+formatter = logging.Formatter(
+    '%(asctime)s - %(levelname)s - %(name)s - %(message)s'
+)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
 
 class Command(BaseCommand):
     def handle(self, *args, **kwargs):
