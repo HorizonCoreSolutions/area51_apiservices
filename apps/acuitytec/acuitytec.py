@@ -370,14 +370,6 @@ class AcuityTecAPI:
     @cache_ips_geo(logger)
     def is_geo_verified(first_name: str, last_name: str, user_name: str, email: str, city: str, id: str, cca2: str, ip: str) -> Dict[str, Union[str, int]]:
         
-        if settings.ENV_POSTFIX == "BETA":
-            return {
-                'error' : False,
-                "message": "OK",
-                "rule" : "",
-                "status": 0
-            }
-        
         endpoint = f"{settings.ACUITYTEC_API.rstrip('/')}/customerregistration"
         
         merchant_id = settings.ACUITYTEC_MERCHANT_ID

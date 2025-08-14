@@ -2,6 +2,8 @@ from functools import wraps
 from typing import Dict, Union
 from urllib.parse import quote_plus
 
+from django.conf import settings
+
 from apps.acuitytec.models import IPLog
 
 def generate_qr_code_url(data: str, size: str = "150x150") -> str:
@@ -31,6 +33,13 @@ def cache_ips_geo(logger):
         """
         @wraps(func)
         def wrapper(*args, **kwargs) -> Dict[str, Union[str, int]]:
+            if settings.ENV_POSTFIX == "BETA":
+                return {
+                    'error' : False,
+                    "message": "OK",
+                    "rule" : "",
+                    "status": 0
+                }
             ip = kwargs.get('ip')
             if not ip:
                 raise ValueError("ip must be provided as a keyword argument: ip='1.1.1.1'")
