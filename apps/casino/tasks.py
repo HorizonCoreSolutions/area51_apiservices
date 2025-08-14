@@ -39,17 +39,21 @@ def task_update_offmarket_transaction(self, transaction_id):
         
         # Atomic update to prevent race conditions
         with db_transaction.atomic():
-            if response.status_code == status.HTTP_200_OK:
-                if trx_status == 'Completed':
-                    transaction.status = 'Completed'
-                    transaction.save()
-                elif trx_status == 'Failed':
-                    user = transaction.user
-                    user.balance = user.balance + (Decimal(transaction.amount) - Decimal(transaction.bonus))
-                    user.save()
-                    refund_transactions(transaction.id) # type: ignore
-                    transaction.status = 'Failed'
-                    transaction.save()
+            if response.status_code != status.HTTP_200_OK:
+                print(f"Transaction {transaction_id}: received non-200 status {response.status_code}. Retrying.")
+                self.retry()
+            if trx_status == 'Completed':
+                transaction.status = 'Completed'
+            elif trx_status == 'Failed':
+                user = transaction.user
+                user.balance = user.balance + (Decimal(transaction.amount) - Decimal(transaction.bonus))
+                user.save()
+                refund_transactions(transaction.id) # type: ignore
+                transaction.status = 'Failed'
+            else:
+                print(f"Unexpected status {trx_status} for transaction {transaction_id}")
+                self.retry()
+            transaction.save()
     except requests.RequestException as e:
         # Log and retry the request
         self.retry(exc=e)
