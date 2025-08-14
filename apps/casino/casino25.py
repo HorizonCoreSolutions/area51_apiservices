@@ -353,7 +353,7 @@ class Casino25:
             balance = int(self.user_tournament.points*100) if self.user_tournament else 0
         else:
             self.user.refresh_from_db()
-            balance = int(self.user.balance*100) + int(self.user.bonus_balance*100)
+            balance = int(self.user.balance*100)
         
         return True, {
             "jsonrpc": "2.0",
@@ -403,14 +403,14 @@ class Casino25:
                         "jsonrpc": request.get('jsonrpc'),
                         "id": self.request_data.get("id"),
                         "result": {
-                            "newBalance": int(self.user.balance*100)+int(self.user.bonus_balance*100) if not self.user_tournament else int(self.user_tournament.points*100),
+                            "newBalance": int(self.user.balance*100) if not self.user_tournament else int(self.user_tournament.points*100),
                             "transactionId": transactionref
                         }
                     }
                     return True, response
                 
                 self.user.refresh_from_db()
-                if not self.user_tournament and float(self.user.balance + self.user.bonus_balance) < float(withdraw/100):
+                if not self.user_tournament and float(self.user.balance) < float(withdraw/100):
                     return True, self.return_server_error("ErrNotEnoughMoneyCode")
                 elif self.user_tournament:
                     self.user_tournament.refresh_from_db()
@@ -437,7 +437,8 @@ class Casino25:
                                 self.user_tournament.spent_points += bet_amount
                                 self.user_tournament.save()
                             else:
-                                amount_to_deduct = min(self.user.bonus_balance, bet_amount)
+                                # amount_to_deduct = min(self.user.bonus_balance, bet_amount)
+                                amount_to_deduct = 0
                                 transaction_obj.bonus_bet_amount = amount_to_deduct
                                 self.user.bonus_balance -= amount_to_deduct
                                 bet_amount = bet_amount-amount_to_deduct
@@ -558,7 +559,7 @@ class Casino25:
                     "jsonrpc": request.get('jsonrpc'),
                     "id": self.request_data.get("id"),
                     "result": {
-                        "newBalance": int(self.user.balance*100)+int(self.user.bonus_balance*100) if not self.user_tournament else int(self.user_tournament.points*100),
+                        "newBalance": int(self.user.balance*100) if not self.user_tournament else int(self.user_tournament.points*100),
                         "transactionId": transactionref
                     }
                 }
