@@ -2039,7 +2039,7 @@ class OffMarketDepositView(APIView):
                 deposit.game_name_full = game.title
                 deposit.bonus = bonus_amount
                 deposit.save()
-                task_update_offmarket_transaction.apply_async(args=[deposit.id], countdown=16)
+                task_update_offmarket_transaction.apply_async(args=[deposit.id], countdown=10)
                 return Response({"message": "Request Submitted Successfully"}, status.HTTP_200_OK)
                 # TODO: remove this testing
             try:
