@@ -76,6 +76,7 @@ from apps.admin_panel.forms import (AdminModelForm, AgentModelForm,
                                     TermsConditinosForm,CookiePolicyForm, IntroductionForm, CashappDetailForm,
                                     SettingsLimitsForm,FooterCategoryForm, CMSPagesForm, SocialLinkForm, EditSocialLinkForm,DetailSocialLinkForm, UserGamesForm
                                     )
+from apps.casino.tasks import task_update_offmarket_transaction
 from apps.payments.models import (AlchemypayOrder, MnetTransaction, NowPaymentsTransactions,
     WithdrawalCurrency, WithdrawalRequests)
 from apps.users.models import FooterPages, MAX_SPEND_AMOUNT, Permission, ResponsibleGambling
@@ -10196,6 +10197,8 @@ class OffMarketCreditAjaxView(CheckRolesMixin, views.JSONResponseMixin, views.Aj
                 if response.status_code == status.HTTP_200_OK:
                     deposit.status="Completed"
                     deposit.save()
+                    
+                task_update_offmarket_transaction.apply_async(args=[deposit.id], countdown=16)
 
                 return self.render_json_response({"message": "Request Submitted Successfully"}, 200)
             else:

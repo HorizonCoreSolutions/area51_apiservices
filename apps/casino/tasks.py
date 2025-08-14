@@ -1,0 +1,58 @@
+import requests
+from decimal import Decimal
+from celery import shared_task
+from django.conf import settings
+from rest_framework import status
+from apps.users.utils import refund_transactions
+from apps.users.models import OffMarketTransactions
+from django.db import transaction as db_transaction
+
+
+@shared_task(bind=True, queue="casino_queue", max_retries=3, default_retry_delay=60)
+def task_update_offmarket_transaction(self, transaction_id):
+    transaction = OffMarketTransactions.objects.filter(
+        id= transaction_id,
+        status='Pending',
+        transaction_type='DEPOSIT'
+    ).first()
+    
+    if transaction is None:
+        return
+    
+    try:
+        params = {
+            "deposit_id": transaction.txn_id,
+            "secret_key": settings.OFF_MARKET_SECRETKEY,
+        }
+
+        headers = {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+        }
+        
+        url = f"{settings.OFFMARKET_API_URL}read"
+        response = requests.get(url, params=params, headers=headers)
+        response.raise_for_status()
+
+        data = response.json().get("data", {})
+        trx_status = data.get("status")
+        
+        # Atomic update to prevent race conditions
+        with db_transaction.atomic():
+            if response.status_code == status.HTTP_200_OK:
+                if trx_status == 'Completed':
+                    transaction.status = 'Completed'
+                    transaction.save()
+                elif trx_status == 'Failed':
+                    user = transaction.user
+                    user.balance = user.balance + (Decimal(transaction.amount) - Decimal(transaction.bonus))
+                    user.save()
+                    refund_transactions(transaction.id) # type: ignore
+                    transaction.status = 'Failed'
+                    transaction.save()
+    except requests.RequestException as e:
+        # Log and retry the request
+        self.retry(exc=e)
+    except Exception as e:
+        # Log the error for this transaction and continue
+        print(f"Error updating transaction {transaction_id}: {e}")
