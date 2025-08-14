@@ -16,6 +16,7 @@ from apps.users.utils import refund_transactions
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 logger = logging.getLogger("fetch_offmarket_transaction")
 logger.setLevel(logging.INFO)
+logger.propagate = False
 
 handler = logging.StreamHandler(sys.stdout)  # stdout is captured by supervisor
 formatter = logging.Formatter(
