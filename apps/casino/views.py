@@ -1276,8 +1276,8 @@ class Casino25ProviderWiseGameList(ListAPIView):
     
     def get_queryset(self):
         device_type = self.request.GET.get("device", "desktop")
-
-        casino_games = CasinoGameList.objects.all()
+        # Todo: REMOVE WHEN MORE PROVIDERS ARE SETUP
+        casino_games = CasinoGameList.objects.filter(vendor_name="CPgames")
         if device_type == "desktop":
             casino_games =  casino_games.filter(is_desktop_supported=True)
         else:

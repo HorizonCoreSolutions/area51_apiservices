@@ -80,7 +80,7 @@ urlpatterns = [
     url(r"^set-language/?", SetlanguageView.as_view(), name="set-language"),
     url(r"^bonus-detail/?", BonusDetailView.as_view(), name="bonus-detail"),
     url(r"^fortunepandas-categories/?", FortunePandasCategoryAPIView.as_view(), name="fortunepandas-categories"),
-    url(r"^fortunepandas/?", FortunePandasAPIView.as_view(), name="fortunepandas"),
+    # url(r"^fortunepandas/?", FortunePandasAPIView.as_view(), name="fortunepandas"),
 
     url(r'^countries/?', CountriesView.as_view(), name='countries'),
 
