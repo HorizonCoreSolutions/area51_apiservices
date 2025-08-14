@@ -16,12 +16,15 @@ from apps.users.utils import refund_transactions
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 logger = logging.getLogger("fetch_offmarket_transaction")
 logger.setLevel(logging.INFO)
-logger.propagate = False
+logger.propagate = False  # Prevent messages from going to root logger
 
-handler = logging.StreamHandler(sys.stdout)  # stdout is captured by supervisor
-formatter = logging.Formatter(
-    '%(asctime)s - %(levelname)s - %(name)s - %(message)s'
-)
+# Clear any existing handlers (in case Django added some)
+if logger.hasHandlers():
+    logger.handlers.clear()
+
+# Attach only one StreamHandler
+handler = logging.StreamHandler(sys.stdout)
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(name)s - %(message)s')
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 
