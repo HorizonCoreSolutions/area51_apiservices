@@ -24,6 +24,7 @@ class Command(BaseCommand):
                     off_market_api_url = settings.OFFMARKET_API_URL
                     pending_transaction = OffMarketTransactions.objects.filter(status='Pending',transaction_type='DEPOSIT')
                     logger.info("Loop started")
+                    print("Loop started", flush=True)
                     for transaction in pending_transaction:
                         try:
                             params = {
