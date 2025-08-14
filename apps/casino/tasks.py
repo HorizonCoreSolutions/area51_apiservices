@@ -8,7 +8,7 @@ from apps.users.models import OffMarketTransactions
 from django.db import transaction as db_transaction
 
 
-@shared_task(bind=True, queue="casino_queue", max_retries=3, default_retry_delay=60)
+@shared_task(bind=True, queue="casino_queue", max_retries=3, default_retry_delay=50)
 def task_update_offmarket_transaction(self, transaction_id):
     transaction = OffMarketTransactions.objects.filter(
         id= transaction_id,
