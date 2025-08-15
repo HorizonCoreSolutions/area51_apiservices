@@ -1,17 +1,17 @@
-from dataclasses import dataclass
+
 import json
 import time
 import requests
 from decimal import Decimal
-from rest_framework import status
-from django.utils import timezone
-from typing import Optional, Dict, List, Union, Tuple, cast
-from decimal import Decimal
 from hashlib import md5, sha1
 from django.conf import settings
-
+from dataclasses import dataclass
+from django.utils import timezone
+from rest_framework import status
 from apps.users.models import Users
 from apps.casino.models import GSoftTransactions
+from django.db import transaction as db_transaction
+from typing import Optional, Dict, List, Union, Tuple
 
 
 @dataclass
@@ -164,6 +164,7 @@ class CPgames():
             "game_key": "hog"
         }
 
+    @db_transaction.atomic
     def select_user_for_update(self,
                                sub_uid: str
                                ) -> Tuple[Optional[Users],
@@ -349,6 +350,7 @@ class CPgames():
             }
         }
 
+    @db_transaction.atomic
     def transfer_in_out(self, data) -> Tuple[Dict, int]:
         to_verify = data.copy()
         app = self.verify_request(request=to_verify)
@@ -452,6 +454,7 @@ class CPgames():
             print(e)
             return self.parse_to_message(1110), status.HTTP_400_BAD_REQUEST
 
+    @db_transaction.atomic
     def cancel_in_out(self, data) -> Tuple[Dict, int]:
         to_verify = data.copy()
         app = self.verify_request(request=to_verify)
@@ -533,6 +536,7 @@ class CPgames():
 
     # 3.4: Bet
 
+    @db_transaction.atomic
     def place_bet(self, data) -> Tuple[Dict, int]:
         to_verify = data.copy()
         app = self.verify_request(request=to_verify)
@@ -615,6 +619,7 @@ class CPgames():
             print(e)
             return self.parse_to_message(1110), status.HTTP_400_BAD_REQUEST
 
+    @db_transaction.atomic
     def cancel_bet(self, data) -> Tuple[Dict, int]:
         to_verify = data.copy()
         app = self.verify_request(request=to_verify)
@@ -701,6 +706,7 @@ class CPgames():
             print(e)
             return self.parse_to_message(1110), status.HTTP_400_BAD_REQUEST
 
+    @db_transaction.atomic
     def settle(self, data) -> Tuple[Dict, int]:
         to_verify = data.copy()
         app = self.verify_request(request=to_verify)
