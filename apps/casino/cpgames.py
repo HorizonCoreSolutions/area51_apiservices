@@ -657,14 +657,11 @@ class CPgames():
                 bet_id=bet_id,
             )
             
-            if not qs.exists():
-                return self.parse_to_message(1118), status.HTTP_200_OK
-            
-            if qs.filter(request_type=GSoftTransactions.RequestType.rollback).exists():
-                return self.get_formated_balance(user=user, app=app), status.HTTP_200_OK
-
             to_rollback = qs.first()
             if not to_rollback:
+                return self.parse_to_message(1118), status.HTTP_200_OK
+            
+            if to_rollback.request_type == GSoftTransactions.RequestType.rollback:
                 return self.get_formated_balance(user=user, app=app), status.HTTP_200_OK
 
             # CHECK: win_amount is higher or equals to 0
