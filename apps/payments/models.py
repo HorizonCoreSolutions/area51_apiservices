@@ -1,4 +1,5 @@
 from django.db import models
+from decimal import Decimal
 from apps.core.models import AbstractBaseModel
 from apps.users.models import Users
 from django.db import models
@@ -193,9 +194,11 @@ class CoinFlowTransaction(AbstractBaseModel):
 
     transaction_id = models.CharField(max_length=80,null=True,blank=True)
     signature = models.CharField(max_length=100,null=True,blank=True)
+    external_id = models.CharField(max_length=80,null=True,blank=True)
 
     user = models.ForeignKey(Users, on_delete=models.CASCADE, blank=False, null=True)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
+    subtotal = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal(0))
     currency = models.CharField(max_length=20,null=True,blank=True)
     ip_address = models.CharField(max_length=20,null=True,blank=True)
     

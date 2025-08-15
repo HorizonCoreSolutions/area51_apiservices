@@ -1034,6 +1034,7 @@ class CoinFlowClient:
         eventType = str(eventType)
         
         tid = l_data.get('webhookInfo', {}).get('transaction_id')
+        external_id = l_data.get('id', '')
         if tid is None:
             logger.critical('The webhook is not retorning the transacction id, no webhook handling can be done')
             return BasicReturn(success=False, error='transacction if is not returned on the webhook')
@@ -1042,8 +1043,10 @@ class CoinFlowClient:
         if not transaction_qs.exists():
             return BasicReturn(success=False, error='transacction was not registered')
         
-        money = l_data.get('subtotal', {}).get('cents')
-        if money is None:
+        money = l_data.get('total', {}).get('cents')
+        subtotal = l_data.get('subtotal', {}).get('cents')
+
+        if money is None or subtotal is None:
             return BasicReturn(success=False, error='Money is none')
         cid = l_data.get('customerId').split("ʬ")[-1]
         if cid is None:
@@ -1073,8 +1076,10 @@ class CoinFlowClient:
             bonus = (Decimal(money) * settings.BONUS_MULTIPLIER) / 100
             user.bonus_balance += bonus
             
+            transaction.external_id = external_id
             transaction.status=CoinFlowTransaction.StatusType.approved
             transaction.amount=Decimal(money) / 100
+            transaction.subtotal=Decimal(subtotal) / 100
             transaction.pre_balance=old_balance
             transaction.post_balance = new_balance
             transaction.is_deleted = False
@@ -1103,6 +1108,7 @@ class CoinFlowClient:
             if eventType == "Card Payment Suspected Fraud":
                 status = CoinFlowTransaction.StatusType.failed_fraud
             
+            transaction.external_id = external_id
             transaction.status=status
             transaction.amount=Decimal(money) / 100
             transaction.pre_balance=user.balance
@@ -1139,6 +1145,7 @@ class CoinFlowClient:
                     currency='USD',
                     amount=pre_balance,
                     transaction_id=tid,
+                    external_id=external_id,
                     pre_balance=pre_balance,
                     post_balance=user.balance,
                     status=CoinFlowTransaction.StatusType.chargeback_opened,
@@ -1157,6 +1164,7 @@ class CoinFlowClient:
                 user=user,
                 currency='USD',
                 transaction_id=tid,
+                external_id=external_id,
                 pre_balance=pre_balance,
                 post_balance=user.balance,
                 amount=transaction.amount,
@@ -1225,6 +1233,7 @@ class CoinFlowClient:
                 currency='USD',
                 transaction_id=tid,
                 amount=transaction.amount,
+                external_id=external_id,
                 status=CoinFlowTransaction.StatusType.refunded,
                 pre_balance=user.balance,
                 post_balance=user.balance - transaction.amount,
@@ -1249,6 +1258,7 @@ class CoinFlowClient:
             # ACH payment has been started - update status to processing
             transaction = transaction_qs.filter(status=CoinFlowTransaction.StatusType.requested).first()
             if transaction:
+                transaction.external_id = external_id
                 transaction.status = CoinFlowTransaction.StatusType.processing
                 transaction.save()
             
@@ -1261,6 +1271,7 @@ class CoinFlowClient:
             if transaction is None:
                 return BasicReturn(success=False, error='The transaction is not on the expected state')
             
+            transaction.external_id = external_id
             transaction.confimation_needed = True
             transaction.save()
             logger.info(f'Payment pending review for user {user.id}, transaction: {tid}')
@@ -1270,6 +1281,7 @@ class CoinFlowClient:
             # Payment expired before completion - mark as expired
             transaction = transaction_qs.filter(status__in=STATUSES_IN_PROGRESS).first()
             if transaction:
+                transaction.external_id = external_id
                 transaction.status = CoinFlowTransaction.StatusType.expired
                 transaction.amount = Decimal(money) / 100
                 transaction.pre_balance = user.balance

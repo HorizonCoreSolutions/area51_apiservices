@@ -53,6 +53,7 @@ from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 from apps.casino.custom_pagination import CustomPagination
 
+from apps.casino.tasks import task_update_offmarket_transaction
 from apps.core.permissions import IsAdmin, IsAgent, IsDealer, IsManager, IsPlayer, IsSuperAdmin
 from apps.core.rest_any_permissions import AnyPermissions
 from apps.core.utils.network import get_user_ip_from_request
@@ -2038,8 +2039,10 @@ class OffMarketDepositView(APIView):
                 deposit.game_name_full = game.title
                 deposit.bonus = bonus_amount
                 deposit.save()
+                task_update_offmarket_transaction.apply_async(args=[deposit.id], countdown=10)
                 return Response({"message": "Request Submitted Successfully"}, status.HTTP_200_OK)
-            # TODO: remove this testing
+
+                # TODO: remove this testing
             try:
                 message = response.json().get("message")
                 if message in messages:

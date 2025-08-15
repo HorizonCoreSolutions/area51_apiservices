@@ -1,5 +1,6 @@
 from datetime import timedelta,timezone,datetime
 import json
+import sys
 from django.core.management.base import BaseCommand
 from django.conf import settings
 from apps.users.models import OffMarketGames, OffMarketTransactions
@@ -8,11 +9,24 @@ import random
 import requests
 from rest_framework import status
 from decimal import Decimal
+import logging
 
 from apps.users.utils import refund_transactions
 
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+logger = logging.getLogger("fetch_offmarket_transaction")
+logger.setLevel(logging.INFO)
+logger.propagate = False  # Prevent messages from going to root logger
 
+# Clear any existing handlers (in case Django added some)
+if logger.hasHandlers():
+    logger.handlers.clear()
 
+# Attach only one StreamHandler
+handler = logging.StreamHandler(sys.stdout)
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(name)s - %(message)s')
+handler.setFormatter(formatter)
+logger.addHandler(handler)
 
 class Command(BaseCommand):
     def handle(self, *args, **kwargs):
@@ -22,6 +36,8 @@ class Command(BaseCommand):
                     secret_key = settings.OFF_MARKET_SECRETKEY
                     off_market_api_url = settings.OFFMARKET_API_URL
                     pending_transaction = OffMarketTransactions.objects.filter(status='Pending',transaction_type='DEPOSIT')
+                    logger.info("Loop started")
+                    print("Loop started", flush=True)
                     for transaction in pending_transaction:
                         try:
                             params = {
@@ -49,7 +65,7 @@ class Command(BaseCommand):
                                     transaction.save()    
                         except Exception as e:
                                 print(e)
-                    print("Sleeping for 10 minutes")
+                    logger.info("Sleeping for 10 minutes")
                     time.sleep(60*10)             
                 except Exception as e:
                     print("ERROR : ",e)  
