@@ -751,11 +751,17 @@ class CPgames():
                 callerId=settings.CP_GAMES_ID,
                 user=user,
                 bet_id=bet_id,
-                game_status=GSoftTransactions.GameStatus.completed,
             )
-            if qs.exists():
-                return self.get_formated_balance(user=user,
-                                                 app=app), status.HTTP_200_OK
+
+            is_completed = qs.filter(
+                game_status=GSoftTransactions.GameStatus.completed
+                ).exists()
+
+            if not qs.exists():
+                return self.parse_to_message(1118), status.HTTP_400_BAD_REQUEST
+
+            if is_completed:
+                return self.get_formated_balance(user=user, app=app), status.HTTP_200_OK
 
             # CHECK: win_amount is higher or equals to 0
             # 3.2: 7.
