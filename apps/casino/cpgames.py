@@ -789,11 +789,11 @@ class CPgames():
             given_from_balance = Decimal(0)
             for item in all_games:
                 if item[0] is not None and item[0] > 0:
-                    given_from_bonus -= Decimal(item[3])
-                    given_from_balance -= Decimal(item[2])
+                    given_from_bonus -= Decimal(item[3] or 0)
+                    given_from_balance -= Decimal(item[2] or 0)
                 elif item[1] is not None and item[1] > 0:
-                    given_from_bonus += Decimal(item[3])
-                    given_from_balance += Decimal(item[2])
+                    given_from_bonus += Decimal(item[3] or 0)
+                    given_from_balance += Decimal(item[2] or 0)
 
             if given_from_bonus > 0:
                 transfer_bonus = min(given_from_bonus, payout)
@@ -801,8 +801,8 @@ class CPgames():
                 transfer_bonus = Decimal(0)
             transfer_balance = payout - transfer_bonus
 
-            user.bonus_balance = transfer_bonus + Decimal(user.bonus_balance)
-            user.balance = transfer_balance + Decimal(user.balance)
+            user.bonus_balance = transfer_bonus + Decimal(user.bonus_balance or 0)
+            user.balance = transfer_balance + Decimal(user.balance or 0)
             user.save()
 
             transaction_obj = GSoftTransactions()
