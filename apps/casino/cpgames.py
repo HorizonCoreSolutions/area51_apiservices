@@ -485,7 +485,10 @@ class CPgames():
             )
             has_rolled = qs.filter(
                 request_type=GSoftTransactions.RequestType.rollback)
-            if has_rolled.exists() or not qs.exists():
+            if not qs.exists():
+                return self.parse_to_message(1118), status.HTTP_400_BAD_REQUEST
+            
+            if has_rolled.exists():
                 return self.get_formated_balance(user=user, app=app), status.HTTP_200_OK
 
             to_rollback = qs.first()
@@ -655,7 +658,7 @@ class CPgames():
             )
             
             if not qs.exists():
-                return self.parse_to_message(1117), status.HTTP_200_OK
+                return self.parse_to_message(1118), status.HTTP_200_OK
             
             if qs.filter(request_type=GSoftTransactions.RequestType.rollback).exists():
                 return self.get_formated_balance(user=user, app=app), status.HTTP_200_OK
