@@ -729,58 +729,85 @@ class CPgames():
             bet_amount = Decimal(bet_info.get("bet_amount", 0))
             payout = Decimal(bet_info.get("win_amount", 0))
 
+            # Idempotency by transaction_id (single credit per provider order)
+            if transaction_id and GSoftTransactions.objects.filter(
+                callerId=settings.CP_GAMES_ID,
+                transaction_id=transaction_id
+            ).exists():
+                # Already processed this provider order: return success with current balance
+                return self.get_formated_balance(user=user, app=app), status.HTTP_200_OK
+            
             # CHECK: if the bet already exist
             # 3.2: 2.
             case_a = settle_type == "bet_id"
             case_b = settle_type == "round_id"
 
-            qs = GSoftTransactions.objects.filter(
-                callerId=settings.CP_GAMES_ID,
-                user=user,
-                bet_id=bet_id,
-            )
-
-            is_completed = qs.filter(
-                game_status=GSoftTransactions.GameStatus.completed
-                ).exists()
+            if case_a:
+                qs = GSoftTransactions.objects.filter(
+                    callerId=settings.CP_GAMES_ID,
+                    user=user,
+                    bet_id=bet_id,
+                ).order_by("-created")
+            elif case_b:
+                qs = GSoftTransactions.objects.filter(
+                    callerId=settings.CP_GAMES_ID,
+                    user=user,
+                    round_id=round_id,
+                ).order_by("-created")
+            else:
+                qs = GSoftTransactions.objects.filter(
+                    callerId=settings.CP_GAMES_ID,
+                    user=user,
+                    bet_id=bet_id,
+                ).order_by("-created")
+                
 
             if not qs.exists():
                 return self.parse_to_message(1118), status.HTTP_400_BAD_REQUEST
+            
+            last_game = qs.first()
 
-            if is_completed:
+            if last_game and last_game.game_status == GSoftTransactions.GameStatus.completed:
                 return self.get_formated_balance(user=user, app=app), status.HTTP_200_OK
 
             # CHECK: win_amount is higher or equals to 0
             # 3.2: 7.
+            if payout < 0:
+                return self.parse_to_message(1110), status.HTTP_400_BAD_REQUEST
 
             all_games = qs
+            
+            # To stop the lsp of unbound on realword scenario
+            # This values should not get to transfer_* assigment
+            given_from_bonus = Decimal(0)
+            given_from_balance = Decimal(0)
+            
             if case_a:
                 # bet amount
                 all_games = qs.values_list(
                     "deposit", "withdraw", "amount", "bonus_bet_amount")
+                given_from_bonus = Decimal(0) if app.is_real_play else payout
+                given_from_balance = payout if app.is_real_play else Decimal(0)
+                for item in all_games:
+                    if item[0] is not None and item[0] > 0:
+                        given_from_bonus -= Decimal(item[3] or 0)
+                        given_from_balance -= Decimal(item[2] or 0)
+                    elif item[1] is not None and item[1] > 0:
+                        given_from_bonus += Decimal(item[3] or 0)
+                        given_from_balance += Decimal(item[2] or 0)
 
             elif case_b:
                 all_games = GSoftTransactions.objects.filter(
                     callerId=settings.CP_GAMES_ID,
                     round_id=round_id
                 )
+                if not all_games.exists():
+                    return self.parse_to_message(1118), status.HTTP_200_OK
                 all_games.update(
                     game_status=GSoftTransactions.GameStatus.completed)
-                all_games = qs.values_list(
-                    "deposit", "withdraw", "amount", "bonus_bet_amount")
+                given_from_bonus = Decimal(0) if app.is_real_play else payout
+                given_from_balance = payout if app.is_real_play else Decimal(0)
 
-            if payout < 0:
-                return self.parse_to_message(1110), status.HTTP_400_BAD_REQUEST
-
-            given_from_bonus = Decimal(0)
-            given_from_balance = Decimal(0)
-            for item in all_games:
-                if item[0] is not None and item[0] > 0:
-                    given_from_bonus -= Decimal(item[3] or 0)
-                    given_from_balance -= Decimal(item[2] or 0)
-                elif item[1] is not None and item[1] > 0:
-                    given_from_bonus += Decimal(item[3] or 0)
-                    given_from_balance += Decimal(item[2] or 0)
 
             transfer_bonus   = given_from_bonus
             transfer_balance = given_from_balance
