@@ -376,7 +376,7 @@ class CPgames():
 
             # 3.2: 4.
             round_id = bet_info.get("parent_bet_id")
-            amount = Decimal(bet_info.get("bet_amout", 0))
+            amount = Decimal(bet_info.get("bet_amount", 0))
             win_amount = Decimal(bet_info.get("win_amount", 0))
             transfer_amount = Decimal(bet_info.get("transfer_amount", 0))
 
