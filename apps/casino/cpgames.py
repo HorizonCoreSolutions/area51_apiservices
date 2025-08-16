@@ -732,6 +732,7 @@ class CPgames():
             # Idempotency by transaction_id (single credit per provider order)
             if transaction_id and GSoftTransactions.objects.filter(
                 callerId=settings.CP_GAMES_ID,
+                game_status=GSoftTransactions.GameStatus.completed,
                 transaction_id=transaction_id
             ).exists():
                 # Already processed this provider order: return success with current balance
@@ -742,24 +743,11 @@ class CPgames():
             case_a = settle_type == "bet_id"
             case_b = settle_type == "round_id"
 
-            if case_a:
-                qs = GSoftTransactions.objects.filter(
-                    callerId=settings.CP_GAMES_ID,
-                    user=user,
-                    bet_id=bet_id,
-                ).order_by("-created")
-            elif case_b:
-                qs = GSoftTransactions.objects.filter(
-                    callerId=settings.CP_GAMES_ID,
-                    user=user,
-                    round_id=round_id,
-                ).order_by("-created")
-            else:
-                qs = GSoftTransactions.objects.filter(
-                    callerId=settings.CP_GAMES_ID,
-                    user=user,
-                    bet_id=bet_id,
-                ).order_by("-created")
+            qs = GSoftTransactions.objects.filter(
+                callerId=settings.CP_GAMES_ID,
+                user=user,
+                **({"round_id": round_id} if case_b else {"bet_id": bet_id})
+            ).order_by("-created")
                 
 
             if not qs.exists():
