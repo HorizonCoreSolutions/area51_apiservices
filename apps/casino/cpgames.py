@@ -499,15 +499,10 @@ class CPgames():
             # 3.2: 7.
             deposit = to_rollback.deposit or Decimal(0)
             withdraw = to_rollback.withdraw or Decimal(0)
-            if withdraw > 0:
-                multipliyer = 1
-            else:
-                multipliyer = -1
+            multipliyer = 1 if withdraw > 0 else -1
 
-            transfer_bonus: Decimal = Decimal(
-                to_rollback.amount or 0) * multipliyer
-            transfer_balance: Decimal = Decimal(
-                to_rollback.bonus_bet_amount or 0) * multipliyer
+            transfer_balance = Decimal(to_rollback.amount or 0) * multipliyer
+            transfer_bonus   = Decimal(to_rollback.bonus_bet_amount or 0) * multipliyer
 
             user.bonus_balance = transfer_bonus + \
                 Decimal(user.bonus_balance or 0)
@@ -655,7 +650,7 @@ class CPgames():
                 callerId=settings.CP_GAMES_ID,
                 user=user,
                 bet_id=bet_id,
-            )
+            ).order_by("-created")
             
             to_rollback = qs.first()
             if not to_rollback:
@@ -668,15 +663,10 @@ class CPgames():
             # 3.2: 7.
             deposit = Decimal(to_rollback.deposit or 0)
             withdraw = Decimal(to_rollback.withdraw or 0)
-            if withdraw > 0:
-                multipliyer = 1
-            else:
-                multipliyer = -1
+            multipliyer = 1 if withdraw > 0 else -1
 
-            transfer_bonus: Decimal = Decimal(
-                to_rollback.amount or 0) * multipliyer
-            transfer_balance: Decimal = Decimal(
-                to_rollback.bonus_bet_amount or 0) * multipliyer
+            transfer_balance = Decimal(to_rollback.amount or 0) * multipliyer
+            transfer_bonus   = Decimal(to_rollback.bonus_bet_amount or 0) * multipliyer
 
             user.bonus_balance = transfer_bonus + Decimal(user.bonus_balance)
             user.balance = transfer_balance + Decimal(user.balance)
@@ -792,11 +782,8 @@ class CPgames():
                     given_from_bonus += Decimal(item[3] or 0)
                     given_from_balance += Decimal(item[2] or 0)
 
-            if given_from_bonus > 0:
-                transfer_bonus = min(given_from_bonus, payout)
-            else:
-                transfer_bonus = Decimal(0)
-            transfer_balance = payout - transfer_bonus
+            transfer_bonus   = given_from_bonus
+            transfer_balance = given_from_balance
 
             user.bonus_balance = transfer_bonus + Decimal(user.bonus_balance or 0)
             user.balance = transfer_balance + Decimal(user.balance or 0)
