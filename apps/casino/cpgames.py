@@ -357,16 +357,16 @@ class CPgames():
         if not app:
             # Signature error 1111
             response_data = self.parse_to_message(1111)
-            return response_data, status.HTTP_401_UNAUTHORIZED
+            return response_data, status.HTTP_200_OK
 
         try:
             msg = json.loads(data.get("message", "{}"))
             sub_uid: str = msg.get("sub_uid")
             user, error = self.select_user_for_update(sub_uid=sub_uid)
             if error is not None:
-                return error, status.HTTP_400_BAD_REQUEST
+                return error, status.HTTP_200_OK
             if user is None:
-                return self.parse_to_message(1116), status.HTTP_400_BAD_REQUEST
+                return self.parse_to_message(1116), status.HTTP_200_OK
 
             # 3.2: 1.
             game_id = msg.get("game_id")
@@ -390,7 +390,7 @@ class CPgames():
             # CHECK: win_amount is higher or equals to 0
             # 3.2: 7.
             if win_amount < 0:
-                return self.parse_to_message(1110), status.HTTP_400_BAD_REQUEST
+                return self.parse_to_message(1110), status.HTTP_200_OK
 
             balance = None
             if app.is_real_play:
@@ -403,7 +403,7 @@ class CPgames():
             # Check if user  has enought money to bet
             if balance < amount:
                 response_data = self.parse_to_message(1117)
-                return response_data, status.HTTP_400_BAD_REQUEST
+                return response_data, status.HTTP_200_OK
 
             withdraw = 0
             deposit = 0
@@ -448,11 +448,11 @@ class CPgames():
         except AttributeError as e:
             print("grep here")
             print(e)
-            return self.parse_to_message(1110), status.HTTP_400_BAD_REQUEST
+            return self.parse_to_message(1110), status.HTTP_200_OK
         except TypeError as e:
             print("grep here")
             print(e)
-            return self.parse_to_message(1110), status.HTTP_400_BAD_REQUEST
+            return self.parse_to_message(1110), status.HTTP_200_OK
 
     @db_transaction.atomic
     def cancel_in_out(self, data) -> Tuple[Dict, int]:
@@ -461,16 +461,16 @@ class CPgames():
         if not app:
             # Signature error 1111
             response_data = self.parse_to_message(1111)
-            return response_data, status.HTTP_401_UNAUTHORIZED
+            return response_data, status.HTTP_200_OK
 
         try:
             msg = json.loads(data.get("message", "{}"))
             sub_uid: str = msg.get("sub_uid")
             user, error = self.select_user_for_update(sub_uid=sub_uid)
             if error is not None:
-                return error, status.HTTP_400_BAD_REQUEST
+                return error, status.HTTP_200_OK
             if user is None:
-                return self.parse_to_message(1116), status.HTTP_400_BAD_REQUEST
+                return self.parse_to_message(1116), status.HTTP_200_OK
 
             # 3.4: 1.
             game_id = msg.get("game_id")
@@ -486,7 +486,7 @@ class CPgames():
             has_rolled = qs.filter(
                 request_type=GSoftTransactions.RequestType.rollback)
             if not qs.exists():
-                return self.parse_to_message(1118), status.HTTP_400_BAD_REQUEST
+                return self.parse_to_message(1118), status.HTTP_200_OK
             
             if has_rolled.exists():
                 return self.get_formated_balance(user=user, app=app), status.HTTP_200_OK
@@ -528,9 +528,9 @@ class CPgames():
 
             return self.get_formated_balance(user=user, app=app), status.HTTP_200_OK
         except AttributeError:
-            return self.parse_to_message(1110), status.HTTP_400_BAD_REQUEST
+            return self.parse_to_message(1110), status.HTTP_200_OK
         except TypeError:
-            return self.parse_to_message(1110), status.HTTP_400_BAD_REQUEST
+            return self.parse_to_message(1110), status.HTTP_200_OK
 
     # 3.4: Bet
 
@@ -541,16 +541,16 @@ class CPgames():
         if not app:
             # Signature error 1111
             response_data = self.parse_to_message(1111)
-            return response_data, status.HTTP_401_UNAUTHORIZED
+            return response_data, status.HTTP_200_OK
 
         try:
             msg = json.loads(data.get("message", "{}"))
             sub_uid: str = msg.get("sub_uid")
             user, error = self.select_user_for_update(sub_uid=sub_uid)
             if error is not None:
-                return error, status.HTTP_400_BAD_REQUEST
+                return error, status.HTTP_200_OK
             if user is None:
-                return self.parse_to_message(1116), status.HTTP_400_BAD_REQUEST
+                return self.parse_to_message(1116), status.HTTP_200_OK
 
             # 3.4: 1.
             game_id = msg.get("game_id")
@@ -579,7 +579,7 @@ class CPgames():
             # Check if user  has enought money to bet
             if balance < amount:
                 response_data = self.parse_to_message(1117)
-                return response_data, status.HTTP_400_BAD_REQUEST
+                return response_data, status.HTTP_200_OK
 
             transfer_balance = - abs(amount)
             withdraw = abs(amount)
@@ -611,11 +611,11 @@ class CPgames():
         except AttributeError as e:
             print("grep here")
             print(e)
-            return self.parse_to_message(1110), status.HTTP_400_BAD_REQUEST
+            return self.parse_to_message(1110), status.HTTP_200_OK
         except TypeError as e:
             print("grep here")
             print(e)
-            return self.parse_to_message(1110), status.HTTP_400_BAD_REQUEST
+            return self.parse_to_message(1110), status.HTTP_200_OK
 
     @db_transaction.atomic
     def cancel_bet(self, data) -> Tuple[Dict, int]:
@@ -624,16 +624,16 @@ class CPgames():
         if not app:
             # Signature error 1111
             response_data = self.parse_to_message(1111)
-            return response_data, status.HTTP_401_UNAUTHORIZED
+            return response_data, status.HTTP_200_OK
 
         try:
             msg = json.loads(data.get("message", "{}"))
             sub_uid: str = msg.get("sub_uid")
             user, error = self.select_user_for_update(sub_uid=sub_uid)
             if error is not None:
-                return error, status.HTTP_400_BAD_REQUEST
+                return error, status.HTTP_200_OK
             if user is None:
-                return self.parse_to_message(1116), status.HTTP_400_BAD_REQUEST
+                return self.parse_to_message(1116), status.HTTP_200_OK
 
             # 3.4: 1.
             game_id = msg.get("game_id")
@@ -694,11 +694,11 @@ class CPgames():
         except AttributeError as e:
             print("grep here")
             print(e)
-            return self.parse_to_message(1110), status.HTTP_400_BAD_REQUEST
+            return self.parse_to_message(1110), status.HTTP_200_OK
         except TypeError as e:
             print("grep here")
             print(e)
-            return self.parse_to_message(1110), status.HTTP_400_BAD_REQUEST
+            return self.parse_to_message(1110), status.HTTP_200_OK
 
     @db_transaction.atomic
     def settle(self, data) -> Tuple[Dict, int]:
@@ -707,16 +707,16 @@ class CPgames():
         if not app:
             # Signature error 1111
             response_data = self.parse_to_message(1111)
-            return response_data, status.HTTP_401_UNAUTHORIZED
+            return response_data, status.HTTP_200_OK
 
         try:
             msg = json.loads(data.get("message", "{}"))
             sub_uid: str = msg.get("sub_uid")
             user, error = self.select_user_for_update(sub_uid=sub_uid)
             if error is not None:
-                return error, status.HTTP_400_BAD_REQUEST
+                return error, status.HTTP_200_OK
             if user is None:
-                return self.parse_to_message(1116), status.HTTP_400_BAD_REQUEST
+                return self.parse_to_message(1116), status.HTTP_200_OK
 
             # 3.4: 1.
             game_id = msg.get("game_id")
@@ -741,7 +741,7 @@ class CPgames():
             # CHECK: if the bet already exist
             # 3.2: 2.
             if not settle_type in { "bet_id", "round_id" }:
-                return self.parse_to_message(1110), status.HTTP_400_BAD_REQUEST
+                return self.parse_to_message(1110), status.HTTP_200_OK
             
             case_a = settle_type == "bet_id"
             case_b = settle_type == "round_id"
@@ -757,7 +757,7 @@ class CPgames():
                 
 
             if not qs.exists():
-                return self.parse_to_message(1118), status.HTTP_400_BAD_REQUEST
+                return self.parse_to_message(1118), status.HTTP_200_OK
             
             last_game = qs.first()
 
@@ -767,7 +767,7 @@ class CPgames():
             # CHECK: win_amount is higher or equals to 0
             # 3.2: 7.
             if payout < 0:
-                return self.parse_to_message(1110), status.HTTP_400_BAD_REQUEST
+                return self.parse_to_message(1110), status.HTTP_200_OK
 
             all_games = qs
             all_games.update(
@@ -800,11 +800,11 @@ class CPgames():
         except AttributeError as e:
             print("grep here")
             print(e)
-            return self.parse_to_message(1110), status.HTTP_400_BAD_REQUEST
+            return self.parse_to_message(1110), status.HTTP_200_OK
         except TypeError as e:
             print("grep here")
             print(e)
-            return self.parse_to_message(1110), status.HTTP_400_BAD_REQUEST
+            return self.parse_to_message(1110), status.HTTP_200_OK
 
     def save_request(self, request, is_response=False):
         file = "cp_request_log.txt"
