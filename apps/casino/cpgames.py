@@ -740,8 +740,14 @@ class CPgames():
             
             # CHECK: if the bet already exist
             # 3.2: 2.
+            if not settle_type in { "bet_id", "round_id" }:
+                return self.parse_to_message(1110), status.HTTP_400_BAD_REQUEST
+            
             case_a = settle_type == "bet_id"
             case_b = settle_type == "round_id"
+
+            # if case b filter by round if not case_b so case_a filter by bet_id
+            # **({"round_id": round_id} if case_b else {"bet_id": bet_id})
 
             qs = GSoftTransactions.objects.filter(
                 callerId=settings.CP_GAMES_ID,
@@ -764,41 +770,11 @@ class CPgames():
                 return self.parse_to_message(1110), status.HTTP_400_BAD_REQUEST
 
             all_games = qs
+            all_games.update(
+                game_status=GSoftTransactions.GameStatus.completed)
             
-            # To stop the lsp of unbound on realword scenario
-            # This values should not get to transfer_* assigment
-            given_from_bonus = Decimal(0)
-            given_from_balance = Decimal(0)
-            
-            if case_a:
-                # bet amount
-                all_games = qs.values_list(
-                    "deposit", "withdraw", "amount", "bonus_bet_amount")
-                given_from_bonus = Decimal(0) if app.is_real_play else payout
-                given_from_balance = payout if app.is_real_play else Decimal(0)
-                for item in all_games:
-                    if item[0] is not None and item[0] > 0:
-                        given_from_bonus -= Decimal(item[3] or 0)
-                        given_from_balance -= Decimal(item[2] or 0)
-                    elif item[1] is not None and item[1] > 0:
-                        given_from_bonus += Decimal(item[3] or 0)
-                        given_from_balance += Decimal(item[2] or 0)
-
-            elif case_b:
-                all_games = GSoftTransactions.objects.filter(
-                    callerId=settings.CP_GAMES_ID,
-                    round_id=round_id
-                )
-                if not all_games.exists():
-                    return self.parse_to_message(1118), status.HTTP_200_OK
-                all_games.update(
-                    game_status=GSoftTransactions.GameStatus.completed)
-                given_from_bonus = Decimal(0) if app.is_real_play else payout
-                given_from_balance = payout if app.is_real_play else Decimal(0)
-
-
-            transfer_bonus   = given_from_bonus
-            transfer_balance = given_from_balance
+            transfer_bonus   = Decimal(0) if app.is_real_play else payout
+            transfer_balance = payout if app.is_real_play else Decimal(0)
 
             user.bonus_balance = transfer_bonus + Decimal(user.bonus_balance or 0)
             user.balance = transfer_balance + Decimal(user.balance or 0)
