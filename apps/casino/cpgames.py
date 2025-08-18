@@ -833,7 +833,6 @@ class CPgames():
             return False, {"success": False, "message": "User with given account_id not found"}
 
         app = None
-        app = None
         for lapp in self.econfig.apps:
             if fake_game and not lapp.is_real_play:
                 app = lapp
