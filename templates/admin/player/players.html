@@ -1036,7 +1036,10 @@ Players
                                                             <!-- Permissions tab content end -->
 
                                                             <!-- Verify tab content start -->
-                                                            {% if request.user.role == 'admin' %}
+
+                                                            <!-- TODO: Bring this functionallity back -->
+                                                            <!-- Remove verication tab -->
+                                                            {% comment %} {% if request.user.role == 'admin' %}
                                                             <div class="tab-pane fade"
                                                                  id="nav-verify-{{ forloop.counter }}" role="tabpanel"
                                                                  aria-labelledby="nav-verify-{{ forloop.counter }}-tab">
@@ -1054,8 +1057,15 @@ Players
                                                                                         </thead>
                                                                                         <tbody>
                                                                                             <tr>
-                                                                                                <td style="text-align: center;"><a href="{% if player.user_id_proof %}{{ player.user_id_proof.url }}{% endif %}" data-lightbox="verify-image-{{ player.id }}"><img src="{% if player.user_id_proof %}{{ player.user_id_proof.url }}{% endif %}" id="verify-image-{{ player.id }}" height="50px" width="50px" alt="User ID Proof" ></a></td>
-                                                                                                <td><input type="checkbox" id="verify-{{ player.id }}" class="verify_switch" player_id="{{ player.pk }}" {% if player.is_verified %}checked{% endif %}><label id="verify-toogle" for="verify-{{ player.id }}">Toggle</label></td>
+                                                                                                <td style="text-align: center;">
+                                                                                                    <a href="{% if player.user_id_proof %}{{ player.user_id_proof.url }}{% endif %}" data-lightbox="verify-image-{{ player.id }}">
+                                                                                                        <img src="{% if player.user_id_proof %}{{ player.user_id_proof.url }}{% endif %}" id="verify-image-{{ player.id }}" height="50px" width="50px" alt="User ID Proof" >
+                                                                                                    </a>
+                                                                                                </td>
+                                                                                                <td>
+                                                                                                    <input type="checkbox" id="verify-{{ player.id }}" class="verify_switch" player_id="{{ player.pk }}" {% if player.is_verified %}checked{% endif %}>
+                                                                                                    <label id="verify-toogle" for="verify-{{ player.id }}">Toggle</label>
+                                                                                                </td>
                                                                                             </tr>
                                                                                         </tbody>
                                                                                     </table>
@@ -1065,7 +1075,7 @@ Players
                                                                     </div>
                                                                 </div>
                                                             </div>
-                                                            {% endif %}
+                                                            {% endif %} {% endcomment %}
                                                             <!-- Verify tab content end -->
 
                                                             
