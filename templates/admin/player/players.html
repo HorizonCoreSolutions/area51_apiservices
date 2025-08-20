@@ -171,19 +171,23 @@ Players
     .transaction-pay-button:hover {
         background-color: #6eb5ff;
     }
+
+    .min-width-210 {
+        min-width: 210px;
+    }
     
     
 
     </style>
-    <div class="pcode" id='nw1' >
-    <div>
+    <div class="pcode" id="nw1" >
+    </div>
     <div class="container-fluid pt-4" >
         <div class="admin-card">
         <div class="row">
             <div class="col-xs-12 col-lg-12 ">
                 <div class="page-content"  >
                     <div class="main-heading-wrap">
-                        <h5>{% trans 'Players' %}</h5>
+                        <h5>{% trans "Players" %}</h5>
                     </div>
                     <div class="container-fluid" >
                         
@@ -197,7 +201,7 @@ Players
             
                                         <!-- Dealer select -->
                                         {% if request.user.role == 'admin' or request.user.role == 'superadmin' %}
-                                            <div class="col" style="min-width: 210px;">
+                                            <div class="col min-width-210" >
                                                 <div class="rs-select2--light rs-select2--md" multiple="multiple">
                                                     <select id="select-dealer" name="dealers" class="js-example-basic-multiple tokenize-open"
                                                             multiple="multiple">
@@ -214,7 +218,7 @@ Players
                 
                                         <!-- Agent select -->
                                         {% if request.user.role == 'admin' or request.user.role == 'dealer' or request.user.role == 'superadmin' %}
-                                            <div class="col" style="min-width: 210px;">
+                                            <div class="col min-width-210" >
                                                 <div class="rs-select2--light rs-select2--md" multiple="multiple">
                                                     <select id="select-agent" name="agents" class="js-example-basic-multiple tokenize-open" multiple="multiple">
                                                         {% if selected_agents %}
@@ -226,7 +230,7 @@ Players
                                                 </div>
                                             </div>
                                         {% endif %}
-                                        <div class="col" style="min-width: 210px;">
+                                        <div class="col min-width-210" >
                                             <div class="rs-select2--light rs-select2--md" multiple="multiple">
                                                 <select id="input-search" name="user_name" class="js-example-basic-multiple tokenize-open" multiple="multiple">
                                                     {% if selected_players %}
@@ -253,7 +257,7 @@ Players
                                     <!-- Order by and search -->
                                     <span style="font-weight: bold; color: black;">{% trans "Ability to Play" %}</span>
                                     <div class="row flex-sm-nowrap flex-wrap">
-                                        <div class="col form-group" style="min-width: 210px;">
+                                        <div class="col form-group min-width-210" >
                                             <select class="form-control select-input" id="ability-to-play" name="ability-to-play" >
                                                 <option {% if ability_to_play == '' %}selected="selected" {% endif %} value="">{% trans "--All--" %}</option>
                                                 <option {% if ability_to_play == '1' %}selected="selected" {% endif %} value="1">{% trans "Yes" %}</option>
@@ -261,7 +265,7 @@ Players
                                             </select>
                                             <div class="dropDownSelect2" ></div>
                                         </div> 
-                                        <div class="col form-group" style="min-width: 210px;">
+                                        <div class="col form-group min-width-210" >
                                             <select id="select-sort" class="form-control select-input font-weight-bold" name="order">
                                                 <option {% if order == '1' %}selected="selected" {% endif %} value="1">{% trans "Recent Login" %}</option>
                                                 <option {% if order == '2' %}selected="selected" {% endif %} value="2">{% trans "Credit Ascending" %}</option>
@@ -273,14 +277,14 @@ Players
                                             </select>
                                             <div class="dropDownSelect2" ></div>
                                         </div>
-                                        <div class="col form-group" style="min-width: 210px;">
+                                        <div class="col form-group min-width-210" >
                                             <div >
-                                                <input type="text" class="form-control" id="search-location" value="{{location}}" name="location" placeholder= '{% trans "Search by Location" %}'/>
+                                                <input type="text" class="form-control" id="search-location" value="{{ location }}" name="location" placeholder='{% trans "Search by Location" %}'/>
                                             </div>
                                         </div>
-                                        <div class="col form-group" style="min-width: 210px;">
+                                        <div class="col form-group min-width-210" >
                                             <div >
-                                                <input type="text" class="form-control" id="search-zip_code" value="{{zip_code}}" name="zip_code" placeholder= '{% trans "Search by Zipcode" %}' onkeypress="return isNumberKey(event)">
+                                                <input type="text" class="form-control" id="search-zip_code" value="{{ zip_code }}" name="zip_code" placeholder='{% trans "Search by Zipcode" %}' onkeypress="return isNumberKey(event)">
                                             </div>
                                         </div>
                                     </div>
@@ -288,14 +292,14 @@ Players
                                     <!-- Date filters -->
                                     {% if request.user.role == 'admin' or request.user.role == 'superadmin' %}
                                         <div class="row flex-sm-nowrap flex-wrap">
-                                            <div class="col form-group" style="min-width: 210px;">
+                                            <div class="col form-group min-width-210" >
                                                 <div class="date-input">
                                                     <span>{% trans "From date" %}</span>
                                                     <input type="text" class="form-control" id="search-date-created-from" name="from" value="" onChange="validateDateRange(this)" readonly="true" style="background-color:transparent" placeholder='{% trans "Select from date" %}'>
                                                 </div>
                                             </div>
                     
-                                            <div class="col form-group" style="min-width: 210px;">
+                                            <div class="col form-group min-width-210" >
                                                 <div class="date-input">
                                                     <span>{% trans "To date" %}</span>
                                                     <input type="text" class="form-control" id="search-date-created-to" name="to" value=""  onChange="validateDateRange(this)" readonly="true" style="background-color:transparent" placeholder='{% trans "Select to date" %}'>
@@ -332,7 +336,7 @@ Players
                                     <div class="modal-header">
                                         <h5 class="modal-title" id="exampleModalLabel">Create UserGame</h5>
                                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                            <span aria-hidden="true">&times;</span>
+                                            <span aria-hidden="true">✖</span>
                                         </button>
                                     </div>
 
@@ -377,7 +381,7 @@ Players
                                     <div class="modal-header">
                                         <h5 class="modal-title" id="exampleModalLabel">Edit UserGame</h5>
                                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                            <span aria-hidden="true">&times;</span>
+                                            <span aria-hidden="true">✖</span>
                                         </button>
                                     </div>
                                     <div class="modal-body">
@@ -424,17 +428,17 @@ Players
                             <table class="table table-data2 users-table text-center">
                                 <thead>
                                     <tr>
-                                        <th>{% trans 'Name' %}</th>
-                                        <th>{% trans 'State' %}</th>
-                                        <th>{% trans 'Address' %}</th>
-                                        <th>{% trans 'ZIPCODE' %}</th>
-                                        <th>{% trans 'Email' %}</th>
-                                        <th>{% trans 'Phone Number' %}</th>
-                                        {% if request.user.role != 'agent' %}<th>{% trans 'Agent' %}</th>{% endif %}
-                                        <th>{% trans 'Master Agent' %}</th>
-                                        <th>{% trans 'Created Date' %}</th>
-                                        <th>{% trans 'Balance' %}</th>
-                                        <th>{% trans 'Bonus Balance' %}</th>
+                                        <th>{% trans "Name" %}</th>
+                                        <th>{% trans "State" %}</th>
+                                        <th>{% trans "Address" %}</th>
+                                        <th>{% trans "ZIPCODE" %}</th>
+                                        <th>{% trans "Email" %}</th>
+                                        <th>{% trans "Phone Number" %}</th>
+                                        {% if request.user.role != 'agent' %}<th>{% trans "Agent" %}</th>{% endif %}
+                                        <th>{% trans "Master Agent" %}</th>
+                                        <th>{% trans "Created Date" %}</th>
+                                        <th>{% trans "Balance" %}</th>
+                                        <th>{% trans "Bonus Balance" %}</th>
                                         {% if request.user.role == 'agent' %}
                                             <th>Edit</th>
                                         {% else %}
@@ -465,7 +469,7 @@ Players
                                                 <span class="email">{% if player.email %}{{ player.email }}{% else %}Not Available {% endif %}</span>
                                             </td>
                                             <td>
-                                                <span class="phone_number">{% if player.phone_number %}{% if player.country_code|isdigit %}+{{player.country_code}} {% endif %}{{ player.phone_number }}{% else %}Not Available {% endif %}</span>
+                                                <span class="phone_number">{% if player.phone_number %}{% if player.country_code|isdigit %}+{{ player.country_code }} {% endif %}{{ player.phone_number }}{% else %}Not Available {% endif %}</span>
                                             </td>
                                             {% if request.user.role != 'agent' %}
                                                 <td>
@@ -477,7 +481,7 @@ Players
                                             </td>
                                             <td>
                                                 <span class="created-date">
-                                                    {{ player.created  | local_date:request.session.user_timezone | date:"d-m-y H:i" }}
+                                                    {{ player.created | local_date:request.session.user_timezone | date:"d-m-y H:i" }}
                                                 </span>
                                             </td>
                                             <td>
@@ -497,12 +501,12 @@ Players
                                             <td>
                                                 {% if request.user.role == 'agent' %}
                                                     <div class="table-data-feature">
-                                                        <a href="#edit-player" data-username="{{ player.username }}" data-dob="{{ player.dob | dob_date }}" data-phone="{{player.phone_number}}" data-zipcode="{{player.zip_code}}"
-                                                        data-email="{{player.email}}" data-first_name="{{player.first_name}}" data-last_name="{{player.last_name}}" data-state="{{player.state}}" data-city="{{player.city}}" data-effect="mfp-zoom-in" data-countrycode="{{player.country_code}}"
-                                                        data-zip_code="{{player.zip_code}}" data-address="{{player.complete_address}}" 
-                                                        data-profile="{% if player.profile_pic %}{{player.profile_pic.url}}{% endif %}" data-id-proof="{% if player.user_id_proof %}{{player.user_id_proof.url}}{% endif %}"
+                                                        <a href="#edit-player" data-username="{{ player.username }}" data-dob="{{ player.dob | dob_date }}" data-phone="{{ player.phone_number }}" data-zipcode="{{ player.zip_code }}"
+                                                        data-email="{{ player.email }}" data-first_name="{{ player.first_name }}" data-last_name="{{ player.last_name }}" data-state="{{ player.state }}" data-city="{{ player.city }}" data-effect="mfp-zoom-in" data-countrycode="{{ player.country_code }}"
+                                                        data-zip_code="{{ player.zip_code }}" data-address="{{ player.complete_address }}" 
+                                                        data-profile="{% if player.profile_pic %}{{ player.profile_pic.url }}{% endif %}" data-id-proof="{% if player.user_id_proof %}{{ player.user_id_proof.url }}{% endif %}"
                                                         class="edit-player-popup item row-button-edit ignore-collapse">
-                                                            <img src="{% static '/icon/edit.png' %}" width="15" height="15" ></img>
+                                                            <img src="{% static '/icon/edit.png' %}" width="15" height="15" alt="edit icon" ></img>
                                                         </a>
                                                     </div>
                                                 {% endif %}
@@ -526,7 +530,7 @@ Players
                                                                        aria-controls="nav-credit-{{ forloop.counter }}"
                                                                        aria-selected="false" style="padding: .5rem 0.5rem;">
                                                                         <div class="noti__item mr-0 pl-2 pr-2">
-                                                                            <img src="{% static '/icon/money.svg' %}" width="20" height="20" ></img>
+                                                                            <img src="{% static '/icon/money.svg' %}" width="20" height="20" alt="money icon" ></img>
                                                                         </div>
                                                                     </a>
                                                                 {% endif %}
@@ -534,24 +538,18 @@ Players
             
                                                                 <!-- Profit tab start -->
                                                                 {% if request.user.role != 'staff' %}
-                                                                    {% if request.user.role == 'agent' %}
-                                                                    <a title="Profit" class="nav-item nav-link"
-                                                                    id="nav-profit-{{ forloop.counter }}-tab"
-                                                                    data-toggle="tab" href="#nav-profit-{{ forloop.counter }}"
-                                                                    role="tab"
-                                                                    aria-controls="nav-profit-" aria-selected="true"
-                                                                    style="padding: .5rem 0.5rem;">
-                                                                    {% else %}
-                                                                    <a title="Profit" class="nav-item nav-link active show"
-                                                                    id="nav-profit-{{ forloop.counter }}-tab"
-                                                                    data-toggle="tab" href="#nav-profit-{{ forloop.counter }}"
-                                                                    role="tab"
-                                                                    aria-controls="nav-profit-" aria-selected="true"
-                                                                    style="padding: .5rem 0.5rem;">
-                                                                    {% endif %}
+                                                                    <a title="Profit"
+                                                                        class="nav-item nav-link {% if request.user.role != 'agent' %}active show{% endif %}"
+                                                                        id="nav-profit-{{ forloop.counter }}-tab"
+                                                                        data-toggle="tab"
+                                                                        href="#nav-profit-{{ forloop.counter }}"
+                                                                        role="tab"
+                                                                        aria-controls="nav-profit-"
+                                                                        aria-selected="true"
+                                                                        style="padding: .5rem 0.5rem;">
                                                                     
                                                                         <div class="noti__item mr-0 pl-2 pr-2">
-                                                                            <img src="{% static '/icon/profit.svg' %}" width="20" height="20" ></img>
+                                                                            <img src="{% static '/icon/profit.svg' %}" width="20" height="20" alt="profit icon" ></img>
                                                                         </div>
                                                                     </a>
                                                                 {% endif %}
@@ -565,7 +563,7 @@ Players
                                                                     aria-controls="nav-permissions-1" aria-selected="false"
                                                                     style="padding: .5rem 0.5rem;">
                                                                     <div class="noti__item mr-0 pl-2 pr-2">
-                                                                        <img src="{% static '/icon/permission.svg' %}" onclick="change_timezone('{{player.id}}')" width="20" height="20" ></img>
+                                                                        <img src="{% static '/icon/permission.svg' %}" onclick="change_timezone('{{ player.id }}')" width="20" height="20" alt="permissions icon" ></img>
                                                                     </div>
                                                                     </a>
                                                                   {% elif request.user.role == 'staff' %}
@@ -575,7 +573,7 @@ Players
                                                                   aria-controls="nav-permissions-1" aria-selected="false"
                                                                   style="padding: .5rem 0.5rem;">
                                                                   <div class="noti__item mr-0 pl-2 pr-2">
-                                                                      <img src="{% static '/icon/permission.svg' %}" onclick="change_timezone('{{player.id}}')" width="20" height="20" ></img>
+                                                                      <img src="{% static '/icon/permission.svg' %}" onclick="change_timezone('{{ player.id }}')" width="20" height="20" alt="permissions icon" ></img>
                                                                   </div>
                                                                   </a>
                                                                   {% endif %}
@@ -606,13 +604,13 @@ Players
                                                                     </div>
                                                                    </a> {% endcomment %}
                                                                 
-                                                                <a title="usergames" class="nav-item nav-link "
+                                                                <a title="usergames" class="nav-item nav-link"
                                                                 id="nav-usergames-{{ forloop.counter }}-tab"
                                                                 data-toggle="tab" href="#nav-usergames-{{ forloop.counter }}" role="tab"
-                                                                aria-controls="nav-usergames-1" aria-selected="false" onclick = "usergames('{{player.id}}')"
+                                                                aria-controls="nav-usergames-1" aria-selected="false" onclick="usergames('{{ player.id }}')"
                                                                 style="padding: .5rem 0.5rem;">
                                                                 <div class="noti__item mr-0 pl-2 pr-2">
-                                                                    <img src="{% static '/icon/dice.svg' %}" width="20" height="20"></img>
+                                                                    <img src="{% static '/icon/dice.svg' %}" width="20" height="20" alt="dice icon" ></img>
                                                                 </div>
                                                                 </a>
                                                                 
@@ -645,7 +643,7 @@ Players
                                                                        aria-controls="nav-off-market-credit-{{ forloop.counter }}"
                                                                        aria-selected="false" style="padding: .5rem 0.5rem;">
                                                                         <div class="noti__item mr-0 pl-2 pr-2">
-                                                                            <img src="{% static '/icon/money.svg' %}" width="20" height="20" ></img>
+                                                                            <img src="{% static '/icon/money.svg' %}" width="20" height="20" alt="money icon" ></img>
                                                                         </div>
                                                                     </a>
                                                                 {% endif %}
@@ -772,15 +770,15 @@ Players
                 
                                                                                                 <tr>
                                                                                                     <td>{% trans "Casino" %}</td>
-                                                                                                    <td id="casino_in_sum-{{player.id}}"></td>
-                                                                                                    <td id="casino_out_sum-{{player.id}}"></td>
-                                                                                                    <td id="casino_profit-{{player.id}}"></td>                                       
+                                                                                                    <td id="casino_in_sum-{{ player.id }}"></td>
+                                                                                                    <td id="casino_out_sum-{{ player.id }}"></td>
+                                                                                                    <td id="casino_profit-{{ player.id }}"></td>                                       
                                                                                                 </tr>
                                                                                                 <tr>
                                                                                                     <td>{% trans "Offmarket" %}</td>
-                                                                                                    <td id="offmarket_in_sum-{{player.id}}"></td>
-                                                                                                    <td id="offmarket_out_sum-{{player.id}}"></td>
-                                                                                                    <td id="offmarket_profit-{{player.id}}" class="text-danger"></td>
+                                                                                                    <td id="offmarket_in_sum-{{ player.id }}"></td>
+                                                                                                    <td id="offmarket_out_sum-{{ player.id }}"></td>
+                                                                                                    <td id="offmarket_profit-{{ player.id }}" class="text-danger"></td>
                                                                                                 </tr>
                                                                                                 <tr class="font-weight-bold">
                                                                                                     <td>{% trans "Total" %}</td>
@@ -813,8 +811,7 @@ Players
 
                                                             <!-- Profit tab content end -->
 
-                                                            {% if request.user.role == 'agent' or request.user.role == 'staff' or request.user.role == 'admin'  %}
-                                                                
+                                                            {% if request.user.role == 'agent' or request.user.role == 'staff' or request.user.role == 'admin' %}
                                                                     <div class="tab-pane fade " id="nav-off-market-credit-{{ forloop.counter }}" role="tabpanel" aria-labelledby="nav-off-market-credit-{{ forloop.counter }}-tab">
                                                                     <div class="card m-0" style="border-top: 0;border-radius: 0;">
                                                                         <div class="card-body pl-md-3 pr-md-3 pb-2  pl-0 pr-0 ">
@@ -828,23 +825,18 @@ Players
                                                                                         <option value="">Select a game</option>
                                                                                         <!-- Add options dynamically here if needed -->
                                                                                     </select>
-                                                                            
                                                                                     <input id="offmarket-transaction-input-{{ forloop.counter }}" name="cc-payment" type="text" class="form-control transaction-input" aria-required="true" aria-invalid="false" placeholder="0" onkeypress="return isNumberKey(event)">
-                                                                                    
-                                                                                    <input type="text" name="payment-id-{{ forloop.counter }}" id="payment-id-{{ forloop.counter }}" class="form-control transaction-input" aria-required="true" aria-invalid="false" placeholder="Enter Unique Payment ID">
-                                                                                    
+                                                                                    <input type="text" name="payment-id-{{ forloop.counter }}" id="payment-id-{{ forloop.counter }}" class="form-control transaction-input" aria-required="true" aria-invalid="false" placeholder="Enter Unique Payment ID">                                                                                    
                                                                                     <input type="hidden" id="player-id-{{ forloop.counter }}" value="{{ player.id }}">
                                                                                 </div>
                                                                                 <div id="game-selector-wrapper" class="game-selector-wrapper" style="padding-left: 90%;padding-top: 1%;">
                                                                                     <button class="btn transaction-pay-button" id="credit-increase-offmarket-{{ forloop.counter }}" onclick="credit_adjust_offmarket()">Submit</button>
                                                                                 </div>
                                                                             </div>
-                                                                            
                                                                         </div>
                                                                     </div>
                                                                 </div>
                                                             {% endif %}
-
 
                                                             <div class="tab-pane fade" id="nav-usergames-{{ forloop.counter }}"
                                                             role="tabpanel"
@@ -855,10 +847,10 @@ Players
                                                                     <h3 class="text-center title-2">{% trans "Usergames" %}</h3>
                                                                 </div>
                                                                 <hr>
-                                                                {% if request.user.role  != 'dealer' and request.user.role  != 'staff' %}
+                                                                {% if request.user.role != 'dealer' and request.user.role != 'staff' %}
                                                                     <div class="mb-3">
                                                                         <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal" data-player-id="{{ player.id }}" style="margin-left: 90%;">
-                                                                            {% trans 'Create' %}
+                                                                            {% trans "Create" %}
                                                                         </button>
                                                                     </div>
                                                                 {% endif %}
@@ -873,8 +865,8 @@ Players
                                                                                 <th>{% trans "Action" %}</th>
                                                                             </tr>
                                                                         </thead>
-                                                                        <tbody id="usergames-body-{{player.id}}">
-                                                                          {{data}}
+                                                                        <tbody id="usergames-body-{{ player.id }}">
+                                                                          {{ data }}
                                                                         </tbody>
                                                                     </table>
                                                                 </div>
@@ -927,8 +919,6 @@ Players
                                                                                 </label>
                                                                             </div>
                                                                         </div>
-
-
                                                                         <div class="row form-group " hidden="true">
                                                                             <div class="col-4" style="margin-top: 20px;">
                                                                                 <label class="form-control-label mb-0 fs-16" style="float:left; margin-right: 50px;">{% trans "Blackout Period" %}</label>
@@ -936,7 +926,7 @@ Players
                                                                             <div class="col-6"  >
                                                                                 <div class="form-group">
                                                                                 <!-- <input type="text" class="form-control" id="black-out-date-time-{{player.id}}" name="black-out-date-time" readonly="readonly" onchange="validateDate({{player.id}})" value={% if player.responsible_gambling.blackout_expire_time %} "{{ player.responsible_gambling.blackout_expire_time|est_to_utc }}" {% else %} "Select Date"  {% endif %} {% if player.responsible_gambling.is_blackout %}disabled{% endif %}/> -->
-                                                                                <select class="form-control select-input"  name="black-out-hours" id="black-out-hours-{{player.id}}" {% if player.responsible_gambling.is_blackout %}disabled{% endif %}>
+                                                                                <select class="form-control select-input"  name="black-out-hours" id="black-out-hours-{{ player.id }}" {% if player.responsible_gambling.is_blackout %}disabled{% endif %}>
                                                                                     <option selected="selected" disabled>{% trans "Select Hours" %}</option>
                                                                                     <option {% if player.responsible_gambling.blackout_expire_hours == 24 %}selected="selected" {% endif %} value="24">{% trans "24 hours" %}</option>
                                                                                     <option {% if player.responsible_gambling.blackout_expire_hours == 48 %}selected="selected" {% endif %} value="48">{% trans "48 hours" %}</option>
@@ -961,10 +951,10 @@ Players
                                                                                 <label class="form-control-label mb-0 fs-16">{% trans "Betting Limit" %}</label>
                                                                             </div>
                                                                             <div class="col-6 d-flex justify-content-end"  >
-                                                                                <input type="number" id="betting-limit-amount-{{player.id}}" min="0" max="4000" name="betting-limit-amount"  onpaste="return false;" ondrop="return false;" autocomplete="off"  placeholder="{% trans "Betting Limit" %}" onkeypress="validateInput(this,{{player.id}})" class="form-control" value="{{player.responsible_gambling.max_spending_limit}}">
+                                                                                <input type="number" id="betting-limit-amount-{{ player.id }}" min="0" max="4000" name="betting-limit-amount"  onpaste="return false;" ondrop="return false;" autocomplete="off"  placeholder="{% trans "Betting Limit" %}" onkeypress="validateInput(this,{{ player.id }})" class="form-control" value="{{ player.responsible_gambling.max_spending_limit }}">
                                                                             </div>
                                                                             <div class="col-2 d-flex justify-content-end"  >
-                                                                                <button class="btn btn-primary" id="set-betting-limit" onclick="set_player_betting_limit({{player.pk}})">
+                                                                                <button class="btn btn-primary" id="set-betting-limit" onclick="set_player_betting_limit({{ player.pk }})">
                                                                                     {% trans "Set" %}
                                                                                 </button>
                                                                             </div>
@@ -1017,13 +1007,13 @@ Players
                                                                                         </label>
                                                                                     </div> {% endcomment %}
                                                                                     <div class="col">
-                                                                                        <input type="text" id="cashtag_input-{{player.id}}" class="form-control" style="margin-left:17px;" {% if player.cashtag %}value="{{player.cashtag}}"{% endif %}placeholder="Enter Cashtag Here">
+                                                                                        <input type="text" id="cashtag_input-{{ player.id }}" class="form-control" style="margin-left:17px;" {% if player.cashtag %}value="{{ player.cashtag }}"{% endif %}placeholder="Enter Cashtag Here">
                                                                                     </div>
                                                                                 <div class="form-group">
                                                                                     <div class="col">
 
                                                                                 <a  data-placement="top" title="Save" >
-                                                                                    <button class="btn btn-primary" id="button-save" onclick="cashtag({{player.id}})" style="margin-right:40px;">
+                                                                                    <button class="btn btn-primary" id="button-save" onclick="cashtag({{ player.id }})" style="margin-right:40px;">
                                                                                         {% trans "Save" %}
                                                                                     </button>
                                                                                 </a>
@@ -1062,8 +1052,8 @@ Players
                                                                                         </thead>
                                                                                         <tbody>
                                                                                             <tr>
-                                                                                                <td style="text-align: center;"><a href="{% if player.user_id_proof %}{{ player.user_id_proof.url }}{% endif %}" data-lightbox="verify-image-{{player.id}}"><img src="{% if player.user_id_proof %}{{ player.user_id_proof.url }}{% endif %}" id="verify-image-{{player.id}}" height="50px" width="50px" alt="User ID Proof"></a></td>
-                                                                                                <td><input type="checkbox" id="verify-{{player.id}}" class="verify_switch" player_id="{{ player.pk }}" {% if player.is_verified %}checked{% endif %}><label id="verify-toogle" for="verify-{{player.id}}">Toggle</label></td>
+                                                                                                <td style="text-align: center;"><a href="{% if player.user_id_proof %}{{ player.user_id_proof.url }}{% endif %}" data-lightbox="verify-image-{{ player.id }}"><img src="{% if player.user_id_proof %}{{ player.user_id_proof.url }}{% endif %}" id="verify-image-{{ player.id }}" height="50px" width="50px" alt="User ID Proof" ></a></td>
+                                                                                                <td><input type="checkbox" id="verify-{{ player.id }}" class="verify_switch" player_id="{{ player.pk }}" {% if player.is_verified %}checked{% endif %}><label id="verify-toogle" for="verify-{{ player.id }}">Toggle</label></td>
                                                                                             </tr>
                                                                                         </tbody>
                                                                                     </table>
@@ -1095,7 +1085,7 @@ Players
                                                                                     <th>{% trans "Is Deleted" %}</th>
                                                                                 </tr>
                                                                             </thead>
-                                                                            <tbody id="cashapp-list-body-{{player.id}}">
+                                                                            <tbody id="cashapp-list-body-{{ player.id }}">
                                                                                 {% for cash_app_detail in player.cashappdeatils_set.all %}
                                                                                     <tr>
                                                                                         <td>{{ cash_app_detail.id }}</td>
@@ -1126,7 +1116,7 @@ Players
                             </table>
                         </div>
             
-                        {% include 'includes/pagination.html' %}
+                        {% include "includes/pagination.html" %}
                         
                     </div>
                 </div>
@@ -1136,9 +1126,9 @@ Players
     </div>
 </div>
 
-    {% include './create_player.html' %}
-    {% include './update_player.html' %}
-    {% include '../../includes/transactions.html' %}
+    {% include "./create_player.html" %}
+    {% include "./update_player.html" %}
+    {% include "../../includes/transactions.html" %}
     </div>
     <div id="pop-loader"></div>
     <script type="text/javascript">
