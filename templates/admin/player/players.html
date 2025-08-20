@@ -504,7 +504,9 @@ Players
                                                         <a href="#edit-player" data-username="{{ player.username }}" data-dob="{{ player.dob | dob_date }}" data-phone="{{ player.phone_number }}" data-zipcode="{{ player.zip_code }}"
                                                         data-email="{{ player.email }}" data-first_name="{{ player.first_name }}" data-last_name="{{ player.last_name }}" data-state="{{ player.state }}" data-city="{{ player.city }}" data-effect="mfp-zoom-in" data-countrycode="{{ player.country_code }}"
                                                         data-zip_code="{{ player.zip_code }}" data-address="{{ player.complete_address }}" 
-                                                        data-profile="{% if player.profile_pic %}{{ player.profile_pic.url }}{% endif %}" data-id-proof="{% if player.user_id_proof %}{{ player.user_id_proof.url }}{% endif %}"
+                                                        data-profile="{% if player.profile_pic %}{{ player.profile_pic.url }}{% endif %}"
+                                                        {% comment %} data-id-proof="{% if player.user_id_proof %}{{ player.user_id_proof.url }}{% endif %}" {% endcomment %}
+                                                        {% comment %} Not such variable with those names {% endcomment %}
                                                         class="edit-player-popup item row-button-edit ignore-collapse">
                                                             <img src="{% static '/icon/edit.png' %}" width="15" height="15" alt="edit icon" ></img>
                                                         </a>
