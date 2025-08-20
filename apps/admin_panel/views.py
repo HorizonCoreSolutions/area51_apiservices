@@ -282,6 +282,13 @@ class PlayersView(CheckRolesMixin, FormMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        
+        # defaults
+        context['selected_dealers'] = Dealer.objects.none()
+        context['selected_agents'] = Agent.objects.none()
+        context['selected_players'] = Player.objects.none()
+        context['data'] = {}
+        
         current_date = timezone.now()
         first_day_of_month_UTC = current_date.replace(day=1, hour=0, minute=0)
         first_day_of_month=self.time_zone_converter(first_day_of_month_UTC,True)
