@@ -453,11 +453,26 @@ class CoinFlowClient:
                 logger.info(f"{k} value is less than 2 characters, {v}")
                 return BasicReturn(success=False, error=f'Please complete your profile {k} before taking any extra steps.')
 
-        res = requests.post(
-            url=self.endpoints.register_user_attested,
-            json=payload,
-            headers=self._build_headers(auth_user_id=self._generate_user_id(user=user))
-            )
+        try:
+            res = requests.post(
+                url=self.endpoints.register_user_attested,
+                json=payload,
+                headers=self._build_headers(auth_user_id=self._generate_user_id(user=user)),
+                timeout=10
+                )
+        except requests.Timeout:
+            # handle timeout separately
+            res = None
+            logger.warning("Request timed out.")
+        except requests.RequestException as e:
+            # other network-level errors
+            res = None
+            tray = uuid4()
+            print(f"Network error occurred: {str(tray)}: {e}")
+            logger.warning(f"Network error occurred {str(tray)}")
+            
+        if res is None:
+            return BasicReturn(success=False, error="This server is not available right now, please try again later.")
         
         if res.status_code == 400:
             try:

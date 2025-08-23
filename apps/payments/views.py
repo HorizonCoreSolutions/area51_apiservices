@@ -2,6 +2,7 @@ import json
 from threading import Thread
 import time
 import traceback
+from typing import Any, Dict
 import uuid
 from datetime import datetime, timedelta
 from decimal import Decimal
@@ -1517,8 +1518,8 @@ class GetCoinFlowLink(APIView):
         
         user: Users = request.user
         
-        if request.user.document_verified != VERIFICATION_APPROVED:
-            return Response(data={'message' : 'Please finish up all the verification steps.'}, status=status.HTTP_400_BAD_REQUEST)
+        # if request.user.document_verified != VERIFICATION_APPROVED:
+        #     return Response(data={'message' : 'Please finish up all the verification steps.'}, status=status.HTTP_400_BAD_REQUEST)
         
         # country = user.country_obj.code_cca2 if user.country_obj else user.country
         # if country != 'US':
@@ -1570,10 +1571,10 @@ class WebhookView(APIView):
         data = cf.handle_webhook(request.data, request.headers.get('Authorization'))
         if data.error:
             save_request('spy', {'data' : data.error, 'Authorization' : request.headers.get('Authorization', 'None')}, is_response=True)
-            
         
         return Response(data={'message' : 'OK'}, status=status.HTTP_200_OK)
-    
+
+
 class TestCoinflow(APIView):
     '''
     This endpoint is meant to test new ideas
@@ -1593,7 +1594,8 @@ class TestCoinflow(APIView):
             save_request('conflow_testing', {'data' : data.error}, is_response=True)
             
         return Response(data={'message' : 'OK'}, status=status.HTTP_200_OK)
-    
+
+
 class GetBankRegistrationLink(APIView):
     permission_class = [IsPlayer]
     def post(self, request):
@@ -1735,7 +1737,7 @@ class CoinflowTransactionView(APIView):
         try:
             player = Users.objects.filter(id=request.user.id).first()
             if player:
-                transaction_filter_dict = {"is_deleted" : False}
+                transaction_filter_dict: Dict[str, Any] = {"is_deleted" : False}
                 from_date = self.request.query_params.get("from_date", None)
                 to_date = self.request.query_params.get("to_date", None)
                 activity_type = self.request.query_params.get("activity_type", None)
