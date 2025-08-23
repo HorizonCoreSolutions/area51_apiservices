@@ -690,6 +690,16 @@ class CoinFlowClient:
             #     if default_webhook:
             #         webhook_info['url'] = default_webhook
             
+            user_data = {
+                "email" : user.email,
+                "first name" : user.first_name,
+                "last name" : user.last_name
+            }
+            
+            for k, v in user_data.items():
+                if v is None:
+                    return BasicReturn(success=False, error=f"Please fill in your {k} to proceed.")
+            
             # Construct checkout payload
             payload = {
                 "subtotal": {
@@ -771,7 +781,7 @@ class CoinFlowClient:
             
         except CoinFlowAPIError as e:
             logger.error(f"CoinFlow API error during checkout link creation for user {user.id}: {e}")
-            return BasicReturn(success=False, error=str(e))
+            return BasicReturn(success=False, error="An unexpected error occurred during checkout link creation.")
         except Exception as e:
             logger.error(f"Unexpected error during checkout link creation for user {user.id}: {e}")
             return BasicReturn(
