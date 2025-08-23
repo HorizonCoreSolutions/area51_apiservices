@@ -670,10 +670,10 @@ class CoinFlowClient:
             BasicReturn object with success status and checkout link data/error message
         """
         try:
-            # Validate user profile
-            profile_validation = self._validate_user_verification(user)
-            if not profile_validation.success:
-                return profile_validation
+            # Validate user profile | currently disabled
+            # profile_validation = self._validate_user_verification(user)
+            # if not profile_validation.success:
+            #     return profile_validation
             
             # Generate item ID if not provided
             if item_id is None:
