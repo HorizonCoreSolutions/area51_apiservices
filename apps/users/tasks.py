@@ -1,4 +1,5 @@
 from celery import shared_task
+from django.utils import timezone
 from apps.bets.models import Transactions
 from apps.bets.utils import generate_reference
 from apps.users.models import BONUS_EVENTS
@@ -61,5 +62,6 @@ def redeam_user_event(self, event: str, user_id: int):
         PromoCodesLogs.objects.create(
             promocode=bonus,
             user=user,
-            log=f"User {user.id} redeemed event {event}"
+            log=f"User {user.id} redeemed event {event}",
+            date=timezone.now()
         )
