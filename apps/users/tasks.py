@@ -1,4 +1,5 @@
 from celery import shared_task
+from apps.bets.models import Transactions
 from apps.users.models import BONUS_EVENTS
 from celery.utils.log import get_task_logger
 from django.db import transaction as transaction_db
@@ -33,10 +34,24 @@ def redeam_user_event(self, event: str, user_id: int):
         if bonus.bonus_percentage is None:
             continue
 
+        pre_balance = user.balance
         if bonus.bonus_percentage > 0:
             user.bonus_balance += bonus.instant_bonus_amount
+            coin = "GC"
         else:
             user.balance += bonus.instant_bonus_amount
+            coin = "SC"
+        
+        Transactions.objects.update_or_create(
+            user=user,
+            journal_entry="bonus",
+            status="charged",
+            previous_balance=pre_balance,
+            new_balance=user.balance,
+            description=f"{event} bonus of {bonus.instant_bonus_amount} {coin}",
+            bonus_type="automated_promos",
+            **({"amount_bonus" if bonus.bonus_percentage > 0 else "amount": bonus.instant_bonus_amount})
+        )
 
         # Log the redemption
         PromoCodesLogs.objects.create(
