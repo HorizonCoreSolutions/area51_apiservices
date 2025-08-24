@@ -5,12 +5,14 @@ from rest_framework import status
 from apps.acuitytec.acuitytec import sync_names
 from apps.acuitytec.models import AcuitytecUser, DocumentTypeChoise, VerificationItem, VerificationStateChoise
 from apps.acuitytec.utils import generate_qr_code_url
-from apps.users.models import VERIFICATION_APPROVED, VERIFICATION_EXPIRED, VERIFICATION_FAILED, Country, Users
+from apps.users.models import VERIFICATION_APPROVED, VERIFICATION_EXPIRED, VERIFICATION_FAILED, Country, Users, EVENT_KYC
 from django.conf import settings
 from django.utils import timezone
 from apps.acuitytec.acuitytec import AcuityTecAPI
 
 from rest_framework.views import APIView
+
+from apps.users.tasks import redeam_user_event
 # Create your views here.
 
 class GetVerificationLinkView(APIView):
@@ -157,6 +159,7 @@ class CallbackAcuitytecView(APIView):
             user.document_verified = VERIFICATION_FAILED
         elif result == 'verification.accepted':
             user.document_verified = VERIFICATION_APPROVED
+            redeam_user_event.apply_async(args=(EVENT_KYC, user.id),countdown=10)
         elif result == 'request.timeout':
             user.document_verified = VERIFICATION_EXPIRED
         
