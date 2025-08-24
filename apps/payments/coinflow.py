@@ -809,7 +809,7 @@ class CoinFlowClient:
             CoinFlowTransaction.StatusType.requested,
             CoinFlowTransaction.StatusType.paid_out,
             CoinFlowTransaction.StatusType.pending,
-            CoinFlowTransaction.StatusType.failed,
+            # CoinFlowTransaction.StatusType.failed,
         ]
         
         DAY_SHIFT_HOURS = 5
@@ -825,7 +825,8 @@ class CoinFlowClient:
             user=user,
             transaction_type = CoinFlowTransaction.TransactionType.withdraw,
             status__in=WITHDRAW_STATUS,
-            created__gte = shifted_start
+            created__gte = shifted_start,
+            is_deleted=False
         ).exists()
 
         if qs:
@@ -953,7 +954,7 @@ class CoinFlowClient:
         ).first()
         if obj is None:
             return
-        obj.is_deleted = False
+        obj.is_deleted = True
         obj.save()
         return
 
