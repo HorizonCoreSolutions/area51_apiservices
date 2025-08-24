@@ -10300,7 +10300,7 @@ class OffMarketCreditAjaxView(CheckRolesMixin, views.JSONResponseMixin, views.Aj
                     deposit.status="Completed"
                     deposit.save()
                     
-                task_update_offmarket_transaction.apply_async(args=[deposit.id], countdown=10)
+                task_update_offmarket_transaction.apply_async(args=[deposit.id], countdown=19)
 
                 return self.render_json_response({"message": "Request Submitted Successfully"}, 200)
             else:
