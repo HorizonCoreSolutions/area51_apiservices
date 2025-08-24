@@ -231,7 +231,7 @@ rabbit_connection_string = 'amqp://%s:%s@%s:5672/%s' % (get_env_var('RABBITMQ_DE
                                                         get_env_var('RABBITMQ_DEFAULT_VHOST'))
 
 # Celery
-CELERY_BROKER_URL = f"redis://{get_env_var('RBROKER')}:6379/{cache_layer_buckets[0]}"
+CELERY_BROKER_URL = f"redis://{get_env_var('RBROKER')}:{get_env_var('RBROKER_PORT')}/{cache_layer_buckets[0]}"
 CELERY_ACCEPT_CONTENT = ["application/json"]
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_TASK_SERIALIZER = "json"
