@@ -50,7 +50,7 @@ def redeam_user_event(self, event: str, user_id: int):
             new_balance=user.balance,
             description=f"{event} bonus of {bonus.instant_bonus_amount} {coin}",
             bonus_type="automated_promos",
-            **({"amount_bonus" if bonus.bonus_percentage > 0 else "amount": bonus.instant_bonus_amount})
+            **({"bonus_amount" if bonus.bonus_percentage > 0 else "amount": bonus.instant_bonus_amount})
         )
 
         # Log the redemption

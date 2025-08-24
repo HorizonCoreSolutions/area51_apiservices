@@ -252,6 +252,7 @@ CELERY_ROUTES = {
     'apps.admin_panel.tasks.rejection_mail': {'queue': 'offmarket_email_queue'},
     'apps.acuitytec.tasks.register_or_update_user': {'queue': 'acuitytec_queue'},
     'apps.casino.tasks.task_update_offmarket_transaction': {'queue': 'casino_queue'},
+    'apps.users.tasks.redeam_user_event': {'queue': 'user_queue'},
 }
 
 
