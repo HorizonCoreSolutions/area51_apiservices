@@ -1808,3 +1808,49 @@ class CoinflowCancelTransaction(APIView):
         cf = CoinFlowClient()
         cf.cancel_delete_unused_transaction(request.user, token)
         return Response({"message" : "ok"}, status=status.HTTP_200_OK)
+
+
+class WithdrawInfoView(APIView):
+    permission_classes = (IsPlayer,)
+
+    def get(self, request) -> Response:
+        # Only generate one per day:
+
+        WITHDRAW_STATUS = [
+            CoinFlowTransaction.StatusType.requested,
+            CoinFlowTransaction.StatusType.paid_out,
+            CoinFlowTransaction.StatusType.pending,
+            # CoinFlowTransaction.StatusType.failed,
+        ]
+
+        DAY_SHIFT_HOURS = 5
+
+        # 1. Get today at midnight (timezone-aware)
+        # Get timezone-aware "today at midnight"
+        start_of_day = timezone.now().replace(
+                hour=0,
+                minute=0,
+                second=0,
+                microsecond=0)
+
+        # Shift forward by N hours (e.g. day starts at 5 AM)
+        shifted_start = start_of_day + timedelta(hours=DAY_SHIFT_HOURS)
+
+        qs = CoinFlowTransaction.objects.filter(
+            user=request.user,
+            transaction_type=CoinFlowTransaction.TransactionType.withdraw,
+            status__in=WITHDRAW_STATUS,
+            created__gte=shifted_start,
+            is_deleted=False
+        ).first()
+
+        if qs:
+            return Response({
+                "withdrawalAvailable": False,
+                "time": round(
+                    (shifted_start + timedelta(hours=24) - qs.created)
+                    .timestamp())
+                },
+                status=status.HTTP_200_OK,
+            )
+        return Response({"withdrawalAvailable": True, "time": 0})
