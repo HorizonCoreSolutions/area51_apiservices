@@ -3481,12 +3481,12 @@ class UpdateAutomatedBonusView(APIView):
     def post(self, request):
         bonus = BonusPercentage.objects.filter(dealer=request.user, bonus_type="automated_promos").first()
         if not bonus:
-            return Response(data={ "message" : "This function is not enables." }, status=status.HTTP_400_BAD_REQUEST)
+            return Response(data={ "message": "This function is not enabled." }, status=status.HTTP_400_BAD_REQUEST)
         action = request.data.get("action")
         if action not in BONUS_EVENTS.keys():
-            return Response(data={ "message" : "This action is not available." }, status=status.HTTP_400_BAD_REQUEST)
-        
-        
+            return Response(data={ "message": "This action is not available." }, status=status.HTTP_400_BAD_REQUEST)
+
+
         # Extract and validate numeric fields
         def is_number(value):
             try:
