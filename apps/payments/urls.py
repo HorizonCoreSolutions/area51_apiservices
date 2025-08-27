@@ -6,7 +6,7 @@ from .views import (AlchemyPayCallback, AlchemyPayCryptoFiatQuery, AlchemyPayCry
     ConvertCoins, CreateAlchemyPayOrder, CreateNowPaymentsTestWithdrawal, CreatePaymentAPIView,
     CreatePaymentQrAPIView, CreateTransaction, CreateWithdrawalCoinpayments, GetBalance, GetBankRegistrationLink,
     GetBasicInfo, GetCallbackAddress, GetCoinFlowLink, GetConversionInfo, GetDepositAddress, GetExchangeRates,
-    GetIsValidAddress, GetRecentUsedAddress, GetTxnInfo, GetWithdrawalHistory, GetWithdrawalInfo, TestCoinflow,
+    GetIsValidAddress, GetRecentUsedAddress, GetTxnInfo, GetWithdrawalHistory, GetWithdrawalInfo, TestCoinflow, WithdrawInfoView,
     ipn_callback, MinAmountView, MnetCallback, MnetTransactionView, NotificationsView,
     NowPaymentsTransaction, NowPaymentsTransactionsAPI, PayoutVerification, QrCodePayment,
     RequestCoinWithdrawal, WithdrawalAPIView, WithdrawalCurrencyAPI)
@@ -60,5 +60,6 @@ urlpatterns = [
     path(r"coinflow-registration/", CoinflowRegisterUserView.as_view(), name="coinflow-registration"),
     path(r"coinflow-transactions", CoinflowTransactionView.as_view(), name="coinflow-transactions"),
     path(r"coinflow-cancel-transactions/", CoinflowCancelTransaction.as_view(), name="coinflow-transactions"),
+    path(r"withdraw-info/", WithdrawInfoView.as_view(), name="withdraw-info"),
 
 ]

@@ -2,6 +2,7 @@ import json
 from threading import Thread
 import time
 import traceback
+from typing import Any, Dict
 import uuid
 from datetime import datetime, timedelta
 from decimal import Decimal
@@ -1517,8 +1518,8 @@ class GetCoinFlowLink(APIView):
         
         user: Users = request.user
         
-        if request.user.document_verified != VERIFICATION_APPROVED:
-            return Response(data={'message' : 'Please finish up all the verification steps.'}, status=status.HTTP_400_BAD_REQUEST)
+        # if request.user.document_verified != VERIFICATION_APPROVED:
+        #     return Response(data={'message' : 'Please finish up all the verification steps.'}, status=status.HTTP_400_BAD_REQUEST)
         
         # country = user.country_obj.code_cca2 if user.country_obj else user.country
         # if country != 'US':
@@ -1570,10 +1571,10 @@ class WebhookView(APIView):
         data = cf.handle_webhook(request.data, request.headers.get('Authorization'))
         if data.error:
             save_request('spy', {'data' : data.error, 'Authorization' : request.headers.get('Authorization', 'None')}, is_response=True)
-            
         
         return Response(data={'message' : 'OK'}, status=status.HTTP_200_OK)
-    
+
+
 class TestCoinflow(APIView):
     '''
     This endpoint is meant to test new ideas
@@ -1593,7 +1594,8 @@ class TestCoinflow(APIView):
             save_request('conflow_testing', {'data' : data.error}, is_response=True)
             
         return Response(data={'message' : 'OK'}, status=status.HTTP_200_OK)
-    
+
+
 class GetBankRegistrationLink(APIView):
     permission_class = [IsPlayer]
     def post(self, request):
@@ -1735,7 +1737,7 @@ class CoinflowTransactionView(APIView):
         try:
             player = Users.objects.filter(id=request.user.id).first()
             if player:
-                transaction_filter_dict = {"is_deleted" : False}
+                transaction_filter_dict: Dict[str, Any] = {"is_deleted" : False}
                 from_date = self.request.query_params.get("from_date", None)
                 to_date = self.request.query_params.get("to_date", None)
                 activity_type = self.request.query_params.get("activity_type", None)
@@ -1806,3 +1808,49 @@ class CoinflowCancelTransaction(APIView):
         cf = CoinFlowClient()
         cf.cancel_delete_unused_transaction(request.user, token)
         return Response({"message" : "ok"}, status=status.HTTP_200_OK)
+
+
+class WithdrawInfoView(APIView):
+    permission_classes = (IsPlayer,)
+
+    def get(self, request) -> Response:
+        # Only generate one per day:
+
+        WITHDRAW_STATUS = [
+            CoinFlowTransaction.StatusType.requested,
+            CoinFlowTransaction.StatusType.paid_out,
+            CoinFlowTransaction.StatusType.pending,
+            # CoinFlowTransaction.StatusType.failed,
+        ]
+
+        DAY_SHIFT_HOURS = 5
+
+        # 1. Get today at midnight (timezone-aware)
+        # Get timezone-aware "today at midnight"
+        start_of_day = timezone.now().replace(
+                hour=0,
+                minute=0,
+                second=0,
+                microsecond=0)
+
+        # Shift forward by N hours (e.g. day starts at 5 AM)
+        shifted_start = start_of_day + timedelta(hours=DAY_SHIFT_HOURS)
+
+        qs = CoinFlowTransaction.objects.filter(
+            user=request.user,
+            transaction_type=CoinFlowTransaction.TransactionType.withdraw,
+            status__in=WITHDRAW_STATUS,
+            created__gte=shifted_start,
+            is_deleted=False
+        ).first()
+
+        if qs:
+            next_available = shifted_start + timedelta(hours=24)
+            remaining = next_available - timezone.now()
+            return Response({
+                "withdrawalAvailable": False,
+                "time": remaining.total_seconds()
+                },
+                status=status.HTTP_200_OK,
+            )
+        return Response({"withdrawalAvailable": True, "time": 0})

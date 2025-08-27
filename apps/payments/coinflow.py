@@ -453,11 +453,26 @@ class CoinFlowClient:
                 logger.info(f"{k} value is less than 2 characters, {v}")
                 return BasicReturn(success=False, error=f'Please complete your profile {k} before taking any extra steps.')
 
-        res = requests.post(
-            url=self.endpoints.register_user_attested,
-            json=payload,
-            headers=self._build_headers(auth_user_id=self._generate_user_id(user=user))
-            )
+        try:
+            res = requests.post(
+                url=self.endpoints.register_user_attested,
+                json=payload,
+                headers=self._build_headers(auth_user_id=self._generate_user_id(user=user)),
+                timeout=10
+                )
+        except requests.Timeout:
+            # handle timeout separately
+            res = None
+            logger.warning("Request timed out.")
+        except requests.RequestException as e:
+            # other network-level errors
+            res = None
+            tray = uuid4()
+            print(f"Network error occurred: {str(tray)}: {e}")
+            logger.warning(f"Network error occurred {str(tray)}")
+            
+        if res is None:
+            return BasicReturn(success=False, error="This server is not available right now, please try again later.")
         
         if res.status_code == 400:
             try:
@@ -655,10 +670,10 @@ class CoinFlowClient:
             BasicReturn object with success status and checkout link data/error message
         """
         try:
-            # Validate user profile
-            profile_validation = self._validate_user_verification(user)
-            if not profile_validation.success:
-                return profile_validation
+            # Validate user profile | currently disabled
+            # profile_validation = self._validate_user_verification(user)
+            # if not profile_validation.success:
+            #     return profile_validation
             
             # Generate item ID if not provided
             if item_id is None:
@@ -674,6 +689,16 @@ class CoinFlowClient:
             #     default_webhook = getattr(settings, 'COINFLOW_WEBHOOK_URL', None)
             #     if default_webhook:
             #         webhook_info['url'] = default_webhook
+            
+            user_data = {
+                "email" : user.email,
+                "first name" : user.first_name,
+                "last name" : user.last_name
+            }
+            
+            for k, v in user_data.items():
+                if v is None:
+                    return BasicReturn(success=False, error=f"Please fill in your {k} to proceed.")
             
             # Construct checkout payload
             payload = {
@@ -756,7 +781,7 @@ class CoinFlowClient:
             
         except CoinFlowAPIError as e:
             logger.error(f"CoinFlow API error during checkout link creation for user {user.id}: {e}")
-            return BasicReturn(success=False, error=str(e))
+            return BasicReturn(success=False, error="An unexpected error occurred during checkout link creation.")
         except Exception as e:
             logger.error(f"Unexpected error during checkout link creation for user {user.id}: {e}")
             return BasicReturn(
@@ -776,31 +801,41 @@ class CoinFlowClient:
         return BasicReturn(success=True, data=data)
 
     @transaction.atomic
-    def create_transaction_withdraw(self, user: Users, data: dict, type: str, cents: int, ip: str) -> BasicReturn:
-        
+    def create_transaction_withdraw(self,
+                                    user: Users,
+                                    data: dict,
+                                    type: str,
+                                    cents: int,
+                                    ip: str) -> BasicReturn:
+
         # Only generate one per day:
-                
+
         WITHDRAW_STATUS = [
             CoinFlowTransaction.StatusType.requested,
             CoinFlowTransaction.StatusType.paid_out,
             CoinFlowTransaction.StatusType.pending,
-            CoinFlowTransaction.StatusType.failed,
+            # CoinFlowTransaction.StatusType.failed,
         ]
-        
+
         DAY_SHIFT_HOURS = 5
 
         # 1. Get today at midnight (timezone-aware)
         # Get timezone-aware "today at midnight"
-        start_of_day = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
+        start_of_day = timezone.now().replace(
+                hour=0,
+                minute=0,
+                second=0,
+                microsecond=0)
 
         # Shift forward by N hours (e.g. day starts at 5 AM)
         shifted_start = start_of_day + timedelta(hours=DAY_SHIFT_HOURS)
-        
+
         qs = CoinFlowTransaction.objects.filter(
             user=user,
-            transaction_type = CoinFlowTransaction.TransactionType.withdraw,
+            transaction_type=CoinFlowTransaction.TransactionType.withdraw,
             status__in=WITHDRAW_STATUS,
-            created__gte = shifted_start
+            created__gte=shifted_start,
+            is_deleted=False
         ).exists()
 
         if qs:
@@ -849,7 +884,7 @@ class CoinFlowClient:
         if res is None:
             logger.critical("Coinflow api response is outbonded request.post(*) -> None")
             return BasicReturn(success=False, error="This service is down, please try again later. If the problem persist contact support.")
-        
+
         if res.status_code == 451:
             logger.info(f"User: {user.id}-{user.username} had access to withdraw but did not had coinflow verification enabled.")
             data = res.json()
@@ -863,12 +898,12 @@ class CoinFlowClient:
         if res.status_code == 503:
             logger.critical(f"{idpk} - for cents {cents} failed 3 times")
             return BasicReturn(success=False, data={"message" : "This service is down, please try again later. If the problem persist contact support.", "status" : 400})
-            
+
         if res.status_code == 409:
             user.save()
             logger.info(f"Duplication of ")
             return BasicReturn(success=True, data={"message" : "The withdraw has already been created.", "status" : 200})
-        
+
         if res.status_code == 400:
             try:
                 data=res.json()
@@ -881,24 +916,24 @@ class CoinFlowClient:
             for log in logs:
                 if log.startswith("Program log: Error:"):
                     error=log[19:]
-            
+
             logger.warning(f"Error {error} | for user {user.id}-{user.username}: {idpk} = {serial}")
             return BasicReturn(success=True, data={"message" : "This service is not enabled right now, please try again later.", "status" : 200})
-        
+
         if res.status_code != 200:
             logger.critical("Coinflow API is not working propertly")
             logger.warning(f"data {res.text}")
             return BasicReturn(success=False, error="This service is down, please try again later. If the problem persist contact support.")
-            
+
         data = res.json()
         user.save()
-        
+
         signature = data.get("signature")
         if signature is None:
             logger.critical("Coinflow API is not working propertly. There is not signature")
             logger.warning(f"data \n{data}")
             return BasicReturn(success=False, error="This service is down, please try again later. If the problem persist contact support.")
-    
+
         CoinFlowTransaction.objects.create(
             user=user,
             amount=(Decimal(cents) / 100),
@@ -928,7 +963,7 @@ class CoinFlowClient:
         ).first()
         if obj is None:
             return
-        obj.is_deleted = False
+        obj.is_deleted = True
         obj.save()
         return
 

@@ -8,7 +8,7 @@ from apps.users.models import OffMarketTransactions
 from django.db import transaction as db_transaction
 
 # Retry delays in seconds
-RETRY_DELAYS = [15, 25, 70]
+RETRY_DELAYS = [12, 22, 67]
 
 class RetryableTransactionError(Exception):
     """Raised when transaction should be retried."""

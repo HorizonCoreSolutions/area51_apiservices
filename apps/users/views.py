@@ -60,6 +60,7 @@ from apps.core.utils.network import get_user_ip_from_request
 from apps.core.views import APIViewContext
 from django.db import transaction
 
+from apps.users.tasks import redeam_user_event
 from apps.users.utils import send_player_balance_update_notification, UTC_OFFSET_PATTERN, get_tz_offset
 from apps.users.filters import PlayerFilters
 from apps.users.models import (Admin, CashappQr, CmsBonusDetail, CmsFAQ, CmsPrivacyPolicy, CookiePolicy,
@@ -68,7 +69,7 @@ from apps.users.models import (Admin, CashappQr, CmsBonusDetail, CmsFAQ, CmsPriv
                                MAX_MULTI_THREE_EVENTS_AMOUNT, MAX_MULTI_TWO_EVENTS_AMOUNT, MAX_MULTIPLE_BET, MAX_ODD,
                                MAX_SINGLE_BET, MAX_SINGLE_BET_OTHER_SPORTS, MAX_SPEND_AMOUNT, MAX_WIN_AMOUNT, MIN_BET,
                                PlayerBettingLimit, PromoCodes, PromoCodesLogs, SettingsLimits, SocialLink,
-                               SpintheWheelDetails, TermsConditinos, Country)
+                               SpintheWheelDetails, TermsConditinos, Country, EVENT_REGISTRATION)
 from apps.users.serializers import (
     # UserUpdateSerializer, 
     AdminBannerSerializer,
@@ -439,7 +440,15 @@ class SignUpView(APIViewContext):
             Thread(target=newuser_email,
                         args=(player.username,player.email)).start()
             
-            promo_obj = PromoCodes.objects.filter(promo_code=player.applied_promo_code, is_expired=False).first() if player.applied_promo_code else None
+            redeam_user_event.apply_async(
+                args=(EVENT_REGISTRATION, player.id),
+                countdown=10
+            )
+            promo_obj = PromoCodes.objects.filter(
+                promo_code=player.applied_promo_code,
+                bonus__bonus_type="welcome_bonus",
+                is_expired=False
+            ).first() if player.applied_promo_code else None
             if  promo_obj and promo_obj.bonus_distribution_method == PromoCodes.BonusDistributionMethod.instant and promo_obj.instant_bonus_amount:
                 player.bonus_balance += promo_obj.instant_bonus_amount
                 player.save()
@@ -2039,7 +2048,7 @@ class OffMarketDepositView(APIView):
                 deposit.game_name_full = game.title
                 deposit.bonus = bonus_amount
                 deposit.save()
-                task_update_offmarket_transaction.apply_async(args=[deposit.id], countdown=10)
+                task_update_offmarket_transaction.apply_async(args=[deposit.id], countdown=19)
                 return Response({"message": "Request Submitted Successfully"}, status.HTTP_200_OK)
 
                 # TODO: remove this testing

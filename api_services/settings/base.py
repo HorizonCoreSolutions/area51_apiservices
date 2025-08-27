@@ -40,6 +40,7 @@ ENV_POSTFIX = get_env_var('ENV_POSTFIX')
 AES_SECRET_KEY=get_env_var('AES_SECRET_KEY') # This should be random len(AES_SECRET_KEY) = 64
 BONUS_MULTIPLIER:int = get_env_var('BONUS_MULTIPLIER', cast=int)
 
+cache_layer_buckets = (0, 1, 2, 3)
 # Application definition
 
 DEFAULT_APPS = [
@@ -69,7 +70,7 @@ DEFAULT_APPS = [
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://127.0.0.1:6379/1",
+        "LOCATION": f"redis://127.0.0.1:{get_env_var('REDIS_PORT')}/{cache_layer_buckets[1]}",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient"
         },
@@ -230,7 +231,7 @@ rabbit_connection_string = 'amqp://%s:%s@%s:5672/%s' % (get_env_var('RABBITMQ_DE
                                                         get_env_var('RABBITMQ_DEFAULT_VHOST'))
 
 # Celery
-CELERY_BROKER_URL = f"redis://{get_env_var('RBROKER')}:6379/0"
+CELERY_BROKER_URL = f"redis://{get_env_var('RBROKER')}:{get_env_var('RBROKER_PORT')}/{cache_layer_buckets[0]}"
 CELERY_ACCEPT_CONTENT = ["application/json"]
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_TASK_SERIALIZER = "json"
@@ -251,6 +252,7 @@ CELERY_ROUTES = {
     'apps.admin_panel.tasks.rejection_mail': {'queue': 'offmarket_email_queue'},
     'apps.acuitytec.tasks.register_or_update_user': {'queue': 'acuitytec_queue'},
     'apps.casino.tasks.task_update_offmarket_transaction': {'queue': 'casino_queue'},
+    'apps.users.tasks.redeam_user_event': {'queue': 'user_queue'},
 }
 
 
@@ -305,7 +307,7 @@ CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
-            "hosts": [(get_env_var('RBROKER'), 6379)],
+            "hosts": [(get_env_var('RBROKER'), get_env_var("RBROKER_PORT", cast=int), cache_layer_buckets[2])],
         },
     },
 }
