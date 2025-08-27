@@ -1845,11 +1845,11 @@ class WithdrawInfoView(APIView):
         ).first()
 
         if qs:
+            next_available = shifted_start + timedelta(hours=24)
+            remaining = next_available - timezone.now()
             return Response({
                 "withdrawalAvailable": False,
-                "time": round(
-                    (shifted_start + timedelta(hours=24) - qs.created)
-                    .timestamp())
+                "time": remaining.total_seconds()
                 },
                 status=status.HTTP_200_OK,
             )
