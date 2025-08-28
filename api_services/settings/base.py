@@ -307,7 +307,7 @@ CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
-            "hosts": [(get_env_var('RBROKER'), get_env_var("RBROKER_PORT", cast=int), cache_layer_buckets[2])],
+            "hosts": [f"redis://{get_env_var('RBROKER')}/{get_env_var('RBROKER_PORT', cast=int)}/{cache_layer_buckets[2]}"],
         },
     },
 }
