@@ -132,6 +132,18 @@ VERIFICATION_STATUS_CHOICES = (
     (VERIFICATION_EXPIRED, 'Expired'),       # Timeout or expiration
 )
 
+
+EVENT_REGISTRATION = "registration"
+EVENT_KYC = "kyc"
+
+# Like im not sure this is the best way
+BONUS_EVENTS = {
+    EVENT_REGISTRATION: "User Registration",
+    EVENT_KYC: "KYC validation",
+}
+
+BONUS_EVENTS_CHOICES = [(k, v) for k, v in BONUS_EVENTS.items()]
+
 class CoinflowAuthState(DjangoChoices):
     pending = ChoiceItem('PNDG', 'pending')
     created = ChoiceItem('CRTD', 'created')
@@ -725,9 +737,12 @@ class PromoCodes(AbstractBaseModel):
 
     dealer = models.ForeignKey(Users, on_delete=models.CASCADE, default=None, null=True)
     bonus = models.ForeignKey(BonusPercentage, on_delete=models.CASCADE, default=None, null=True)
+    # When the Bonus percentage is automated, this is going to be used as a promo event_type
     promo_code = models.CharField(_("Promo Code"), max_length=50, null=True, blank=True, default=None)
     start_date = models.DateField(_("Start Date"), auto_now=False, null=True, blank=True, default=None)
     end_date = models.DateField(_("End Date"), auto_now=False, null=True, blank=True, default=None)
+    # When the Bonus percentage is automated, this is going to be used as a promo event_type
+    # When 1 it is GC, when it is SC
     bonus_percentage = models.FloatField(_("bonus percentage"), default=None, null=True, blank=True, validators=[MinValueValidator(Decimal("0.00"))])
     is_expired = models.BooleanField(_("Is Expired"), default=False)
     usage_limit = models.IntegerField(_("usage limit"), default=1, null=False, blank=False, validators=[MinValueValidator(1)])

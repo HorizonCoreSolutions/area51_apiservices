@@ -79,7 +79,7 @@ from apps.admin_panel.forms import (AdminModelForm, AgentModelForm,
 from apps.casino.tasks import task_update_offmarket_transaction
 from apps.payments.models import (AlchemypayOrder, MnetTransaction, NowPaymentsTransactions,
     WithdrawalCurrency, WithdrawalRequests)
-from apps.users.models import FooterPages, MAX_SPEND_AMOUNT, Permission, ResponsibleGambling
+from apps.users.models import FooterPages, MAX_SPEND_AMOUNT, Permission, ResponsibleGambling, BONUS_EVENTS
 from apps.users.utils import send_message_to_chatlist,send_live_status_to_player, encrypt
 from excel_response import ExcelResponse
 from apps.bets.utils import generate_reference
@@ -3444,6 +3444,108 @@ class BonusesView(CheckRolesMixin, ListView):
             context["losing_end_date"] = timezone.now().strftime(self.date_format)
             context["promo_code_usage_limit"] = 1
         return context
+
+
+class AutomatedBonusView(CheckRolesMixin, ListView):
+    """
+    Sign Up bonus view - Renamed from welcome bonus percentage
+    Ref: https://trello.com/c/xoCgHWtk
+    """
+    template_name = "admin/bonuses/automated_bonuses.html"
+    model = PromoCodes
+    queryset = PromoCodes.objects.order_by("-created").all()
+    context_object_name = "bonuses"
+    allowed_roles = ("admin")
+    date_format = "%d/%m/%Y"
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        queryset = queryset.filter(
+            dealer=self.request.user, bonus__bonus_type="automated_promos"
+        )
+        data = {}
+        for item in queryset:
+            pres = {
+                ("gc" if item.bonus_percentage > 0 else "sc"): item.instant_bonus_amount,
+                "enabled" : not bool(item.is_expired)
+            }
+            if item.promo_code in data:
+                data[item.promo_code].update(pres)
+            else:
+                data[item.promo_code] = pres
+        
+        return data
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["available_events"] = BONUS_EVENTS.items()
+        return context
+    
+
+class UpdateAutomatedBonusView(APIView):
+    permission_classes = [IsAdmin]
+    
+    def post(self, request):
+        bonus = BonusPercentage.objects.filter(dealer=request.user, bonus_type="automated_promos").first()
+        if not bonus:
+            return Response(data={ "message": "This function is not enabled." }, status=status.HTTP_400_BAD_REQUEST)
+        action = request.data.get("action")
+        if action not in BONUS_EVENTS.keys():
+            return Response(data={ "message": "This action is not available." }, status=status.HTTP_400_BAD_REQUEST)
+
+
+        # Extract and validate numeric fields
+        def is_number(value):
+            try:
+                float(value)
+                return True
+            except (TypeError, ValueError):
+                return False
+
+        sc_price = request.data.get("sc_price")
+        gc_price = request.data.get("gc_price")
+        enabled = request.data.get("enabled")
+
+        # Validation
+        errors = {}
+        if sc_price is None or not is_number(sc_price):
+            errors["sc_price"] = "Must be a number and not None."
+        if gc_price is None or not is_number(gc_price):
+            errors["gc_price"] = "Must be a number and not None."
+        if enabled is None:
+            errors["enabled"] = "This field cannot be None."
+
+        if errors:
+            return Response({"message" : "Invalid values.", "errors": errors}, status=status.HTTP_400_BAD_REQUEST)
+
+        sc_price = Decimal(sc_price).quantize(Decimal("0.01"))
+        gc_price = Decimal(gc_price).quantize(Decimal("0.01"))
+        enabled = str(enabled).lower() in ["true", "1", "yes"]
+        
+        gc_start_date = timezone.now()
+        sc_start_date = gc_start_date + timedelta(minutes=5)
+        
+        for bonus_percentage, amount, start_date, usage_limit in [
+            (Decimal("0.00"), sc_price, sc_start_date, 1),
+            (Decimal("1.00"), gc_price, gc_start_date, 1)
+        ]:
+            PromoCodes.objects.update_or_create(
+                bonus=bonus,
+                promo_code=action,
+                dealer=request.user,
+                bonus_percentage=bonus_percentage,
+                defaults={
+                    "bonus_distribution_method": PromoCodes.BonusDistributionMethod.instant,
+                    "instant_bonus_amount": amount,
+                    "max_bonus_limit": Decimal(1),
+                    "start_date": start_date,
+                    "usage_limit": Decimal(usage_limit),
+                    "is_expired": not enabled,
+                }
+            )
+
+        return Response({"message": "Bonus updated successfully."}, status=status.HTTP_200_OK)
+    
 
 
 class SignUpBonusView(CheckRolesMixin, ListView):
@@ -10205,7 +10307,7 @@ class OffMarketCreditAjaxView(CheckRolesMixin, views.JSONResponseMixin, views.Aj
                     deposit.status="Completed"
                     deposit.save()
                     
-                task_update_offmarket_transaction.apply_async(args=[deposit.id], countdown=10)
+                task_update_offmarket_transaction.apply_async(args=[deposit.id], countdown=19)
 
                 return self.render_json_response({"message": "Request Submitted Successfully"}, 200)
             else:

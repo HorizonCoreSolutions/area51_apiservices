@@ -616,6 +616,13 @@
 
                                                     {% if request.user.is_welcome_bonus_enabled %}
                                                     <li class="">
+                                                        <a href="{% url 'admin-panel:automated-bonus' %}" class="waves-effect waves-dark" >
+                                                            <span class="pcoded-micon"><i class="ti-angle-right"></i></span>
+                                                            <span class="pcoded-mtext">{% trans 'Event Based Bonus' %}</span>
+                                                            <span class="pcoded-mcaret"></span>
+                                                        </a>
+                                                    </li>
+                                                    <li class="">
                                                         <a href="{% url 'admin-panel:sign-up-bonus' %}" class="waves-effect waves-dark" >
                                                             <span class="pcoded-micon"><i class="ti-angle-right"></i></span>
                                                             <span class="pcoded-mtext">{% trans 'Sign Up Bonus' %}</span>
