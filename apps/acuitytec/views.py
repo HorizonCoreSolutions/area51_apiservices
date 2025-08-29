@@ -1,35 +1,54 @@
-from datetime import timedelta
 import json
-from rest_framework.response import Response
-from rest_framework import status
-from apps.acuitytec.acuitytec import sync_names
-from apps.acuitytec.models import AcuitytecUser, DocumentTypeChoise, VerificationItem, VerificationStateChoise
-from apps.acuitytec.utils import generate_qr_code_url
-from apps.users.models import VERIFICATION_APPROVED, VERIFICATION_EXPIRED, VERIFICATION_FAILED, Country, Users, EVENT_KYC
-from django.conf import settings
+from datetime import timedelta
 from django.utils import timezone
-from apps.acuitytec.acuitytec import AcuityTecAPI
-
+from rest_framework import status
 from rest_framework.views import APIView
-
+from rest_framework.response import Response
 from apps.users.tasks import redeam_user_event
+from apps.acuitytec.acuitytec import sync_names
+from apps.acuitytec.acuitytec import AcuityTecAPI
+from apps.acuitytec.utils import generate_qr_code_url
+from apps.core.permissions import IsAdmin, IsAgent, IsDealer, IsManager, IsPlayer, IsSuperAdmin
+
+from apps.acuitytec.models import (
+                AcuitytecUser,
+                DocumentTypeChoise,
+                VerificationItem,
+                VerificationStateChoise)
+
+from apps.users.models import (
+        VERIFICATION_APPROVED,
+        VERIFICATION_EXPIRED,
+        VERIFICATION_FAILED,
+        Country,
+        Users,
+        EVENT_KYC)
 # Create your views here.
 
+
 class GetVerificationLinkView(APIView):
+    permission_classes = [IsSuperAdmin, IsAdmin, IsDealer, IsPlayer, IsAgent]
     http_method_names = ["post"]
+
     def post(self, request):
         try:
-            if not request.user.is_authenticated:
-                return Response({"message": "The user must be authenticated"}, status.HTTP_400_BAD_REQUEST)
+            is_player = request.user.role.lower() == "player"
 
-            user = Users.objects.get(id=request.user.id)
+            if is_player:
+                id = request.user.id
+            else:
+                id = request.data.get("user_id")
+                if not id:
+                    return Response({"message": "A user_id must be provided"}, status.HTTP_400_BAD_REQUEST)
+
+            user = Users.objects.get(id=id)
 
             language = request.data.get('language')
 
             if language is None:
                 return Response({"message": "language must not be None"}, status.HTTP_400_BAD_REQUEST)
 
-            if not language in ('es', 'en', 'fr'):
+            if language not in ('es', 'en', 'fr'):
                 return Response({"message": "language must be one of the following us, es, fr"}, status.HTTP_400_BAD_REQUEST)
 
             ac = AcuityTecAPI(user=user)
@@ -41,6 +60,9 @@ class GetVerificationLinkView(APIView):
                 ip = x_forwarded_for.split(',')[0].strip()  # client’s real IP
             else:
                 ip = request.META.get('REMOTE_ADDR')
+
+            if not is_player:
+                ip = "0.0.0.0"
 
             if not AcuitytecUser.objects.filter(user=user).exists():
                 res = ac.register_customer(ip, check_info=True)
@@ -55,12 +77,12 @@ class GetVerificationLinkView(APIView):
                     return Response({"message": "This service is down. Please try again in a few minuts."}, status.HTTP_400_BAD_REQUEST)
             user.refresh_from_db()
             if user.document_verified == VERIFICATION_APPROVED:
-                return Response({'url' : "", 'is_verified': True}, status=status.HTTP_200_OK)
+                return Response({'url': "", 'is_verified': True}, status=status.HTTP_200_OK)
             link = ac.getLink(language=language)
             if link.startswith('error'):
                 return Response({"message": link[5:]}, status.HTTP_400_BAD_REQUEST)
 
-            return Response({'url' : link, 'is_verified': False}, status=status.HTTP_200_OK)
+            return Response({'url': link, 'is_verified': False}, status=status.HTTP_200_OK)
         except Exception as e:
             print(e)
             return Response({"message": "Something Went Wrong"}, status.HTTP_500_INTERNAL_SERVER_ERROR)

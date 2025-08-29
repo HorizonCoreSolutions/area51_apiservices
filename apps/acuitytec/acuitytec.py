@@ -4,22 +4,28 @@ Simple Python implementation for customer registration verification
 """
 import time
 import json
+import random
+import string
 import base64
-from uuid import uuid4
 import requests
 from io import BytesIO
+from uuid import uuid4
 from datetime import timedelta
-from typing import Dict, Any, Optional, Union
-from apps.acuitytec.models import VerificationStateChoise, VerificationItem
-from apps.acuitytec.utils import cache_ips_geo
-from apps.core.custom_types import BasicReturn
-from apps.core.file_logger import SimpleLogger
-from apps.users.models import VERIFICATION_APPROVED, VERIFICATION_PENDING, VERIFICATION_PROCESSING, Users
 from django.conf import settings
 from django.utils import timezone
 from urllib.parse import urlparse
+from typing import Dict, Any, Optional, Union
+from apps.acuitytec.utils import cache_ips_geo
+from apps.core.file_logger import SimpleLogger
+from apps.core.custom_types import BasicReturn
+from apps.acuitytec.models import VerificationStateChoise, VerificationItem
+from apps.users.models import VERIFICATION_APPROVED, VERIFICATION_PENDING, VERIFICATION_PROCESSING, Users
 
 logger = SimpleLogger(name='Acuitytec', log_file='logs/acuitytec.log').get_logger()
+
+def generate_code(length=4):
+    characters = string.ascii_letters + string.digits  # a-zA-Z0-9
+    return ''.join(random.choices(characters, k=length))
 
 def sync_names(first_name=None, last_name=None, full_name=None):
     # Normalize empty strings to None
@@ -32,11 +38,11 @@ def sync_names(first_name=None, last_name=None, full_name=None):
         names = full_name.strip().split(None, 1)
         first_name = names[0]
         last_name = names[1] if len(names) > 1 else ''
-    
+
     # Case 2: first_name or last_name exists but full_name does not
     elif (first_name or last_name) and not full_name:
         full_name = f"{first_name or ''} {last_name or ''}".strip()
-    
+
     # Case 3: all are present or some conflict; prefer full_name
     elif full_name:
         names = full_name.strip().split(None, 1)
@@ -47,11 +53,12 @@ def sync_names(first_name=None, last_name=None, full_name=None):
     names = (first_name or '', last_name or '')
     return names, full_name
 
+
 class AcuityTecAPI:
     """
     AcuityTec API Client for Customer Registration
     """
-    
+
     def __init__(self, user: Users):
         """
         Initialize the AcuityTec API client
@@ -244,7 +251,8 @@ class AcuityTecAPI:
         }.get(k, k).replace('_', ' ')
 
     def getLink(self, language):
-        document = ("0000" + str(self.user.id))[-4:]
+        document = ("0000" + str(self.user.id))[6:] + generate_code(length=8)
+        
         try:
             qs = VerificationItem.objects.filter(
                 user=self.user,

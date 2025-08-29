@@ -1,9 +1,8 @@
-{% extends 'index.html' %}
+{% extends "index.html" %}
 {% load static %}
 {% load i18n %}
 {% load math %}
 {% load date_utils %}
-
 
 {% block title %}
     {% trans "Inbox" %}
@@ -11,519 +10,586 @@
 {% block content %}
 
 <style>
-
-    .video-container {
-        height:10px;
-        width:10px;
-    }
-  
-    .body {
-        background-color: #f1f0f0;
-        font-family: 'Roboto', sans-serif;
-        overflow: hidden;
-    }
-
-    .message {
-        display: flex;
-        margin: 10px;
-    }
-
-    .sent .message-bubble {
-        background-color:  #f0f0f6;
-        color: #000;
-        border-radius: 20px 20px 20px 0;
-        margin-left: auto; /* update margin-left instead of margin-right */
-        max-width: 70%;
-        padding: 15px 20px;
-        word-break: break-all;
-    }
-
-    .received .message-bubble {
-        background-color: #545456;
-        color: #fff;
-        border-radius: 20px 20px 0 20px;
-        max-width: 70%;
-        padding: 15px 20px;
-        word-break: break-all;
-    }
-
-    .received .message-bubble::after {
-        content: "";
-        position: absolute;
-        bottom: -10px;
-        border-style: solid;
-        border-width: 10px 10px 0 0; /* update border-width for the arrow */
-        transform: rotate(45deg); /* update rotation angle */
-        left: -10px; /* update left instead of right */
-        border-color: #f1f0f0 transparent transparent transparent;
-    }
-
-    .message-text {
-        font-size: 14px;
-        line-height: 1.4;
-        margin-bottom: 5px;
-    }
-    .tipmsg {
-        background-color: #f8d8ae;
-    }
-    .tipmsg-amount {
-        font-size: 20px;
-    }
-    .tipmsg-username img {
-        width: 20px;
-      }
-      
-      
-
-    .message-time {
-        font-size: 10px;
-        color: #f7f1f1;
-    }
-
-    .message-time-send {
-        font-size: 10px;
-        color: #605c5c;
-    }
-    #chat-container {
-        overflow-y: auto;
-        height: calc(100vh - 360px);
-        padding: 0 40px;
-    
-    }
-
-    #chat-form {
-        padding: 10px 10px 0;
-    }
-
-    #chat-form input {
-        border-radius: 30px;
-        padding:20px 20px 20px 20px;
-        height:50px;
-
-    }
-    #chat-form .btn {
-        border-radius: 100%;
-        height: 40px;
-        width: 40px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 5px;
-    }
-
-    .file-link {
-        /* display: inline-block;
-        padding: 8px 12px;
-        background-color: #3e74d8;
-        color: white;
-        text-decoration: none;
-        border-radius: 5px; */
-        height: 300px;
-        width: 300px;
-        border-radius: 5px;
-        overflow: hidden;
-
-    }
-    .file-link img {
-
-        height: 100%;
-        width: 100%;
-        object-fit: cover;
-
-    }
-
-    .file-link a {
-
-        height: 100%;
-        width: 100%;
-        object-fit: cover;
-
-    }
-    .file-link video {
-
-        height: 100%;
-        width: 100%;
-        object-fit: cover;
-
-    }
-
-    .chat-header {
-        padding:10px 20px;
-        background-color: #000000;
-        border-radius: 5px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-
-    }
-
-    .chat-header h4 {
-        font-size: 16px;
-        font-weight: bold;
-        margin: 0px;
-        line-height: 16px;
-        color: #fff;
-    }
-
-    .chat-header span {
-        font-size: 12px;
-        color: #fff;
-    }
-    .chat-wrapper {
-        /* max-width: 1000px;
-        margin: 0 auto; */
-        background-color: #007bff14;
-        padding-bottom: 10px;
-        border-bottom-left-radius: 15px;
-        border-bottom-right-radius: 15px;
-    }
-
-    .input-wrap {
-        position: relative;
-        width: 100%;
-    }
-    
-    .input-button {
-        display: flex;
-        align-items: center;
-        position: absolute;
-        top:5px;
-        right:0;
-    }
-
-    .content-header{
-        display:none;
-    }
-
-    .admin-card{
-        background-color: #ffffff;
-        box-shadow: 0px 0px 6px 6px rgb(204 204 204 / 0.25);
-        padding: 30px 10px;
-    }
-    .chat-header-right a {
-
-        height: 30px;
-        width: 30px;
-        border-radius: 100%;
-        border:1px solid #fff;
-        display:flex;
-        align-items: center;
-        justify-content: center;
-        padding:5px;
-    
-    }
-    .chat-header-right a:hover{
-        background-color: #fff;
-        color:#000;
-    }
-
-    .pcode.left-spacer {
-        margin-left: 0px;
-    }
-
-    .pcode{
-        margin-left: 250px;
-    }
-    @media(max-width:767px){
-        .pcode{
-            margin-left: 0px;
-        }
-    }
-
-    .verify_switch{
-        height: 0;
-        width: 0;
-        visibility: hidden;
-    }
-
-    #verify-toogle {
-        cursor: pointer;
-        text-indent: -9999px;
-        width: 80px;
-        height: 30px;
-        background: grey;
-        display: block;
-        border-radius: 100px;
-        position: relative;
-    }
-
-    #verify-toogle:after {
-        content: '';
-        position: absolute;
-        top: 5px;
-        left: 5px;
-        width: 20px;
-        height: 20px;
-        background: #fff;
-        border-radius: 90px;
-        transition: 0.3s;
-    }
-
-    .verify_switch:checked + #verify-toogle {
-        background: green;
-    }
-
-    .verify_switch:checked + #verify-toogle:after {
-        left: calc(100% - 5px);
-        transform: translateX(-100%);
-    }
-
-    #verify-toogle:active:after {
-        width: 80px;
-    }
-
-    .lb-closeContainer{
-        display: none;
-    }
-    .switch {
-        display: inline-block;
-        height: 34px;
-        position: relative;
-        width: 60px;
-    }
-
-    .switch input {
-        display: none;
-    }
-
-    .slider {
-        background-color: #ccc;
-        bottom: 0;
-        cursor: pointer;
-        left: 0;
-        position: absolute;
-        right: 0;
-        top: 0;
-        transition: 0.4s;
-    }
-
-    .slider:before {
-        background-color: #fff;
-        bottom: 4px;
-        content: "";
-        height: 26px;
-        left: 4px;
-        position: absolute;
-        transition: 0.4s;
-        width: 26px;
-    }
-
-    input:checked + .slider {
-        background-color: #66bb6a;
-    }
-
-    input:checked + .slider:before {
-        transform: translateX(26px);
-    }
-
-    .slider.round {
-        border-radius: 34px;
-    }
-
-    .slider.round:before {
-        border-radius: 50%;
-    }
-    
-    .icon-toggle-container {
-        display: flex;
-        align-items: center;
-    }
-
-    .icon-toggle-container .btn {
-        margin-right: 10px;
-    }
-    
-    .message.join-message {
-        background-color: #4287f5;
-        color: #fff;
-        padding: 10px;
-        border-radius: 5px;
-        margin-bottom: 10px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        text-align: center;
-        border-radius: 20px;
-    }
-
-    .message.end-message {
-        background-color: #FF0000;
-        color: #fff;
-        padding: 10px;
-        border-radius: 5px;
-        margin-bottom: 10px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        text-align: center;
-        border-radius: 20px;
-    }
-    
-    .player-count-container {
-        display: flex;
-        align-items: center;
-    }
-
-    .player-count-text {
-        margin-left: 5px;
-        font-weight: bold;
-    }
-    
-    /* CSS for typing indicator */
-    .form-row {
-        display: flex;
-        align-items: flex-start;
-        position: relative;
-    }
-
-    #typing-indicator {
-        position: absolute;
-        top: -40px; /* Adjust this value to position the indicator above the input field */
-        left: 10px;
-        padding: 5px 10px;
-        background-color: #f1f1f1;
-        border-radius: 10px;
-        font-size: 12px;
-        color: #333;
-    }
-
-    /* Add padding between table rows */
-    .table tr td {
-        padding: 22px; /* Adjust the value as needed */
-    }
-
-    /* Style for the loader */
-    .loader {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100px; /* Set the desired height to center vertically */
-    }
-
-    /* Style for the loader image */
-    .loader img {
-        width: 50px;
-        height: 50px;
-    }
-
-
-    /* Style for the table rows */
-    .table tr {
-        border-bottom: 1px solid #ddd; /* Adjust the color and size as needed */
-    }
-
-    /* Style for odd rows */
-    .table tr:nth-child(odd) {
-        {% comment %} background-color: #f9f9f9; /* Adjust the background color as needed */ {% endcomment %}
-    }
-
-    /* Style for even rows */
-    .table tr:nth-child(even) {
-        {% comment %} background-color: #f1f1f1; /* Adjust the background color as needed */ {% endcomment %}
-    }
-        
-    /* Hide the default checkbox */
-    .switch-input {
-        display: none;
-    }
-
-    /* Style for the switch label */
-    .switch-label {
-        display: inline-block;
-        width: 100px;
-        height: 40px;
-        background-color: #FF0000;
-        border: 2px solid #FF0000;
-        border-radius: 20px;
-        position: relative;
-        cursor: pointer;
-        overflow: hidden;
-    }
-
-    /* Style for the slider (the part that moves) */
-    .slider {
-        position: absolute;
-        top: 2px;
-        left: 2px;
-        width: 46%;
-        height: 36px;
-        background-color: #008000; /* Green color for the active state */
-        border-radius: 20px;
-        transition: 0.4s;
-    }
-
-    /* Style for the login and logout labels */
-    .login-label,
-    .logout-label {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        font-weight: bold;
-        font-size: 14px;
-        pointer-events: none;
-        z-index: 1;
-    }
-
-    /* Set the color for login and logout labels */
-    .login-label {
-        color: #333; /* White color for the active state */
-    }
-
-    .logout-label {
-        color: #333; /* Adjust the color for the inactive state */
-    }
-
-    .switch-input:checked + .switch-label .slider {
-        left: 52%;
-    }
-        
-    .btn.disabled {
-        opacity: 0.7; 
-        cursor: not-allowed;
-        background-color: #b0b0b0;
-    }
-
-    .active-tab {
-        {% comment %} background-color: white;
-        color: green; {% endcomment %}
-        background-color: #00800040;
-        color: #000;
-    }
-    
-    .input-container {
-        display: flex;
-        align-items: center;
-        border: 1px solid #ccc;
-        border-radius: 20px;
-        padding: 5px;
-        background-color: #fff;
-    }
-
-    #chat-input {
-        flex: 1;
-        border: none;
-        outline: none;
-    }
-
-    #back-btn {
-        margin-left: 10px; /* Adjust as needed for spacing */
-    }
-
-
-    /* Add the 'cursor: not-allowed' style for disabled .switch-input elements */
-    .switch-input:disabled {
-        cursor: not-allowed;
-    }
-
-    /* Add the 'cursor: not-allowed' style for disabled labels */
-    .switch-input:disabled + .switch-label {
-        cursor: not-allowed;
-    }
+  /* General Styles */
+  .body {
+    background-color: #f8f9fa;
+    font-family: "Roboto", sans-serif;
+    overflow: hidden;
+  }
+
+  .video-container {
+    height: 10px;
+    width: 10px;
+  }
+
+  /* Chat Header */
+  .chat-header {
+    padding: 10px 20px;
+    background-color: #000000;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .chat-header h4 {
+    font-size: 16px;
+    font-weight: bold;
+    margin: 0;
+    line-height: 16px;
+    color: #fff;
+  }
+
+  .chat-header span {
+    font-size: 12px;
+    color: #fff;
+  }
+
+  .chat-header-right a {
+    height: 30px;
+    width: 30px;
+    border-radius: 100%;
+    border: 1px solid #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5px;
+  }
+
+  .chat-header-right a:hover {
+    background-color: #fff;
+    color: #000;
+  }
+
+  /* Chat Wrapper & Container */
+  .chat-wrapper {
+    background-color: #007bff14;
+    padding-bottom: 10px;
+    border-bottom-left-radius: 15px;
+    border-bottom-right-radius: 15px;
+  }
+
+  #chat-container {
+    overflow-y: auto;
+    height: calc(100vh - 360px);
+    padding: 5px;
+  }
+
+  /* Messages */
+  .message {
+    display: flex;
+    margin: 8px 10px 4px;
+  }
+
+  .message-text {
+    font-size: 14px;
+    line-height: 1.4;
+  }
+
+  .message-time {
+    font-size: 0.7rem; /* Slightly smaller, like WhatsApp */
+    color: #f7f1f1;
+    position: absolute; /* Allow precise placement */
+    bottom: 3px;
+    right: 6px;
+  }
+
+  .message-time-send {
+    font-size: 0.7rem;
+    color: #605c5c;
+    position: absolute;
+    bottom: 3px;
+    right: 6px;
+  }
+
+  .tip-bubble {
+    border-radius: 8px;
+    max-width: 70%;
+    padding: 5px 12px;
+    word-break: break-word;
+    box-shadow: 0 2px 1px rgba(94, 94, 94, 0.1);
+    position: relative;
+
+  }
+
+  .message-bubble {
+    min-width: 95px;
+  }
+
+  .sent .message-bubble {
+    background-color: #ffffffff;
+    color: #000;
+    border-radius: 8px;
+    margin-left: auto;
+    max-width: 70%;
+    padding: 7px 42px 7px 12px;
+    word-break: break-word;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+    position: relative;
+  }
+
+  .received .message-bubble {
+    background-color: #545456;
+    color: #fff;
+    border-radius: 8px;
+    max-width: 70%;
+    padding: 7px 42px 7px 12px;
+    word-break: break-word;
+    box-shadow: 0 2px 1px rgba(94, 94, 94, 0.1);
+    position: relative;
+  }
+
+  .received .message-bubble::after {
+    content: "";
+    position: absolute;
+    bottom: -10px;
+    border-style: solid;
+    border-width: 10px 10px 0 0;
+    transform: rotate(45deg);
+    left: -10px;
+    border-color: #f1f0f0 transparent transparent transparent;
+  }
+
+  .message.received + .message.received {
+    margin-top: 0px !important;
+    margin-bottom: 5px !important;
+  }
+
+  .message.sent + .message.sent {
+    margin-top: 0px !important;
+    margin-bottom: 5px !important;
+  }
+
+  .message.received + .message.received .message-bubble::before {
+    display: none;
+  }
+
+  .message.sent + .message.sent .message-bubble::before {
+    display: none;
+  }
+
+  .message.sent + .message.sent::before {
+    margin-top: 0px !important;
+    margin-bottom: 5px !important;
+  }
+
+
+  .message.received + .message.sent {
+    margin-top: 0px !important;
+    margin-bottom: 5px !important;
+  }
+
+  .message.sent + .message.received {
+    margin-top: 0px !important;
+    margin-bottom: 4px !important;
+  }
+
+  /* Tail for the last received message before a sent one */
+  .message.sent .message-bubble::before {
+    content: "";
+    position: absolute;
+    right: -8px;
+    top: 0px;
+    width: 0;
+    height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-top: 8px solid #ffffffff; /* same as sent background */
+  }
+
+  .message.received .message-bubble::before {
+    content: "";
+    position: absolute;
+    left: -8px;
+    top: 0px;
+    width: 0;
+    height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-top: 8px solid #545456; /* same as received background */
+  }
+
+  .message.join-message {
+    background-color: #4287f5;
+    color: #fff;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    border-radius: 20px;
+  }
+
+  .message.end-message {
+    background-color: #ff0000;
+    color: #fff;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+  }
+
+  /* File Links */
+  .file-link {
+    height: 300px;
+    width: 300px;
+    border-radius: 5px;
+    overflow: hidden;
+  }
+
+  .file-link img {
+    height: 100%;
+    width: 100%;
+    object-fit: cover;
+  }
+
+  .file-link a {
+    height: 100%;
+    width: 100%;
+    object-fit: cover;
+  }
+
+  .file-link video {
+    height: 100%;
+    width: 100%;
+    object-fit: cover;
+  }
+
+  /* Chat Form & Input */
+  #chat-form {
+    padding: 10px 10px 0;
+  }
+
+  #chat-form input {
+    border-radius: 30px;
+    padding: 20px;
+    height: 50px;
+  }
+
+  #chat-form .btn {
+    border-radius: 100%;
+    height: 40px;
+    width: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 5px;
+  }
+
+  .input-wrap {
+    position: relative;
+    width: 100%;
+  }
+
+  .input-button {
+    display: flex;
+    align-items: center;
+    position: absolute;
+    top: 5px;
+    right: 0;
+  }
+
+  .input-container {
+    display: flex;
+    align-items: center;
+    border: 1px solid #ccc;
+    border-radius: 20px;
+    padding: 5px;
+    background-color: #fff;
+  }
+
+  #chat-input {
+    flex: 1;
+    border: none;
+    outline: none;
+  }
+
+  #back-btn {
+    margin-left: 10px;
+  }
+
+  /* Typing Indicator */
+  .form-row {
+    display: flex;
+    align-items: flex-start;
+    position: relative;
+  }
+
+  #typing-indicator {
+    position: absolute;
+    top: -40px;
+    left: 10px;
+    padding: 5px 10px;
+    background-color: #f1f1f1;
+    border-radius: 10px;
+    font-size: 12px;
+    color: #333;
+  }
+
+  /* Admin Card */
+  .admin-card {
+    background-color: #ffffff;
+    box-shadow: 0px 0px 6px 6px rgb(204 204 204 / 0.25);
+    padding: 30px 10px;
+  }
+
+  /* Player Count */
+  .player-count-container {
+    display: flex;
+    align-items: center;
+  }
+
+  .player-count-text {
+    margin-left: 5px;
+    font-weight: bold;
+  }
+
+  /* Tip Message */
+  .tipmsg {
+    background-color: #f8d8ae;
+  }
+
+  .tipmsg-amount {
+    font-size: 20px;
+  }
+
+  .tipmsg-username img {
+    width: 20px;
+  }
+
+  /* Verification Toggle */
+  .verify_switch {
+    height: 0;
+    width: 0;
+    visibility: hidden;
+  }
+
+  #verify-toogle {
+    cursor: pointer;
+    text-indent: -9999px;
+    width: 80px;
+    height: 30px;
+    background: grey;
+    display: block;
+    border-radius: 100px;
+    position: relative;
+  }
+
+  #verify-toogle:after {
+    content: "";
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    width: 20px;
+    height: 20px;
+    background: #fff;
+    border-radius: 90px;
+    transition: 0.3s;
+  }
+
+  .verify_switch:checked + #verify-toogle {
+    background: green;
+  }
+
+  .verify_switch:checked + #verify-toogle:after {
+    left: calc(100% - 5px);
+    transform: translateX(-100%);
+  }
+
+  #verify-toogle:active:after {
+    width: 80px;
+  }
+
+  /* Switch Toggle */
+  .switch {
+    display: inline-block;
+    height: 34px;
+    position: relative;
+    width: 60px;
+  }
+
+  .switch input {
+    display: none;
+  }
+
+  .slider {
+    background-color: #ccc;
+    bottom: 0;
+    cursor: pointer;
+    left: 0;
+    position: absolute;
+    right: 0;
+    top: 0;
+    transition: 0.4s;
+  }
+
+  .slider:before {
+    background-color: #fff;
+    bottom: 4px;
+    content: "";
+    height: 26px;
+    left: 4px;
+    position: absolute;
+    transition: 0.4s;
+    width: 26px;
+  }
+
+  input:checked + .slider {
+    background-color: #66bb6a;
+  }
+
+  input:checked + .slider:before {
+    transform: translateX(26px);
+  }
+
+  .slider.round {
+    border-radius: 34px;
+  }
+
+  .slider.round:before {
+    border-radius: 50%;
+  }
+
+  /* Icon Toggle */
+  .icon-toggle-container {
+    display: flex;
+    align-items: center;
+  }
+
+  .icon-toggle-container .btn {
+    margin-right: 10px;
+  }
+
+  /* Switch Input */
+  .switch-input {
+    display: none;
+  }
+
+  .switch-input:disabled {
+    cursor: not-allowed;
+  }
+
+  /* Switch Label */
+  .switch-label {
+    display: inline-block;
+    width: 100px;
+    height: 40px;
+    background-color: #ff0000;
+    border: 2px solid #ff0000;
+    border-radius: 20px;
+    position: relative;
+    cursor: pointer;
+    overflow: hidden;
+  }
+
+  .switch-input:disabled + .switch-label {
+    cursor: not-allowed;
+  }
+
+  /* Slider (within Switch Label) */
+  .switch-label .slider {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 46%;
+    height: 36px;
+    background-color: #008000;
+    border-radius: 20px;
+    transition: 0.4s;
+  }
+
+  .switch-input:checked + .switch-label .slider {
+    left: 52%;
+  }
+
+  /* Login/Logout Labels (within Switch Label) */
+  .login-label,
+  .logout-label {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    font-size: 14px;
+    pointer-events: none;
+    z-index: 1;
+    color: #333;
+  }
+
+  /* Table Styles */
+  .table tr td {
+    padding: 22px;
+  }
+
+  .table tr {
+    border-bottom: 1px solid #ddd;
+  }
+
+  .table tr:nth-child(odd) {
+    /* background-color: #f9f9f9; */
+  }
+
+  .table tr:nth-child(even) {
+    /* background-color: #f1f1f1; */
+  }
+
+  /* Loader */
+  .loader {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100px;
+  }
+
+  .loader img {
+    width: 50px;
+    height: 50px;
+  }
+
+  /* Button States */
+  .btn.disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    background-color: #b0b0b0;
+  }
+
+  .active-tab {
+    background-color: #00800040;
+    color: #000;
+  }
+
+  /* Responsive Design */
+  .pcode.left-spacer {
+    margin-left: 0px;
+  }
+
+  .pcode {
+    margin-left: 250px;
+  }
+
+  @media (max-width: 767px) {
+    .pcode {
+      margin-left: 0px;
+    }
+  }
+
+  /* Hidden Elements */
+  .content-header {
+    display: none;
+  }
+
+  .lb-closeContainer {
+    display: none;
+  }
 </style>
 
 {% include "./cashapp.html" %}
@@ -935,8 +1001,8 @@
                         console.log(message.is_comment,"commenne")
                         
                         if (message.is_tip && !message.is_comment){
-                            var html = `<div class="message ${message.sender !== "player" ? 'sent justify-content-start' : 'received'}">
-                                <div class="message-bubble" style="background-color: #f8d8ae;color: #000;"> 
+                            var html = `<div class="message ${message.sender !== "player" ? 'sent justify-content-start' : 'received-tip'}">
+                                <div class="tip-bubble" style="background-color: #f8d8ae;color: #000;"> 
                                 ${message.message}
                                 </div>
                             </div>`
@@ -1366,8 +1432,8 @@
                         console.log(data,"hiiiiiiiiiiiiiiiiiiii")
                         if (data['is_tip'] &&  !data['is_comment']){
                             var messageHTML = `
-                            <div class="message ${is_staff_sent ? 'sent justify-content-start' : 'received'}">
-                                <div class="message-bubble ${is_staff_sent ? 'sent justify-content-start' : 'received'}" style="background-color: #f8d8ae;color: #000;>
+                            <div class="message ${is_staff_sent ? 'sent-tip justify-content-start' : 'received-tip'}">
+                                <div class="tip-bubble ${is_staff_sent ? 'sent-tip justify-content-start' : 'received-tip'}" style="background-color: #f8d8ae;color: #000;>
                                     <div class="message-text"}>
                                         ${message_text}
                                     </div>
