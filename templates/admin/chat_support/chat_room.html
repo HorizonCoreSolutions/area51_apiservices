@@ -234,6 +234,12 @@
     text-align: center;
   }
 
+  .message-bubble:has(> .long) {
+    min-width: 150px;
+    padding: 7px 42px 20px 12px;
+  }
+
+
   /* File Links */
   .file-link {
     height: 300px;
@@ -1019,7 +1025,7 @@
                             <div class="message ${message.sender !== "player" ? 'sent justify-content-start' : 'received'}">
                             <div class="message-bubble">
                                 ${message.is_file === 'True' ? getFilePreview(message.message) : `<div class="message-text">${message.message}</div>`}
-                                <div class="message-time${message.sender !== "player" ? '-send' : ''}">
+                                <div class="message-time${message.sender !== "player" ? '-send' : ''} ${messageTime.length > 8 ? 'long' : ''}">
                                 ${messageTime}
                                 </div>
                             </div>
@@ -1430,6 +1436,9 @@
                             messageInput.disabled = false;
                         }
                         console.log(data,"hiiiiiiiiiiiiiiiiiiii")
+
+                        var formatTimeSent = formatTime(message_sent_time)
+
                         if (data['is_tip'] &&  !data['is_comment']){
                             var messageHTML = `
                             <div class="message ${is_staff_sent ? 'sent-tip justify-content-start' : 'received-tip'}">
@@ -1438,7 +1447,7 @@
                                         ${message_text}
                                     </div>
                                 </div>
-                                <div class=" ${is_staff_sent ? 'message-time-send' : 'message-time'}">${formatTime(message_sent_time)}</div>
+                                <div class=" ${is_staff_sent ? 'message-time-send' : 'message-time'} ${ formatTimeSent.length > 8 ? 'long' : ''}">${ formatTimeSent }</div>
                                 </div>
                             </div>`
                             if("{{request.user.role}}" != 'admin'){
@@ -1452,7 +1461,7 @@
                                         ${message_text}
                                     </div>
                                 </div>
-                                <div class=" ${is_staff_sent ? 'message-time-send' : 'message-time'}">${formatTime(message_sent_time)}</div>
+                                <div class=" ${is_staff_sent ? 'message-time-send' : 'message-time'} ${ formatTimeSent.length > 8 ? 'long' : ''}">${ formatTimeSent }</div>
                                 </div>
                             </div>`
                         }else{
@@ -1463,7 +1472,7 @@
                                 <div class="${is_file ? 'message-file' : 'message-text'}">
                                     ${is_file ? getFilePreview(message_text) : message_text}
                                 </div>
-                                <div class=" ${is_staff_sent ? 'message-time-send' : 'message-time'}">${formatTime(message_sent_time)}</div>
+                                <div class=" ${is_staff_sent ? 'message-time-send' : 'message-time'} ${ formatTimeSent.length > 8 ? 'long' : ''}">${ formatTimeSent }</div>
                                 </div>
                             </div>
                             `;
