@@ -392,6 +392,7 @@ class SignUpView(APIViewContext):
 
     def post(self, request):
         # Skip phone number if one of them does not exist
+        cca2 = "US"
         data = request.data.copy()
         if str(request.data.get('tyc')) != "1":
             return Response({"message" : "You must accept the TYC, tyc != 1"},status=status.HTTP_400_BAD_REQUEST)
@@ -419,10 +420,10 @@ class SignUpView(APIViewContext):
         if request.data.get('country_code', '') == '' or request.data.get('phone_number', '') == "":
             data.pop('countray_code', None)
             data.pop('phone_number', None)
-        if request.data.get('code_cca2'):
+        if cca2:
             data.pop("country", None)
             data.pop('code_cca2', None)
-            country = Country.objects.filter(code_cca2=request.data.get('code_cca2').upper()).first()
+            country = Country.objects.filter(code_cca2=cca2.upper()).first()
             if not country:
                 return Response({"message" : "code_ccs2 is not valid"},status=status.HTTP_400_BAD_REQUEST)
 
@@ -503,7 +504,7 @@ class UserUpdateView(APIViewContext):
                 return Response({"message": "User Updated Successfully."},status.HTTP_200_OK)
             
             # Handle user personal data
-            cca2 = request.data.get("code_cca2", player.country) or "US"
+            cca2 = "US"
             phone_number = request.data.get("phone_number")
             country_code = request.data.get("country_code")
             cashtag = request.data.get("cashtag")
@@ -1725,6 +1726,7 @@ class SignUpOTP(APIView):
             email = str(request.data.get("email"))
             username = request.data.get("username")
             city = str(request.data.get('city'))
+            cca2 = "US"
             # country_code = request.data.get("country_code")
             # phone_number = request.data.get("phone_number")
             #
@@ -1766,13 +1768,13 @@ class SignUpOTP(APIView):
             # if age < 18:
             #     return Response({"message": "You must be 18+ to have an account on this platform"}, status.HTTP_400_BAD_REQUEST)
 
-            if request.data.get('code_cca2'):
-                country = Country.objects.filter(code_cca2=request.data.get('code_cca2').upper()).first()
+            if cca2:
+                country = Country.objects.filter(code_cca2=cca2.upper()).first()
                 if not country:
-                    return Response({"message" : "code_ccs2 is not valid"},status=status.HTTP_400_BAD_REQUEST)
+                    return Response({"message" : "code_cca2 is not valid"},status=status.HTTP_400_BAD_REQUEST)
                 cca2 = country.code_cca2
             else:
-                return Response({"message" : "code_ccs2 has not been provided"},status=status.HTTP_400_BAD_REQUEST)
+                return Response({"message" : "code_cca2 has not been provided"},status=status.HTTP_400_BAD_REQUEST)
 
         
             # TODO: ADD THE DIVING NAME PART
