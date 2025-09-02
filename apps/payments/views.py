@@ -1565,11 +1565,11 @@ class GetCoinFlowLink(APIView):
 
 class WebhookView(APIView):
     def post(self, request):
-        save_request('spy', request)
         
         cf = CoinFlowClient()
         data = cf.handle_webhook(request.data, request.headers.get('Authorization'))
         if data.error:
+            save_request('spy', request)
             save_request('spy', {'data' : data.error, 'Authorization' : request.headers.get('Authorization', 'None')}, is_response=True)
         
         return Response(data={'message' : 'OK'}, status=status.HTTP_200_OK)
@@ -1582,15 +1582,16 @@ class TestCoinflow(APIView):
     so this can be use by my coworkers to at least in teory play the game
     '''
     def post(self, request):
-        save_request('coinflow_testing', request)
         
         cf = CoinFlowClient()
         data = cf.register_user_with_document(user=request.user)
         if data.error:
+            save_request('coinflow_testing', request)
             save_request('coinflow_testing', {'data' : data.error}, is_response=True)
         
         data = cf.register_user_attested(user=request.user, ssn=f'{request.user.id}3245'[:4])
         if data.error:
+            save_request('coinflow_testing', request)
             save_request('conflow_testing', {'data' : data.error}, is_response=True)
             
         return Response(data={'message' : 'OK'}, status=status.HTTP_200_OK)
