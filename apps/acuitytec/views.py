@@ -27,13 +27,15 @@ from apps.users.models import (
 
 
 class GetVerificationLinkView(APIView):
-    permission_classes = [IsSuperAdmin, IsAdmin, IsDealer, IsPlayer, IsAgent]
     http_method_names = ["post"]
 
-    def post(self, request):
+    def post(self, request, **kwargs):
         try:
-            is_player = request.user.role.lower() == "player"
+            if not request.user.is_authenticated:
+                return Response({"message": "The user must be authenticated"}, status.HTTP_400_BAD_REQUEST)
 
+            is_player = request.user.role.lower() == "player"
+            #           request.user.role == "player"
             if is_player:
                 id = request.user.id
             else:
@@ -181,7 +183,7 @@ class CallbackAcuitytecView(APIView):
             user.document_verified = VERIFICATION_FAILED
         elif result == 'verification.accepted':
             user.document_verified = VERIFICATION_APPROVED
-            redeam_user_event.apply_async(args=(EVENT_KYC, user.id),countdown=10)
+            redeam_user_event.apply_async(args=(EVENT_KYC, user.id),countdown=10)  # type: ignore
         elif result == 'request.timeout':
             user.document_verified = VERIFICATION_EXPIRED
         
