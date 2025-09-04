@@ -90,6 +90,10 @@ class OneGameHub:
         return hmac.new(self.salt.encode(), d.encode(), sha256).hexdigest()
 
     @staticmethod
+    def parse_request_params(params: Dict) -> Dict:
+        return {k: v[0] for k, v in params.items()}
+
+    @staticmethod
     def get_player_uid(user: Users) -> str:
         return str(user.id) + settings.ENV_POSTFIX
 

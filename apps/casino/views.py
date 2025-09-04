@@ -1377,7 +1377,8 @@ class OneGameHubApiView(APIView):
     def post(self, request) -> Response:
         save_request(service="OneGameHub", request=request)
 
-        params = request.query_params.dict()
+        params = OneGameHub.parse_request_params(request.query_params.dict())
+
         ogh = OneGameHub()
         ogh_func: Dict[str, Callable] = {
             "cancel": ogh.cancel_bet,
