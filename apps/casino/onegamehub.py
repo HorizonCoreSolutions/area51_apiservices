@@ -6,7 +6,7 @@ from django.conf import settings
 from dataclasses import dataclass
 from apps.users.models import Users
 from urllib.parse import urlencode, quote
-from typing import Dict, Optional, Any, List, Tuple
+from typing import Dict, Optional, Any, List, Tuple, Union
 
 
 @dataclass
@@ -64,7 +64,7 @@ class OneGameHub:
         self.actions: Actions = actions
         self.url = config.get("url", settings.ONE_GAME_HUB_URL or "")
         self.salt = config.get("salt", settings.ONE_GAME_HUB_SALT or "")
-        self.secret = config.get("secret", settings.ONE_GAME_RPC_SECRET)
+        self.secret = config.get("secret", settings.ONE_GAME_HUB_RPC_SECRET)
 
         pass
 
@@ -180,6 +180,7 @@ class OneGameHub:
         url = self.get_url(self.actions.real_play, params=params)
 
         try:
+            print(url)
             res = requests.get(url=url, timeout=20)
             res.raise_for_status()
         except requests.exceptions.RequestException:
@@ -192,12 +193,14 @@ class OneGameHub:
                 raise ValueError()
             data = data.get("response")
             token = data.get("token")
-            return (token, f"{data.get('game_url')}?token={token}"), False
+            return (token, data.get('game_url')), False
 
         except ValueError:
             return ("", ""), True
 
-    def start_game(self, request_param, ip):
+    def start_game(self,
+                   request_param,
+                   ip) -> Tuple[bool, Dict[str, Union[bool, str, Dict]]]:
         game_id = request_param.get("game_id")
         lang = request_param.get("lang", "en")
         account_id = request_param.get("account_id")
@@ -242,17 +245,4 @@ class OneGameHub:
 
 
 if __name__ == "__main__":
-    print("Starting One gamehub")
-    ogh = OneGameHub()
-
-    data = ogh.start_game(
-        {
-            "game_id": "spadegaming-IcelandSA",
-            "lang": "en",
-            "account_id": "1",
-            "device": "desktop",
-            "mode": "gold"
-        },
-        ip="127.0.0.1"
-    )
-    print(data)
+    pass
