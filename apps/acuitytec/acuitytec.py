@@ -122,6 +122,9 @@ class AcuityTecAPI:
             status: enum
               - 0 : OK
               - -1: Should retry
+              - -2: External Error
+              - -3: Unkown error
+              - -4: Retry after delay
         """
         start_time = time.time()
         logger.info(("register_customer_start "
@@ -147,7 +150,7 @@ class AcuityTecAPI:
                     'error': True,
                     "message": ("Please wait a few seconds. "
                                 "Request limit reached"),
-                    "status": -2
+                    "status": -4
                 }
 
         # Build the request payload
@@ -237,7 +240,7 @@ class AcuityTecAPI:
             return {
                 'error': True,
                 'message': f'Invalid JSON response: {str(e)}',
-                'status': -3
+                'status': -2
             }
 
     def create_customer_info(self, **optional_info) -> Dict[str, Any]:
