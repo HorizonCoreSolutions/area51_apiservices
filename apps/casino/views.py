@@ -47,6 +47,7 @@ from .utils import (ValidateRequest,
                     ErrorResponseMsg,
                     return_possible_game_error,
                     GSoftUtils)
+from apps.core.utils.network import save_request
 from .gsoft import GsoftCasino
 
 
@@ -1374,6 +1375,7 @@ class CPGamesSettleBetApiView(APIView):
 
 class OneGameHubApiView(APIView):
     def post(self, request) -> Response:
+        save_request(service="OneGameHub", request=request)
 
         params = request.query_params.dict()
         ogh = OneGameHub()
