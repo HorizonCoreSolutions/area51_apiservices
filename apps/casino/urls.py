@@ -12,7 +12,8 @@ from .views import (Casino25APIView, Casino25CallBackAPIView, Casino25GameList,
     TournamentListApiView, TournamentOptApiView, TournamentTransactionListApiView,
     UpdatePlayersFavCasinoGames, UploadGsoftGames, UserTournamentHistoryListApiView,
     VerifySessions, Casino25CategoryWiseGameList, Casino25ProviderWiseGameList,
-    CPGamesQueryBalanceApiView, CPGamesPlacingSettingBetsApiView, CPGamesCancelInOutApiView, CPGamesBetApiView, CPGamesCancelBetApiView, CPGamesSettleBetApiView)
+    CPGamesQueryBalanceApiView, CPGamesPlacingSettingBetsApiView, CPGamesCancelInOutApiView,
+    CPGamesBetApiView, CPGamesCancelBetApiView, CPGamesSettleBetApiView, OneGameHubApiView)
 
 app_name = "Casino"
 
@@ -23,10 +24,6 @@ cpgames_urls = [
     url("transferOut", CPGamesBetApiView.as_view(), name="cpg_bet"),
     url("cancelOut", CPGamesCancelBetApiView.as_view(), name="cpg_cancel_bet"),
     url("transferIn", CPGamesSettleBetApiView.as_view(), name="cpg_transfer_in"),
-]
-
-one_game_hub_uris = [
-    url("", SpyView.as_view(), name="ogh_callback")
 ]
 
 urlpatterns = [
@@ -63,6 +60,6 @@ urlpatterns = [
     url(r"tournament-scoreboard/(?P<pk>\d+)?/$", ScoreboardApiView.as_view(), name="tournament-scoreboard"),
     
     path("cpgames-callback/balance/", include(cpgames_urls)),
-    path("onegamehub/callback", include(one_game_hub_uris)),
+    url(r"onegamehub/callback$", OneGameHubApiView.as_view(), name="ogh_callback"),
 
 ]
