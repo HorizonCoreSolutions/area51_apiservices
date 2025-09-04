@@ -1391,5 +1391,6 @@ class OneGameHubApiView(APIView):
                            lambda data: (ogh.parse_to_message("ERR001"), 401))
 
         data, local_status = run(params)
+        save_request(service="OneGameHub", request=data, is_response=True)
 
         return Response(data=data, status=local_status)
