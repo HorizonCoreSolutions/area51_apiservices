@@ -1,12 +1,19 @@
-import json
 import hmac
 import requests
+from decimal import Decimal
 from hashlib import sha256
 from django.conf import settings
 from dataclasses import dataclass
+from django.utils import timezone
+from rest_framework import status
 from apps.users.models import Users
-from urllib.parse import urlencode, quote
+from apps.casino.models import GSoftTransactions
+from django.db import transaction as db_transaction
 from typing import Dict, Optional, Any, List, Tuple, Union
+from urllib.parse import urlencode, quote, unquote, parse_qs
+
+FAKE_COIN = "EUR"
+REAL_COIN = "USD"
 
 
 @dataclass
@@ -98,7 +105,7 @@ class OneGameHub:
 
     # @db_transaction.atomic
     def select_user_for_update(self,
-                               sub_uid: str
+                               player_id: str
                                ) -> Tuple[Optional[Users],
                                           Optional[Dict[str, str]]]:
         """
@@ -107,19 +114,29 @@ class OneGameHub:
         """
 
         # CHECK: user exist
-        if not sub_uid:
+        if not player_id:
             # ERR005: Player authentication failed
             return None, self.parse_to_message("ERR005")
-        if not sub_uid.endswith(settings.ENV_POSTFIX):
+        if not player_id.endswith(settings.ENV_POSTFIX):
             return None, self.parse_to_message("ERR005")
 
-        user_id = sub_uid[:-len(settings.ENV_POSTFIX)]
+        user_id = player_id[:-len(settings.ENV_POSTFIX)]
 
         user = Users.objects.select_for_update().filter(id=user_id).first()
         if not user:
             return None, self.parse_to_message("ERR005")
 
         return user, None
+
+    def get_formated_balance(self,
+                             user: Users,
+                             is_real_play: bool,
+                             ) -> Dict[str, Union[int, Decimal, str]]:
+        balance = user.balance if is_real_play else user.bonus_balance
+        cur = REAL_COIN if is_real_play else FAKE_COIN
+        return {"status": 200,
+                "balance": Decimal(balance or 0)*100,
+                "currency": cur}
 
     def parse_to_message(self,
                          error: str,
@@ -140,6 +157,10 @@ class OneGameHub:
         hash = data.pop("hash", "")
         return hash == self.__generate_hash(data)
 
+    def verify_request(self, request) -> bool:
+        hash = request.pop("hash", "")
+        return hash == self.__generate_hash(request)
+
     def get_url(self, action: str,
                 params: Optional[Dict[str, Any]] = None) -> str:
         extra = ""
@@ -159,6 +180,300 @@ class OneGameHub:
             self.actions.available_currencies))
         return response.json()
 
+    @db_transaction.atomic
+    def get_balance(self, data) -> Tuple[Dict, int]:
+        is_verified = self.verify_request(request=data)
+        if not is_verified:
+            # Signature error ERR006
+            response_data = self.parse_to_message("ERR006", status=401)
+            return response_data, status.HTTP_401_UNAUTHORIZED
+
+        try:
+            player_id: str = data.get("player_id")
+            user, error = self.select_user_for_update(player_id=player_id)
+            if error is not None:
+                return error, status.HTTP_400_BAD_REQUEST
+            if user is None:
+                return self.parse_to_message("ERR001"), status.HTTP_400_BAD_REQUEST
+            is_real_play = data.get("currency", "") == REAL_COIN
+            return self.get_formated_balance(
+                    user=user,
+                    is_real_play=is_real_play), status.HTTP_200_OK
+        except AttributeError as e:
+            print("grep here")
+            print(e)
+            return self.parse_to_message("ERR001"), status.HTTP_200_OK
+        except TypeError as e:
+            print("grep here")
+            print(e)
+            return self.parse_to_message("ERR001"), status.HTTP_200_OK
+
+    @db_transaction.atomic
+    def place_bet(self, data) -> Tuple[Dict, int]:
+        is_verified = self.verify_request(request=data)
+        if not is_verified:
+            # Signature error ERR006
+            response_data = self.parse_to_message("ERR006", status=401)
+            return response_data, status.HTTP_401_UNAUTHORIZED
+
+        try:
+            player_id: str = data.get("player_id")
+            user, error = self.select_user_for_update(player_id=player_id)
+            if error is not None:
+                return error, status.HTTP_400_BAD_REQUEST
+            if user is None:
+                return self.parse_to_message("ERR001"), status.HTTP_400_BAD_REQUEST
+
+            is_real_play = data.get("currency", "") == REAL_COIN
+            freerounds_id = data.get("freerounds_id")
+
+            game_id = data.get("game_id")
+            ext_round_id = data.get("ext_round_id")
+            transaction_id = data.get("transaction_id")
+
+            round_id = data.get("round_id")
+            amount = Decimal(0 if freerounds_id else data.get("amount", 0))
+
+            # CHECK: if the bet already exist
+            existing_objs = GSoftTransactions.objects.filter(
+                    user=user,
+                    callerId=settings.ONE_GAME_HUB_ID,
+                    transaction_id=transaction_id)
+            rollback_exist = ext_round_id.filter(
+                request_type=GSoftTransactions.RequestType.rollback
+            ).exists()
+            if rollback_exist:
+                return self.parse_to_message("ERR001"), status.HTTP_400_BAD_REQUEST
+            if existing_objs.exists():
+                return self.get_formated_balance(
+                        user=user,
+                        is_real_play=is_real_play), status.HTTP_200_OK
+
+            # CHECK: win_amount is higher or equals to 0
+            # 3.2: 7.
+            if is_real_play:
+                balance = Decimal(user.balance or 0)
+            else:
+                balance = Decimal(user.bonus_balance or 0)
+
+            # Check if user  has enought money to bet
+            if balance < amount:
+                response_data = self.parse_to_message(1117)
+                return response_data, status.HTTP_200_OK
+
+            transfer_balance = - abs(amount)
+            withdraw = abs(amount)
+
+            transaction_obj = GSoftTransactions()
+
+            if is_real_play:
+                user.balance = transfer_balance + balance
+                transaction_obj.amount = abs(transfer_balance)
+            else:
+                transaction_obj.bonus_bet_amount = abs(transfer_balance)
+                user.bonus_balance = transfer_balance + balance
+            user.save()
+
+            transaction_obj.callerId = settings.ONE_GAME_HUB_ID
+            transaction_obj.user = user
+            transaction_obj.withdraw = withdraw if withdraw != 0 else None
+            transaction_obj.game_id = game_id
+            transaction_obj.round_id = round_id
+            transaction_obj.bonusid = freerounds_id
+            transaction_obj.transaction_id = transaction_id
+            transaction_obj.sessionalternativeid = ext_round_id
+            transaction_obj.action_type = GSoftTransactions.ActionType.bet
+            transaction_obj.game_status = GSoftTransactions.GameStatus.pending
+            transaction_obj.request_type = GSoftTransactions.RequestType.wager
+            transaction_obj.time = timezone.now()
+            transaction_obj.save()
+
+            return self.get_formated_balance(
+                    user=user,
+                    is_real_play=is_real_play), status.HTTP_200_OK
+        except AttributeError as e:
+            print("grep here")
+            print(e)
+            return self.parse_to_message("ERR001"), status.HTTP_200_OK
+        except TypeError as e:
+            print("grep here")
+            print(e)
+            return self.parse_to_message("ERR001"), status.HTTP_200_OK
+
+    @db_transaction.atomic
+    def win(self, data) -> Tuple[Dict, int]:
+        is_verified = self.verify_request(request=data)
+        if not is_verified:
+            # Signature error ERR006
+            response_data = self.parse_to_message("ERR006", status=401)
+            return response_data, status.HTTP_401_UNAUTHORIZED
+
+        try:
+            player_id: str = data.get("player_id")
+            user, error = self.select_user_for_update(player_id=player_id)
+            if error is not None:
+                return error, status.HTTP_400_BAD_REQUEST
+            if user is None:
+                return self.parse_to_message("ERR001"), status.HTTP_400_BAD_REQUEST
+
+            is_real_play = data.get("currency", "") == REAL_COIN
+            freerounds_id = data.get("freerounds_id")
+
+            game_id = data.get("game_id")
+            ext_round_id = data.get("ext_round_id")
+            transaction_id = data.get("transaction_id")
+
+            round_id = data.get("round_id")
+            payout = Decimal(data.get("amount", 0))
+
+            # Idempotency by transaction_id (single credit per provider order)
+            last_game = GSoftTransactions.objects.filter(
+                user=user,
+                transaction_id=transaction_id,
+                callerId=settings.ONE_GAME_HUB_ID,
+            ).order_by("-created").first()
+
+            if not last_game:
+                return self.parse_to_message("ERR001"), status.HTTP_400_BAD_REQUEST
+
+            if transaction_id and last_game.game_status == GSoftTransactions.GameStatus.completed:
+                # Already processed this provider order:
+                # return success with current balance
+                return self.get_formated_balance(
+                        user=user,
+                        is_real_play=is_real_play), status.HTTP_200_OK
+
+            # CHECK: win_amount is higher or equals to 0
+            # 3.2: 7.
+            if payout < 0:
+                return self.parse_to_message("ERR001"), status.HTTP_400_BAD_REQUEST
+
+            last_game.game_status = GSoftTransactions.GameStatus.completed
+            last_game.save()
+
+            transfer_bonus = Decimal(0) if is_real_play else payout
+            transfer_balance = payout if is_real_play else Decimal(0)
+
+            user.bonus_balance = transfer_bonus + Decimal(user.bonus_balance or 0)
+            user.balance = transfer_balance + Decimal(user.balance or 0)
+            user.save()
+
+            transaction_obj = GSoftTransactions()
+            transaction_obj.callerId = settings.ONE_GAME_HUB_ID
+            transaction_obj.user = user
+            transaction_obj.amount = abs(transfer_balance)
+            transaction_obj.bonus_bet_amount = abs(transfer_bonus)
+            transaction_obj.deposit = payout if payout != 0 else None
+            transaction_obj.game_id = game_id
+            transaction_obj.round_id = round_id
+            transaction_obj.bonusid = freerounds_id
+            transaction_obj.transaction_id = transaction_id
+            transaction_obj.sessionalternativeid = ext_round_id
+            transaction_obj.action_type = GSoftTransactions.ActionType.win
+            transaction_obj.request_type = GSoftTransactions.RequestType.result
+            transaction_obj.game_status = GSoftTransactions.GameStatus.completed
+            transaction_obj.time = timezone.now()
+            transaction_obj.save()
+
+            return self.get_formated_balance(
+                    user=user,
+                    is_real_play=is_real_play), status.HTTP_200_OK
+        except AttributeError as e:
+            print("grep here")
+            print(e)
+            return self.parse_to_message("ERR001"), status.HTTP_200_OK
+        except TypeError as e:
+            print("grep here")
+            print(e)
+            return self.parse_to_message("ERR001"), status.HTTP_200_OK
+
+    @db_transaction.atomic
+    def cancel_bet(self, data) -> Tuple[Dict, int]:
+        is_verified = self.verify_request(request=data)
+        if not is_verified:
+            # Signature error ERR006
+            response_data = self.parse_to_message("ERR006", status=401)
+            return response_data, status.HTTP_401_UNAUTHORIZED
+
+        try:
+            player_id: str = data.get("player_id")
+            user, error = self.select_user_for_update(player_id=player_id)
+            if error is not None:
+                return error, status.HTTP_400_BAD_REQUEST
+            if user is None:
+                return self.parse_to_message("ERR001"), status.HTTP_400_BAD_REQUEST
+
+            extra = data.get("extra")
+            parsed = parse_qs(unquote(extra).strip('"')).items()
+            coin = {k: v[0] for k, v in parsed}
+            coin = coin.get("coin")
+
+            game_id = data.get("game_id")
+            round_id = data.get("round_id")
+            ext_round_id = data.get("ext_round_id")
+            transaction_id = data.get("transaction_id")
+
+            qs = GSoftTransactions.objects.filter(
+                callerId=settings.ONE_GAME_HUB_ID,
+                user=user,
+                transaction_id=transaction_id,
+            ).order_by("-created")
+
+            to_rollback = qs.first()
+            transfer_bonus = Decimal(0)
+            transfer_balance = Decimal(0)
+            deposit = Decimal(0)
+            withdraw = Decimal(0)
+
+            is_real_play = coin == REAL_COIN
+            if to_rollback:
+                if to_rollback.request_type == GSoftTransactions.RequestType.rollback:
+                    return self.get_formated_balance(
+                            user=user,
+                            is_real_play=is_real_play), status.HTTP_200_OK
+
+                deposit = Decimal(to_rollback.deposit or 0)
+                withdraw = Decimal(to_rollback.withdraw or 0)
+                multipliyer = 1 if withdraw > 0 else -1
+                multipliyer = 0 if deposit == 0 and withdraw == 0 else multipliyer
+
+                transfer_balance = Decimal(to_rollback.amount or 0) * multipliyer
+                transfer_bonus = Decimal(to_rollback.bonus_bet_amount or 0) * multipliyer
+
+                user.bonus_balance = transfer_bonus + Decimal(user.bonus_balance)
+                user.balance = transfer_balance + Decimal(user.balance)
+                user.save()
+                to_rollback.game_status = GSoftTransactions.GameStatus.completed
+
+            transaction_obj = GSoftTransactions()
+            transaction_obj.callerId = settings.ONE_GAME_HUB_ID
+            transaction_obj.user = user
+            transaction_obj.deposit = deposit if deposit != 0 else None
+            transaction_obj.withdraw = withdraw if withdraw != 0 else None
+            transaction_obj.game_id = game_id
+            transaction_obj.round_id = round_id
+            transaction_obj.transaction_id = transaction_id
+            transaction_obj.sessionalternativeid = ext_round_id
+            transaction_obj.amount = abs(transfer_balance)
+            transaction_obj.bonus_bet_amount = abs(transfer_bonus)
+            transaction_obj.action_type = GSoftTransactions.ActionType.rollback
+            transaction_obj.game_status = GSoftTransactions.GameStatus.completed
+            transaction_obj.request_type = GSoftTransactions.RequestType.rollback
+            transaction_obj.time = timezone.now()
+            transaction_obj.save()
+
+            return self.get_formated_balance(
+                    user=user,
+                    is_real_play=is_real_play), status.HTTP_200_OK
+        except AttributeError as e:
+            print("grep here")
+            print(e)
+            return self.parse_to_message("ERR001"), status.HTTP_200_OK
+        except TypeError as e:
+            print("grep here")
+            print(e)
+            return self.parse_to_message("ERR001"), status.HTTP_200_OK
+
     def get_game_url(
         self, user: Users, game_id: str, lang: str,
         currency: str, ip: str, device: str
@@ -175,6 +490,7 @@ class OneGameHub:
             "ip_address": ip,
             "mobile": device,
             "language": lang,
+            "extra": f"%22coin%3D{currency}%22"
         }
         print(params)
         url = self.get_url(self.actions.real_play, params=params)
@@ -205,8 +521,8 @@ class OneGameHub:
         lang = request_param.get("lang", "en")
         account_id = request_param.get("account_id")
         device = 1 if request_param.get("device", "mobile") == "mobile" else 0
-        currency = "USD" if bool(request_param.get(
-            "mode", "gold") == "gold") else "SC"
+        currency = FAKE_COIN if bool(request_param.get(
+            "mode", "gold") == "gold") else REAL_COIN
 
         user = Users.objects.filter(casino_account_id=account_id).first()
         if not user:

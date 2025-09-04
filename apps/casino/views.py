@@ -1,7 +1,7 @@
 import pytz
 from dateutil.parser import parse
 import json
-from typing import cast
+from typing import Callable, Dict
 from decimal import Decimal
 from rest_framework.permissions import IsAuthenticated
 import traceback
@@ -29,8 +29,9 @@ from apps.core.pagination import PageNumberPagination
 from apps.core.permissions import *
 from apps.users.models import (FortunePandasGameList, FortunePandasGameManagement, OffMarketGames,
     Player, UserGames, Users)
-from apps.casino.casino25 import Casino25
 from apps.casino.cpgames import CPgames
+from apps.casino.casino25 import Casino25
+from apps.casino.onegamehub import OneGameHub
 from apps.bets.models import CHARGED, DEBIT, Transactions
 from apps.bets.utils import generate_reference
 from .serializers import (Casino25CasinoManagementSerializer,
@@ -1331,38 +1332,61 @@ class CPGamesQueryBalanceApiView(APIView):
             return Response(data=data, status=status.HTTP_200_OK)
 
 
-
 class CPGamesPlacingSettingBetsApiView(APIView):
     @transaction.atomic
     def post(self, request) -> Response:
         cp = CPgames()
-        data, status = cp.transfer_in_out(data=request.data)
-        return Response(data=data, status=status)
+        data, local_status = cp.transfer_in_out(data=request.data)
+        return Response(data=data, status=local_status)
+
 
 class CPGamesCancelInOutApiView(APIView):
     @transaction.atomic
     def post(self, request) -> Response:
         cp = CPgames()
-        data, status = cp.cancel_in_out(data=request.data)
-        return Response(data=data, status=status)
+        data, local_status = cp.cancel_in_out(data=request.data)
+        return Response(data=data, status=local_status)
+
 
 class CPGamesBetApiView(APIView):
     @transaction.atomic
     def post(self, request) -> Response:
         cp = CPgames()
-        data, status = cp.place_bet(data=request.data)
-        return Response(data=data, status=status)
+        data, local_status = cp.place_bet(data=request.data)
+        return Response(data=data, status=local_status)
+
 
 class CPGamesCancelBetApiView(APIView):
     @transaction.atomic
     def post(self, request) -> Response:
         cp = CPgames()
-        data, status = cp.cancel_bet(data=request.data)
-        return Response(data=data, status=status)
+        data, local_status = cp.cancel_bet(data=request.data)
+        return Response(data=data, status=local_status)
+
 
 class CPGamesSettleBetApiView(APIView):
     @transaction.atomic
     def post(self, request) -> Response:
         cp = CPgames()
-        data, status = cp.settle(data=request.data)
-        return Response(data=data, status=status)
+        data, local_status = cp.settle(data=request.data)
+        return Response(data=data, status=local_status)
+
+
+class OneGameHubApiView(APIView):
+    def post(self, request) -> Response:
+
+        params = request.query_params.dict()
+        ogh = OneGameHub()
+        ogh_func: Dict[str, Callable] = {
+            "cancel": ogh.cancel_bet,
+            "win": ogh.win,
+            "bet": ogh.place_bet,
+            "balance": ogh.get_balance
+        }
+
+        run = ogh_func.get(params.get("action", ""),
+                           lambda data: (ogh.parse_to_message("ERR001"), 401))
+
+        data, local_status = run(params)
+
+        return Response(data=data, status=local_status)
