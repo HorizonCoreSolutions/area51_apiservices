@@ -73,7 +73,7 @@ class GetVerificationLinkView(APIView):
                         user=user,
                         login_ip=ip
                         )
-                elif res['status'] == -1:
+                elif res['status'] == -4:
                     return Response({"message": res.get("message", "This service is down. Please try again in a few minuts.")}, status.HTTP_400_BAD_REQUEST)
                 else:
                     return Response({"message": "This service is down. Please try again in a few minuts."}, status.HTTP_400_BAD_REQUEST)
