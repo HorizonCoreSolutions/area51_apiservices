@@ -1984,8 +1984,8 @@ class OffMarketDepositView(APIView):
             is_allowed = limiter.allow(
                 key=f"ofm:{request.user.id}:deposit",
                 sliding=True,
-                window=300,
-                limit=5,)
+                window=180,
+                limit=3,)
 
             if not is_allowed:
                 return Response({"message": "Please try again later."}, status.HTTP_429_TOO_MANY_REQUESTS)
@@ -2046,7 +2046,11 @@ class OffMarketDepositView(APIView):
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
             }
-            response = requests.post(off_market_api_url + 'add_credit', json=request_payload, headers=headers)
+
+            response = requests.post(
+                url=off_market_api_url + 'add_credit',
+                json=request_payload, headers=headers,
+                timeout=30)
 
             # TODO: remove this testing
             print("off-market-response")
