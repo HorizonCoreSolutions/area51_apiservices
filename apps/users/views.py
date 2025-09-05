@@ -13,6 +13,7 @@ from datetime import datetime,timedelta
 from django.utils import timezone
 
 import requests
+from apps.core.rate_limiter import limiter
 from pyhanko_certvalidator import ValidationError
 
 from apps.acuitytec.acuitytec import AcuityTecAPI
@@ -1980,6 +1981,15 @@ class OffMarketDepositView(APIView):
     @transaction.atomic
     def post(self, request):
         try:
+            is_allowed = limiter.allow(
+                key=f"ofm:{request.user.id}:deposit",
+                sliding=True,
+                window=300,
+                limit=5,)
+
+            if not is_allowed:
+                return Response({"message": "Please try again later."}, status.HTTP_429_TOO_MANY_REQUESTS)
+            
             user = Users.objects.select_for_update().filter(id=request.user.id).first()
             if user is None:
                 return Response({"message" : "You should not see this"}, status.HTTP_400_BAD_REQUEST)
