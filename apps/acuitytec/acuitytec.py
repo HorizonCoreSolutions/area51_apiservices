@@ -14,10 +14,10 @@ from datetime import timedelta
 from django.conf import settings
 from django.utils import timezone
 from urllib.parse import urlparse
+from apps.acuitytec.logger import logger
 from apps.core.rate_limiter import limiter
 from typing import Dict, Any, Optional, Union
 from apps.acuitytec.utils import cache_ips_geo
-from apps.core.file_logger import SimpleLogger
 from apps.core.custom_types import BasicReturn
 from apps.acuitytec.models import VerificationStateChoise, VerificationItem
 from apps.users.models import (
@@ -25,10 +25,6 @@ from apps.users.models import (
         # VERIFICATION_PENDING,
         VERIFICATION_PROCESSING,
         Users)
-
-logger = SimpleLogger(
-        name='Acuitytec',
-        log_file='logs/acuitytec.log').get_logger()
 
 
 def generate_code(length=4):

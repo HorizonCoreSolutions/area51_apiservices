@@ -3,11 +3,12 @@ from datetime import timedelta
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.views import APIView
+from apps.acuitytec.logger import logger
+from apps.core.rate_limiter import limiter
 from rest_framework.response import Response
 from apps.users.tasks import redeam_user_event
-from apps.acuitytec.acuitytec import sync_names
-from apps.acuitytec.acuitytec import AcuityTecAPI
 from apps.acuitytec.utils import generate_qr_code_url
+from apps.acuitytec.acuitytec import sync_names, AcuityTecAPI
 from apps.core.permissions import IsAdmin, IsAgent, IsDealer, IsManager, IsPlayer, IsSuperAdmin
 
 from apps.acuitytec.models import (
@@ -66,9 +67,24 @@ class GetVerificationLinkView(APIView):
             if not is_player:
                 ip = "0.0.0.0"
 
-            if not AcuitytecUser.objects.filter(user=user).exists():
+            is_allowed = limiter.allow(
+                    key=f"user:{request.user.id}:ac:link_endpoint",
+                    limit=4,  # 3 request / (window)
+                    window=60,  # 5 seconds
+                    sliding=True
+                    )
+
+            if not is_allowed:
+                logger.warning(f"user:{request.user.id}:{request.user.username}"
+                            "has reached register_customer r/s limit.")
+
+            is_user_register = AcuitytecUser.objects.filter(user=user).exists()
+            # Consulta el registro local, para ver si el usuario existe
+            if not is_user_register:
                 res = ac.register_customer(ip, check_info=True)
                 if res['status'] == 0:
+                    # si si se registro,
+                    # se crea el registro local
                     AcuitytecUser.objects.create(
                         user=user,
                         login_ip=ip
