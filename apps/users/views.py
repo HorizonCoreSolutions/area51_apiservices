@@ -1985,12 +1985,12 @@ class OffMarketDepositView(APIView):
             is_allowed = limiter.allow(
                 key=f"ofm:{request.user.id}:deposit",
                 sliding=True,
-                window=180,
+                window=90,
                 limit=3,)
 
             if not is_allowed:
                 return Response({"message": ("Deposit too frequent. "
-                                             "Try again in 5 minuts.")},
+                                             "Try again in a minute.")},
                                 status.HTTP_429_TOO_MANY_REQUESTS)
 
             user = Users.objects.select_for_update().filter(id=request.user.id).first()
