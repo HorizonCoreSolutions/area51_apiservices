@@ -385,6 +385,9 @@ class AcuityTecAPI:
                     self.user.document_verified = VERIFICATION_PROCESSING
                     self.user.save()
 
+                    logger.info(f"user:{self.user.id} has "
+                                "succesfully generated a link")
+
                     return result['verification_source']
                 else:
                     logger.critical("API responded with error:"
