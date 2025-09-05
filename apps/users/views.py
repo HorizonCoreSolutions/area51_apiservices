@@ -1976,18 +1976,27 @@ class RestrictedLoginView(APIView):
 class OffMarketDepositView(APIView):
     permission_classes = (IsPlayer,)
     http_method_names = ["post"]
+    
+    @transaction.atomic
     def post(self, request):
         try:
-            user = Users.objects.filter(id=request.user.id).first()
-            amount = request.data.get('amount')
+            user = Users.objects.select_for_update().filter(id=request.user.id).first()
+            if user is None:
+                return Response({"message" : "You should not see this"}, status.HTTP_400_BAD_REQUEST)
+
             promo_code = request.data.get('promo_code')
+            amount = request.data.get('amount')
+
             if user.balance < Decimal(amount):
                     return Response({"message": "Insufficient Funds"}, status.HTTP_400_BAD_REQUEST)
+
             amount = Decimal(amount)
+
             secret_key = settings.OFF_MARKET_SECRETKEY
             off_market_api_url = settings.OFFMARKET_API_URL
+
             game_code = request.data.get('game_code')
-            game = OffMarketGames.objects.filter(code = game_code).first()
+            game = OffMarketGames.objects.filter(code=game_code).first()
             user_game = UserGames.objects.filter(game=game,user=user).first()
             a_username = encrypt(user.username)
             game_user = encrypt(game.game_user)
@@ -1996,6 +2005,7 @@ class OffMarketDepositView(APIView):
             bonus_amount = Decimal(game.bonus_percentage/100)*Decimal(amount)
             total_amount = bonus_amount + amount
             print('deposit_id',deposit_id)
+
             request_payload = {
                 "deposit_id": deposit_id,
                 "gaming_site": game_code,
@@ -2007,6 +2017,7 @@ class OffMarketDepositView(APIView):
                 "customer_username": user_game.username,
                 "area51_username" : a_username,
             }
+
             messages = ['Promo Code Is Invalid',
                         'Promo Code Expired',
                         'Promo Code Already Claimed']
@@ -2052,8 +2063,6 @@ class OffMarketDepositView(APIView):
                 deposit.save()
                 task_update_offmarket_transaction.apply_async(args=[deposit.id], countdown=19)
                 return Response({"message": "Request Submitted Successfully"}, status.HTTP_200_OK)
-
-                # TODO: remove this testing
             try:
                 message = response.json().get("message")
                 if message in messages:
