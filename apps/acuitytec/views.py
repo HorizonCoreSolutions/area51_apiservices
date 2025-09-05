@@ -78,7 +78,7 @@ class GetVerificationLinkView(APIView):
             if not is_allowed:
                 logger.warning(f"user:{request.user.id}:{request.user.username} "
                             "has reached register_customer r/s limit.")
-                return Response(data={"message" : "You have reach you limit. Please try again tomorrow."})
+                return Response(data={"message" : "You have reach you limit. Please try again tomorrow."}, status=status.HTTP_429_TOO_MANY_REQUESTS)
 
             is_user_register = AcuitytecUser.objects.filter(user=user).exists()
             # Consulta el registro local, para ver si el usuario existe
