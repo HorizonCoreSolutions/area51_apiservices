@@ -67,16 +67,18 @@ class GetVerificationLinkView(APIView):
             if not is_player:
                 ip = "0.0.0.0"
 
+            ONE_DAY = 86400
             is_allowed = limiter.allow(
                     key=f"user:{request.user.id}:ac:link_endpoint",
-                    limit=4,  # 3 request / (window)
-                    window=60,  # 5 seconds
+                    limit=10,  # 3 request / (window)
+                    window=ONE_DAY,  # 5 seconds
                     sliding=True
                     )
 
             if not is_allowed:
-                logger.warning(f"user:{request.user.id}:{request.user.username}"
+                logger.warning(f"user:{request.user.id}:{request.user.username} "
                             "has reached register_customer r/s limit.")
+                return Response(data={"message" : "You have reach you limit. Please try again tomorrow."})
 
             is_user_register = AcuitytecUser.objects.filter(user=user).exists()
             # Consulta el registro local, para ver si el usuario existe
