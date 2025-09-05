@@ -1974,10 +1974,11 @@ class RestrictedLoginView(APIView):
         except:
             return Response({"message": "Something Went Wrong"}, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+
 class OffMarketDepositView(APIView):
     permission_classes = (IsPlayer,)
     http_method_names = ["post"]
-    
+
     @transaction.atomic
     def post(self, request):
         try:
@@ -1988,11 +1989,13 @@ class OffMarketDepositView(APIView):
                 limit=3,)
 
             if not is_allowed:
-                return Response({"message": "Please try again later."}, status.HTTP_429_TOO_MANY_REQUESTS)
-            
+                return Response({"message": ("Deposit too frequent. "
+                                             "Try again in 5 minuts.")},
+                                status.HTTP_429_TOO_MANY_REQUESTS)
+
             user = Users.objects.select_for_update().filter(id=request.user.id).first()
             if user is None:
-                return Response({"message" : "You should not see this"}, status.HTTP_400_BAD_REQUEST)
+                return Response({"message": "You should not see this"}, status.HTTP_400_BAD_REQUEST)
 
             promo_code = request.data.get('promo_code')
             amount = request.data.get('amount')
@@ -2014,7 +2017,7 @@ class OffMarketDepositView(APIView):
             deposit_id = ('#'+user.username + str(random.randint(1000000, 9999999))).upper()
             bonus_amount = Decimal(game.bonus_percentage/100)*Decimal(amount)
             total_amount = bonus_amount + amount
-            print('deposit_id',deposit_id)
+            print('deposit_id', deposit_id)
 
             request_payload = {
                 "deposit_id": deposit_id,
