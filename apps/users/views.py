@@ -396,10 +396,10 @@ class SignUpView(APIViewContext):
         cca2 = "US"
         data = request.data.copy()
         if str(request.data.get('tyc')) != "1":
-            return Response({"message" : "You must accept the TYC, tyc != 1"},status=status.HTTP_400_BAD_REQUEST)
+            return Response({"message": "You must accept the TYC."}, status=status.HTTP_400_BAD_REQUEST)
         if str(request.data.get('confirm_age')) != "1":
-            return Response({"message" : "You must confirm you are 18+, confirm_age != 1"},status=status.HTTP_400_BAD_REQUEST)
-        
+            return Response({"message": "You must confirm you are 18+."}, status=status.HTTP_400_BAD_REQUEST)
+
         # check age
         # dob = request.data.get('dob')
         # if dob is None:
@@ -415,8 +415,6 @@ class SignUpView(APIViewContext):
             # return Response({"message": "You must be 18+ to have an account on this platform"}, status.HTTP_400_BAD_REQUEST)
 
         # remove un used
-        
-        # TODO: ADD THE DIVING NAME PART
 
         if request.data.get('country_code', '') == '' or request.data.get('phone_number', '') == "":
             data.pop('countray_code', None)
@@ -440,21 +438,22 @@ class SignUpView(APIViewContext):
         if serializer.is_valid():
             player = serializer.save()
             Thread(target=newuser_email,
-                        args=(player.username,player.email)).start()
-            
+                   args=(player.username, player.email)).start()
+
             redeam_user_event.apply_async(
-                args=(EVENT_REGISTRATION, player.id),
-                countdown=10
-            )
+                    args=(EVENT_REGISTRATION, player.id),
+                    countdown=10
+                    )  # type: ignore
+
             promo_obj = PromoCodes.objects.filter(
                 promo_code=player.applied_promo_code,
                 bonus__bonus_type="welcome_bonus",
                 is_expired=False
             ).first() if player.applied_promo_code else None
-            if  promo_obj and promo_obj.bonus_distribution_method == PromoCodes.BonusDistributionMethod.instant and promo_obj.instant_bonus_amount:
+            if promo_obj and promo_obj.bonus_distribution_method == PromoCodes.BonusDistributionMethod.instant and promo_obj.instant_bonus_amount:
                 player.bonus_balance += promo_obj.instant_bonus_amount
                 player.save()
-                
+
                 Transactions.objects.update_or_create(
                     user=player,
                     journal_entry="bonus",
@@ -467,7 +466,7 @@ class SignUpView(APIViewContext):
                     bonus_type="welcome_bonus",
                     bonus_amount=promo_obj.instant_bonus_amount
                 )
-                
+
             return Response({"message": _("User Created Successfully")}, status.HTTP_201_CREATED)
 
         if serializer.errors.get('non_field_errors', None):
