@@ -54,7 +54,7 @@ def register_or_update_user(self, ip, schedule, user_id):
 
         ip_to_use = acuitytec_user.login_ip or ip
         res = ac.register_customer(ip_to_use)
-        if not res.get('error', True):
+        if res['status'] == 0:
             AcuitytecUser.objects.update_or_create(
                 user=user,
                 defaults={
@@ -63,9 +63,13 @@ def register_or_update_user(self, ip, schedule, user_id):
                 }
             )
             return
-        else:
+        elif res['status'] in {-2, -3, -4}:
+            return
+        elif res['status'] == -1:
             print(res)
             raise Exception("AcuityTec registration failed (status -2)")
+        else:
+            return
 
     except Exception as exc:
         retry_count = self.request.retries

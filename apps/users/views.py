@@ -13,6 +13,7 @@ from datetime import datetime,timedelta
 from django.utils import timezone
 
 import requests
+from apps.core.rate_limiter import limiter
 from pyhanko_certvalidator import ValidationError
 
 from apps.acuitytec.acuitytec import AcuityTecAPI
@@ -1973,21 +1974,42 @@ class RestrictedLoginView(APIView):
         except:
             return Response({"message": "Something Went Wrong"}, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+
 class OffMarketDepositView(APIView):
     permission_classes = (IsPlayer,)
     http_method_names = ["post"]
+
+    @transaction.atomic
     def post(self, request):
         try:
-            user = Users.objects.filter(id=request.user.id).first()
-            amount = request.data.get('amount')
+            is_allowed = limiter.allow(
+                key=f"ofm:{request.user.id}:deposit",
+                sliding=True,
+                window=90,
+                limit=3,)
+
+            if not is_allowed:
+                return Response({"message": ("Deposit too frequent. "
+                                             "Try again in a minute.")},
+                                status.HTTP_429_TOO_MANY_REQUESTS)
+
+            user = Users.objects.select_for_update().filter(id=request.user.id).first()
+            if user is None:
+                return Response({"message": "You should not see this"}, status.HTTP_400_BAD_REQUEST)
+
             promo_code = request.data.get('promo_code')
+            amount = request.data.get('amount')
+
             if user.balance < Decimal(amount):
                     return Response({"message": "Insufficient Funds"}, status.HTTP_400_BAD_REQUEST)
+
             amount = Decimal(amount)
+
             secret_key = settings.OFF_MARKET_SECRETKEY
             off_market_api_url = settings.OFFMARKET_API_URL
+
             game_code = request.data.get('game_code')
-            game = OffMarketGames.objects.filter(code = game_code).first()
+            game = OffMarketGames.objects.filter(code=game_code).first()
             user_game = UserGames.objects.filter(game=game,user=user).first()
             a_username = encrypt(user.username)
             game_user = encrypt(game.game_user)
@@ -1995,7 +2017,8 @@ class OffMarketDepositView(APIView):
             deposit_id = ('#'+user.username + str(random.randint(1000000, 9999999))).upper()
             bonus_amount = Decimal(game.bonus_percentage/100)*Decimal(amount)
             total_amount = bonus_amount + amount
-            print('deposit_id',deposit_id)
+            print('deposit_id', deposit_id)
+
             request_payload = {
                 "deposit_id": deposit_id,
                 "gaming_site": game_code,
@@ -2007,6 +2030,7 @@ class OffMarketDepositView(APIView):
                 "customer_username": user_game.username,
                 "area51_username" : a_username,
             }
+
             messages = ['Promo Code Is Invalid',
                         'Promo Code Expired',
                         'Promo Code Already Claimed']
@@ -2025,7 +2049,11 @@ class OffMarketDepositView(APIView):
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
             }
-            response = requests.post(off_market_api_url + 'add_credit', json=request_payload, headers=headers)
+
+            response = requests.post(
+                url=off_market_api_url + 'add_credit',
+                json=request_payload, headers=headers,
+                timeout=30)
 
             # TODO: remove this testing
             print("off-market-response")
@@ -2052,8 +2080,6 @@ class OffMarketDepositView(APIView):
                 deposit.save()
                 task_update_offmarket_transaction.apply_async(args=[deposit.id], countdown=19)
                 return Response({"message": "Request Submitted Successfully"}, status.HTTP_200_OK)
-
-                # TODO: remove this testing
             try:
                 message = response.json().get("message")
                 if message in messages:
