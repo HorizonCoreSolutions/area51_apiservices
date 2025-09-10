@@ -735,6 +735,7 @@ class PromoCodes(AbstractBaseModel):
     # Currently used for checking when the bonus will be given for signup bonuses
     class BonusDistributionMethod(DjangoChoices):
         deposit = ChoiceItem("deposit", "Deposit")
+        mixture = ChoiceItem("mixture", "Mixture")
         instant = ChoiceItem("instant", "Instant")
 
     dealer = models.ForeignKey(Users, on_delete=models.CASCADE, default=None, null=True)
@@ -749,8 +750,13 @@ class PromoCodes(AbstractBaseModel):
         _("bonus percentage"), default=None, null=True, blank=True,
         validators=[MinValueValidator(Decimal("0.00"))]
     )
+    gold_percentage = models.FloatField(
+        _("gold percentage"), default=None, null=True, blank=True,
+        validators=[MinValueValidator(Decimal("0.00"))]
+    )
     is_expired = models.BooleanField(_("Is Expired"), default=False)
     usage_limit = models.IntegerField(_("usage limit"), default=1, null=False, blank=False, validators=[MinValueValidator(1)])
+    limit_per_user = models.IntegerField(_("User usage limit"), default=1, null=False, blank=False, validators=[MinValueValidator(1)])
     max_bonus_limit = models.IntegerField(_("Max bonus amount limit"), default=1, null=False, blank=False, validators=[MinValueValidator(1)])
     bonus_distribution_method = models.CharField(max_length=100, choices=BonusDistributionMethod,blank=True, null=True,default=BonusDistributionMethod.deposit)
     instant_bonus_amount = models.DecimalField(
