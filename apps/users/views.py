@@ -13,6 +13,7 @@ from datetime import datetime,timedelta
 from django.utils import timezone
 
 import requests
+from apps.users import promo_handler
 from apps.core.rate_limiter import limiter
 from pyhanko_certvalidator import ValidationError
 
@@ -445,27 +446,10 @@ class SignUpView(APIViewContext):
                     countdown=10
                     )  # type: ignore
 
-            promo_obj = PromoCodes.objects.filter(
-                promo_code=player.applied_promo_code,
-                bonus__bonus_type="welcome_bonus",
-                is_expired=False
-            ).first() if player.applied_promo_code else None
-            if promo_obj and promo_obj.bonus_distribution_method == PromoCodes.BonusDistributionMethod.instant and promo_obj.instant_bonus_amount:
-                player.bonus_balance += promo_obj.instant_bonus_amount
-                player.save()
-
-                Transactions.objects.update_or_create(
-                    user=player,
-                    journal_entry="bonus",
-                    amount=0,
-                    status="charged",
-                    previous_balance=0,
-                    new_balance=player.balance,
-                    description=f"welcome bonus of {promo_obj.instant_bonus_amount}",
-                    reference=generate_reference(player),
-                    bonus_type="welcome_bonus",
-                    bonus_amount=promo_obj.instant_bonus_amount
-                )
+            if player.applied_promo_code:
+                promo_handler.redeam_code(
+                    user=player, bonus_type='welcome',
+                    promo_code=player.applied_promo_code)
 
             return Response({"message": _("User Created Successfully")}, status.HTTP_201_CREATED)
 
@@ -807,6 +791,7 @@ class OTPActionsView(APIView):
 class VerifyOTPView(APIView):
     # Verifies the otp from number when sign in
     # MarcosAlv: I considere this deprecated and we ("I") are planing to remove it slowly ("next update")
+    # MaecosAlv: This was a really slowly update. There has been 4 months
 
     def post(self, request):
         try:
@@ -1195,31 +1180,29 @@ class ValidateSignUpPromoCode(APIView):
     def post(self, request):
 
         promo_code = request.data.get("promo_code", None)
+        if promo_code is None:
+            return Response(
+                {
+                    "data": {
+                        "message": "Invalid promocode",
+                        "status": "Failed",
+                    }
+                },
+                status=status.HTTP_200_OK,
+            )
+        
+        user = request.user if request.user.is_authenticated else None
+        
+        is_valid, msg = promo_handler.verify_code(user=user, promo_code=promo_code)
+        
+        status_text = "Success" if is_valid else "Failed"
+        http_status = status.HTTP_200_OK if is_valid else status.HTTP_400_BAD_REQUEST
+        message = "Promo-code applied successfully" if is_valid else msg
 
-        # validate the promocode
-        try:
-            response = { "message":"Promo-code applied succesfully", "status": "success" }
-            promo_obj = PromoCodes.objects.filter(promo_code=promo_code).first()
-
-            if not promo_obj:
-                response = { "message":"Invalid promocode", "status": "Failed" }
-                return Response({"data": response}, status.HTTP_404_NOT_FOUND)
-
-            promo_code_use_count = PromoCodesLogs.objects.filter(promocode=promo_obj).count()
-            
-            if promo_obj.is_expired or promo_obj.start_date > datetime.now().date() or promo_obj.end_date < datetime.now().date():
-                response = { "message":"Promo-code Expired", "status": "Failed" }
-                return Response({"data": response}, status.HTTP_400_BAD_REQUEST)
-
-            elif promo_code_use_count >= promo_obj.usage_limit:
-                response = { "message":"Promo-code use limit exceeded", "status": "Failed" }
-                return Response({"data": response}, status.HTTP_400_BAD_REQUEST)
-
-        except Exception as e:
-            print(e)
-            response = { "message":"Something went wrong", "status": "Failed" }
-
-        return Response({"data": response}, status.HTTP_200_OK)
+        return Response(
+            {"data": {"message": message, "status": status_text}},
+            status=http_status,
+        )
 
 
 class ValidatePromoCode(APIView):
@@ -1229,39 +1212,33 @@ class ValidatePromoCode(APIView):
     permission_classes = (AllowAny,)
     http_method_names = ["post"]
 
-    def post(self, request):
+    def post(self, request) -> Response:
 
         promo_code = request.data.get("promo_code", None)
+        if promo_code is None:
+            return Response(
+                {
+                    "data": {
+                        "message": "Invalid promocode",
+                        "status": "Failed",
+                    }
+                },
+                status=status.HTTP_200_OK,
+            )
+        
+        user = request.user if request.user.is_authenticated else None
+        
+        is_valid, msg = promo_handler.verify_code(user=user, promo_code=promo_code)
+        
+        status_text = "Success" if is_valid else "Failed"
+        http_status = status.HTTP_200_OK if is_valid else status.HTTP_400_BAD_REQUEST
+        message = "Promo-code applied successfully" if is_valid else msg
 
-        # validate the promocode
-        try:
-            response = { "message":"Promo-code applied succesfully", "status": "success" }
-            promo_obj = PromoCodes.objects.filter(promo_code=promo_code)
+        return Response(
+            {"data": {"message": message, "status": status_text}},
+            status=http_status,
+        )
 
-            if promo_obj:
-                promo_obj = promo_obj.first()
-
-                if not promo_obj:
-                    response = { "message":"Invalid promocode", "status": "Failed" }
-                    return Response({"data": response}, status.HTTP_404_NOT_FOUND)
-
-                promo_code_use_count = PromoCodesLogs.objects.filter(promocode=promo_obj).count()
-                if promo_obj.is_expired or promo_obj.start_date > datetime.now().date() or promo_obj.end_date < datetime.now().date():
-                    response = { "message":"Promo-code Expired", "status": "Failed" }
-                    return Response({"data": response}, status.HTTP_400_BAD_REQUEST)
-
-                elif promo_code_use_count > promo_obj.usage_limit:
-                    response = { "message":"Promo-code use limit exceeded", "status": "Failed" }
-                    return Response({"data": response}, status.HTTP_400_BAD_REQUEST)
-            else:
-                response = { "message":"Invalid promocode", "status": "Failed" }
-                return Response({"data": response}, status.HTTP_404_NOT_FOUND)
-
-        except Exception as e:
-            print(e)
-            response = { "message":"Something went wrong", "status": "Failed" }
-
-        return Response({"data": response}, status.HTTP_200_OK)
 
 class ValidateReferralUser(APIView):
     """

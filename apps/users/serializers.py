@@ -21,6 +21,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.db.models import Q
 
+from apps.users import promo_handler
 from api_services.settings.base import DOMAIN_URL
 from apps.admin_panel.utils import create_casino_account_id
 from rest_framework import serializers
@@ -32,7 +33,7 @@ import base64
 from apps.core.exceptions import DeactivatedUserException, NotActiveUserException
 from apps.users.models import (AdminBanner, CashAppDeatils, ChatMessage, CmsPromotionDetails,
                                FortunePandasGameList, FortunePandasGameManagement, MAX_MULTIPLE_BET, MAX_SINGLE_BET,
-                               MAX_SINGLE_BET_OTHER_SPORTS, MAX_SPEND_AMOUNT, MIN_BET, OffMarketGames, PromoCodes,
+                               MAX_SINGLE_BET_OTHER_SPORTS, MAX_SPEND_AMOUNT, MIN_BET, OffMarketGames,
                                ResponsibleGambling, Country)
 from apps.users.utils import check_otp
 import logging
@@ -448,12 +449,11 @@ class SignUpSerializer(serializers.ModelSerializer):
         # if Users.objects.filter(phone_number=data.get("phone_number")).exists():
         #     raise serializers.ValidationError("Phone number already exists.")
         
-        if data.get("applied_promo_code"): 
-            promo_code = PromoCodes.objects.filter(promo_code=data.get("applied_promo_code"), bonus__bonus_type="welcome_bonus").first()
-            if not promo_code:
-                raise serializers.ValidationError("Invalid promo code.")
-            elif promo_code.is_expired or promo_code.end_date < timezone.now().date():
-                raise serializers.ValidationError("Promo code expired.")
+        if data.get("applied_promo_code"):
+            is_valid, msg = promo_handler.verify_code(
+                data.get("applied_promo_code"), bypass_limit_check=True)
+            if not is_valid:
+                raise serializers.ValidationError(msg)
         
         if data.get('otp'):
             checkotp = check_otp(data.get('otp'))

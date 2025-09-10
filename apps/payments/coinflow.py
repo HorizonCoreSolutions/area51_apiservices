@@ -844,7 +844,7 @@ class CoinFlowClient:
                 success=False,
                 data={
                     'message' : 'Only one transaction per day',
-                    'status' : 400
+                    'status' : 429
                 }
             )
         

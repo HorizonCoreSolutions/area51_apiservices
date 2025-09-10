@@ -12,6 +12,7 @@ from apps.bets.utils import generate_reference
 from apps.payments.models import (AlchemypayOrder, MnetTransaction, NowPaymentsTransactions,
     WithdrawalRequests)
 
+from apps.users import promo_handler
 from apps.users.models import BonusPercentage, PromoCodes, Users
 from apps.bets.models import Transactions, DEPOSIT, PENDING
 import requests
@@ -237,6 +238,7 @@ def get_min_amount(currency_from):
 
 def checkbonus(payment_id, payment_through="nowpayment"):
     try:
+        player = None
         if payment_through == "nowpayment":
             payment = NowPaymentsTransactions.objects.filter(payment_id=payment_id).first()
             player = payment.user
@@ -288,6 +290,11 @@ def checkbonus(payment_id, payment_through="nowpayment"):
         deposit_count_mnet = MnetTransaction.objects.filter(user=player, transaction_type=MnetTransaction.TransactionType.deposit,status=MnetTransaction.StatusType.approved).count()
         deposit_count = Transactions.objects.filter(user=player, journal_entry='deposit').count() + deposit_count_np_wl + deposit_count_alchemypay + deposit_count_mnet
         try:
+            promo_handler.redeam_code(
+                user=player,
+                amount_dep=None,
+                bonus_type="welcome",
+                promo_code=promo_code)
             promo_obj = PromoCodes.objects.filter(promo_code=player.applied_promo_code, is_expired=False).first() if player.applied_promo_code else None
             if promo_obj and deposit_count==1 and promo_obj.bonus_distribution_method == PromoCodes.BonusDistributionMethod.deposit and promo_obj.bonus_percentage>0:
                 welcome_bonus = round(Decimal(float(delta) * float(promo_obj.bonus_percentage / 100)), 2)

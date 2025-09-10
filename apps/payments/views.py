@@ -22,6 +22,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import viewsets
+from apps.users import promo_handler
 from apps.users.utils import redis_client
 from apps.core.rate_limiter import limiter
 from apps.admin_panel.tasks import ipn_status_transaction_mail
@@ -1109,24 +1110,12 @@ class CreateAlchemyPayOrder(APIView):
             if not address:
                 return Response({'error': 'error in generating address'}, status=status.HTTP_400_BAD_REQUEST)
             if promo_code:
-                promo_obj = PromoCodes.objects.filter(promo_code=promo_code, bonus__bonus_type="deposit_bonus").first()
-                nowpayment_promo_deposit_transactions = NowPaymentsTransactions.objects.filter(
+                is_valid, msg = promo_handler.verify_code(
                     user=user,
-                    applied_promo_code=promo_code,
-                    created__date=datetime.now().date()
-                ).count()
-                alchemypay_promo_deposit_transactions = AlchemypayOrder.objects.filter(
-                    user=user,
-                    applied_promo_code=promo_code,
-                    created__date=datetime.now().date()
-                ).count()
-                
-                if not promo_obj:
-                    return Response({'error': 'Invalid promo code'}, status=status.HTTP_400_BAD_REQUEST)
-                elif promo_obj.is_expired or promo_obj.end_date < timezone.now().date():
-                    return Response({'error': 'Promo code expired'}, status=status.HTTP_400_BAD_REQUEST)
-                elif nowpayment_promo_deposit_transactions + alchemypay_promo_deposit_transactions >= promo_obj.usage_limit:
-                    return Response({'error': f"Maximum limit for using '{promo_obj.promo_code}' reached"}, status=status.HTTP_400_BAD_REQUEST)
+                    bonus_type='deposit',
+                    promo_code=promo_code)
+                if not is_valid:
+                    return Response({'error': msg}, status=status.HTTP_400_BAD_REQUEST)
 
             user.alchemypay_address = address
             user.save()
