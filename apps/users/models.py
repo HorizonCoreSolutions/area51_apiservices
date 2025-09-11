@@ -776,6 +776,10 @@ class PromoCodes(AbstractBaseModel):
 class PromoCodesLogs(AbstractBaseModel):
     promocode = models.ForeignKey(PromoCodes, on_delete=models.CASCADE, default=None, null=True)
     date = models.DateTimeField(_("Date"), null=False, blank=False, editable=False)
+    # When none, means user has claimed it tho has not used it
+    transfer = models.DecimalField(
+        _("transfer"), max_digits=15, decimal_places=4, default=Decimal('0.0000'), null=True, blank=True
+    )
     log = models.CharField(max_length=2048, null=False, blank=False, editable=False)
     user = models.ForeignKey(Users, on_delete=models.CASCADE, default=None, null=True)
 

@@ -3,8 +3,8 @@ from datetime import datetime
 from django.conf import settings
 from django.db import transaction
 from django.utils import timezone
-from django.db.models import Count, Q
 from apps.bets.models import Transactions
+from django.db.models import Count, Q, Sum
 from typing import Optional, Tuple, Literal
 from apps.bets.utils import generate_reference
 from apps.users.models import PromoCodes, PromoCodesLogs, Users
@@ -54,19 +54,38 @@ def _is_promo_valid(
 def _check_usage_limits(
     promo_obj: PromoCodes,
     user: Optional[Users],
+    amount_dep: Optional[Decimal] = None,
 ) -> Tuple[bool, Optional[Literal["Promo-code use limit exceeded"]]]:
     """Check global and per-user usage limits."""
     qs = PromoCodesLogs.objects.filter(promocode=promo_obj)
-    counts = qs.aggregate(
-        total=Count("id"),
-        user_count=Count("id", filter=Q(user=user)) if user else None,
-    )
 
-    if user and counts["user_count"] >= promo_obj.limit_per_user:
+    agg_kwargs = {
+        "total": Count("id"),
+        "amount_redeamed": Sum("transfer", filter=Q(transfer__isnull=False)),
+    }
+    if user:
+        agg_kwargs["user_count"] = Count("id", filter=Q(user=user))
+
+    counts = qs.aggregate(**agg_kwargs)
+
+    if user and counts.get("user_count", 0) >= promo_obj.limit_per_user:
         return False, "Promo-code use limit exceeded"
 
-    if counts["total"] >= promo_obj.usage_limit:
+    if counts.get("total", 0) >= promo_obj.usage_limit:
         return False, "Promo-code use limit exceeded"
+    
+    amount_redeamed = counts.get("amount_redeamed") or Decimal("0")
+
+    if amount_redeamed >= promo_obj.max_bonus_limit:
+        return False, "Promo-code use limit exceeded"
+
+    if promo_obj.bonus_distribution_method == promo_obj.BonusDistributionMethod.instant:
+        if amount_redeamed + promo_obj.instant_bonus_amount > promo_obj.max_bonus_limit:
+            return False, "Promo-code use limit exceeded"
+    elif amount_dep:
+        total = amount_redeamed + amount_dep * Decimal(promo_obj.bonus_percentage or 0)
+        if (total > promo_obj.max_bonus_limit):
+            return False, "Promo-code use limit exceeded"
 
     return True, None
 
@@ -85,7 +104,7 @@ def redeam_code(
     if not _is_promo_valid(promo_obj, now):
         return False, "Promo-code Expired"
 
-    valid, msg = _check_usage_limits(promo_obj, user)
+    valid, msg = _check_usage_limits(promo_obj, user, amount_dep=amount_dep)
     if not valid:
         return False, msg
 
@@ -106,7 +125,6 @@ def redeam_code(
             )
             
         pre_balance = user.balance
-        pre_gold = user.bonus_balance
         
         amount = 0
         bonus_amount = 0
