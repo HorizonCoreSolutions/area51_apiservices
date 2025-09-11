@@ -27,7 +27,7 @@
                         bonus_id="{{ bonus.id }}">
                     {% csrf_token %}
                     <div class="row mb-4">
-                      <div class="page-content col-xs-12 col-md-12 mb-3 mb-md-0">
+                      <div class="page-content col-xs-12 col-md-12 mb-md-0">
                         <div class="admin-card">
                           <div class="main-heading-wrap">
                             <h5>{% trans "Edit Sign Up Bonus" %}</h5>
@@ -36,7 +36,8 @@
                             <form autocomplete="off">
                               <div class="setting-select">
                                 <div class="row">
-                                  <div class="col-xs-12 col-md-4 form-group"
+
+                                  <div class="col-xs-12 col-md-6 form-group"
                                        name="promo-field-div"
                                        style="min-width: 210px">
                                     <div style="font-weight: bold; color:black;">
@@ -51,26 +52,9 @@
                                              onkeypress='return event.charCode >= 65 && event.charCode <= 90 || event.charCode >= 97 && event.charCode <= 122 || event.charCode >= 48 && event.charCode <= 57 || event.charCode == 45'
                                              readonly>
                                     </div>
-                                    <span style='padding:0.5em;'></span>
                                   </div>
-                                  <div class="col-xs-12 col-md-4 form-group"
-                                        name="bonus-percentage-field-div"
-                                        style="min-width: 210px">
-                                    <div style="font-weight: bold; color:black;">
-                                      <span style="font-weight: bold;">{% trans "Percentage" %}</span>
-                                      <input type="text"
-                                              id="welcome-bonus"
-                                              name="welcome-bonus-percentage"
-                                              placeholder="{% trans 'Enter Sign-Up Bonus Percentage' %}"
-                                              class="form-control"
-                                              value="{{ welcome_bonus }}"
-                                              required="required"
-                                              autocomplete='off'
-                                              onkeypress='return event.charCode >= 48 && event.charCode <= 57 || event.charCode == 46'>
-                                    </div>
-                                    <span style='padding:0.5em;'></span>
-                                  </div>
-                                  <div class="col-xs-12 col-md-4 form-group"
+
+                                  <div class="col-xs-12 col-md-6 form-group"
                                         name="max-bonus-field-div"
                                         style="min-width: 210px">
                                     <div style="font-weight: bold; color:black;">
@@ -86,10 +70,12 @@
                                               onkeypress='return event.charCode >= 48 && event.charCode <= 57 || event.charCode == 46'
                                               maxlength="6">
                                     </div>
-                                    <span style='padding:0.5em;'></span>
                                   </div>
+
+                                </div>
+                                <div class="row">
+
                                   <div class="col-xs-12 col-md-6 form-group"
-                                        style="display:none"
                                         name="instant-bonus-field-div">
                                     <div style="font-weight: bold; color:black;">
                                       <span style="font-weight: bold;">{% trans "Instant Bonus Amount" %}</span>
@@ -103,15 +89,64 @@
                                               onkeypress='return event.charCode >= 48 && event.charCode <= 57 || event.charCode == 46'
                                               maxlength="6">
                                     </div>
-                                    <span style='padding:0.5em;'></span>
+                                  </div>
+
+                                  <div class="col-xs-12 col-md-6 form-group"
+                                        name="instant-gold-field-div">
+                                    <div style="font-weight: bold; color:black;">
+                                      <span style="font-weight: bold;">{% trans "Instant Gold Amount" %}</span>
+                                      <input type="text"
+                                              id="instant-gold-amount"
+                                              name="instant-gold-amount"
+                                              autocomplete="off"
+                                              value=""
+                                              placeholder="{% trans 'Enter Instant Gold Amount' %}"
+                                              class="form-control disablepaste"
+                                              onkeypress='return event.charCode >= 48 && event.charCode <= 57 || event.charCode == 46'
+                                              maxlength="6">
+                                    </div>
+                                  </div>
+
+                                  <div class="col-xs-12 col-md-6 form-group"
+                                        name="bonus-percentage-field-div"
+                                        style="min-width: 210px">
+                                    <div style="font-weight: bold; color:black;">
+                                      <span style="font-weight: bold;">{% trans "Percentage" %}</span>
+                                      <input type="text"
+                                              id="welcome-bonus"
+                                              name="welcome-bonus-percentage"
+                                              placeholder="{% trans 'Enter Sign-Up Bonus Percentage' %}"
+                                              class="form-control"
+                                              value="{{ welcome_bonus }}"
+                                              required="required"
+                                              autocomplete='off'
+                                              onkeypress='return event.charCode >= 48 && event.charCode <= 57 || event.charCode == 46'>
+                                    </div>
+                                  </div>
+
+                                  <div class="col-xs-12 col-md-6 form-group"
+                                        name="gold-percentage-field-div"
+                                        style="min-width: 210px">
+                                    <div style="font-weight: bold; color:black;">
+                                      <span style="font-weight: bold;">{% trans "Percentage" %}</span>
+                                      <input type="text"
+                                              id="welcome-bonus-gold"
+                                              name="welcome-gold-percentage"
+                                              placeholder="{% trans 'Enter Sign-Up Gold Percentage' %}"
+                                              class="form-control"
+                                              value="{{ welcome_bonus }}"
+                                              required="required"
+                                              autocomplete='off'
+                                              onkeypress='return event.charCode >= 48 && event.charCode <= 57 || event.charCode == 46'>
+                                    </div>
                                   </div>
                                 </div>
+
                                 <div class="row">
-                                  <div class="col-xs-12 col-md-3 form-group"
-                                        style="min-width: 210px;
-                                              display:none">
+                                  <div class="col-xs-12 col-md-6 form-group"
+                                        style="min-width: 210px;">
                                     <div class="date-input">
-                                      <span>{% trans "Promo-Code Usage Limit (per player)" %}</span>
+                                      <span>{% trans "Promo-Code Usage Limit" %}</span>
                                       <input value="{{ promo_code_usage_limit }}"
                                               type="text"
                                               class="form-control"
@@ -120,6 +155,20 @@
                                               onkeypress='return event.charCode >= 48 && event.charCode <= 57'>
                                     </div>
                                   </div>
+                                  <div class="col-xs-12 col-md-6 form-group"
+                                        style="min-width: 210px;">
+                                    <div class="date-input">
+                                      <span>{% trans "Usage Limit (per player)" %}</span>
+                                      <input value="{{ promo_code_usage_limit }}"
+                                              type="text"
+                                              class="form-control"
+                                              id="input-signup-promo-code-user-limit"
+                                              name="signup-promo-code-user-limit"
+                                              onkeypress='return event.charCode >= 48 && event.charCode <= 57'>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div class="row">
                                   <div class="col-xs-12 col-md-6 form-group" style="min-width: 210px;">
                                     <div class="date-input">
                                       <span>{% trans "From date" %}</span>

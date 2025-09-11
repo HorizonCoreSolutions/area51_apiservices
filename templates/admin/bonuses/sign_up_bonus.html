@@ -301,9 +301,18 @@ Signup Bonus
                               <td class="align-middle">
                                 <button class="disablepromobutton btn btn-primary bonus-button" bonus_id="{{ bonus.id }}" >Disable</button>
                                 <button class="edit-signup-popup btn btn-primary bonus-button" href="#edit-signup-page" 
-                                        data-bonus_id="{{ bonus.id }}" data-bonus_name="{{ bonus.promo_code }}" data-percentage="{{ bonus.bonus_percentage }}"
-                                        data-use_limit="{{ bonus.usage_limit }}" data-start_date="{{ bonus.start_date | date:'d/m/Y' }}" data-signup_bonus_type={{bonus.bonus_distribution_method}}
-                                        data-end_date="{{ bonus.end_date | date:'d/m/Y' }}" data-max_bonus_limit={{bonus.max_bonus_limit}} data-instant_bonus_amount={{bonus.instant_bonus_amount}}>Edit</button>
+                                        data-bonus_id="{{ bonus.id }}"
+                                        data-bonus_name="{{ bonus.promo_code }}"
+                                        data-use_limit="{{ bonus.usage_limit }}"
+                                        data-max_bonus_limit="{{ bonus.max_bonus_limit }}"
+                                        data-percentage="{{ bonus.bonus_percentage }}"
+                                        data-instant_gold_amount="{{ bonus.gold_bonus|default:0 }}"
+                                        data-gold_percentage="{{ bonus.gold_percentage|default:0 }}"
+                                        data-instant_bonus_amount="{{ bonus.instant_bonus_amount }}"
+                                        data-end_date="{{ bonus.end_date | date:'d/m/Y' }}"
+                                        data-start_date="{{ bonus.start_date | date:'d/m/Y' }}"
+                                        data-signup_bonus_type="{{ bonus.bonus_distribution_method }}"
+                                        >Edit</button>
                               </td>
                             {% endif %}
                           </tr>
@@ -626,60 +635,69 @@ Signup Bonus
           }
       });
   });
-
+  
   $('.edit-signup-popup').magnificPopup({
-                  type:'inline',
-                  midClick: true,
-                  fixedContentPos: true,
-                  callbacks: {
-                      beforeOpen: function() {
-                          this.st.mainClass = this.st.el.attr('data-effect');
+    type: 'inline',
+    midClick: true,
+    fixedContentPos: true,
+    callbacks: {
+      beforeOpen: function() {
+        function cleanNumber(str) {
+          return str.replace(/[^0-9.]/g, '')      // remove everything except digits and dot
+                    .replace(/(\..*)\./g, '$1');  // keep only the first dot
+        }
+        this.st.mainClass = this.st.el.attr('data-effect');
 
-                          var bonus_id = this.st.el.attr('data-bonus_id');
-                          var dealer_username = this.st.el.attr('data-bonus_name');
-                          var percentage = this.st.el.attr('data-percentage');
-                          var bet_limit = this.st.el.attr('data-bet_limit');
-                          var use_limit = this.st.el.attr('data-use_limit');
-                          var start_date = this.st.el.attr('data-start_date');
-                          var end_date = this.st.el.attr('data-end_date');
-                          var max_bonus_limit = this.st.el.attr('data-max_bonus_limit');
-                          var signup_bonus_type = this.st.el.attr('data-signup_bonus_type');
-                          var instant_bonus_amount = this.st.el.attr('data-instant_bonus_amount');
+        var bonus_id = this.st.el.attr('data-bonus_id');
+        var promo_code = this.st.el.attr('data-bonus_name');
+        var percentage = this.st.el.attr('data-percentage');
+        var gold_percentage = this.st.el.attr('data-gold_percentage');
+        var bet_limit = this.st.el.attr('data-bet_limit');
+        var use_limit = this.st.el.attr('data-use_limit');
+        var start_date = this.st.el.attr('data-start_date');
+        var end_date = this.st.el.attr('data-end_date');
+        var max_bonus_limit = this.st.el.attr('data-max_bonus_limit');
+        var signup_bonus_type = this.st.el.attr('data-signup_bonus_type');
+        var instant_bonus_amount = this.st.el.attr('data-instant_bonus_amount');
+        var instant_gold_amount = this.st.el.attr('data-instant_gold_amount');
 
-                          $("#edit-signup-page input[name='signup-promo-code']").val(dealer_username).prop('readonly', true);
-                          $("#edit-signup-page input[name='bonus-id']").val(bonus_id).prop('readonly', true);
-                          $("#edit-signup-page input[name='welcome-bonus-percentage']").val(percentage).prop('readonly', false);
-                          $("#edit-signup-page input[name='losing-max-bet-limit']").val(bet_limit).prop('readonly', false);
-                          $("#edit-signup-page input[name='signup-promo-code-usage-limit']").val(use_limit).prop('readonly', false);
-                          $("#edit-signup-page input[name='losing-start-time']").val(start_date).prop('readonly', false);
-                          $("#edit-signup-page input[name='losing-end-time']").val(end_date).prop('readonly', false);
-                          $("#edit-signup-page input[name='max-bonus-limit']").val(max_bonus_limit).prop('readonly', false);
+        $("#edit-signup-page input[name='bonus-id']").val(bonus_id).prop('readonly', true);
 
-                          
-                          console.log($('#signup-bonus-type').val())
-                          console.log(signup_bonus_type)
-                          if(signup_bonus_type == "instant"){
-                              $("#edit-signup-page div[name='bonus-percentage-field-div']").hide();
-                              $("#edit-signup-page div[name='max-bonus-field-div']").hide();
-                              $("#edit-signup-page div[name='instant-bonus-field-div']").show();
-                              $("#edit-signup-page input[name='welcome-bonus-percentage']").prop('required', false);
-                              $("#edit-signup-page input[name='max-bonus-limit']").prop('required', false);
-                              $("#edit-signup-page input[name='instant-bonus-amount']").prop('required', true);
-                              $("#edit-signup-page div[name='promo-field-div']").removeClass("col-md-4").addClass("col-md-6");
-                              $("#edit-signup-page input[name='instant-bonus-amount']").val(instant_bonus_amount).prop('readonly', false);
-                          }else{
-                              $("#edit-signup-page div[name='bonus-percentage-field-div']").show();
-                              $("#edit-signup-page div[name='max-bonus-field-div']").show();
-                              $("#edit-signup-page div[name='instant-bonus-field-div']").hide();
-                              $("#edit-signup-page input[name='welcome-bonus-percentage']").prop('required', true);
-                              $("#edit-signup-page input[name='max-bonus-limit']").prop('required', true);
-                              $("#edit-signup-page input[name='instant-bonus-amount']").prop('required', false);
-                              $("#edit-signup-page div[name='promo-field-div']").removeClass("col-md-6").addClass("col-md-4");
-                          }
-                      
-                      }
-                  },
-              });
+        $("#edit-signup-page input[name='signup-promo-code']").val(promo_code).prop('readonly', true);
+        $("#edit-signup-page input[name='max-bonus-limit']").val(max_bonus_limit).prop('readonly', false);
+
+        $("#edit-signup-page input[name='instant-bonus-amount']").val(percentage).prop('readonly', false);
+        $("#edit-signup-page input[name='instant-gold-amount']").val(gold_percentage).prop('readonly', false);
+        $("#edit-signup-page input[name='welcome-gold-percentage']").val(instant_gold_amount).prop('readonly', false);
+        $("#edit-signup-page input[name='welcome-bonus-percentage']").val(instant_bonus_amount).prop('readonly', false);
+        
+        $("#edit-signup-page input[name='signup-promo-code-usage-limit']").val(use_limit).prop('readonly', false);
+        $("#edit-signup-page input[name='signup-promo-code-user-limit']").val(use_limit).prop('readonly', false);
+
+        $("#edit-signup-page input[name='losing-end-time']").val(end_date).prop('readonly', false);
+        $("#edit-signup-page input[name='losing-start-time']").val(start_date).prop('readonly', false);
+
+        console.log($('#signup-bonus-type').val())
+        console.log(signup_bonus_type)
+        if(signup_bonus_type == "instant"){
+          $("#edit-signup-page input[name='instant-gold-amount']").prop('required', true).closest(".form-group").show();
+          $("#edit-signup-page input[name='instant-bonus-amount']").prop('required', true).closest(".form-group").show();
+          $("#edit-signup-page input[name='welcome-gold-percentage']").prop('required', false).closest(".form-group").hide();
+          $("#edit-signup-page input[name='welcome-bonus-percentage']").prop('required', false).closest(".form-group").hide();
+        } else if (signup_bonus_type == "mixture") {
+          $("#edit-signup-page input[name='instant-gold-amount']").prop('required', true).closest(".form-group").show();
+          $("#edit-signup-page input[name='instant-bonus-amount']").prop('required', false).closest(".form-group").hide();
+          $("#edit-signup-page input[name='welcome-gold-percentage']").prop('required', false).closest(".form-group").hide();
+          $("#edit-signup-page input[name='welcome-bonus-percentage']").prop('required', true).closest(".form-group").show();
+        } else {
+          $("#edit-signup-page input[name='instant-gold-amount']").prop('required', false).closest(".form-group").hide();
+          $("#edit-signup-page input[name='instant-bonus-amount']").prop('required', false).closest(".form-group").hide();
+          $("#edit-signup-page input[name='welcome-gold-percentage']").prop('required', true).closest(".form-group").show();
+          $("#edit-signup-page input[name='welcome-bonus-percentage']").prop('required', true).closest(".form-group").show();
+        }      
+      }
+    },
+  });
 
   $('#edit-signup-form').submit(function (event) {
     event.preventDefault();
