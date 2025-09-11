@@ -4,7 +4,7 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.views import APIView
 from apps.acuitytec.logger import logger
-from apps.core.rate_limiter import limiter
+from apps.core.concurrency import limiter
 from rest_framework.response import Response
 from apps.users.tasks import redeam_user_event
 from apps.acuitytec.utils import generate_qr_code_url

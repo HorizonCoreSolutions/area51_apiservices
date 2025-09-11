@@ -14,7 +14,7 @@ from django.utils import timezone
 
 import requests
 from apps.users import promo_handler
-from apps.core.rate_limiter import limiter
+from apps.core.concurrency import limiter
 from pyhanko_certvalidator import ValidationError
 
 from apps.acuitytec.acuitytec import AcuityTecAPI

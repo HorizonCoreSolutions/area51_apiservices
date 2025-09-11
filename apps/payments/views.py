@@ -24,7 +24,7 @@ from rest_framework.views import APIView
 from rest_framework import viewsets
 from apps.users import promo_handler
 from apps.users.utils import redis_client
-from apps.core.rate_limiter import limiter
+from apps.core.concurrency import limiter
 from apps.admin_panel.tasks import ipn_status_transaction_mail
 from apps.bets.models import PENDING, WITHDRAW, Transactions, DEPOSIT
 from apps.bets.utils import generate_reference, validate_date
