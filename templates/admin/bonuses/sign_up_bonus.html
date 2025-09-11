@@ -10,304 +10,308 @@ Signup Bonus
 {% endblock title %}
 {% block content %}
 <style>
-    .admin-card{
-        background-color: #ffffff;
-        box-shadow: 0px 0px 6px 6px rgb(204 204 204 / 0.25);
-        padding: 30px 10px;
-    }
+  .admin-card{
+    background-color: #ffffff;
+    box-shadow: 0px 0px 6px 6px rgb(204 204 204 / 0.25);
+    padding: 30px 10px;
+  }
 
-    .pcode.left-spacer {
+  .pcode.left-spacer {
     margin-left: 0px;
+  }
+  .pcode{
+    margin-left: 250px;
+  }
+
+  @media(max-width:991px){
+    .setting-page .card-title h3{
+      font-size: 18px;
     }
     .pcode{
-    margin-left: 250px;
+      margin-left: 0px;
     }
-
-    @media(max-width:991px){
-        .setting-page .card-title h3{
-        font-size: 18px;
-        }
-        .pcode{
-        margin-left: 0px;
-        }
-    }
-    .setting-page .card-title h3{
+  }
+  .setting-page .card-title h3{
     font-size: 18px;
-    }
+  }
 
- 
 </style>
 <script type="text/javascript">
- $(document).ready(function () {
-  $('#sortable').DataTable({
+  $(document).ready(function () {
+    $('#sortable').DataTable({
       searching : true,
       pageLength: 5,
       lengthMenu: [[5, 10, 20, -1], [5, 10, 20, "All"]],
+    });
+    $('.dataTables_filter input[type="search"]').
+    attr('placeholder','Search Promotion Page').
+    css({'width':'193px','display':'inline-block'});
   });
-  $('.dataTables_filter input[type="search"]').
-  attr('placeholder','Search Promotion Page').
-  css({'width':'193px','display':'inline-block'});
-});
 </script>
-<div class="pcode" id='nw1' >
-<div>
+<div class="pcode" id="nw1" >
+  <div>
     <div class="container-fluid ">
-        <div class="pt-3 mx-auto" style="max-width: 540px;">
-            {% include "includes/messages.html" %}
-        </div>
-        <div class="row">
-            <div class="col-xs-12 col-lg-12 ">
-                <div class="page-content pt-4 setting-page">
-                    <div class='container-fluid pt-2'>
-                        <!-- Bonus Section -->
-                        {% if request.user.is_welcome_bonus_enabled or request.user.is_referral_bonus_enabled or request.user.is_losing_bonus_enabled %} 
-                            <!-- Sign-Up bonus start -->
-                             {% if request.user.is_welcome_bonus_enabled %}
-                                <div class="row mb-4">
-                                    <div class="page-content col-xs-12 col-md-12 mb-3 mb-md-0">
-                                        <div class="admin-card">
-                                            <div class="main-heading-wrap">
-                                                <div class="row">
-                                                    <div class="col">
-                                                        <h5>{% trans "Sign Up Bonus" %}</h5>
-                                                    </div>
-                                                    <div class="col">
-                                                        <select class="ml-auto col-3 mr-3 text-center form-control" name="signup-bonus-type" id="signup-bonus-type">
-                                                            <option value="deposit">Bonus On Deposit</option>
-                                                            <option value="instant">Instant Bonus</option>
-                                                        </select>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="container-fluid">
-                                                <form mehod="post" autocomplete="off" id="signup-bonus-form">
-                                                    <div class="setting-select">
-                                                        {% csrf_token %}
-                                                        <div class="row" style="margin-bottom: -20px;">
-                                                            <div class="col-xs-12 col-md-4 form-group" id="promo-field-div" style="min-width: 210px;">
-                                                                <div style="font-weight: bold; color:black;">
-                                                                    <span style="font-weight: bold;">{% trans "Promo Code" %}</span>
-                                                                    <input type="text" id="input-signup-promo-code" name="signup-promo-code"
-                                                                        placeholder="{% trans 'Enter promo code.' %}" class="form-control"
-                                                                        required="required" autocomplete='off' value=""
-                                                                        onkeypress='return event.charCode >= 65 && event.charCode <= 90 ||
-                                                                        event.charCode >= 97 && event.charCode <= 122 ||
-                                                                        event.charCode >= 48 && event.charCode <= 57 ||
-                                                                        event.charCode == 45'>
-                                                                </div>
-                                                                <span style='padding:0.5em;'></span>
-                                                            </div>
-                                                            <div class="col-xs-12 col-md-4 form-group" id="bonus-percentage-field-div" style="min-width: 210px;">
-                                                                <div style="font-weight: bold; color:black;">
-                                                                    <span style="font-weight: bold;">{% trans "Percentage" %}</span>
-                                                                    <input type="number" id="welcome-bonus" name="welcome-bonus-percentage"
-                                                                    autocomplete="off"
-                                                                    placeholder="{% trans 'Enter Bonus Percentage' %}" class="form-control disablepaste"
-                                                                    value="" required="required"
-                                                                    onkeypress='return event.charCode >= 48 && event.charCode <= 57 || event.charCode == 46'
-                                                                    min="1" max="100"
-                                                                    onchange="checkBonusPercentage(this)">
-                                                                </div>
-                                                                <span style='padding:0.5em;'></span>
-                                                            </div>
-                                                            <div class="col-xs-12 col-md-4 form-group" id="max-bonus-field-div" style="min-width: 210px;">
-                                                                <div style="font-weight: bold; color:black;">
-                                                                    <span style="font-weight: bold;">{% trans "Maximum Bonus Limit" %}</span>
-                                                                    <input type="text" id="max-bonus-limit" name="max-bonus-limit"
-                                                                        autocomplete="off"
-                                                                        placeholder="{% trans 'Enter Max Bonus Limit' %}" class="form-control disablepaste"
-                                                                        value="" required="required"
-                                                                        onkeypress='return event.charCode >= 48 && event.charCode <= 57 ||
-                                                                            event.charCode == 46' maxlength="6">
-                                                                </div>
-                                                                <span style='padding:0.5em;'></span>
-                                                            </div>
-
-                                                            <div class="col-xs-12 col-md-6 form-group" style="display:none;" id="instant-bonus-field-div">
-                                                                <div style="font-weight: bold; color:black;">
-                                                                    <span style="font-weight: bold;">{% trans "Instant Bonus Amount" %}</span>
-                                                                    <input type="text" id="instant-bonus-amount" name="instant-bonus-amount" autocomplete="off" value="" 
-                                                                        placeholder="{% trans 'Enter Instant Bonus Amount' %}" class="form-control disablepaste"
-                                                                        onkeypress='return event.charCode >= 48 && event.charCode <= 57 || event.charCode == 46' maxlength="6">
-                                                                </div>
-                                                                <span style='padding:0.5em;'></span>
-                                                            </div>
-                                                            
-                                                            {% comment %} <div class="col-xs-12 col-md-4 form-group" style="min-width: 210px;">
-                                                                <div class="date-input">
-                                                                    <span>{% trans "Promo-Code Usage Limit (per player)" %}</span>
-                                                                    <input  value="" type="text" class="form-control"
-                                                                        id="input-signup-promo-code-usage-limit" name="signup-promo-code-usage-limit"
-                                                                        onkeypress='return event.charCode >= 48 && event.charCode <= 57'
-                                                                        placeholder="{% trans 'Enter promo-code use limit.' %}" maxlength="6">
-                                                                </div>
-                                                            </div> {% endcomment %}
-                                                        </div>
-                                                        <div class="row">
-                                                            <div class="col-xs-12 col-md-5 form-group" style="min-width: 210px;">
-                                                                <div class="date-input">
-                                                                    <span>{% trans "From date" %}</span>
-                                                                    <input  value="" type="text" placeholder="Select from Date" onChange="validateDateRange(this)" class="form-control" id="input-start-time-losing" name="losing-start-time" style="background-color:transparent" required>
-                                                                </div>
-                                                            </div>
-                                                            <div class="col-xs-12 col-md-5 form-group" style="min-width: 210px;">
-                                                                <div class="date-input">
-                                                                    <span>{% trans "To date" %}</span>
-                                                                    <input value="" type="text" placeholder="Select to Date" class="form-control" onChange="validateDateRange(this)" id="input-end-time-losing" name="losing-end-time" style="background-color:transparent" required>
-                                                                </div>
-                                                            </div>
-                                                            <div class="col-xs-12 col-md-2 form-group mt-md-4">
-                                                                <button type="submit" class="btn btn-primary btn-block" id="signup-button-add">
-                                                                    {% trans "Submit" %}
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </form>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            {% endif %}
-                            <!-- Sign Up Bonus Ends -->
-                        {% endif %}
-                        <!-- Bonus Section Ends -->
-
-                        <div class="row justify-content-center ">
-                            <div class="page-content col-12">
-                                <div class="admin-card">
-                                    <div class="main-heading-wrap">
-                                        <h5>{% trans "Promo Codes History" %}</h5>
-                                    </div>
-                                    <div class="table-responsive result-table w-100">
-                                        <table class="table table-data2 table-hover text-center" id="sortable">
-                                            <thead class="thead-dark">
-                                                <tr>
-                                                    <th>{% trans "S. No." %}</th>
-                                                    <th>{% trans "Promo Code" %}</th>
-                                                    <th>{% trans "Distribution Type" %}</th>
-                                                    <th>{% trans "Instant Bonus" %}</th>
-                                                    <th>{% trans "Percentage" %}</th>
-                                                    <th>{% trans "Maximum Bonus Limit" %}</th>
-                                                    <th>{% trans "Start Date" %}</th>
-                                                    <th>{% trans "End Date" %}</th>
-                                                    {% comment %} <th>{% trans "Usage Limit" %}</th> {% endcomment %}
-                                                    {% comment %} <th>{% trans "Bonus Type" %}</th> {% endcomment %}
-                                                    <th>{% trans "Status" %}</th>
-                                                    <th>{% trans "Action" %}</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="result-body">
-                                                {% if not bonuses %}
-                                                    <tr>
-                                                        <td colspan="8" class="text-center">
-                                                            <span>{% trans "No data found" %}</span>
-                                                        </td>
-                                                    </tr>
-                                                {% endif %}
-                                                {%  for bonus in bonuses %}
-                                                <tr class="table-row">
-                                                    <td class="align-middle">
-                                                        <div>
-                                                            <span>{{ forloop.counter }}.</span>
-                                                        </div>
-                                                    </td>
-                                                    <td class="align-middle">
-                                                        <div >
-                                                            <span>{{ bonus.promo_code }}</span>
-                                                        </div>
-                                                    </td>
-                                                    <td class="align-middle">
-                                                        <span>
-                                                            {{ bonus.bonus_distribution_method }}
-                                                        </span>
-                                                    </td>
-                                                    <td class="align-middle">
-                                                        <div >
-                                                            <span>{% if bonus.bonus_distribution_method == "instant" %} {{ bonus.instant_bonus_amount|floatformat:"0" }} {% else %} N/A {% endif %} </span>
-                                                        </div>
-                                                    </td>
-                                                    <td class="align-middle">
-                                                        <div >
-                                                            <span>{% if bonus.bonus_distribution_method == "deposit" %} {{ bonus.bonus_percentage }} {% else %} N/A {% endif %} </span>
-                                                        </div>
-                                                    </td>
-                                                    <td class="align-middle">
-                                                        <div >
-                                                            <span>{% if bonus.bonus_distribution_method == "deposit" %} {{ bonus.max_bonus_limit }} {% else %} N/A {% endif %} </span>
-                                                        </div>
-                                                    </td>
-                                                    <td class="align-middle">
-                                                        <span>
-                                                            {{ bonus.start_date | date:"M. d, Y" }}
-                                                        </span>
-                                                    </td>
-                                                    <td class="align-middle">
-                                                        <span>
-                                                            {% if bonus.end_date %}
-                                                                {{ bonus.end_date | date:"M. d, Y" }}
-                                                            {% else %}
-                                                                ------------
-                                                            {% endif %}
-                                                        </span>
-                                                    </td>
-                                                    {% comment %} <td class="align-middle">
-                                                        <span>
-                                                            {{ bonus.usage_limit }}
-                                                        </span>
-                                                    </td> {% endcomment %}
-                                                    {% comment %} <td class="align-middle">
-                                                        <span>
-                                                            {{ bonus.bonus.get_bonus_type_display }}
-                                                        </span>
-                                                    </td> {% endcomment %}
-                                                    {% if bonus.is_expired %}
-                                                        {% if bonus.is_deleted %}
-                                                            <td class="align-middle">
-                                                                <span class="text-danger">
-                                                                    Disabled
-                                                                </span>
-                                                            </td>
-                                                            <td class="align-middle">
-                                                                <button class="enablepromobutton btn btn-primary bonus-button" bonus_id="{{ bonus.id }}">Activate</button>
-                                                            </td>
-                                                        {% else %}
-                                                            <td class="align-middle">
-                                                                <span class="text-danger">
-                                                                    Expired
-                                                                </span>
-                                                            </td>
-                                                        {% endif %}
-                                                        {% comment %} <td class="align-middle"></td> {% endcomment %}
-                                                    {% else %}
-                                                        <td class="align-middle">
-                                                            <span class="text-success">
-                                                                Active
-                                                            </span>
-                                                        </td>
-                                                        <td class="align-middle">
-                                                            <button class="disablepromobutton btn btn-primary bonus-button" bonus_id="{{ bonus.id }}" >Disable</button>
-                                                            <button class="edit-signup-popup btn btn-primary bonus-button" href="#edit-signup-page" 
-                                                            data-bonus_id="{{ bonus.id }}" data-bonus_name="{{ bonus.promo_code }}" data-percentage="{{ bonus.bonus_percentage }}"
-                                                            data-use_limit="{{ bonus.usage_limit }}" data-start_date="{{ bonus.start_date | date:'d/m/Y' }}" data-signup_bonus_type={{bonus.bonus_distribution_method}}
-                                                            data-end_date="{{ bonus.end_date | date:'d/m/Y' }}" data-max_bonus_limit={{bonus.max_bonus_limit}} data-instant_bonus_amount={{bonus.instant_bonus_amount}}>Edit</button>
-                                                        </td>
-                                                    {% endif %}
-                                                </tr>
-                                                {% endfor %}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
+      <div class="pt-3 mx-auto" style="max-width: 540px;">
+        {% include "includes/messages.html" %}
+      </div>
+      <div class="row">
+        <div class="col-xs-12 col-lg-12 ">
+          <div class="page-content pt-4 setting-page">
+            <div class="container-fluid pt-2">
+              <!-- Bonus Section -->
+              {% if request.user.is_welcome_bonus_enabled or request.user.is_referral_bonus_enabled or request.user.is_losing_bonus_enabled %} 
+                <!-- Sign-Up bonus start -->
+                {% if request.user.is_welcome_bonus_enabled %}
+                  <div class="row mb-4">
+                    <div class="page-content col-xs-12 col-md-12 mb-3 mb-md-0">
+                      <div class="admin-card">
+                        <div class="main-heading-wrap">
+                          <div class="row">
+                            <div class="col">
+                              <h5>{% trans "Sign Up Bonus" %}</h5>
                             </div>
+                            <div class="col">
+                              <select class="ml-auto col-3 mr-3 text-center form-control" name="signup-bonus-type" id="signup-bonus-type">
+                                <option value="deposit">Bonus On Deposit</option>
+                                <option value="instant">Instant Bonus</option>
+                              </select>
+                            </div>
+                          </div>
                         </div>
+                        <div class="container-fluid">
+                          <form mehod="post" autocomplete="off" id="signup-bonus-form">
+                            <div class="setting-select">
+                              {% csrf_token %}
+                              <div class="row" style="margin-bottom: -20px;">
+                                <div class="col-xs-12 col-md-4 form-group" id="promo-field-div" style="min-width: 210px;">
+                                  <div style="font-weight: bold; color:black;">
+                                    <span style="font-weight: bold;">{% trans "Promo Code" %}</span>
+                                    <input type="text" id="input-signup-promo-code" name="signup-promo-code"
+                                        placeholder="{% trans 'Enter promo code.' %}" class="form-control"
+                                        required="required" autocomplete='off' value=""
+                                        onkeypress='return event.charCode >= 65 && event.charCode <= 90 ||
+                                        event.charCode >= 97 && event.charCode <= 122 ||
+                                        event.charCode >= 48 && event.charCode <= 57 ||
+                                        event.charCode == 45'>
+                                  </div>
+                                  <span style='padding:0.5em;'></span>
+                                </div>
+                                <div class="col-xs-12 col-md-4 form-group" id="bonus-percentage-field-div" style="min-width: 210px;">
+                                  <div style="font-weight: bold; color:black;">
+                                    <span style="font-weight: bold;">{% trans "Percentage" %}</span>
+                                    <input type="number" id="welcome-bonus" name="welcome-bonus-percentage"
+                                    autocomplete="off"
+                                    placeholder="{% trans 'Enter Bonus Percentage' %}" class="form-control disablepaste"
+                                    value="" required="required"
+                                    onkeypress='return event.charCode >= 48 && event.charCode <= 57 || event.charCode == 46'
+                                    min="1" max="100"
+                                    onchange="checkBonusPercentage(this)">
+                                  </div>
+                                  <span style='padding:0.5em;'></span>
+                                </div>
+                                <div class="col-xs-12 col-md-4 form-group" id="max-bonus-field-div" style="min-width: 210px;">
+                                  <div style="font-weight: bold; color:black;">
+                                    <span style="font-weight: bold;">{% trans "Maximum Bonus Limit" %}</span>
+                                    <input type="text" id="max-bonus-limit" name="max-bonus-limit"
+                                        autocomplete="off"
+                                        placeholder="{% trans 'Enter Max Bonus Limit' %}" class="form-control disablepaste"
+                                        value="" required="required"
+                                        onkeypress='return event.charCode >= 48 && event.charCode <= 57 ||
+                                            event.charCode == 46' maxlength="6">
+                                  </div>
+                                  <span style='padding:0.5em;'></span>
+                                </div>
+
+                                <div class="col-xs-12 col-md-6 form-group" style="display:none;" id="instant-bonus-field-div">
+                                  <div style="font-weight: bold; color:black;">
+                                    <span style="font-weight: bold;">{% trans "Instant Bonus Amount" %}</span>
+                                    <input type="text" id="instant-bonus-amount" name="instant-bonus-amount" autocomplete="off" value="" 
+                                        placeholder="{% trans 'Enter Instant Bonus Amount' %}" class="form-control disablepaste"
+                                        onkeypress='return event.charCode >= 48 && event.charCode <= 57 || event.charCode == 46' maxlength="6">
+                                  </div>
+                                  <span style='padding:0.5em;'></span>
+                                </div>
+                                          
+                                {% comment %}
+                                  <div class="col-xs-12 col-md-4 form-group" style="min-width: 210px;">
+                                    <div class="date-input">
+                                      <span>{% trans "Promo-Code Usage Limit (per player)" %}</span>
+                                      <input  value="" type="text" class="form-control"
+                                          id="input-signup-promo-code-usage-limit" name="signup-promo-code-usage-limit"
+                                          onkeypress='return event.charCode >= 48 && event.charCode <= 57'
+                                          placeholder="{% trans 'Enter promo-code use limit.' %}" maxlength="6">
+                                    </div>
+                                  </div>
+                                {% endcomment %}
+                              </div>
+                              <div class="row">
+                                <div class="col-xs-12 col-md-5 form-group" style="min-width: 210px;">
+                                  <div class="date-input">
+                                    <span>{% trans "From date" %}</span>
+                                    <input  value="" type="text" placeholder="Select from Date" onChange="validateDateRange(this)" class="form-control" id="input-start-time-losing" name="losing-start-time" style="background-color:transparent" required>
+                                  </div>
+                                </div>
+                                <div class="col-xs-12 col-md-5 form-group" style="min-width: 210px;">
+                                  <div class="date-input">
+                                    <span>{% trans "To date" %}</span>
+                                    <input value="" type="text" placeholder="Select to Date" class="form-control" onChange="validateDateRange(this)" id="input-end-time-losing" name="losing-end-time" style="background-color:transparent" required>
+                                  </div>
+                                </div>
+                                <div class="col-xs-12 col-md-2 form-group mt-md-4">
+                                  <button type="submit" class="btn btn-primary btn-block" id="signup-button-add">
+                                      {% trans "Submit" %}
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          </form>
+                        </div>
+                      </div>
                     </div>
+                  </div>
+                {% endif %}
+                <!-- Sign Up Bonus Ends -->
+              {% endif %}
+              <!-- Bonus Section Ends -->
+
+              <div class="row justify-content-center ">
+                <div class="page-content col-12">
+                  <div class="admin-card">
+                    <div class="main-heading-wrap">
+                      <h5>{% trans "Promo Codes History" %}</h5>
+                    </div>
+                    <div class="table-responsive result-table w-100">
+                      <table class="table table-data2 table-hover text-center" id="sortable">
+                        <thead class="thead-dark">
+                          <tr>
+                            <th>{% trans "S. No." %}</th>
+                            <th>{% trans "Promo Code" %}</th>
+                            <th>{% trans "Distribution Type" %}</th>
+                            <th>{% trans "Instant Bonus" %}</th>
+                            <th>{% trans "Percentage" %}</th>
+                            <th>{% trans "Maximum Bonus Limit" %}</th>
+                            <th>{% trans "Start Date" %}</th>
+                            <th>{% trans "End Date" %}</th>
+                            {% comment %} <th>{% trans "Usage Limit" %}</th> {% endcomment %}
+                            {% comment %} <th>{% trans "Bonus Type" %}</th> {% endcomment %}
+                            <th>{% trans "Status" %}</th>
+                            <th>{% trans "Action" %}</th>
+                          </tr>
+                        </thead>
+                          <tbody id="result-body">
+                            {% if not bonuses %}
+                            <tr>
+                              <td colspan="8" class="text-center">
+                                <span>{% trans "No data found" %}</span>
+                              </td>
+                            </tr>
+                            {% endif %}
+                            {% for bonus in bonuses %}
+                            <tr class="table-row">
+                              <td class="align-middle">
+                                <div>
+                                  <span>{{ forloop.counter }}.</span>
+                                </div>
+                              </td>
+                              <td class="align-middle">
+                                <div>
+                                  <span>{{ bonus.promo_code }}</span>
+                                </div>
+                              </td>
+                              <td class="align-middle">
+                                <span>
+                                  {{ bonus.bonus_distribution_method }}
+                                </span>
+                              </td>
+                              <td class="align-middle">
+                                <div >
+                                  <span>{% if bonus.bonus_distribution_method == "instant" %} {{ bonus.instant_bonus_amount|floatformat:"0" }} {% else %} N/A {% endif %} </span>
+                                </div>
+                              </td>
+                              <td class="align-middle">
+                                <div>
+                                  <span>{% if bonus.bonus_distribution_method == "deposit" %} {{ bonus.bonus_percentage }} {% else %} N/A {% endif %} </span>
+                                </div>
+                              </td>
+                              <td class="align-middle">
+                                <div >
+                                  <span>{% if bonus.bonus_distribution_method == "deposit" %} {{ bonus.max_bonus_limit }} {% else %} N/A {% endif %} </span>
+                                </div>
+                              </td>
+                              <td class="align-middle">
+                                <span>
+                                  {{ bonus.start_date | date:"M. d, Y" }}
+                                </span>
+                              </td>
+                              <td class="align-middle">
+                                <span>
+                                  {% if bonus.end_date %}
+                                    {{ bonus.end_date | date:"M. d, Y" }}
+                                  {% else %}
+                                    ------------
+                                  {% endif %}
+                                </span>
+                              </td>
+                              {% comment %}
+                              <td class="align-middle">
+                                <span>
+                                  {{ bonus.usage_limit }}
+                                </span>
+                              </td>
+                              {% endcomment %}
+                              {% comment %}
+                              <td class="align-middle">
+                                <span>
+                                  {{ bonus.bonus.get_bonus_type_display }}
+                                </span>
+                              </td>
+                              {% endcomment %}
+                              {% if bonus.is_expired %}
+                                {% if bonus.is_deleted %}
+                                  <td class="align-middle">
+                                    <span class="text-danger">
+                                      Disabled
+                                    </span>
+                                  </td>
+                                  <td class="align-middle">
+                                    <button class="enablepromobutton btn btn-primary bonus-button" bonus_id="{{ bonus.id }}">Activate</button>
+                                  </td>
+                                {% else %}
+                                  <td class="align-middle">
+                                    <span class="text-danger">
+                                      Expired
+                                    </span>
+                                  </td>
+                                {% endif %}
+                                {% comment %} <td class="align-middle"></td> {% endcomment %}
+                              {% else %}
+                                <td class="align-middle">
+                                  <span class="text-success">
+                                    Active
+                                  </span>
+                                </td>
+                                <td class="align-middle">
+                                  <button class="disablepromobutton btn btn-primary bonus-button" bonus_id="{{ bonus.id }}" >Disable</button>
+                                  <button class="edit-signup-popup btn btn-primary bonus-button" href="#edit-signup-page" 
+                                          data-bonus_id="{{ bonus.id }}" data-bonus_name="{{ bonus.promo_code }}" data-percentage="{{ bonus.bonus_percentage }}"
+                                          data-use_limit="{{ bonus.usage_limit }}" data-start_date="{{ bonus.start_date | date:'d/m/Y' }}" data-signup_bonus_type={{bonus.bonus_distribution_method}}
+                                          data-end_date="{{ bonus.end_date | date:'d/m/Y' }}" data-max_bonus_limit={{bonus.max_bonus_limit}} data-instant_bonus_amount={{bonus.instant_bonus_amount}}>Edit</button>
+                                </td>
+                              {% endif %}
+                            </tr>
+                          {% endfor %}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
                 </div>
+              </div>
             </div>
+          </div>
         </div>
-        
+      </div>
     </div>
-</div>
+  </div>
 </div>
 {% include './edit_bonuses.html' %}
 <script>

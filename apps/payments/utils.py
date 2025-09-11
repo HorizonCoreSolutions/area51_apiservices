@@ -1,25 +1,49 @@
 import base64
 import json
 import time
-from django.utils import timezone
+import pyotp
 import datetime
+import requests
 from decimal import Decimal
-
 from django.conf import settings
-from django_coinpayments.models import CoinPayments
-from django_coinpayments.exceptions import CoinPaymentsProviderError
+from django.utils import timezone
+from rest_framework import status
+from apps.users.models import Users
+from apps.users import promo_handler
+
 from apps.bets.utils import generate_reference
+from django_coinpayments.models import CoinPayments
+from apps.bets.models import Transactions, DEPOSIT, PENDING
+from django_coinpayments.exceptions import CoinPaymentsProviderError
 from apps.payments.models import (AlchemypayOrder, MnetTransaction, NowPaymentsTransactions,
     WithdrawalRequests)
 
-from apps.users import promo_handler
-from apps.users.models import BonusPercentage, PromoCodes, Users
-from apps.bets.models import Transactions, DEPOSIT, PENDING
-import requests
-from rest_framework import status
-import pyotp
 
 COIN_PAYMENTS = CoinPayments(settings.COINPAYMENTS_API_KEY, settings.COINPAYMENTS_API_SECRET)
+
+def count_transactions(user: Users):
+    deposit_count_np_wl = NowPaymentsTransactions.objects.filter(
+        user=user,
+        payment_status="finished",
+        transaction_type="DEPOSIT",
+    ).count()
+
+    deposit_count_alchemypay = AlchemypayOrder.objects.filter(
+        user=user,
+        status="finished",
+    ).count()
+
+    deposit_count_mnet = MnetTransaction.objects.filter(
+        user=user,
+        transaction_type=MnetTransaction.TransactionType.deposit,
+        status=MnetTransaction.StatusType.approved,
+    ).count()
+
+    return (
+        deposit_count_alchemypay
+        + deposit_count_np_wl
+        + deposit_count_mnet
+    )
 
 
 def custom_create_transaction(params):
@@ -238,7 +262,9 @@ def get_min_amount(currency_from):
 
 def checkbonus(payment_id, payment_through="nowpayment"):
     try:
+        delta = None
         player = None
+        payment = None
         if payment_through == "nowpayment":
             payment = NowPaymentsTransactions.objects.filter(payment_id=payment_id).first()
             player = payment.user
@@ -255,70 +281,27 @@ def checkbonus(payment_id, payment_through="nowpayment"):
             player = payment.user
             delta=payment.amount
         
-    
-        try:
-            promo_code = PromoCodes.objects.filter(promo_code=payment.applied_promo_code, bonus__bonus_type="deposit_bonus").first()
-            perc = promo_code.bonus_percentage if promo_code else 0
-            bonus = (Decimal(delta)/100)* Decimal(perc)
-        except Exception as e:
-            promo_code = None
-            exception=e
-        
-        if promo_code:                    
-            previous_balance = player.balance
-            bonus_to_be_given = min(bonus, promo_code.max_bonus_limit)
-            player.bonus_balance += bonus_to_be_given
-            
-            Transactions.objects.update_or_create(
+        if (
+            player
+            and payment
+            and delta
+            and not isinstance(payment, MnetTransaction)
+            and payment.applied_promo_code
+        ):
+            promo_handler.redeam_code(
                 user=player,
-                journal_entry="bonus",
-                amount=delta,
-                status="charged",
-                previous_balance=previous_balance,
-                new_balance=player.balance,
-                description=f"deposit bonus of {bonus_to_be_given}",
-                reference=generate_reference(player),
-                bonus_type="deposit_bonus",
-                bonus_amount=bonus_to_be_given
-            )
-            player.save()
-            send_player_balance_update_notification(player)
-                                        
-        welcome_bonus_obj = BonusPercentage.objects.filter(bonus_type="welcome_bonus").first()    
-        deposit_count_np_wl = NowPaymentsTransactions.objects.filter(user=player,transaction_type='DEPOSIT',payment_status='finished').count()
-        deposit_count_alchemypay = AlchemypayOrder.objects.filter(user=player,status="finished").count()
-        deposit_count_mnet = MnetTransaction.objects.filter(user=player, transaction_type=MnetTransaction.TransactionType.deposit,status=MnetTransaction.StatusType.approved).count()
-        deposit_count = Transactions.objects.filter(user=player, journal_entry='deposit').count() + deposit_count_np_wl + deposit_count_alchemypay + deposit_count_mnet
-        try:
+                amount_dep=delta,
+                promo_code=payment.applied_promo_code,
+                bonus_type="deposit")     
+
+        code = player.applied_promo_code
+        if player and code:
             promo_handler.redeam_code(
                 user=player,
                 amount_dep=None,
                 bonus_type="welcome",
-                promo_code=promo_code)
-            promo_obj = PromoCodes.objects.filter(promo_code=player.applied_promo_code, is_expired=False).first() if player.applied_promo_code else None
-            if promo_obj and deposit_count==1 and promo_obj.bonus_distribution_method == PromoCodes.BonusDistributionMethod.deposit and promo_obj.bonus_percentage>0:
-                welcome_bonus = round(Decimal(float(delta) * float(promo_obj.bonus_percentage / 100)), 2)
-                previous_bal = player.balance
-                bonus_to_be_given = min(welcome_bonus, promo_obj.max_bonus_limit)
-                player.bonus_balance = round(Decimal(float(player.bonus_balance)+float(bonus_to_be_given)),2)
-                
-                Transactions.objects.update_or_create(
-                    user=player,
-                    journal_entry="bonus",
-                    amount=delta,
-                    status="charged",
-                    previous_balance=previous_bal,
-                    new_balance=player.balance,
-                    description=f"welcome bonus of {bonus_to_be_given}",
-                    reference=generate_reference(player),
-                    bonus_type="welcome_bonus",
-                    bonus_amount=bonus_to_be_given
-                )
-                player.save()
-                send_player_balance_update_notification(player)
-        except Exception as e:
-            print(e)
-                    
+                promo_code=code)
+
         if(player.affiliated_by):
             affiliate = player.affiliated_by
             aff_deposit_count = Transactions.objects.filter(user=affiliate,journal_entry='bonus',bonus_type="affiliate_bonus").count()

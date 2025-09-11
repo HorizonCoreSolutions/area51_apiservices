@@ -1,4 +1,3 @@
-from datetime import timedelta
 import time
 from django.conf import settings
 from redis import Redis, ConnectionPool

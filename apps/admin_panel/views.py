@@ -3737,7 +3737,7 @@ class ReferralBonusView(CheckRolesMixin, ListView):
 
 
 #             try:
-#                 promo_obj = PromoCodes()
+#                 promo_obj = PromoCode/s()
 #                 promo_obj.bonus = bonus_obj
 #                 # promo_obj.promo_code = promo_code
 #                 # promo_obj.start_date = start_date
@@ -3806,34 +3806,34 @@ class BonusPercentageView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxRe
 
         bonus_obj.save()
 
-        if bonus_type in ["welcome_bonus", "deposit_bonus"]:
-            try:
-                promo_obj = PromoCodes()
-                promo_obj.bonus = bonus_obj
-                promo_obj.promo_code = promo_code
-                promo_obj.start_date = start_date
-                promo_obj.end_date = end_date
-                promo_obj.dealer = self.request.user
-                if bonus_type == "welcome_bonus":
-                    if signup_bonus_type in ["deposit", "", None]:
-                        promo_obj.bonus_percentage = percentage
-                        promo_obj.max_bonus_limit = usage_limit
-                    else:
-                        promo_obj.instant_bonus_amount = instant_bonus_amount
-                        promo_obj.bonus_distribution_method = PromoCodes.BonusDistributionMethod.instant
-                else:
+        if bonus_type not in ["welcome_bonus", "deposit_bonus"]:
+            return self.render_json_response({"status": "success", "message": _("Bonus details saved successfully")})
+
+        try:
+            promo_obj = PromoCodes()
+            promo_obj.bonus = bonus_obj
+            promo_obj.promo_code = promo_code
+            promo_obj.start_date = start_date
+            promo_obj.end_date = end_date
+            promo_obj.dealer = self.request.user
+            if bonus_type == "welcome_bonus":
+                if signup_bonus_type in ["deposit", "", None]:
                     promo_obj.bonus_percentage = percentage
                     promo_obj.max_bonus_limit = usage_limit
-                    promo_obj.usage_limit = deposit_per_day_usage_limit if deposit_per_day_usage_limit !='' else 1
-                promo_obj.save()
-            except Exception:
-                bonus_obj.percentage = 0
-                bonus_obj.save()
-                return self.render_json_response({"status": "error", "message": _("Something Went Wrong")})
+                else:
+                    promo_obj.instant_bonus_amount = instant_bonus_amount
+                    promo_obj.bonus_distribution_method = PromoCodes.BonusDistributionMethod.instant
+            else:
+                promo_obj.bonus_percentage = percentage
+                promo_obj.max_bonus_limit = usage_limit
+                promo_obj.usage_limit = deposit_per_day_usage_limit if deposit_per_day_usage_limit !='' else 1
+            promo_obj.save()
+        except Exception:
+            bonus_obj.percentage = 0
+            bonus_obj.save()
+            return self.render_json_response({"status": "error", "message": _("Something Went Wrong")})
 
-            return self.render_json_response({"status": "success", "message": _("Promo code created successfully")})
-        else:
-            return self.render_json_response({"status": "success", "message": _("Bonus details saved successfully")})
+        return self.render_json_response({"status": "success", "message": _("Promo code created successfully")})
 
 
 class DisableLosingBonusView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseMixin, View):

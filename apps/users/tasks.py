@@ -23,9 +23,10 @@ def redeam_user_event(self, event: str, user_id: int):
         return
 
     queryset = PromoCodes.objects.filter(
+        is_expired=False,
+        promo_code=event,
         dealer=user.admin,
         bonus__bonus_type="automated_promos",
-        is_expired=False,
     ).order_by("-created")
     # Process each bonus one by one
     for bonus in queryset:
