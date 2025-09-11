@@ -57,7 +57,7 @@ def _check_usage_limits(
     amount_dep: Optional[Decimal] = None,
 ) -> Tuple[bool, Optional[Literal["Promo-code use limit exceeded"]]]:
     """Check global and per-user usage limits."""
-    qs = PromoCodesLogs.objects.filter(promocode=promo_obj)
+    qs = PromoCodesLogs.objects.filter(promocode=promo_obj, transfer__isnull=False)
 
     agg_kwargs = {
         "total": Count("id"),
@@ -100,7 +100,7 @@ def redeam_code(
     if not promo_obj:
         return False, "Invalid promocode"
 
-    now = datetime.now().date()
+    now = timezone.now().date()
     if not _is_promo_valid(promo_obj, now):
         return False, "Promo-code Expired"
 
@@ -161,6 +161,7 @@ def redeam_code(
 
         PromoCodesLogs.objects.create(
             user=user,
+            transfer=amount,
             promocode=promo_obj,
             data=timezone.now(),
             log=f"Redeem for {bonus_type} Tx.id:{t.id}",  #type: ignore
@@ -169,6 +170,33 @@ def redeam_code(
     send_player_balance_update_notification(user)
 
     return True, "OK"
+
+
+def claim_code(
+    user: Users,
+    promo_code:str
+) -> bool:
+    now = timezone.now()
+    promo = PromoCodes.objects.filter(
+        start_date__lte=now,
+        end_date__gt=now,
+        promo_code=promo_code,
+        is_expired=False).first()
+
+    if not promo:
+        return False
+
+    # If want to remove the None
+    # please remember to change all the current Nones to 0
+
+    PromoCodesLogs.objects.create(
+        date=now,
+        user=user,
+        transfer=None,
+        promocode=promo,
+        log=f"Promo-code: {promo_code} claimed for player: {user.username}",
+    )
+    return True
 
 
 def verify_code(

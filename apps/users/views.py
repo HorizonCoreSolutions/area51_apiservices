@@ -70,8 +70,8 @@ from apps.users.models import (Admin, CashappQr, CmsBonusDetail, CmsFAQ, CmsPriv
                                FortunePandasGameManagement, Introduction, MAX_MULTI_FOUR_EVENTS_AMOUNT,
                                MAX_MULTI_THREE_EVENTS_AMOUNT, MAX_MULTI_TWO_EVENTS_AMOUNT, MAX_MULTIPLE_BET, MAX_ODD,
                                MAX_SINGLE_BET, MAX_SINGLE_BET_OTHER_SPORTS, MAX_SPEND_AMOUNT, MAX_WIN_AMOUNT, MIN_BET,
-                               PlayerBettingLimit, PromoCodes, PromoCodesLogs, SettingsLimits, SocialLink,
-                               SpintheWheelDetails, TermsConditinos, Country, EVENT_REGISTRATION)
+                               PlayerBettingLimit, SettingsLimits, SocialLink, SpintheWheelDetails,
+                               TermsConditinos, Country, EVENT_REGISTRATION)
 from apps.users.serializers import (
     # UserUpdateSerializer, 
     AdminBannerSerializer,
@@ -860,14 +860,9 @@ class VerifyOTPView(APIView):
                     user.save()
 
                     # Log applied promocode details so that we can track the applied counts and other details mfor the future references
-                    if user_data.get("applied_promo_code", None):
-                        promo_code = PromoCodes.objects.filter(promo_code=user_data.filter("applied_promo_code"), is_expired=False).first()
-                    
-                        promocode_logs = PromoCodesLogs()
-                        promocode_logs.promocode = promo_code
-                        promocode_logs.date = datetime.datetime.now()
-                        promocode_logs.logs = f"Promo-code: {promo_code.promo_code} applied for player: {user.username}"
-                        promocode_logs.save()
+                    promo_code_a = user_data.get("applied_promo_code", None)
+                    if promo_code_a:
+                        promo_handler.claim_code(user=user, promo_code=promo_code_a)
 
                     return Response(
                         {"message": "Signup Successfull"},
