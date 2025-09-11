@@ -104,12 +104,13 @@ def redeam_code(
     if not _is_promo_valid(promo_obj, now):
         return False, "Promo-code Expired"
 
-    valid, msg = _check_usage_limits(promo_obj, user, amount_dep=amount_dep)
-    if not valid:
-        return False, msg
-
     with transaction.atomic():
         user = Users.objects.select_for_update().get(id=user.id)
+
+        valid, msg = _check_usage_limits(promo_obj, user, amount_dep=amount_dep)
+        if not valid:
+            return False, msg
+
         method = PromoCodes.BonusDistributionMethod
         
         if (
