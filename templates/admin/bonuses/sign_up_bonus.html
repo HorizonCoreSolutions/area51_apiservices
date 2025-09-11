@@ -10,6 +10,62 @@ Signup Bonus
 {% endblock title %}
 {% block content %}
 <style>
+
+  /* Base toggle button */
+  .toggle-btn {
+      position: relative;
+      width: 50px;        /* total width */
+      height: 28px;       /* total height */
+      border-radius: 14px;
+      background-color: #ccc; /* off color */
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      outline: none;
+  }
+
+  /* The circle inside the toggle */
+  .toggle-btn::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 24px;
+      height: 24px;
+      background-color: #fff;
+      border-radius: 50%;
+      transition: transform 0.3s;
+  }
+
+  /* Active state */
+  .toggle-btn.active {
+      background-color: #4cd964; /* green when active */
+  }
+
+  .toggle-btn.active::after {
+      transform: translateX(22px); /* move circle to the right */
+  }
+
+  .fa-btn {
+    display: inline-flex;           /* aligns icon and text properly */
+    align-items: center;            /* vertically center icon and text */
+    justify-content: center;
+    border-radius: 5px;
+    text-transform: capitalize;
+    font-size: 15px;
+    padding: 6px 4px 8px 7px;             /* adjust spacing */
+    cursor: pointer;
+    border: 2px solid;
+    gap: 6px;                       /* space between icon and text */
+    transition: background 0.2s, color 0.2s;
+  }
+
+  .fa-btn i {
+    display: inline-block;          /* ensures icon aligns with text */
+    font-size: 16px;                /* optional, slightly bigger than text */
+  }
+
+
   .admin-card{
     background-color: #ffffff;
     box-shadow: 0px 0px 6px 6px rgb(204 204 204 / 0.25);
@@ -70,9 +126,10 @@ Signup Bonus
                             <h5>{% trans "Sign Up Bonus" %}</h5>
                           </div>
                           <div class="col">
-                            <select class="ml-auto col-3 mr-3 text-center form-control" name="signup-bonus-type" id="signup-bonus-type">
-                              <option value="deposit">Bonus On Deposit</option>
+                            <select class="ml-auto col-3 mr-3 form-control" name="signup-bonus-type" id="frm-signup-bonus-type">
+                              {% comment %} <option value="deposit">Bonus On Deposit</option> {% endcomment %}
                               <option value="instant">Instant Bonus</option>
+                              {% comment %} <option value="mixture">Mixture Deposit Bonus</option> {% endcomment %}
                             </select>
                           </div>
                         </div>
@@ -85,7 +142,7 @@ Signup Bonus
                               <div class="col-xs-12 col-md-4 form-group" id="promo-field-div" style="min-width: 210px;">
                                 <div style="font-weight: bold; color:black;">
                                   <span style="font-weight: bold;">{% trans "Promo Code" %}</span>
-                                  <input type="text" id="input-signup-promo-code" name="signup-promo-code"
+                                  <input type="text" id="frm-input-signup-promo-code" name="signup-promo-code"
                                       placeholder="{% trans 'Enter promo code.' %}" class="form-control"
                                       required="required" autocomplete='off' value=""
                                       onkeypress='return event.charCode >= 65 && event.charCode <= 90 ||
@@ -93,44 +150,86 @@ Signup Bonus
                                       event.charCode >= 48 && event.charCode <= 57 ||
                                       event.charCode == 45'>
                                 </div>
-                                <span style='padding:0.5em;'></span>
                               </div>
-                              <div class="col-xs-12 col-md-4 form-group" id="bonus-percentage-field-div" style="min-width: 210px;">
+                              <div class="col-xs-12 col-md-4 form-group" style="display:none;" id="bonus-percentage-field-div" style="min-width: 210px;">
                                 <div style="font-weight: bold; color:black;">
-                                  <span style="font-weight: bold;">{% trans "Percentage" %}</span>
-                                  <input type="number" id="welcome-bonus" name="welcome-bonus-percentage"
+                                  <span style="font-weight: bold;">SC {% trans "Percentage" %}</span>
+                                  <input type="number" id="frm-welcome-bonus" name="welcome-bonus-percentage"
                                   autocomplete="off"
-                                  placeholder="{% trans 'Enter Bonus Percentage' %}" class="form-control disablepaste"
-                                  value="" required="required"
+                                  placeholder="{% trans 'Enter Sweep Percentage' %}" class="form-control disablepaste"
+                                  value=""
                                   onkeypress='return event.charCode >= 48 && event.charCode <= 57 || event.charCode == 46'
                                   min="1" max="100"
                                   onchange="checkBonusPercentage(this)">
                                 </div>
-                                <span style='padding:0.5em;'></span>
                               </div>
+                              <div class="col-xs-12 col-md-4 form-group" style="display:none;" id="gold-percentage-field-div" style="min-width: 210px;">
+                                <div style="font-weight: bold; color:black;">
+                                  <span style="font-weight: bold;">GC {% trans "Percentage" %}</span>
+                                  <input type="number" id="frm-welcome-gold" name="welcome-gold-percentage"
+                                  autocomplete="off"
+                                  placeholder="{% trans 'Enter Gold Percentage' %}" class="form-control disablepaste"
+                                  value=""
+                                  onkeypress='return event.charCode >= 48 && event.charCode <= 57 || event.charCode == 46'
+                                  min="1" max="100"
+                                  onchange="checkBonusPercentage(this)">
+                                </div>
+                              </div>
+
+                              <div class="col-xs-12 col-md-4 form-group" id="instant-bonus-field-div">
+                                <div style="font-weight: bold; color:black;">
+                                  <span style="font-weight: bold;">{% trans "Instant Sweep Amount" %}</span>
+                                  <input type="text" id="frm-instant-bonus-amount" name="instant-bonus-amount" autocomplete="off" value="" 
+                                      placeholder="{% trans 'Enter Instant Sweep Amount' %}" class="form-control disablepaste" required
+                                      onkeypress='return event.charCode >= 48 && event.charCode <= 57 || event.charCode == 46' maxlength="6">
+                                </div>
+                              </div>
+
+                              <div class="col-xs-12 col-md-4 form-group" id="instant-gold-field-div">
+                                <div style="font-weight: bold; color:black;">
+                                  <span style="font-weight: bold;">{% trans "Instant Gold Amount" %}</span>
+                                  <input type="text" id="frm-instant-gold-amount" name="instant-gold-amount" autocomplete="off" value="" 
+                                      placeholder="{% trans 'Enter Instant Gold Amount' %}" class="form-control disablepaste" required
+                                      onkeypress='return event.charCode >= 48 && event.charCode <= 57 || event.charCode == 46' maxlength="6">
+                                </div>
+                              </div>
+
                               <div class="col-xs-12 col-md-4 form-group" id="max-bonus-field-div" style="min-width: 210px;">
                                 <div style="font-weight: bold; color:black;">
                                   <span style="font-weight: bold;">{% trans "Maximum Bonus Limit" %}</span>
-                                  <input type="text" id="max-bonus-limit" name="max-bonus-limit"
+                                  <input type="text" id="frm-max-bonus-limit" name="max-bonus-limit"
                                       autocomplete="off"
                                       placeholder="{% trans 'Enter Max Bonus Limit' %}" class="form-control disablepaste"
                                       value="" required="required"
                                       onkeypress='return event.charCode >= 48 && event.charCode <= 57 ||
                                           event.charCode == 46' maxlength="6">
                                 </div>
-                                <span style='padding:0.5em;'></span>
                               </div>
 
-                              <div class="col-xs-12 col-md-6 form-group" style="display:none;" id="instant-bonus-field-div">
+                              <div class="col-xs-12 col-md-4 form-group" id="max-usage-field-div" style="min-width: 210px;">
                                 <div style="font-weight: bold; color:black;">
-                                  <span style="font-weight: bold;">{% trans "Instant Bonus Amount" %}</span>
-                                  <input type="text" id="instant-bonus-amount" name="instant-bonus-amount" autocomplete="off" value="" 
-                                      placeholder="{% trans 'Enter Instant Bonus Amount' %}" class="form-control disablepaste"
-                                      onkeypress='return event.charCode >= 48 && event.charCode <= 57 || event.charCode == 46' maxlength="6">
+                                  <span style="font-weight: bold;">{% trans "Maximum Usage Limit" %}</span>
+                                  <input type="text" id="frm-max-usage-limit" name="max-usage-limit"
+                                      autocomplete="off"
+                                      placeholder="{% trans 'Enter Max Usage Limit' %}" class="form-control disablepaste"
+                                      value="" required="required"
+                                      onkeypress='return event.charCode >= 48 && event.charCode <= 57 ||
+                                          event.charCode == 46' maxlength="6">
                                 </div>
-                                <span style='padding:0.5em;'></span>
                               </div>
-                                        
+
+                              <div class="col-xs-12 col-md-4 form-group" id="max-user-field-div" style="min-width: 210px;">
+                                <div style="font-weight: bold; color:black;">
+                                  <span style="font-weight: bold;">{% trans "Maximum User Limit" %}</span>
+                                  <input type="text" id="frm-max-user-limit" name="max-user-limit"
+                                      autocomplete="off"
+                                      placeholder="{% trans 'Enter Max User Limit' %}" class="form-control disablepaste"
+                                      value="" required="required"
+                                      onkeypress='return event.charCode >= 48 && event.charCode <= 57 ||
+                                          event.charCode == 46' maxlength="6">
+                                </div>
+                              </div>
+
                               {% comment %}
                                 <div class="col-xs-12 col-md-4 form-group" style="min-width: 210px;">
                                   <div class="date-input">
@@ -145,18 +244,21 @@ Signup Bonus
                             </div>
                             <div class="row">
                               <div class="col-xs-12 col-md-5 form-group" style="min-width: 210px;">
+                                <span style='padding:0.5em;'></span>
                                 <div class="date-input">
                                   <span>{% trans "From date" %}</span>
-                                  <input  value="" type="text" placeholder="Select from Date" onChange="validateDateRange(this)" class="form-control" id="input-start-time-losing" name="losing-start-time" style="background-color:transparent" required>
+                                  <input  value="" type="text" placeholder="Select from Date" onChange="validateDateRange(this)" class="form-control" id="frm-input-start-time-losing" name="losing-start-time" style="background-color:transparent" required>
                                 </div>
                               </div>
                               <div class="col-xs-12 col-md-5 form-group" style="min-width: 210px;">
+                                <span style='padding:0.5em;'></span>
                                 <div class="date-input">
                                   <span>{% trans "To date" %}</span>
-                                  <input value="" type="text" placeholder="Select to Date" class="form-control" onChange="validateDateRange(this)" id="input-end-time-losing" name="losing-end-time" style="background-color:transparent" required>
+                                  <input value="" type="text" placeholder="Select to Date" class="form-control" onChange="validateDateRange(this)" id="frm-input-end-time-losing" name="losing-end-time" style="background-color:transparent" required>
                                 </div>
                               </div>
                               <div class="col-xs-12 col-md-2 form-group mt-md-4">
+                                <span style='padding:0.5em;'></span>
                                 <button type="submit" class="btn btn-primary btn-block" id="signup-button-add">
                                     {% trans "Submit" %}
                                 </button>
@@ -282,7 +384,7 @@ Signup Bonus
                                   </span>
                                 </td>
                                 <td class="align-middle">
-                                  <button class="enablepromobutton btn btn-primary bonus-button" bonus_id="{{ bonus.id }}">Activate</button>
+                                  <button class="enablepromobutton toggle-btn" bonus_id="{{ bonus.id }}"></button>
                                 </td>
                               {% else %}
                                 <td class="align-middle">
@@ -298,9 +400,9 @@ Signup Bonus
                                   Active
                                 </span>
                               </td>
-                              <td class="align-middle">
-                                <button class="disablepromobutton btn btn-primary bonus-button" bonus_id="{{ bonus.id }}" >Disable</button>
-                                <button class="edit-signup-popup btn btn-primary bonus-button" href="#edit-signup-page" 
+                              <td class="align-middle" style="padding:4px; display:flex; gap:4px;">
+                                <button class="disablepromobutton toggle-btn active" bonus_id="{{ bonus.id }}" ></button>
+                                <button class="edit-signup-popup fa-btn btn-primary" href="#edit-signup-page"
                                         data-bonus_id="{{ bonus.id }}"
                                         data-bonus_name="{{ bonus.promo_code }}"
                                         data-use_limit="{{ bonus.usage_limit }}"
@@ -312,7 +414,7 @@ Signup Bonus
                                         data-end_date="{{ bonus.end_date | date:'d/m/Y' }}"
                                         data-start_date="{{ bonus.start_date | date:'d/m/Y' }}"
                                         data-signup_bonus_type="{{ bonus.bonus_distribution_method }}"
-                                        >Edit</button>
+                                        ><i class="fas fa-edit"></i></button>
                               </td>
                             {% endif %}
                           </tr>
@@ -332,19 +434,16 @@ Signup Bonus
 {% include './edit_bonuses.html' %}
 <script>
 
-  $("#input-start-time-losing").datetimepicker({
+  const dateConfig = (value) => ({
     defaultDate: new Date(),
     format: 'd/m/Y',
-    value: '{{ from }}',
-    timepicker: false,
+    value: value,
+    timepicker: false
   });
 
-  $("#input-end-time-losing").datetimepicker({
-    defaultDate: new Date(),
-    format: 'd/m/Y',
-    value: '{{ to }}',
-    timepicker: false,
-  });
+  // Initialize datetimepickers
+  $("#frm-input-start-time-losing, #input-start-time-losing").datetimepicker(dateConfig('{{ from }}'));
+  $("#frm-input-end-time-losing, #input-end-time-losing").datetimepicker(dateConfig('{{ to }}'));
 
   $('.disablepaste').bind('copy paste cut',function(e) {
     e.preventDefault();
@@ -516,40 +615,58 @@ Signup Bonus
     })
   {% endcomment %}
 
-  $('#signup-bonus-type').change(function() {
+  $('#frm-signup-bonus-type').change(function() {
       // Get the selected option value
       var selectedValue = $(this).val();
 
-      if(selectedValue=="instant"){
-          $("#bonus-percentage-field-div").hide();
-          $("#max-bonus-field-div").hide();
-          $("#instant-bonus-field-div").show();
-          $("#welcome-bonus").prop('required', false);
-          $("#max-bonus-limit").prop('required', false);
-          $('#instant-bonus-amount').prop('required', true);
-      }else{
-          $("#bonus-percentage-field-div").show();
-          $("#max-bonus-field-div").show();
-          $("#instant-bonus-field-div").hide();
-          $("#welcome-bonus").prop('required', true);
-          $("#max-bonus-limit").prop('required', true);
-          $('#instant-bonus-amount').prop('required', false);
+      if(selectedValue=="instant") {
+        $("#frm-welcome-gold").closest("div.form-group").hide();
+        $("#frm-welcome-gold").prop('required', false)
+        $("#frm-welcome-bonus").closest("div.form-group").hide();
+        $("#frm-welcome-bonus").prop('required', false)
+        $("#frm-instant-gold-amount").closest("div.form-group").show();
+        $("#frm-instant-gold-amount").prop('required', true)
+        $("#frm-instant-bonus-amount").closest("div.form-group").show();
+        $("#frm-instant-bonus-amount").prop('required', true);
+      } else if(selectedValue=="mixture") {
+        $("#frm-welcome-gold").closest("div.form-group").hide();
+        $("#frm-welcome-gold").prop('required', false)
+        $("#frm-welcome-bonus").closest("div.form-group").show();
+        $("#frm-welcome-bonus").prop('required', true)
+        $("#frm-instant-gold-amount").closest("div.form-group").show();
+        $("#frm-instant-gold-amount").prop('required', true)
+        $("#frm-instant-bonus-amount").closest("div.form-group").hide();
+        $("#frm-instant-bonus-amount").prop('required', false);
+      } else {
+        $("#frm-welcome-gold").closest("div.form-group").show();
+        $("#frm-welcome-gold").prop('required', true)
+        $("#frm-welcome-bonus").closest("div.form-group").show();
+        $("#frm-welcome-bonus").prop('required', true)
+        $("#frm-instant-gold-amount").closest("div.form-group").hide();
+        $("#frm-instant-gold-amount").prop('required', false)
+        $("#frm-instant-bonus-amount").closest("div.form-group").hide();
+        $("#frm-instant-bonus-amount").prop('required', false);
       }
-      $("#promo-field-div").toggleClass("col-md-4 col-md-6");
   });
 
   $('#signup-bonus-form').submit(function(e) {
+
+    console.log("heeeeeelp")
       // Prevent the default form submission
       e.preventDefault();
 
-      var start_time = $("#input-start-time-losing").val();
-      var end_time = $("#input-end-time-losing").val();
-      var bonus_percentage = $("#welcome-bonus").val();
-      var promo_code = $("#input-signup-promo-code").val();
-      var promoUsageLimit = $("#input-signup-promo-code-usage-limit").val();
-      var maximum_bonus_limit = $("#max-bonus-limit").val();
-      var signup_bonus_type = $('#signup-bonus-type').val();
-      var instant_bonus_amount = $('#instant-bonus-amount').val();
+      var promo_code = $("#frm-input-signup-promo-code").val();
+
+      var bonus_type = $("#frm-signup-bonus-type").val();
+      var gold_percentage = $("#frm-welcome-gold").val();
+      var bonus_percentage = $("#frm-welcome-bonus").val();
+      var insta_golds = $("#frm-instant-gold-amount").val();
+      var insta_bonus = $("#frm-instant-bonus-amount").val();
+      var user_limit = $("#frm-max-user-limit").val();
+      var bonus_limit = $("#frm-max-bonus-limit").val();
+      var usage_limit = $("#frm-max-usage-limit").val();
+      var end_time = $("#frm-input-end-time-losing").val();
+      var start_time = $("#frm-input-start-time-losing").val();
 
       $.ajax({
           type: 'POST',
@@ -559,10 +676,10 @@ Signup Bonus
               end_time: end_time,
               percentage: bonus_percentage || 0,
               promo_code: promo_code,
-              usage_limit : maximum_bonus_limit || 0,
+              usage_limit : usage_limit || 0,
               bonusType: "welcome_bonus",
-              signup_bonus_type: signup_bonus_type,
-              instant_bonus_amount: instant_bonus_amount || 0,
+              signup_bonus_type: bonus_type,
+              instant_bonus_amount: insta_bonus || 0,
               csrfmiddlewaretoken: '{{ csrf_token }}'
           },
           success: function(response) {
@@ -606,6 +723,7 @@ Signup Bonus
           confirmButtonText: '{% trans "Yes" %}',
           cancelButtonText: '{% trans "No" %}'
       }).then((resp) => {
+          $(this).toggleClass("active")
           if(resp.value){
               console.log(resp.value);
 
@@ -767,6 +885,7 @@ Signup Bonus
             confirmButtonText: '{% trans "Yes" %}',
             cancelButtonText: '{% trans "No" %}'
         }).then((resp) => {
+          $(this).toggleClass("active")
             if(resp.value){
                 console.log(resp.value);
 

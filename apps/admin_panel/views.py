@@ -3762,15 +3762,46 @@ class BonusPercentageView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxRe
     #     return HttpResponseRedirect(settings.LOGIN_URL)
 
     def post_ajax(self, request, *args, **kwargs):
-        percentage = self.request.POST.get("percentage", 0.00)
         bonus_type = self.request.POST.get("bonusType", None)
-        usage_limit = self.request.POST.get("usage_limit", 1)
-        bet_bonus_per_day_limit = self.request.POST.get("per_day_usage_limit", 1)
-        deposit_per_day_usage_limit = self.request.POST.get("deposit_per_day_usage_limit", 1)
+        promocode_bonus_type = self.request.POST.get("signup_bonus_type")
+
+        try:
+            gold_percentage = Decimal(self.request.POST.get("gold_percentage", 0.00) or 0)
+            bonus_percentage = Decimal(self.request.POST.get("percentage", 0.00) or 0)
+            if gold_percentage < 0 or bonus_percentage < 0:
+                raise ValueError
+        except ValueError:
+            return self.render_json_response({"status": "error", "message": _(f"Percentages are not valid.")},400)
+            
+        try:
+            instant_gold_amount = Decimal(self.request.POST.get("instant_gold_amount", 0) or 0)
+            instant_bonus_amount = Decimal(self.request.POST.get("instant_bonus_amount", 0) or 0)
+
+            if instant_gold_amount < 0 or instant_gold_amount < 0:
+                raise ValueError
+        except ValueError:
+            return self.render_json_response({"status": "error", "message": _(f"Instant values are not valid.")},400)
+
+        
+        
+        try:
+            user_limit = int(self.request.POST.get("user_limit", 1))
+            bonus_limit = int(self.request.POST.get("bonus_limit", 1))
+            usage_limit = int(self.request.POST.get("usage_limit", 1))
+
+            if user_limit < 1 or bonus_limit < 1 or usage_limit < 1:
+                raise ValueError
+        except ValueError:
+            return self.render_json_response({"status": "error", "message": _(f"Limits are not valid.")},400)
+
         start_date = self.request.POST.get("start_time")
         end_date = self.request.POST.get("end_time")
-        signup_bonus_type = self.request.POST.get("signup_bonus_type")
-        instant_bonus_amount = self.request.POST.get("instant_bonus_amount")
+
+        deposit_per_day_usage_limit = self.request.POST.get("deposit_per_day_usage_limit", 1)
+        bet_bonus_per_day_limit = self.request.POST.get("per_day_usage_limit", 1)
+        
+        if start_date is None or end_date is None:
+            return self.render_json_response({"status": "error", "message": _(f"Dates are not valid.")},400)
         
         if start_date:
             start_date = timezone.datetime.strptime(
@@ -3783,9 +3814,12 @@ class BonusPercentageView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxRe
             ).date()
 
         promo_code = self.request.POST.get("promo_code", None)
-        
+        if bonus_type not in {"deposit_bonus", "welcome_bonus", "bet_bonus"}:
+            return self.render_json_response({"status": "error", "message": _(f"Bonus type: '{bonus_type}' does not exists.")},400)
         if promo_code and PromoCodes.objects.filter(promo_code=promo_code, bonus__bonus_type=bonus_type).exists():
             return self.render_json_response({"status": "error", "message": _(f"Promo code with the name '{promo_code}' already exists. Please choose a unique name.")},400)
+        if promo_code is None:
+            return self.render_json_response({"status": "error", "message": _(f"Promo code with the name must not be none.")},400)
 
         bonus_obj = BonusPercentage.objects.filter(dealer=self.request.user, bonus_type=bonus_type).first()
         if not bonus_obj:
@@ -3798,7 +3832,8 @@ class BonusPercentageView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxRe
             bonus_obj.deposit_bonus_per_day_limit = deposit_per_day_usage_limit if deposit_per_day_usage_limit !='' else 1
             bonus_obj.percentage = percentage
         elif bonus_type == "welcome_bonus":
-            bonus_obj.welcome_bonus_limit = usage_limit
+            pass
+            # bonus_obj.welcome_bonus_limit = usage_limit
         elif bonus_type == "bet_bonus":
             bonus_obj.bet_bonus_per_day_limit = bet_bonus_per_day_limit if bet_bonus_per_day_limit !='' else 1
             bonus_obj.percentage = percentage
@@ -3809,24 +3844,34 @@ class BonusPercentageView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxRe
         if bonus_type not in ["welcome_bonus", "deposit_bonus"]:
             return self.render_json_response({"status": "success", "message": _("Bonus details saved successfully")})
 
+        if promocode_bonus_type not in {"deposit", "mixture", "instant"}:
+            return self.render_json_response({"status": "error", "message": _(f"Promo code type is not valid.")},400)
+
         try:
             promo_obj = PromoCodes()
+            promo_obj.bonus_distribution_method = promocode_bonus_type
             promo_obj.bonus = bonus_obj
             promo_obj.promo_code = promo_code
             promo_obj.start_date = start_date
             promo_obj.end_date = end_date
             promo_obj.dealer = self.request.user
-            if bonus_type == "welcome_bonus":
-                if signup_bonus_type in ["deposit", "", None]:
-                    promo_obj.bonus_percentage = percentage
-                    promo_obj.max_bonus_limit = usage_limit
-                else:
-                    promo_obj.instant_bonus_amount = instant_bonus_amount
-                    promo_obj.bonus_distribution_method = PromoCodes.BonusDistributionMethod.instant
+            
+            promo_obj.is_deleted = True
+            promo_obj.is_expired = True
+            
+            promo_obj.usage_limit = usage_limit
+            promo_obj.limit_per_user = user_limit
+            promo_obj.max_bonus_limit = bonus_limit
+            
+            if promocode_bonus_type == "deposit":
+                promo_obj.gold_percentage = gold_percentage
+                promo_obj.bonus_percentage = bonus_percentage
+            elif promocode_bonus_type == "mixture":
+                promo_obj.gold_bonus = instant_gold_amount
+                promo_obj.bonus_percentage = bonus_percentage
             else:
-                promo_obj.bonus_percentage = percentage
-                promo_obj.max_bonus_limit = usage_limit
-                promo_obj.usage_limit = deposit_per_day_usage_limit if deposit_per_day_usage_limit !='' else 1
+                promo_obj.gold_bonus = instant_gold_amount
+                promo_obj.instant_bonus_amount = instant_bonus_amount
             promo_obj.save()
         except Exception:
             bonus_obj.percentage = 0

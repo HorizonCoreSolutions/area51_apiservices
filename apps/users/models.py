@@ -746,6 +746,7 @@ class PromoCodes(AbstractBaseModel):
     end_date = models.DateField(_("End Date"), auto_now=False, null=True, blank=True, default=None)
     # When the Bonus percentage is automated, this is going to be used as a promo event_type
     # When 1 it is GC, when it is SC
+    # Both of this should be treated as integers.
     bonus_percentage = models.FloatField(
         _("bonus percentage"), default=None, null=True, blank=True,
         validators=[MinValueValidator(Decimal("0.00"))]
