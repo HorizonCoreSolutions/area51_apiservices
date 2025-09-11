@@ -49,260 +49,267 @@ Signup Bonus
   });
 </script>
 <div class="pcode" id="nw1" >
-  <div>
-    <div class="container-fluid ">
-      <div class="pt-3 mx-auto" style="max-width: 540px;">
-        {% include "includes/messages.html" %}
-      </div>
-      <div class="row">
-        <div class="col-xs-12 col-lg-12 ">
-          <div class="page-content pt-4 setting-page">
-            <div class="container-fluid pt-2">
-              <!-- Bonus Section -->
-              {% if request.user.is_welcome_bonus_enabled or request.user.is_referral_bonus_enabled or request.user.is_losing_bonus_enabled %} 
-                <!-- Sign-Up bonus start -->
-                {% if request.user.is_welcome_bonus_enabled %}
-                  <div class="row mb-4">
-                    <div class="page-content col-xs-12 col-md-12 mb-3 mb-md-0">
-                      <div class="admin-card">
-                        <div class="main-heading-wrap">
-                          <div class="row">
-                            <div class="col">
-                              <h5>{% trans "Sign Up Bonus" %}</h5>
-                            </div>
-                            <div class="col">
-                              <select class="ml-auto col-3 mr-3 text-center form-control" name="signup-bonus-type" id="signup-bonus-type">
-                                <option value="deposit">Bonus On Deposit</option>
-                                <option value="instant">Instant Bonus</option>
-                              </select>
-                            </div>
+  <div class="container-fluid">
+    <div class="pt-3 mx-auto" style="max-width: 540px;">
+      {% include "includes/messages.html" %}
+    </div>
+    <div class="row">
+      <div class="col-xs-12 col-lg-12 ">
+        <div class="page-content pt-4 setting-page">
+          <div class="container-fluid pt-2">
+            <!-- Bonus Section -->
+            {% if request.user.is_welcome_bonus_enabled or request.user.is_referral_bonus_enabled or request.user.is_losing_bonus_enabled %} 
+              <!-- Sign-Up bonus start -->
+              {% if request.user.is_welcome_bonus_enabled %}
+                <div class="row mb-4">
+                  <div class="page-content col-xs-12 col-md-12 mb-3 mb-md-0">
+                    <div class="admin-card">
+                      <div class="main-heading-wrap">
+                        <div class="row">
+                          <div class="col">
+                            <h5>{% trans "Sign Up Bonus" %}</h5>
+                          </div>
+                          <div class="col">
+                            <select class="ml-auto col-3 mr-3 text-center form-control" name="signup-bonus-type" id="signup-bonus-type">
+                              <option value="deposit">Bonus On Deposit</option>
+                              <option value="instant">Instant Bonus</option>
+                            </select>
                           </div>
                         </div>
-                        <div class="container-fluid">
-                          <form mehod="post" autocomplete="off" id="signup-bonus-form">
-                            <div class="setting-select">
-                              {% csrf_token %}
-                              <div class="row" style="margin-bottom: -20px;">
-                                <div class="col-xs-12 col-md-4 form-group" id="promo-field-div" style="min-width: 210px;">
-                                  <div style="font-weight: bold; color:black;">
-                                    <span style="font-weight: bold;">{% trans "Promo Code" %}</span>
-                                    <input type="text" id="input-signup-promo-code" name="signup-promo-code"
-                                        placeholder="{% trans 'Enter promo code.' %}" class="form-control"
-                                        required="required" autocomplete='off' value=""
-                                        onkeypress='return event.charCode >= 65 && event.charCode <= 90 ||
-                                        event.charCode >= 97 && event.charCode <= 122 ||
-                                        event.charCode >= 48 && event.charCode <= 57 ||
-                                        event.charCode == 45'>
-                                  </div>
-                                  <span style='padding:0.5em;'></span>
+                      </div>
+                      <div class="container-fluid">
+                        <form mehod="post" autocomplete="off" id="signup-bonus-form">
+                          <div class="setting-select">
+                            {% csrf_token %}
+                            <div class="row" style="margin-bottom: -20px;">
+                              <div class="col-xs-12 col-md-4 form-group" id="promo-field-div" style="min-width: 210px;">
+                                <div style="font-weight: bold; color:black;">
+                                  <span style="font-weight: bold;">{% trans "Promo Code" %}</span>
+                                  <input type="text" id="input-signup-promo-code" name="signup-promo-code"
+                                      placeholder="{% trans 'Enter promo code.' %}" class="form-control"
+                                      required="required" autocomplete='off' value=""
+                                      onkeypress='return event.charCode >= 65 && event.charCode <= 90 ||
+                                      event.charCode >= 97 && event.charCode <= 122 ||
+                                      event.charCode >= 48 && event.charCode <= 57 ||
+                                      event.charCode == 45'>
                                 </div>
-                                <div class="col-xs-12 col-md-4 form-group" id="bonus-percentage-field-div" style="min-width: 210px;">
-                                  <div style="font-weight: bold; color:black;">
-                                    <span style="font-weight: bold;">{% trans "Percentage" %}</span>
-                                    <input type="number" id="welcome-bonus" name="welcome-bonus-percentage"
-                                    autocomplete="off"
-                                    placeholder="{% trans 'Enter Bonus Percentage' %}" class="form-control disablepaste"
-                                    value="" required="required"
-                                    onkeypress='return event.charCode >= 48 && event.charCode <= 57 || event.charCode == 46'
-                                    min="1" max="100"
-                                    onchange="checkBonusPercentage(this)">
-                                  </div>
-                                  <span style='padding:0.5em;'></span>
-                                </div>
-                                <div class="col-xs-12 col-md-4 form-group" id="max-bonus-field-div" style="min-width: 210px;">
-                                  <div style="font-weight: bold; color:black;">
-                                    <span style="font-weight: bold;">{% trans "Maximum Bonus Limit" %}</span>
-                                    <input type="text" id="max-bonus-limit" name="max-bonus-limit"
-                                        autocomplete="off"
-                                        placeholder="{% trans 'Enter Max Bonus Limit' %}" class="form-control disablepaste"
-                                        value="" required="required"
-                                        onkeypress='return event.charCode >= 48 && event.charCode <= 57 ||
-                                            event.charCode == 46' maxlength="6">
-                                  </div>
-                                  <span style='padding:0.5em;'></span>
-                                </div>
-
-                                <div class="col-xs-12 col-md-6 form-group" style="display:none;" id="instant-bonus-field-div">
-                                  <div style="font-weight: bold; color:black;">
-                                    <span style="font-weight: bold;">{% trans "Instant Bonus Amount" %}</span>
-                                    <input type="text" id="instant-bonus-amount" name="instant-bonus-amount" autocomplete="off" value="" 
-                                        placeholder="{% trans 'Enter Instant Bonus Amount' %}" class="form-control disablepaste"
-                                        onkeypress='return event.charCode >= 48 && event.charCode <= 57 || event.charCode == 46' maxlength="6">
-                                  </div>
-                                  <span style='padding:0.5em;'></span>
-                                </div>
-                                          
-                                {% comment %}
-                                  <div class="col-xs-12 col-md-4 form-group" style="min-width: 210px;">
-                                    <div class="date-input">
-                                      <span>{% trans "Promo-Code Usage Limit (per player)" %}</span>
-                                      <input  value="" type="text" class="form-control"
-                                          id="input-signup-promo-code-usage-limit" name="signup-promo-code-usage-limit"
-                                          onkeypress='return event.charCode >= 48 && event.charCode <= 57'
-                                          placeholder="{% trans 'Enter promo-code use limit.' %}" maxlength="6">
-                                    </div>
-                                  </div>
-                                {% endcomment %}
+                                <span style='padding:0.5em;'></span>
                               </div>
-                              <div class="row">
-                                <div class="col-xs-12 col-md-5 form-group" style="min-width: 210px;">
+                              <div class="col-xs-12 col-md-4 form-group" id="bonus-percentage-field-div" style="min-width: 210px;">
+                                <div style="font-weight: bold; color:black;">
+                                  <span style="font-weight: bold;">{% trans "Percentage" %}</span>
+                                  <input type="number" id="welcome-bonus" name="welcome-bonus-percentage"
+                                  autocomplete="off"
+                                  placeholder="{% trans 'Enter Bonus Percentage' %}" class="form-control disablepaste"
+                                  value="" required="required"
+                                  onkeypress='return event.charCode >= 48 && event.charCode <= 57 || event.charCode == 46'
+                                  min="1" max="100"
+                                  onchange="checkBonusPercentage(this)">
+                                </div>
+                                <span style='padding:0.5em;'></span>
+                              </div>
+                              <div class="col-xs-12 col-md-4 form-group" id="max-bonus-field-div" style="min-width: 210px;">
+                                <div style="font-weight: bold; color:black;">
+                                  <span style="font-weight: bold;">{% trans "Maximum Bonus Limit" %}</span>
+                                  <input type="text" id="max-bonus-limit" name="max-bonus-limit"
+                                      autocomplete="off"
+                                      placeholder="{% trans 'Enter Max Bonus Limit' %}" class="form-control disablepaste"
+                                      value="" required="required"
+                                      onkeypress='return event.charCode >= 48 && event.charCode <= 57 ||
+                                          event.charCode == 46' maxlength="6">
+                                </div>
+                                <span style='padding:0.5em;'></span>
+                              </div>
+
+                              <div class="col-xs-12 col-md-6 form-group" style="display:none;" id="instant-bonus-field-div">
+                                <div style="font-weight: bold; color:black;">
+                                  <span style="font-weight: bold;">{% trans "Instant Bonus Amount" %}</span>
+                                  <input type="text" id="instant-bonus-amount" name="instant-bonus-amount" autocomplete="off" value="" 
+                                      placeholder="{% trans 'Enter Instant Bonus Amount' %}" class="form-control disablepaste"
+                                      onkeypress='return event.charCode >= 48 && event.charCode <= 57 || event.charCode == 46' maxlength="6">
+                                </div>
+                                <span style='padding:0.5em;'></span>
+                              </div>
+                                        
+                              {% comment %}
+                                <div class="col-xs-12 col-md-4 form-group" style="min-width: 210px;">
                                   <div class="date-input">
-                                    <span>{% trans "From date" %}</span>
-                                    <input  value="" type="text" placeholder="Select from Date" onChange="validateDateRange(this)" class="form-control" id="input-start-time-losing" name="losing-start-time" style="background-color:transparent" required>
+                                    <span>{% trans "Promo-Code Usage Limit (per player)" %}</span>
+                                    <input  value="" type="text" class="form-control"
+                                        id="input-signup-promo-code-usage-limit" name="signup-promo-code-usage-limit"
+                                        onkeypress='return event.charCode >= 48 && event.charCode <= 57'
+                                        placeholder="{% trans 'Enter promo-code use limit.' %}" maxlength="6">
                                   </div>
                                 </div>
-                                <div class="col-xs-12 col-md-5 form-group" style="min-width: 210px;">
-                                  <div class="date-input">
-                                    <span>{% trans "To date" %}</span>
-                                    <input value="" type="text" placeholder="Select to Date" class="form-control" onChange="validateDateRange(this)" id="input-end-time-losing" name="losing-end-time" style="background-color:transparent" required>
-                                  </div>
+                              {% endcomment %}
+                            </div>
+                            <div class="row">
+                              <div class="col-xs-12 col-md-5 form-group" style="min-width: 210px;">
+                                <div class="date-input">
+                                  <span>{% trans "From date" %}</span>
+                                  <input  value="" type="text" placeholder="Select from Date" onChange="validateDateRange(this)" class="form-control" id="input-start-time-losing" name="losing-start-time" style="background-color:transparent" required>
                                 </div>
-                                <div class="col-xs-12 col-md-2 form-group mt-md-4">
-                                  <button type="submit" class="btn btn-primary btn-block" id="signup-button-add">
-                                      {% trans "Submit" %}
-                                  </button>
+                              </div>
+                              <div class="col-xs-12 col-md-5 form-group" style="min-width: 210px;">
+                                <div class="date-input">
+                                  <span>{% trans "To date" %}</span>
+                                  <input value="" type="text" placeholder="Select to Date" class="form-control" onChange="validateDateRange(this)" id="input-end-time-losing" name="losing-end-time" style="background-color:transparent" required>
                                 </div>
+                              </div>
+                              <div class="col-xs-12 col-md-2 form-group mt-md-4">
+                                <button type="submit" class="btn btn-primary btn-block" id="signup-button-add">
+                                    {% trans "Submit" %}
+                                </button>
                               </div>
                             </div>
-                          </form>
-                        </div>
+                          </div>
+                        </form>
                       </div>
                     </div>
                   </div>
-                {% endif %}
-                <!-- Sign Up Bonus Ends -->
+                </div>
               {% endif %}
-              <!-- Bonus Section Ends -->
+              <!-- Sign Up Bonus Ends -->
+            {% endif %}
+            <!-- Bonus Section Ends -->
 
-              <div class="row justify-content-center ">
-                <div class="page-content col-12">
-                  <div class="admin-card">
-                    <div class="main-heading-wrap">
-                      <h5>{% trans "Promo Codes History" %}</h5>
-                    </div>
-                    <div class="table-responsive result-table w-100">
-                      <table class="table table-data2 table-hover text-center" id="sortable">
-                        <thead class="thead-dark">
+            <div class="row justify-content-center ">
+              <div class="page-content col-12">
+                <div class="admin-card">
+                  <div class="main-heading-wrap">
+                    <h5>{% trans "Promo Codes History" %}</h5>
+                  </div>
+                  <div class="table-responsive result-table w-100">
+                    <table class="table table-data2 table-hover text-center" id="sortable">
+                      <thead class="thead-dark">
+                        <tr>
+                          {% comment %} <th>{% trans "S. No." %}</th> {% endcomment %}
+                          <th>{% trans "Promo Code" %}</th>
+                          <th>{% trans "Distribution Type" %}</th>
+                          <th>SC</th>
+                          <th>GC</th>
+                          <th>{% trans "Maximum Bonus Limit" %}</th>
+                          <th>{% trans "Usage Limit" %}</th>
+                          <th>{% trans "User Limit" %}</th>
+                          <th>{% trans "Start Date" %}</th>
+                          <th>{% trans "End Date" %}</th>
+                          <th>{% trans "Status" %}</th>
+                          <th>{% trans "Action" %}</th>
+                        </tr>
+                      </thead>
+                        <tbody id="result-body">
+                          {% if not bonuses %}
                           <tr>
-                            <th>{% trans "S. No." %}</th>
-                            <th>{% trans "Promo Code" %}</th>
-                            <th>{% trans "Distribution Type" %}</th>
-                            <th>{% trans "Instant Bonus" %}</th>
-                            <th>{% trans "Percentage" %}</th>
-                            <th>{% trans "Maximum Bonus Limit" %}</th>
-                            <th>{% trans "Start Date" %}</th>
-                            <th>{% trans "End Date" %}</th>
-                            {% comment %} <th>{% trans "Usage Limit" %}</th> {% endcomment %}
-                            {% comment %} <th>{% trans "Bonus Type" %}</th> {% endcomment %}
-                            <th>{% trans "Status" %}</th>
-                            <th>{% trans "Action" %}</th>
+                            <td colspan="10" class="text-center">
+                              <span>{% trans "No data found" %}</span>
+                            </td>
                           </tr>
-                        </thead>
-                          <tbody id="result-body">
-                            {% if not bonuses %}
-                            <tr>
-                              <td colspan="8" class="text-center">
-                                <span>{% trans "No data found" %}</span>
-                              </td>
-                            </tr>
-                            {% endif %}
-                            {% for bonus in bonuses %}
-                            <tr class="table-row">
-                              <td class="align-middle">
-                                <div>
-                                  <span>{{ forloop.counter }}.</span>
-                                </div>
-                              </td>
-                              <td class="align-middle">
-                                <div>
-                                  <span>{{ bonus.promo_code }}</span>
-                                </div>
-                              </td>
-                              <td class="align-middle">
+                          {% endif %}
+                          {% for bonus in bonuses %}
+                          <tr class="table-row">
+                            <td class="align-middle">
+                              <div>
+                                <span>{{ bonus.promo_code }}</span>
+                              </div>
+                            </td>
+                            <td class="align-middle">
+                              <span>
+                                {{ bonus.bonus_distribution_method }}
+                              </span>
+                            </td>
+                            <td class="align-middle">
+                              <div >
+                                <span>{% if bonus.bonus_distribution_method == "instant" %} {{ bonus.instant_bonus_amount|floatformat:"2" }} {% else %} {{ bonus.bonus_percentage }}% {% endif %} </span>
+                              </div>
+                            </td>
+                            <td class="align-middle">
+                              <div>
                                 <span>
-                                  {{ bonus.bonus_distribution_method }}
-                                </span>
-                              </td>
-                              <td class="align-middle">
-                                <div >
-                                  <span>{% if bonus.bonus_distribution_method == "instant" %} {{ bonus.instant_bonus_amount|floatformat:"0" }} {% else %} N/A {% endif %} </span>
-                                </div>
-                              </td>
-                              <td class="align-middle">
-                                <div>
-                                  <span>{% if bonus.bonus_distribution_method == "deposit" %} {{ bonus.bonus_percentage }} {% else %} N/A {% endif %} </span>
-                                </div>
-                              </td>
-                              <td class="align-middle">
-                                <div >
-                                  <span>{% if bonus.bonus_distribution_method == "deposit" %} {{ bonus.max_bonus_limit }} {% else %} N/A {% endif %} </span>
-                                </div>
-                              </td>
-                              <td class="align-middle">
-                                <span>
-                                  {{ bonus.start_date | date:"M. d, Y" }}
-                                </span>
-                              </td>
-                              <td class="align-middle">
-                                <span>
-                                  {% if bonus.end_date %}
-                                    {{ bonus.end_date | date:"M. d, Y" }}
-                                  {% else %}
-                                    ------------
-                                  {% endif %}
-                                </span>
-                              </td>
-                              {% comment %}
-                              <td class="align-middle">
-                                <span>
-                                  {{ bonus.usage_limit }}
-                                </span>
-                              </td>
-                              {% endcomment %}
-                              {% comment %}
-                              <td class="align-middle">
-                                <span>
-                                  {{ bonus.bonus.get_bonus_type_display }}
-                                </span>
-                              </td>
-                              {% endcomment %}
-                              {% if bonus.is_expired %}
-                                {% if bonus.is_deleted %}
-                                  <td class="align-middle">
-                                    <span class="text-danger">
-                                      Disabled
-                                    </span>
-                                  </td>
-                                  <td class="align-middle">
-                                    <button class="enablepromobutton btn btn-primary bonus-button" bonus_id="{{ bonus.id }}">Activate</button>
-                                  </td>
+                                  {% if bonus.bonus_distribution_method == "instant" or bonus.bonus_distribution_method == "mixture" %}
+                                    {{ bonus.gold_bonus|floatformat:"2" }}
+                                  {% else %} 
+                                    {% if bonus.gold_percentage %} {{ bonus.gold_percentage }} {% else %}0{% endif %} % {% endif %} </span>
+                              </div>
+                            </td>
+                            <td class="align-middle">
+                              <div >
+                                <span>{{ bonus.max_bonus_limit }} </span>
+                              </div>
+                            </td>
+                            <td class="align-middle">
+                              <div >
+                                <span>{{ bonus.usage_limit }} </span>
+                              </div>
+                            </td>
+                            <td class="align-middle">
+                              <div >
+                                <span>{{ bonus.limit_per_user }} </span>
+                              </div>
+                            </td>
+                            <td class="align-middle">
+                              <span>
+                                {{ bonus.start_date | date:"M. d, Y" }}
+                              </span>
+                            </td>
+                            <td class="align-middle">
+                              <span>
+                                {% if bonus.end_date %}
+                                  {{ bonus.end_date | date:"M. d, Y" }}
                                 {% else %}
-                                  <td class="align-middle">
-                                    <span class="text-danger">
-                                      Expired
-                                    </span>
-                                  </td>
+                                  ------------
                                 {% endif %}
-                                {% comment %} <td class="align-middle"></td> {% endcomment %}
-                              {% else %}
+                              </span>
+                            </td>
+                            {% comment %}
+                            <td class="align-middle">
+                              <span>
+                                {{ bonus.usage_limit }}
+                              </span>
+                            </td>
+                            {% endcomment %}
+                            {% comment %}
+                            <td class="align-middle">
+                              <span>
+                                {{ bonus.bonus.get_bonus_type_display }}
+                              </span>
+                            </td>
+                            {% endcomment %}
+                            {% if bonus.is_expired %}
+                              {% if bonus.is_deleted %}
                                 <td class="align-middle">
-                                  <span class="text-success">
-                                    Active
+                                  <span class="text-danger">
+                                    Disabled
                                   </span>
                                 </td>
                                 <td class="align-middle">
-                                  <button class="disablepromobutton btn btn-primary bonus-button" bonus_id="{{ bonus.id }}" >Disable</button>
-                                  <button class="edit-signup-popup btn btn-primary bonus-button" href="#edit-signup-page" 
-                                          data-bonus_id="{{ bonus.id }}" data-bonus_name="{{ bonus.promo_code }}" data-percentage="{{ bonus.bonus_percentage }}"
-                                          data-use_limit="{{ bonus.usage_limit }}" data-start_date="{{ bonus.start_date | date:'d/m/Y' }}" data-signup_bonus_type={{bonus.bonus_distribution_method}}
-                                          data-end_date="{{ bonus.end_date | date:'d/m/Y' }}" data-max_bonus_limit={{bonus.max_bonus_limit}} data-instant_bonus_amount={{bonus.instant_bonus_amount}}>Edit</button>
+                                  <button class="enablepromobutton btn btn-primary bonus-button" bonus_id="{{ bonus.id }}">Activate</button>
+                                </td>
+                              {% else %}
+                                <td class="align-middle">
+                                  <span class="text-danger">
+                                    Expired
+                                  </span>
                                 </td>
                               {% endif %}
-                            </tr>
-                          {% endfor %}
-                        </tbody>
-                      </table>
-                    </div>
+                              {% comment %} <td class="align-middle"></td> {% endcomment %}
+                            {% else %}
+                              <td class="align-middle">
+                                <span class="text-success">
+                                  Active
+                                </span>
+                              </td>
+                              <td class="align-middle">
+                                <button class="disablepromobutton btn btn-primary bonus-button" bonus_id="{{ bonus.id }}" >Disable</button>
+                                <button class="edit-signup-popup btn btn-primary bonus-button" href="#edit-signup-page" 
+                                        data-bonus_id="{{ bonus.id }}" data-bonus_name="{{ bonus.promo_code }}" data-percentage="{{ bonus.bonus_percentage }}"
+                                        data-use_limit="{{ bonus.usage_limit }}" data-start_date="{{ bonus.start_date | date:'d/m/Y' }}" data-signup_bonus_type={{bonus.bonus_distribution_method}}
+                                        data-end_date="{{ bonus.end_date | date:'d/m/Y' }}" data-max_bonus_limit={{bonus.max_bonus_limit}} data-instant_bonus_amount={{bonus.instant_bonus_amount}}>Edit</button>
+                              </td>
+                            {% endif %}
+                          </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
               </div>
@@ -316,268 +323,135 @@ Signup Bonus
 {% include './edit_bonuses.html' %}
 <script>
 
-    $('#mobile-collapse').click(function () {
-        $("#nw1").toggleClass('left-spacer');
-    });
+  $("#input-start-time-losing").datetimepicker({
+    defaultDate: new Date(),
+    format: 'd/m/Y',
+    value: '{{ from }}',
+    timepicker: false,
+  });
 
-    $("#input-start-time-losing").datetimepicker({
-        defaultDate: new Date(),
-        format: 'd/m/Y',
-        value: '{{ from }}',
-        timepicker: false,
-    });
+  $("#input-end-time-losing").datetimepicker({
+    defaultDate: new Date(),
+    format: 'd/m/Y',
+    value: '{{ to }}',
+    timepicker: false,
+  });
 
-    $("#input-end-time-losing").datetimepicker({
-        defaultDate: new Date(),
-        format: 'd/m/Y',
-        value: '{{ to }}',
-        timepicker: false,
-    });
-
-    $('.disablepaste').bind('copy paste cut',function(e) {
-      e.preventDefault();
-      Swal.fire('cut,copy & paste options are disabled !!');
-});
+  $('.disablepaste').bind('copy paste cut',function(e) {
+    e.preventDefault();
+    Swal.fire('cut,copy & paste options are disabled !!');
+  });
 
 
-    function validateDateRange(input){
+  function validateDateRange(input){
         
-        var from_date = $("#input-start-time-losing").val();
-        var to_date = $("#input-end-time-losing").val();
-        error_msg = "";
-        if(input.id == "input-start-time-losing"){
-            error_msg = "From date must be less than To date!!"
-            if([null, undefined, ""].includes(from_date)){
-                return false
-            }
-        }
-        else{
-            error_msg = "To date must be greater than From date!!"
-            if([null, undefined, ""].includes(to_date)){
-                return false
-            }
-        }
-
-        var from_day = parseInt(from_date.split("/")[0]);
-        var from_month = parseInt(from_date.split("/")[1]);
-        var from_year = from_date.split("/")[2];
-        from_year = from_year.split(" ")[0];
-
-        var to_day = parseInt(to_date.split("/")[0]);
-        var to_month = parseInt(to_date.split("/")[1]);
-        var to_year = to_date.split("/")[2];
-        // from date should be less than to date
-        if(from_year > to_year){
-            Swal.fire({
-                icon: 'error',
-                title: 'Oops...',
-                text: error_msg
-            });
-            input.value="";
-            return false;
-        }else if(from_year == to_year){
-            if(from_month > to_month){
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Oops...',
-                    text: error_msg
-                });
-                input.value="";
-                return false;
-            }else if(from_month == to_month){
-                if(from_day > to_day){
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Oops...',
-                        text: error_msg
-                    });
-
-                    input.value="";
-                    return false;
-                }
-            }
-        }        
+    var from_date = $("#input-start-time-losing").val();
+    var to_date = $("#input-end-time-losing").val();
+    error_msg = "";
+    if(input.id == "input-start-time-losing") {
+      error_msg = "From date must be less than To date!!"
+      if([null, undefined, ""].includes(from_date)) {
+        return false
+      }
+    }
+    else{
+      error_msg = "To date must be greater than From date!!"
+      if([null, undefined, ""].includes(to_date)){
+        return false
+      }
     }
 
-    // Removed referrl bonous from here
+    var from_day = parseInt(from_date.split("/")[0]);
+    var from_month = parseInt(from_date.split("/")[1]);
+    var from_year = from_date.split("/")[2];
+    from_year = from_year.split(" ")[0];
 
-    function checkBonusPercentage(input) {
+    var to_day = parseInt(to_date.split("/")[0]);
+    var to_month = parseInt(to_date.split("/")[1]);
+    var to_year = to_date.split("/")[2];
+    // from date should be less than to date
+    if(from_year > to_year){
+      Swal.fire({
+        icon: 'error',
+        title: 'Oops...',
+        text: error_msg
+      });
+      input.value="";
+      return false;
+    } else if(from_year == to_year){
+      if(from_month > to_month){
+        Swal.fire({
+          icon: 'error',
+          title: 'Oops...',
+          text: error_msg
+        });
+        input.value="";
+        return false;
+      } else if(from_month == to_month){
+        if(from_day > to_day){
+          Swal.fire({
+            icon: 'error',
+            title: 'Oops...',
+            text: error_msg
+          });
+          input.value="";
+          return false;
+        }
+      }
+    }        
+  }
+
+  // Removed referrl bonous from here
+
+  function checkBonusPercentage(input) {
     const value = parseFloat(input.value);
     if (isNaN(value) || value > 100) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Invalid Bonus Percentage',
+        text: 'Please enter a percentage between 1 and 100.',
+      });
+      input.value = '';
+    }
+  }
+
+  {% comment %}
+  $("#signup-button-add").click(function (e) {
+    e.preventDefault();
+    var start_time = $("#input-start-time-losing").val();
+    var end_time = $("#input-end-time-losing").val();
+    var bonus_percentage = $("#welcome-bonus").val();
+    var promo_code = $("#input-signup-promo-code").val();
+    var promoUsageLimit = $("#input-signup-promo-code-usage-limit").val();
+    var maximum_bonus_limit = $("#max-bonus-limit").val();
+
+    // console.log("date:  ", losing_start_time)
+
+    {% comment %} if (losing_bonus_percentage==''){
         Swal.fire({
             icon: 'error',
-            title: 'Invalid Bonus Percentage',
-            text: 'Please enter a percentage between 1 and 100.',
-        });
-        input.value = '';
+            title: 'Error',
+            text: 'Please Enter Bonus Percentage First',
+        })
+        return false
+    } {% endcomment %}
+
+    {% comment %} start_temp= losing_start_time.split("/");
+    end_temp= losing_end_time.split("/");
+
+    console.log("after daet", start_temp) {% end comment %}
+
+
+    if (maximum_bonus_limit == "" )  {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Please Enter bonus limit.',
+      })
+      return false
     }
-}
 
-    {% comment %} $("#signup-button-add").click(function (e) {
-        e.preventDefault();
-        var start_time = $("#input-start-time-losing").val();
-        var end_time = $("#input-end-time-losing").val();
-        var bonus_percentage = $("#welcome-bonus").val();
-        var promo_code = $("#input-signup-promo-code").val();
-        var promoUsageLimit = $("#input-signup-promo-code-usage-limit").val();
-        var maximum_bonus_limit = $("#max-bonus-limit").val();
-
-        // console.log("date:  ", losing_start_time)
-
-        {% comment %} if (losing_bonus_percentage==''){
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'Please Enter Bonus Percentage First',
-            })
-            return false
-        } {% endcomment %}
-
-        {% comment %} start_temp= losing_start_time.split("/");
-        end_temp= losing_end_time.split("/");
-
-        console.log("after daet", start_temp) {% end comment %}
-    
-    
-        if (maximum_bonus_limit == "" )  {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'Please Enter bonus limit.',
-            })
-            return false
-        }
-
-        else {
-            Swal.fire({
-                html:
-                    '<div class="swal-custom-content">' +
-                    '<p class="swal-custom-icon"><i class="cp-icon">&#xe815;</i></p>' +
-                    '<p class="swal-custom-title">{% trans "Are you sure" %} ?</p>' +
-                    '</div>',
-                customClass: {
-                    actions: 'swal-custom-actions',
-                    confirmButton: 'swal-custom-btn swal-custom-confirm-btn',
-                    cancelButton: 'swal-custom-btn swal-custom-cancel-btn',
-                },
-                showCancelButton: true,
-                confirmButtonText: '{% trans "Yes" %}',
-                cancelButtonText: '{% trans "No" %}'
-            }).then((result) => {
-                if (result.value) {
-                    $.ajax({
-                        url: "{% url 'admin-panel:bonus-percentage' %}",
-                        type: "POST",
-                        dataType: "json",
-                        data: {
-                            start_time: start_time,
-                            end_time: end_time,
-                            percentage: bonus_percentage,
-                            {% comment %} promo_code_usage_limit: promoUsageLimit, {% end comment %}
-                            promo_code: promo_code,
-                            usage_limit : maximum_bonus_limit,
-                            bonusType: "welcome_bonus",
-                            csrfmiddlewaretoken: '{{ csrf_token }}'
-                        },
-                        success: function (data) {
-                            Swal.fire({
-                                icon: data["status"],
-                                title: data["status"][0].toUpperCase() + data["status"].substring(1),
-                                text: data['message'],
-                            }).then(() => {
-                                window.location.reload();
-                            });
-                        },
-                        error : function(data) {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                text: data['message'],
-                            })
-                        }
-                    });
-                } else if (result.dismiss === "cancel") {
-                    // show message ?
-                }
-            })
-        }
-    }) {% endcomment %}
-
-    $('#signup-bonus-type').change(function() {
-        // Get the selected option value
-        var selectedValue = $(this).val();
-
-        if(selectedValue=="instant"){
-            $("#bonus-percentage-field-div").hide();
-            $("#max-bonus-field-div").hide();
-            $("#instant-bonus-field-div").show();
-            $("#welcome-bonus").prop('required', false);
-            $("#max-bonus-limit").prop('required', false);
-            $('#instant-bonus-amount').prop('required', true);
-        }else{
-            $("#bonus-percentage-field-div").show();
-            $("#max-bonus-field-div").show();
-            $("#instant-bonus-field-div").hide();
-            $("#welcome-bonus").prop('required', true);
-            $("#max-bonus-limit").prop('required', true);
-            $('#instant-bonus-amount').prop('required', false);
-        }
-        $("#promo-field-div").toggleClass("col-md-4 col-md-6");
-    });
-
-    $('#signup-bonus-form').submit(function(e) {
-        // Prevent the default form submission
-        e.preventDefault();
-
-        var start_time = $("#input-start-time-losing").val();
-        var end_time = $("#input-end-time-losing").val();
-        var bonus_percentage = $("#welcome-bonus").val();
-        var promo_code = $("#input-signup-promo-code").val();
-        var promoUsageLimit = $("#input-signup-promo-code-usage-limit").val();
-        var maximum_bonus_limit = $("#max-bonus-limit").val();
-        var signup_bonus_type = $('#signup-bonus-type').val();
-        var instant_bonus_amount = $('#instant-bonus-amount').val();
-
-        $.ajax({
-            type: 'POST',
-            url: "{% url 'admin-panel:bonus-percentage' %}", // Form's action attribute
-            data: {
-                start_time: start_time,
-                end_time: end_time,
-                percentage: bonus_percentage || 0,
-                promo_code: promo_code,
-                usage_limit : maximum_bonus_limit || 0,
-                bonusType: "welcome_bonus",
-                signup_bonus_type: signup_bonus_type,
-                instant_bonus_amount: instant_bonus_amount || 0,
-                csrfmiddlewaretoken: '{{ csrf_token }}'
-            },
-            success: function(response) {
-                Swal.fire({
-                    icon: response["status"],
-                    title: response["status"][0].toUpperCase() + response["status"].substring(1),
-                    text: response['message'],
-                }).then(() => {
-                    window.location.reload();
-                });
-            },
-            error: function(xhr, status, error) {
-                console.error('Error:', status, error, xhr);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: xhr.responseJSON.message,
-                }).then(() => {
-                    if(xhr.responseJSON.message=="Something Went Wrong"){
-                        window.location.reload();
-                    }
-                });
-            }
-        });
-    });
-
-    $(".disablepromobutton").click(function(e){
-        e.preventDefault();
+    else {
         Swal.fire({
             html:
                 '<div class="swal-custom-content">' +
@@ -592,139 +466,269 @@ Signup Bonus
             showCancelButton: true,
             confirmButtonText: '{% trans "Yes" %}',
             cancelButtonText: '{% trans "No" %}'
-        }).then((resp) => {
-            if(resp.value){
-                console.log(resp.value);
-
-                if(String(resp.value == "true")){
-                    var bonus_id = $(this).attr("bonus_id");
-                    console.log(bonus_id);
-                    var url_mask = "{% url 'admin-panel:disable-bonus' %}";
-                    $.ajax({
-                        url: url_mask,
-                        type: "POST",
-                        dataType: "json",
-                        data: {
-                            bonus_id: bonus_id
-                        },
-                        success: function (data) {
-                            console.log(data);
-                            Swal.fire({
-                                icon: data["status"],
-                                title: data["message"],
-                                text: data['message'],
-                            }).then((result) => {
-                                location.reload();
-                            });;
-                        },
-                    });
-                }
-            }
-        });
-    });
-
-    $('.edit-signup-popup').magnificPopup({
-                    type:'inline',
-                    midClick: true,
-                    fixedContentPos: true,
-                    callbacks: {
-                        beforeOpen: function() {
-                            this.st.mainClass = this.st.el.attr('data-effect');
-
-                            var bonus_id = this.st.el.attr('data-bonus_id');
-                            var dealer_username = this.st.el.attr('data-bonus_name');
-                            var percentage = this.st.el.attr('data-percentage');
-                            var bet_limit = this.st.el.attr('data-bet_limit');
-                            var use_limit = this.st.el.attr('data-use_limit');
-                            var start_date = this.st.el.attr('data-start_date');
-                            var end_date = this.st.el.attr('data-end_date');
-                            var max_bonus_limit = this.st.el.attr('data-max_bonus_limit');
-                            var signup_bonus_type = this.st.el.attr('data-signup_bonus_type');
-                            var instant_bonus_amount = this.st.el.attr('data-instant_bonus_amount');
-
-                            $("#edit-signup-page input[name='signup-promo-code']").val(dealer_username).prop('readonly', true);
-                            $("#edit-signup-page input[name='bonus-id']").val(bonus_id).prop('readonly', true);
-                            $("#edit-signup-page input[name='welcome-bonus-percentage']").val(percentage).prop('readonly', false);
-                            $("#edit-signup-page input[name='losing-max-bet-limit']").val(bet_limit).prop('readonly', false);
-                            $("#edit-signup-page input[name='signup-promo-code-usage-limit']").val(use_limit).prop('readonly', false);
-                            $("#edit-signup-page input[name='losing-start-time']").val(start_date).prop('readonly', false);
-                            $("#edit-signup-page input[name='losing-end-time']").val(end_date).prop('readonly', false);
-                            $("#edit-signup-page input[name='max-bonus-limit']").val(max_bonus_limit).prop('readonly', false);
-
-                            
-                            console.log($('#signup-bonus-type').val())
-                            console.log(signup_bonus_type)
-                            if(signup_bonus_type == "instant"){
-                                $("#edit-signup-page div[name='bonus-percentage-field-div']").hide();
-                                $("#edit-signup-page div[name='max-bonus-field-div']").hide();
-                                $("#edit-signup-page div[name='instant-bonus-field-div']").show();
-                                $("#edit-signup-page input[name='welcome-bonus-percentage']").prop('required', false);
-                                $("#edit-signup-page input[name='max-bonus-limit']").prop('required', false);
-                                $("#edit-signup-page input[name='instant-bonus-amount']").prop('required', true);
-                                $("#edit-signup-page div[name='promo-field-div']").removeClass("col-md-4").addClass("col-md-6");
-                                $("#edit-signup-page input[name='instant-bonus-amount']").val(instant_bonus_amount).prop('readonly', false);
-                            }else{
-                                $("#edit-signup-page div[name='bonus-percentage-field-div']").show();
-                                $("#edit-signup-page div[name='max-bonus-field-div']").show();
-                                $("#edit-signup-page div[name='instant-bonus-field-div']").hide();
-                                $("#edit-signup-page input[name='welcome-bonus-percentage']").prop('required', true);
-                                $("#edit-signup-page input[name='max-bonus-limit']").prop('required', true);
-                                $("#edit-signup-page input[name='instant-bonus-amount']").prop('required', false);
-                                $("#edit-signup-page div[name='promo-field-div']").removeClass("col-md-6").addClass("col-md-4");
-                            }
-                        
-                        }
+        }).then((result) => {
+            if (result.value) {
+                $.ajax({
+                    url: "{% url 'admin-panel:bonus-percentage' %}",
+                    type: "POST",
+                    dataType: "json",
+                    data: {
+                        start_time: start_time,
+                        end_time: end_time,
+                        percentage: bonus_percentage,
+                        {% comment %} promo_code_usage_limit: promoUsageLimit, {% end comment %}
+                        promo_code: promo_code,
+                        usage_limit : maximum_bonus_limit,
+                        bonusType: "welcome_bonus",
+                        csrfmiddlewaretoken: '{{ csrf_token }}'
                     },
+                    success: function (data) {
+                        Swal.fire({
+                            icon: data["status"],
+                            title: data["status"][0].toUpperCase() + data["status"].substring(1),
+                            text: data['message'],
+                        }).then(() => {
+                            window.location.reload();
+                        });
+                    },
+                    error : function(data) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: data['message'],
+                        })
+                    }
                 });
+            } else if (result.dismiss === "cancel") {
+                // show message ?
+            }
+        })
+    }
+    })
+  {% endcomment %}
 
-    $('#edit-signup-form').submit(function (event) {
-        event.preventDefault();
+  $('#signup-bonus-type').change(function() {
+      // Get the selected option value
+      var selectedValue = $(this).val();
 
-        var losing_start_time = $("#input-start-time-losing").val();
-        var losing_end_time = $("#input-end-time-losing").val();
-        var losing_bonus_percentage = $("#welcome-bonus").val();
-        var losing_promo_code = $("#input-signup-promo-code").val();
-        var promoUsageLimit = $("#input-signup-promo-code-usage-limit").val();
-        var bonus_id = $("#input-bonus-id").val();
-        var max_bonus_limit = $("#max-bonus-limit").val();
-        var instant_bonus_amount = $("#instant-bonus-amount").val();
+      if(selectedValue=="instant"){
+          $("#bonus-percentage-field-div").hide();
+          $("#max-bonus-field-div").hide();
+          $("#instant-bonus-field-div").show();
+          $("#welcome-bonus").prop('required', false);
+          $("#max-bonus-limit").prop('required', false);
+          $('#instant-bonus-amount').prop('required', true);
+      }else{
+          $("#bonus-percentage-field-div").show();
+          $("#max-bonus-field-div").show();
+          $("#instant-bonus-field-div").hide();
+          $("#welcome-bonus").prop('required', true);
+          $("#max-bonus-limit").prop('required', true);
+          $('#instant-bonus-amount').prop('required', false);
+      }
+      $("#promo-field-div").toggleClass("col-md-4 col-md-6");
+  });
 
-        $.ajax({
-            url: "{% url 'admin-panel:edit-bonuses' %}",
-            type: "POST",
-            dataType: "json",
-            data: {
-                bonus_type: "welcome_bonus",
-                losing_promo_code: losing_promo_code,
-                promoUsageLimit: promoUsageLimit,
-                losing_bonus_percentage: losing_bonus_percentage,
-                losing_end_time: losing_end_time,
-                losing_start_time: losing_start_time,
-                bonus_id: bonus_id,
-                max_bonus_limit:max_bonus_limit,
-                instant_bonus_amount:instant_bonus_amount,
-                csrfmiddlewaretoken: '{{ csrf_token }}'
-            },
-            success: function (data) {
-                if(data.status === 'Failed'){
-                    if(data.message.toLowerCase().includes("password")){
-                        $("#edit-password-input .error-msg").text(data.message);
-                    }
-                    else {
-                        $("#edit-password-input .error-msg").text('');
-                    }
-                }else {
-                    Swal.fire({
-                        title: 'Promocode: ' + losing_promo_code + ' edited successfully!',
-                        icon: 'success',
-                    }).then((result) => {
-                            $.magnificPopup.close();
-                            location.reload();
-                    });
-                }
-            },
-        });
+  $('#signup-bonus-form').submit(function(e) {
+      // Prevent the default form submission
+      e.preventDefault();
+
+      var start_time = $("#input-start-time-losing").val();
+      var end_time = $("#input-end-time-losing").val();
+      var bonus_percentage = $("#welcome-bonus").val();
+      var promo_code = $("#input-signup-promo-code").val();
+      var promoUsageLimit = $("#input-signup-promo-code-usage-limit").val();
+      var maximum_bonus_limit = $("#max-bonus-limit").val();
+      var signup_bonus_type = $('#signup-bonus-type').val();
+      var instant_bonus_amount = $('#instant-bonus-amount').val();
+
+      $.ajax({
+          type: 'POST',
+          url: "{% url 'admin-panel:bonus-percentage' %}", // Form's action attribute
+          data: {
+              start_time: start_time,
+              end_time: end_time,
+              percentage: bonus_percentage || 0,
+              promo_code: promo_code,
+              usage_limit : maximum_bonus_limit || 0,
+              bonusType: "welcome_bonus",
+              signup_bonus_type: signup_bonus_type,
+              instant_bonus_amount: instant_bonus_amount || 0,
+              csrfmiddlewaretoken: '{{ csrf_token }}'
+          },
+          success: function(response) {
+              Swal.fire({
+                  icon: response["status"],
+                  title: response["status"][0].toUpperCase() + response["status"].substring(1),
+                  text: response['message'],
+              }).then(() => {
+                  window.location.reload();
+              });
+          },
+          error: function(xhr, status, error) {
+              console.error('Error:', status, error, xhr);
+              Swal.fire({
+                  icon: 'error',
+                  title: 'Error',
+                  text: xhr.responseJSON.message,
+              }).then(() => {
+                  if(xhr.responseJSON.message=="Something Went Wrong"){
+                      window.location.reload();
+                  }
+              });
+          }
+      });
+  });
+
+  $(".disablepromobutton").click(function(e){
+      e.preventDefault();
+      Swal.fire({
+          html:
+              '<div class="swal-custom-content">' +
+              '<p class="swal-custom-icon"><i class="cp-icon">&#xe815;</i></p>' +
+              '<p class="swal-custom-title">{% trans "Are you sure" %} ?</p>' +
+              '</div>',
+          customClass: {
+              actions: 'swal-custom-actions',
+              confirmButton: 'swal-custom-btn swal-custom-confirm-btn',
+              cancelButton: 'swal-custom-btn swal-custom-cancel-btn',
+          },
+          showCancelButton: true,
+          confirmButtonText: '{% trans "Yes" %}',
+          cancelButtonText: '{% trans "No" %}'
+      }).then((resp) => {
+          if(resp.value){
+              console.log(resp.value);
+
+              if(String(resp.value == "true")){
+                  var bonus_id = $(this).attr("bonus_id");
+                  console.log(bonus_id);
+                  var url_mask = "{% url 'admin-panel:disable-bonus' %}";
+                  $.ajax({
+                      url: url_mask,
+                      type: "POST",
+                      dataType: "json",
+                      data: {
+                          bonus_id: bonus_id
+                      },
+                      success: function (data) {
+                          console.log(data);
+                          Swal.fire({
+                              icon: data["status"],
+                              title: data["message"],
+                              text: data['message'],
+                          }).then((result) => {
+                              location.reload();
+                          });;
+                      },
+                  });
+              }
+          }
+      });
+  });
+
+  $('.edit-signup-popup').magnificPopup({
+                  type:'inline',
+                  midClick: true,
+                  fixedContentPos: true,
+                  callbacks: {
+                      beforeOpen: function() {
+                          this.st.mainClass = this.st.el.attr('data-effect');
+
+                          var bonus_id = this.st.el.attr('data-bonus_id');
+                          var dealer_username = this.st.el.attr('data-bonus_name');
+                          var percentage = this.st.el.attr('data-percentage');
+                          var bet_limit = this.st.el.attr('data-bet_limit');
+                          var use_limit = this.st.el.attr('data-use_limit');
+                          var start_date = this.st.el.attr('data-start_date');
+                          var end_date = this.st.el.attr('data-end_date');
+                          var max_bonus_limit = this.st.el.attr('data-max_bonus_limit');
+                          var signup_bonus_type = this.st.el.attr('data-signup_bonus_type');
+                          var instant_bonus_amount = this.st.el.attr('data-instant_bonus_amount');
+
+                          $("#edit-signup-page input[name='signup-promo-code']").val(dealer_username).prop('readonly', true);
+                          $("#edit-signup-page input[name='bonus-id']").val(bonus_id).prop('readonly', true);
+                          $("#edit-signup-page input[name='welcome-bonus-percentage']").val(percentage).prop('readonly', false);
+                          $("#edit-signup-page input[name='losing-max-bet-limit']").val(bet_limit).prop('readonly', false);
+                          $("#edit-signup-page input[name='signup-promo-code-usage-limit']").val(use_limit).prop('readonly', false);
+                          $("#edit-signup-page input[name='losing-start-time']").val(start_date).prop('readonly', false);
+                          $("#edit-signup-page input[name='losing-end-time']").val(end_date).prop('readonly', false);
+                          $("#edit-signup-page input[name='max-bonus-limit']").val(max_bonus_limit).prop('readonly', false);
+
+                          
+                          console.log($('#signup-bonus-type').val())
+                          console.log(signup_bonus_type)
+                          if(signup_bonus_type == "instant"){
+                              $("#edit-signup-page div[name='bonus-percentage-field-div']").hide();
+                              $("#edit-signup-page div[name='max-bonus-field-div']").hide();
+                              $("#edit-signup-page div[name='instant-bonus-field-div']").show();
+                              $("#edit-signup-page input[name='welcome-bonus-percentage']").prop('required', false);
+                              $("#edit-signup-page input[name='max-bonus-limit']").prop('required', false);
+                              $("#edit-signup-page input[name='instant-bonus-amount']").prop('required', true);
+                              $("#edit-signup-page div[name='promo-field-div']").removeClass("col-md-4").addClass("col-md-6");
+                              $("#edit-signup-page input[name='instant-bonus-amount']").val(instant_bonus_amount).prop('readonly', false);
+                          }else{
+                              $("#edit-signup-page div[name='bonus-percentage-field-div']").show();
+                              $("#edit-signup-page div[name='max-bonus-field-div']").show();
+                              $("#edit-signup-page div[name='instant-bonus-field-div']").hide();
+                              $("#edit-signup-page input[name='welcome-bonus-percentage']").prop('required', true);
+                              $("#edit-signup-page input[name='max-bonus-limit']").prop('required', true);
+                              $("#edit-signup-page input[name='instant-bonus-amount']").prop('required', false);
+                              $("#edit-signup-page div[name='promo-field-div']").removeClass("col-md-6").addClass("col-md-4");
+                          }
+                      
+                      }
+                  },
+              });
+
+  $('#edit-signup-form').submit(function (event) {
+    event.preventDefault();
+
+    var losing_start_time = $("#input-start-time-losing").val();
+    var losing_end_time = $("#input-end-time-losing").val();
+    var losing_bonus_percentage = $("#welcome-bonus").val();
+    var losing_promo_code = $("#input-signup-promo-code").val();
+    var promoUsageLimit = $("#input-signup-promo-code-usage-limit").val();
+    var bonus_id = $("#input-bonus-id").val();
+    var max_bonus_limit = $("#max-bonus-limit").val();
+    var instant_bonus_amount = $("#instant-bonus-amount").val();
+
+    $.ajax({
+      url: "{% url 'admin-panel:edit-bonuses' %}",
+      type: "POST",
+      dataType: "json",
+      data: {
+        bonus_type: "welcome_bonus",
+        losing_promo_code: losing_promo_code,
+        promoUsageLimit: promoUsageLimit,
+        losing_bonus_percentage: losing_bonus_percentage,
+        losing_end_time: losing_end_time,
+        losing_start_time: losing_start_time,
+        bonus_id: bonus_id,
+        max_bonus_limit:max_bonus_limit,
+        instant_bonus_amount:instant_bonus_amount,
+        csrfmiddlewaretoken: '{{ csrf_token }}'
+      },
+      success: function (data) {
+        if(data.status === 'Failed'){
+          if(data.message.toLowerCase().includes("password")){
+            $("#edit-password-input .error-msg").text(data.message);
+          }
+          else {
+            $("#edit-password-input .error-msg").text('');
+          }
+        }else {
+          Swal.fire({
+            title: 'Promocode: ' + losing_promo_code + ' edited successfully!',
+            icon: 'success',
+          }).then((result) => {
+            $.magnificPopup.close();
+            location.reload();
+          });
+        }
+      },
     });
+  });
 
 </script>
 <script>
