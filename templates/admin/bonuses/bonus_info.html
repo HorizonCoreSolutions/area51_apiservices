@@ -1,4 +1,8 @@
 {% extends "index.html" %}
+{% comment %} 
+  This is an info view:
+  
+{% endcomment %}
 {% load static %}
 {% load i18n %}
 {% load math %}
@@ -6,60 +10,194 @@
 {% block title %}
   Bonus Info
 {% endblock title %}
-{% block content %}
-<style>
-  body { font-family: Arial, sans-serif; margin: 20px; }
-  table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
-  th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-  th { background-color: #f0f0f0; }
-  h2 { margin-top: 30px; }
-</style>
-<h1>Promo Code Details</h1>
+{% block javascript %}
 
-{% if promo_code %}
-    <p><strong>Promo Code:</strong> {{ promo_code }}</p>
-    <p><strong>Promo Name:</strong> {{ promo.name }}</p>
-
-    <h2>Promo Usage by Users</h2>
-    {% if promo_logs %}
-        <table>
-            <thead>
-                <tr>
-                    <th>Username</th>
-                    <th>Total Usages</th>
-                    <th>Total Transfer</th>
-                    <th>Individual Transfers</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for log in promo_logs %}
-                    <tr>
-                        <td>{{ log.user__username }}</td>
-                        <td>{{ log.total_usages }}</td>
-                        <td>{{ log.total_transfer|default:"0" }}</td>
-                        <td>
-                            {% for usage in log.usages %}
-                                {{ usage.date }} → {{ usage.transfer }}<br>
-                            {% empty %}
-                                No transfers
-                            {% endfor %}
-                        </td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    {% else %}
-        <p>No promo usage logs available.</p>
-    {% endif %}
-
-    <h2>Overall Analytics</h2>
-    <p><strong>Total Usages:</strong> {{ analytics.total_usages }}</p>
-    <p><strong>Total Transfer:</strong> {{ analytics.total_transfer|default:"0" }}</p>
-
-{% else %}
-    <p>No promo code selected or promo not found.</p>
+{% include "components/charjs.html" %}
+{% comment %} Includeeeees {% endcomment %}
+{% include "components/js/utils/gauge.html" %}
+{% if promo_logs %}
+  {{ promo_logs|json_script:"promo_logs" }}
 {% endif %}
+{% endblock javascript %}
 
-</body>
-</html>
+{% comment %}  {% endcomment %}
+
+{% block css %}
+<style>
+  .admin-card {
+    background-color: #ffffff;
+    box-shadow: 0px 0px 6px 6px rgb(204 204 204 / 0.25);
+    padding: 30px 10px;
+    margin: 20px;
+  }
+
+  .pcode.left-spacer {
+    margin-left: 15px;
+  }
+
+  .pcode {
+    margin-left: 250px;
+  }
+
+  @media(max-width:720px) {
+    .pcode {
+      margin-left: 15px;
+    }
+  }
+
+  .pseudo-table {
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    overflow: hidden;
+  }
+
+  .table-row {
+    display: flex;
+    align-items: center;
+    padding: 12px 15px;
+    border-bottom: 1px solid #dee2e6;
+    background-color: #fff;
+    text-decoration: none;
+    color: inherit;
+    transition: background-color 0.2s ease;
+  }
+
+  .table-row:hover {
+    background-color: #f8f9fa;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .table-row:last-child {
+    border-bottom: none;
+  }
+
+  .col-username {
+    width: 30%;
+  }
+
+  .col-total-usages {
+    width: 30%;
+  }
+
+  .col-total-transfer {
+    width: 30%;
+  }
+
+  .col-individual {
+    width: 5%;
+  }
+
+  .expand-icon {
+    transition: transform 0.3s ease;
+    font-size: 1.2em;
+  }
+
+  .extra-content {
+    max-height: 0;
+    overflow: hidden;
+    background-color: #f8f9fa;
+    transition: max-height 0.3s ease, padding 0.3s ease;
+    padding: 0 15px;
+  }
+
+  .extra-content:target {
+    max-height: 300px;
+    padding: 15px;
+  }
+
+  .extra-content:target~.table-row .expand-icon {
+    transform: rotate(180deg);
+  }
+
+  .table-header {
+    display: flex;
+    align-items: center;
+    padding: 12px 15px;
+    background-color: #e9ecef;
+    font-weight: 600;
+    border-bottom: 2px solid #dee2e6;
+  }
+
+  .close-btn {
+    float: right;
+    background: none;
+    border: none;
+    font-size: 1.5em;
+    cursor: pointer;
+    color: #6c757d;
+  }
+
+  .close-btn:hover {
+    color: #495057;
+  }
+</style>
+{% comment %} Includeeeees {% endcomment %}
+{% include "components/css/utils/gauge.html" %}
+{% endblock css %}
+
+{% comment %}  {% endcomment %}
+
+{% block content %}
+  <div class="pcode spacer" id="nw1">
+    <div class="admin-card">
+      <h1 class="mb-4">Promo Code Details</h1>
+      {% if promo_code %}
+        <h2>
+          <strong>Promo Code:</strong>
+        </h2>
+        <p>{{ promo_code }}</p>
+        <p>
+          <strong>Promo Name:</strong> {{ promo.name }}
+        </p>
+        <h2>Promo Usage by Users</h2>
+        {% with sub_title="Days" midle_text=analytics.midle_text_days size=200 total=analytics.total_days partial=analytics.passed_days y=100 r=100 indepotent_key="promo_progress" %}
+          {% include "components/html/utils/gauge.html" %}
+        {% endwith %}
+        {% with sub_title="Total Usage USD" midle_text=analytics.total_midle_text size=200 total=promo.max_bonus_limit partial=analytics.total_transfer|default:"0" y=80 r=90 indepotent_key="total" %}
+          {% include "components/html/utils/gauge.html" %}
+        {% endwith %}
+        {% if promo_logs %}
+          <div class="pseudo-table">
+            <div class="table-header">
+              <div class="col-username">Username</div>
+              <div class="col-total-usages">Total Usages</div>
+              <div class="col-total-transfer">Total Transfer</div>
+              <div class="col-individual">Individual Transfers</div>
+            </div>
+            {% for log in promo_logs %}
+              <a href="#details{{ forloop.counter }}" class="table-row">
+                <div class="col-username">{{ log.user__username }}</div>
+                <div class="col-total-usages">{{ log.total_usages }}</div>
+                <div class="col-total-transfer">{{ log.total_transfer|default:"0"|floatformat:2 }}</div>
+                <div class="col-individual">
+                  <span class="expand-icon">▼</span>
+                </div>
+              </a>
+              <div class="extra-content" id="details{{ forloop.counter }}">
+                <button class="close-btn" onclick="location.hash=''">×</button>
+                <h6>Individual Transfers</h6>
+                {% if log.usages %}
+                  {% for usage in log.usages %}<p>{{ usage.date }} → {{ usage.transfer|floatformat:2 }} </p>{% endfor %}
+                {% else %}
+                  <p>No transfers</p>
+                {% endif %}
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p>No promo usage logs available.</p>
+        {% endif %}
+        <h2 class="mt-4">Overall Analytics</h2>
+        <p>
+          <strong>Total Usages:</strong> {{ analytics.total_usages }}
+        </p>
+        <p>
+          <strong>Total Transfer:</strong> {{ analytics.total_transfer|default:"0" }}
+        </p>
+      {% else %}
+        <p>No promo code selected or promo not found.</p>
+      {% endif %}
+    </div>
+  </div>
 {% endblock content %}

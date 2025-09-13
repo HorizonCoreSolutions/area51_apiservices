@@ -3505,12 +3505,38 @@ class DetailBonusView(CheckRolesMixin, ListView):
                 "usages": usages
             })
 
+        # Sort by total_transfer descending
+        promo_logs_list = sorted(promo_logs_list, key=lambda x: x["total_transfer"], reverse=True)
+
         context["promo_logs"] = promo_logs_list
+        # total days of promo
+        total_days = 0
+        days_passed = 0
+        if (promo.start_date and promo.end_date):
+            total_days = (promo.end_date - promo.start_date).days + 1
+            days_passed = min((date.today() - promo.start_date).days, total_days)
+        
+        day_units = f"{days_passed}/{total_days}"
+
+        if total_days - days_passed < 14:
+            day_units = f"{total_days - days_passed} left"
+        elif total_days > 50:
+            days_passed = round((days_passed / total_days) * 100, 2)
+            total_days = 100
+            day_units = f"{days_passed}%"
+            
+        usages = len(promos)
+        
+        transfer = round(sum(log["transfer"] for log in promos) if promos else 0, 2)
 
         # Overall analytics
         context["analytics"] = {
+            "total_days": total_days,
+            "passed_days": days_passed,
+            "midle_text_days": day_units,
+            "total_midle_text": f"{transfer}",
             "total_usages": len(promos),
-            "total_transfer": sum(log["transfer"] for log in promos) if promos else 0
+            "total_transfer": transfer
         }
 
         return context
