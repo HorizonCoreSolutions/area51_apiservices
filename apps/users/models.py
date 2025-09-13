@@ -780,6 +780,9 @@ class PromoCodesLogs(AbstractBaseModel):
     transfer = models.DecimalField(
         _("transfer"), max_digits=15, decimal_places=4, default=Decimal('0.0000'), null=True, blank=True
     )
+    transfer_gold = models.DecimalField(
+        _("transfer"), max_digits=15, decimal_places=4, default=Decimal('0.0000'), null=True, blank=True
+    )
     log = models.CharField(max_length=2048, null=False, blank=False, editable=False)
     user = models.ForeignKey(Users, on_delete=models.CASCADE, default=None, null=True)
 

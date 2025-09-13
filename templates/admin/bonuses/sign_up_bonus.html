@@ -301,30 +301,30 @@ Signup Bonus
                       </thead>
                         <tbody id="result-body">
                           {% if not bonuses %}
-                          <tr>
-                            <td colspan="10" class="text-center">
-                              <span>{% trans "No data found" %}</span>
-                            </td>
-                          </tr>
+                            <tr>
+                              <td colspan="10" class="text-center">
+                                <span>{% trans "No data found" %}</span>
+                              </td>
+                            </tr>
                           {% endif %}
                           {% for bonus in bonuses %}
                           <tr class="table-row">
-                            <td class="align-middle">
+                            <td class="align-middle" onclick="location.href='./{{ bonus.promo_code }}/'">
                               <div>
                                 <span>{{ bonus.promo_code }}</span>
                               </div>
                             </td>
-                            <td class="align-middle">
+                            <td class="align-middle" onclick="location.href='./{{ bonus.promo_code }}/'">
                               <span>
                                 {{ bonus.bonus_distribution_method }}
                               </span>
                             </td>
-                            <td class="align-middle">
+                            <td class="align-middle" onclick="location.href='./{{ bonus.promo_code }}/'">
                               <div >
                                 <span>{% if bonus.bonus_distribution_method == "instant" %} {{ bonus.instant_bonus_amount|floatformat:"2" }} {% else %} {{ bonus.bonus_percentage }}% {% endif %} </span>
                               </div>
                             </td>
-                            <td class="align-middle">
+                            <td class="align-middle" onclick="location.href='./{{ bonus.promo_code }}/'">
                               <div>
                                 <span>
                                   {% if bonus.bonus_distribution_method == "instant" or bonus.bonus_distribution_method == "mixture" %}
@@ -333,27 +333,27 @@ Signup Bonus
                                     {% if bonus.gold_percentage %} {{ bonus.gold_percentage }} {% else %}0{% endif %} % {% endif %} </span>
                               </div>
                             </td>
-                            <td class="align-middle">
+                            <td class="align-middle" onclick="location.href='./{{ bonus.promo_code }}/'">
                               <div >
                                 <span>{{ bonus.max_bonus_limit }} </span>
                               </div>
                             </td>
-                            <td class="align-middle">
+                            <td class="align-middle" onclick="location.href='./{{ bonus.promo_code }}/'">
                               <div >
                                 <span>{{ bonus.usage_limit }} </span>
                               </div>
                             </td>
-                            <td class="align-middle">
+                            <td class="align-middle" onclick="location.href='./{{ bonus.promo_code }}/'">
                               <div >
                                 <span>{{ bonus.limit_per_user }} </span>
                               </div>
                             </td>
-                            <td class="align-middle">
+                            <td class="align-middle" onclick="location.href='./{{ bonus.promo_code }}/'">
                               <span>
                                 {{ bonus.start_date | date:"M. d, Y" }}
                               </span>
                             </td>
-                            <td class="align-middle">
+                            <td class="align-middle" onclick="location.href='./{{ bonus.promo_code }}/'">
                               <span>
                                 {% if bonus.end_date %}
                                   {{ bonus.end_date | date:"M. d, Y" }}
@@ -378,29 +378,45 @@ Signup Bonus
                             {% endcomment %}
                             {% if bonus.is_expired %}
                               {% if bonus.is_deleted %}
-                                <td class="align-middle">
+                                <td class="align-middle" onclick="location.href='./{{ bonus.promo_code }}/'">
                                   <span class="text-danger">
                                     Disabled
                                   </span>
                                 </td>
-                                <td class="align-middle">
-                                  <button class="enablepromobutton toggle-btn" bonus_id="{{ bonus.id }}"></button>
+                                <td class="d-flex justify-content-center align-items-center gap-2" >
+                                  <button class="disablepromobutton toggle-btn" bonus_id="{{ bonus.id }}" ></button>
+                                  <button class="edit-signup-popup fa-btn btn-primary" href="#edit-signup-page"
+                                          data-bonus_id="{{ bonus.id }}"
+                                          data-bonus_name="{{ bonus.promo_code }}"
+                                          data-use_limit="{{ bonus.usage_limit }}"
+                                          data-user_limit="{{ bonus.limit_per_user }}"
+                                          data-max_bonus_limit="{{ bonus.max_bonus_limit }}"
+                                          data-percentage="{{ bonus.bonus_percentage }}"
+                                          data-instant_gold_amount="{{ bonus.gold_bonus|default:0 }}"
+                                          data-gold_percentage="{{ bonus.gold_percentage|default:0 }}"
+                                          data-instant_bonus_amount="{{ bonus.instant_bonus_amount }}"
+                                          data-end_date="{{ bonus.end_date | date:'d/m/Y' }}"
+                                          data-start_date="{{ bonus.start_date | date:'d/m/Y' }}"
+                                          data-signup_bonus_type="{{ bonus.bonus_distribution_method }}"
+                                          ><i class="fas fa-edit"></i></button>
                                 </td>
                               {% else %}
-                                <td class="align-middle">
+                                <td class="align-middle" colspan="2" onclick="location.href='./{{ bonus.promo_code }}/'">
                                   <span class="text-danger">
                                     Expired
                                   </span>
                                 </td>
+                                <td class="align-middle" colspan="0">
+                                </td>
                               {% endif %}
                               {% comment %} <td class="align-middle"></td> {% endcomment %}
                             {% else %}
-                              <td class="align-middle">
+                              <td class="align-middle" onclick="location.href='./{{ bonus.promo_code }}/'">
                                 <span class="text-success">
                                   Active
                                 </span>
                               </td>
-                              <td class="align-middle" style="padding:4px; display:flex; gap:4px;">
+                              <td class="d-flex justify-content-center align-items-center gap-2" >
                                 <button class="disablepromobutton toggle-btn active" bonus_id="{{ bonus.id }}" ></button>
                                 <button class="edit-signup-popup fa-btn btn-primary" href="#edit-signup-page"
                                         data-bonus_id="{{ bonus.id }}"

@@ -3485,14 +3485,15 @@ class DetailBonusView(CheckRolesMixin, ListView):
         promos = PromoCodesLogs.objects.filter(
             promocode=promo,
             transfer__isnull=False
-        ).values("user__username", "created", "transfer")
+        ).values("user__username", "created", "transfer", "transfer_gold")
 
         # Build per-user usage data manually
         promo_logs_dict = defaultdict(list)
         for log in promos:
             promo_logs_dict[log["user__username"]].append({
                 "date": log["created"],
-                "transfer": log["transfer"]
+                "transfer": log["transfer"],
+                "transfer_gold": log["transfer_gold"]
             })
 
         # Convert dict to list with totals
@@ -3502,6 +3503,7 @@ class DetailBonusView(CheckRolesMixin, ListView):
                 "user__username": username,
                 "total_usages": len(usages),
                 "total_transfer": sum(u["transfer"] for u in usages),
+                "total_transfer_gold": sum(u["transfer_gold"] for u in usages),
                 "usages": usages
             })
 
@@ -3525,9 +3527,12 @@ class DetailBonusView(CheckRolesMixin, ListView):
             total_days = 100
             day_units = f"{days_passed}%"
             
-        usages = len(promos)
-        
         transfer = round(sum(log["transfer"] for log in promos) if promos else 0, 2)
+        transfer_gold = round(sum(log["transfer_gold"] for log in promos) if promos else 0, 2)
+        usages = len(promos)
+        if not promos:
+            context["promo_logs"] = None
+        
 
         # Overall analytics
         context["analytics"] = {
@@ -3536,7 +3541,9 @@ class DetailBonusView(CheckRolesMixin, ListView):
             "midle_text_days": day_units,
             "total_midle_text": f"{transfer}",
             "total_usages": len(promos),
-            "total_transfer": transfer
+            "total_transfer": transfer,
+            "total_transfer_gold": transfer_gold,
+            "total_midle_text_gold": f"{transfer_gold}",
         }
 
         return context

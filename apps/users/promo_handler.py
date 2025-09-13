@@ -37,17 +37,31 @@ def _get_promo(
 
 def _is_promo_valid(
     promo_obj: PromoCodes,
-    now,
+    now
 ) -> bool:
-    """Check if promo is active (not expired or out of range)."""
+    """
+    Check if a promo is active (not expired or out of range).
+
+    Args:
+        promo_obj (PromoCodes): The promo code object.
+        now (datetime): Current datetime for comparison.
+
+    Returns:
+        bool: True if promo is valid, False otherwise.
+    """
     if promo_obj.is_expired:
         return False
-    if promo_obj.start_date is None or promo_obj.end_date is None:
+
+    # If start or end date is missing, or promo is out of range
+    if (
+        not promo_obj.start_date
+        or not promo_obj.end_date
+        or not (promo_obj.start_date <= now <= promo_obj.end_date)
+    ):
+        promo_obj.is_expired = True
+        promo_obj.save()
         return False
-    if promo_obj.start_date > now:
-        return False
-    if promo_obj.end_date < now:
-        return False
+
     return True
 
 
@@ -56,6 +70,9 @@ def _check_usage_limits(
     user: Optional[Users],
     amount_dep: Optional[Decimal] = None,
 ) -> Tuple[bool, Optional[Literal["Promo-code use limit exceeded"]]]:
+    def mark_expired():
+        promo_obj.is_expired = True
+        promo_obj.save()
     """Check global and per-user usage limits."""
     qs = PromoCodesLogs.objects.filter(promocode=promo_obj, transfer__isnull=False)
 
@@ -69,22 +86,27 @@ def _check_usage_limits(
     counts = qs.aggregate(**agg_kwargs)
 
     if user and counts.get("user_count", 0) >= promo_obj.limit_per_user:
+        mark_expired()
         return False, "Promo-code use limit exceeded"
 
     if counts.get("total", 0) >= promo_obj.usage_limit:
+        mark_expired()
         return False, "Promo-code use limit exceeded"
     
     amount_redeamed = counts.get("amount_redeamed") or Decimal("0")
 
     if amount_redeamed >= promo_obj.max_bonus_limit:
+        mark_expired()
         return False, "Promo-code use limit exceeded"
 
     if promo_obj.bonus_distribution_method == promo_obj.BonusDistributionMethod.instant:
         if amount_redeamed + promo_obj.instant_bonus_amount > promo_obj.max_bonus_limit:
+            mark_expired()
             return False, "Promo-code use limit exceeded"
     elif amount_dep:
         total = amount_redeamed + amount_dep * Decimal(promo_obj.bonus_percentage or 0)
         if (total > promo_obj.max_bonus_limit):
+            mark_expired()
             return False, "Promo-code use limit exceeded"
 
     return True, None
@@ -120,13 +142,9 @@ def redeam_code(
             raise ValueError(
                 "Mixture and Deposit should be used with a positive deposit amount"
             )
-        if (
-            promo_obj.bonus_distribution_method in {method.mixture, method.deposit}
-            and amount_dep is None
-        ):
-            raise ValueError(
-                "Mixture and Deposit should be used with a positive deposit amount"
-            )
+
+        if not amount_dep:
+            amount_dep = Decimal(0)
 
         pre_balance = user.balance
 
@@ -167,6 +185,7 @@ def redeam_code(
             user=user,
             transfer=amount,
             promocode=promo_obj,
+            transfer_gold=bonus_amount,
             date=timezone.now(),
             log=f"Redeem for {bonus_type} Tx.id:{t.id}",  #type: ignore
         )
@@ -198,6 +217,7 @@ def claim_code(
         user=user,
         transfer=None,
         promocode=promo,
+        transfer_gold=None,
         log=f"Promo-code: {promo_code} claimed for player: {user.username}",
     )
     return True

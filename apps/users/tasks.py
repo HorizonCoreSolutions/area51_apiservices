@@ -37,11 +37,15 @@ def redeam_user_event(self, event: str, user_id: int):
         if bonus.bonus_percentage is None:
             continue
 
+        bonus_t = 0
+        gold_t = 0
         pre_balance = user.balance
         if bonus.bonus_percentage > 0:
+            gold_t += bonus.instant_bonus_amount
             user.bonus_balance += bonus.instant_bonus_amount
             coin = "GC"
         else:
+            bonus_t += bonus.instant_bonus_amount
             user.balance += bonus.instant_bonus_amount
             coin = "SC"
         
@@ -62,6 +66,8 @@ def redeam_user_event(self, event: str, user_id: int):
         # Log the redemption
         PromoCodesLogs.objects.create(
             promocode=bonus,
+            transfer=bonus_t,
+            transfer_gold=gold_t,
             user=user,
             log=f"User {user.id} redeemed event {event}",
             date=timezone.now()
