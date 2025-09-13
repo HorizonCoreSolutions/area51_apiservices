@@ -1,0 +1,65 @@
+{% extends "index.html" %}
+{% load static %}
+{% load i18n %}
+{% load math %}
+{% load date_utils %}
+{% block title %}
+  Bonus Info
+{% endblock title %}
+{% block content %}
+<style>
+  body { font-family: Arial, sans-serif; margin: 20px; }
+  table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
+  th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+  th { background-color: #f0f0f0; }
+  h2 { margin-top: 30px; }
+</style>
+<h1>Promo Code Details</h1>
+
+{% if promo_code %}
+    <p><strong>Promo Code:</strong> {{ promo_code }}</p>
+    <p><strong>Promo Name:</strong> {{ promo.name }}</p>
+
+    <h2>Promo Usage by Users</h2>
+    {% if promo_logs %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Total Usages</th>
+                    <th>Total Transfer</th>
+                    <th>Individual Transfers</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in promo_logs %}
+                    <tr>
+                        <td>{{ log.user__username }}</td>
+                        <td>{{ log.total_usages }}</td>
+                        <td>{{ log.total_transfer|default:"0" }}</td>
+                        <td>
+                            {% for usage in log.usages %}
+                                {{ usage.date }} → {{ usage.transfer }}<br>
+                            {% empty %}
+                                No transfers
+                            {% endfor %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No promo usage logs available.</p>
+    {% endif %}
+
+    <h2>Overall Analytics</h2>
+    <p><strong>Total Usages:</strong> {{ analytics.total_usages }}</p>
+    <p><strong>Total Transfer:</strong> {{ analytics.total_transfer|default:"0" }}</p>
+
+{% else %}
+    <p>No promo code selected or promo not found.</p>
+{% endif %}
+
+</body>
+</html>
+{% endblock content %}

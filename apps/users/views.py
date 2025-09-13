@@ -448,7 +448,9 @@ class SignUpView(APIViewContext):
 
             if player.applied_promo_code:
                 promo_handler.redeam_code(
-                    user=player, bonus_type='welcome',
+                    user=player,
+                    amount_dep=None,
+                    bonus_type='welcome',
                     promo_code=player.applied_promo_code)
 
             return Response({"message": _("User Created Successfully")}, status.HTTP_201_CREATED)

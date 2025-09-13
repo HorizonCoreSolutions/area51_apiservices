@@ -406,6 +406,7 @@ Signup Bonus
                                         data-bonus_id="{{ bonus.id }}"
                                         data-bonus_name="{{ bonus.promo_code }}"
                                         data-use_limit="{{ bonus.usage_limit }}"
+                                        data-user_limit="{{ bonus.limit_per_user }}"
                                         data-max_bonus_limit="{{ bonus.max_bonus_limit }}"
                                         data-percentage="{{ bonus.bonus_percentage }}"
                                         data-instant_gold_amount="{{ bonus.gold_bonus|default:0 }}"
@@ -677,6 +678,7 @@ Signup Bonus
               percentage: bonus_percentage || 0,
               promo_code: promo_code,
               usage_limit : usage_limit || 0,
+              user_limit : user_limit || 0,
               bonusType: "welcome_bonus",
               signup_bonus_type: bonus_type,
               instant_bonus_amount: insta_bonus || 0,
@@ -772,6 +774,7 @@ Signup Bonus
         var gold_percentage = this.st.el.attr('data-gold_percentage');
         var bet_limit = this.st.el.attr('data-bet_limit');
         var use_limit = this.st.el.attr('data-use_limit');
+        var user_limit = this.st.el.attr('data-user_limit');
         var start_date = this.st.el.attr('data-start_date');
         var end_date = this.st.el.attr('data-end_date');
         var max_bonus_limit = this.st.el.attr('data-max_bonus_limit');
@@ -790,7 +793,7 @@ Signup Bonus
         $("#edit-signup-page input[name='welcome-bonus-percentage']").val(instant_bonus_amount).prop('readonly', false);
         
         $("#edit-signup-page input[name='signup-promo-code-usage-limit']").val(use_limit).prop('readonly', false);
-        $("#edit-signup-page input[name='signup-promo-code-user-limit']").val(use_limit).prop('readonly', false);
+        $("#edit-signup-page input[name='signup-promo-code-user-limit']").val(user_limit).prop('readonly', false);
 
         $("#edit-signup-page input[name='losing-end-time']").val(end_date).prop('readonly', false);
         $("#edit-signup-page input[name='losing-start-time']").val(start_date).prop('readonly', false);
@@ -819,28 +822,38 @@ Signup Bonus
 
   $('#edit-signup-form').submit(function (event) {
     event.preventDefault();
+    var bonus_id = $("#input-bonus-id").val();
 
+    var losing_gold_percentage = $("#welcome-bonus-gold").val();
+    var losing_bonus_percentage = $("#welcome-bonus").val();
+
+    var losing_promo_code = $("#input-signup-promo-code").val();
+    var max_bonus_limit = $("#max-bonus-limit").val();
+
+    var promoUsageLimit = $("#input-signup-promo-code-usage-limit").val();
+    var promoUserLimit = $("#input-signup-promo-code-user-limit").val();
+
+    var instant_bonus_amount = $("#instant-bonus-amount").val();
+    var instant_gold_amount = $("#instant-gold-amount").val();
+    
     var losing_start_time = $("#input-start-time-losing").val();
     var losing_end_time = $("#input-end-time-losing").val();
-    var losing_bonus_percentage = $("#welcome-bonus").val();
-    var losing_promo_code = $("#input-signup-promo-code").val();
-    var promoUsageLimit = $("#input-signup-promo-code-usage-limit").val();
-    var bonus_id = $("#input-bonus-id").val();
-    var max_bonus_limit = $("#max-bonus-limit").val();
-    var instant_bonus_amount = $("#instant-bonus-amount").val();
 
     $.ajax({
       url: "{% url 'admin-panel:edit-bonuses' %}",
       type: "POST",
       dataType: "json",
       data: {
+        bonus_id: bonus_id,
         bonus_type: "welcome_bonus",
         losing_promo_code: losing_promo_code,
         promoUsageLimit: promoUsageLimit,
+        promoUserLimit: promoUserLimit,
         losing_bonus_percentage: losing_bonus_percentage,
+        losing_gold_percentage: losing_gold_percentage,
         losing_end_time: losing_end_time,
         losing_start_time: losing_start_time,
-        bonus_id: bonus_id,
+        instant_gold_amount: instant_gold_amount,
         max_bonus_limit:max_bonus_limit,
         instant_bonus_amount:instant_bonus_amount,
         csrfmiddlewaretoken: '{{ csrf_token }}'

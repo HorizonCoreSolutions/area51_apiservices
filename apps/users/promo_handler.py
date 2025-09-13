@@ -112,7 +112,7 @@ def redeam_code(
             return False, msg
 
         method = PromoCodes.BonusDistributionMethod
-        
+
         if (
             promo_obj.bonus_distribution_method in {method.mixture, method.deposit}
             and (amount_dep is None or amount_dep <= Decimal("0.00"))
@@ -120,13 +120,16 @@ def redeam_code(
             raise ValueError(
                 "Mixture and Deposit should be used with a positive deposit amount"
             )
-        if amount_dep is None:
+        if (
+            promo_obj.bonus_distribution_method in {method.mixture, method.deposit}
+            and amount_dep is None
+        ):
             raise ValueError(
                 "Mixture and Deposit should be used with a positive deposit amount"
             )
-            
+
         pre_balance = user.balance
-        
+
         amount = 0
         bonus_amount = 0
 
@@ -164,7 +167,7 @@ def redeam_code(
             user=user,
             transfer=amount,
             promocode=promo_obj,
-            data=timezone.now(),
+            date=timezone.now(),
             log=f"Redeem for {bonus_type} Tx.id:{t.id}",  #type: ignore
         )
     
