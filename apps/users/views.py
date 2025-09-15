@@ -79,6 +79,7 @@ from apps.users.serializers import (
     CashappQrSerializer,
     ChangePasswordSerializer,
     CmsPromotionSerializer,
+    CmsPromotionsSerializer,
     FortunePandasGameListSerializer,
     FortunePandasManagementGameListSerializer,
     GetOtpSerializer,
@@ -100,7 +101,7 @@ from apps.users.models import Player, Agent, Dealer, AdminBanner, CmsAboutDetail
 from apps.users.utils import check_otp, create_otp, create_otp_password,encrypt, is_only_one
 from apps.admin_panel.templatetags.navigate import is_active
 from apps.users.fortunepandas import FortunePandaAPI
-from .models import ( VERIFICATION_APPROVED, VERIFICATION_PENDING, VERIFICATION_PROCESSING, AdminAdsBanner,CASHBACK_PERCENTAGE, AffiliateRequests, BonusPercentage, ChatHistory, ChatMessage, ChatRoom, CsrQueries, OffMarketGames, OffMarketTransactions, OffmarketWithdrawalRequests,
+from .models import ( VERIFICATION_APPROVED, VERIFICATION_PENDING, VERIFICATION_PROCESSING, AdminAdsBanner,CASHBACK_PERCENTAGE, AffiliateRequests, BonusPercentage, ChatHistory, ChatMessage, ChatRoom, CmsPromotions, CsrQueries, OffMarketGames, OffMarketTransactions, OffmarketWithdrawalRequests,
                     Player, Queue, Staff, SuperAdminSetting, UserGames,
                       Users, CmsContactDetails,ResponsibleGambling,
                       CmsPages,CashAppDeatils
@@ -1072,6 +1073,29 @@ class PromotionCmsView(APIView):
 
     def get(self, request):
         cms_obj = CmsPromotionDetails.objects.order_by('-id')
+        serializer = self.serializer_class(cms_obj, many=True)
+        return Response({"data": serializer.data}, status.HTTP_200_OK)
+    
+
+class CmsPromotionsView(APIView):
+    # permission_classes = (IsAuthenticated,)
+    permission_classes = (AllowAny,)
+    http_method_names = ["get", ]
+    serializer_class = CmsPromotionsSerializer
+
+    def get(self, request):
+        now = timezone.now()
+        cms_obj = CmsPromotions.objects.filter(
+            disabled=False,
+            start_date__lte=now,
+            end_date__gte=now
+        ).order_by('-start_date')
+        
+        # Apply type filter
+        promo_type = request.GET.get('type', 'toaster')
+        if promo_type in ['toaster', 'page_blocker']:
+            cms_obj = cms_obj.filter(type=promo_type)
+        # if promo_type == 'all', no filter is applied
         serializer = self.serializer_class(cms_obj, many=True)
         return Response({"data": serializer.data}, status.HTTP_200_OK)
 

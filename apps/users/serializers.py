@@ -39,7 +39,7 @@ from apps.users.utils import check_otp
 import logging
 logger = logging.getLogger('django')
 
-from .models import DEFAULT_AFFILIATE_COMMISION_PERCENTAGE, DEFAULT_AFFILIATE_DURATION_IN_DAYS, Admin, DefaultAffiliateValues, OffMarketTransactions, Player, UserGames, Users, BonusPercentage , SpintheWheelDetails, CashappQr 
+from .models import DEFAULT_AFFILIATE_COMMISION_PERCENTAGE, DEFAULT_AFFILIATE_DURATION_IN_DAYS, Admin, CmsPromotions, DefaultAffiliateValues, OffMarketTransactions, Player, UserGames, Users, BonusPercentage , SpintheWheelDetails, CashappQr 
 
 jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
 jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
@@ -693,6 +693,31 @@ class CmsPromotionSerializer(serializers.ModelSerializer):
     
     def get_page_content(self, obj):
         return obj.get_page_content()
+
+
+class CmsPromotionsSerializer(serializers.ModelSerializer):
+    # Show full URL for image
+    image_url = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = CmsPromotions
+        fields = [
+            'id',
+            'type',
+            'url',
+            'title',
+            'content',
+            'image_url',
+            'button_text',
+            'start_date',
+            'end_date',
+        ]
+
+
+    def get_image_url(self, obj):
+        if obj.image and hasattr(obj.image, 'url'):
+            return settings.FE_DOMAIN + obj.image.url
+        return None
 
 
 class AdminBannerSerializer(serializers.ModelSerializer):
