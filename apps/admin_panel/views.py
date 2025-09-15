@@ -37,7 +37,7 @@ from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from apps.casino.models import (CasinoGameList, CasinoHeaderCategory, CasinoManagement, GSoftTransactions, Tournament,
     TournamentPrize, TournamentTransaction, Providers)
 
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, render
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.utils.decorators import method_decorator
@@ -66,6 +66,7 @@ from apps.admin_panel.forms import (AdminModelForm, AgentModelForm,
 from apps.casino.tasks import task_update_offmarket_transaction
 from apps.payments.models import (AlchemypayOrder, MnetTransaction, NowPaymentsTransactions,
     WithdrawalCurrency, WithdrawalRequests)
+from apps.users.forms import PageBlockerCmsPromotionsForm, ToasterCmsPromotionsForm
 from apps.users.models import FooterPages, MAX_SPEND_AMOUNT, Permission, ResponsibleGambling, BONUS_EVENTS
 from apps.users.utils import send_message_to_chatlist, send_live_status_to_player, encrypt
 from excel_response import ExcelResponse
@@ -84,7 +85,8 @@ from apps.users.models import (
         OtpCredsInfo,
         PromoCodes,
         PromoCodesLogs,
-        SuperAdminSetting)
+        SuperAdminSetting,
+        CmsPromotions)
 from apps.bets.models import BONUS, CASHBACK, CREDIT, DEBIT, DEPOSIT, WITHDRAW, Transactions
 from apps.users.utils import send_player_balance_update_notification
 from apps.users.models import (
@@ -4904,7 +4906,7 @@ class CMSPromotionView(CheckRolesMixin, TemplateView, views.JSONResponseMixin, v
         except Exception as e:
             print(e)
             messages.error(request, "Something Went Wrong")
-        return redirect('admin-panel:cms-promotion')
+        return redirect('admin-panel:cms-promotions')
 
 
 class CRMView(CheckRolesMixin, ListView):
@@ -5954,6 +5956,101 @@ class EditPromotionPageAjax(CheckRolesMixin, TemplateView, views.JSONResponseMix
             if(type(e) != ValueError):
                 messages.error(request, "Something Went Wrong")
         return redirect('admin-panel:promotion-page')
+
+
+class CmsPromotionsView(CheckRolesMixin, TemplateView):
+    allowed_roles = ["admin"]
+    template_name = "admin/cms/promotion.html"
+    context_object_name = "promotions"
+
+    def get_context_data(self, **kwargs):
+        # Always call super() first
+        context = super().get_context_data(**kwargs)
+        # Add your promotions queryset
+        context['promotions'] = CmsPromotions.objects.all().order_by('-created')
+        return context
+
+
+class CmsPromotionsBaseView(CheckRolesMixin, TemplateView):
+    """Shared helpers for create/edit views."""
+    template_name = "admin/cms/promotion_form.html"
+    allowed_roles = ("admin", "superadmin")
+
+    def get_form_class(self, promotion_type=None):
+        if promotion_type == "toaster":
+            return ToasterCmsPromotionsForm
+        elif promotion_type == "page_blocker":
+            return PageBlockerCmsPromotionsForm
+        return ToasterCmsPromotionsForm
+
+    def save_image_thumbnail(self, image_file):
+        """Resize and return thumbnail InMemoryUploadedFile."""
+        filename_format = image_file.name.split(".")
+        name, ext = filename_format[-2], filename_format[-1]
+        filename = f"{name}{uuid.uuid4()}.{ext}"
+        thumb = Image.open(image_file)
+        thumb.thumbnail((750, 400))
+        thumb_io = BytesIO()
+        fmt = "JPEG" if ext.lower() == "jpg" else ext.upper()
+        thumb.save(thumb_io, format=fmt)
+        return InMemoryUploadedFile(
+            thumb_io, "ImageField", filename, fmt, sys.getsizeof(thumb_io), None
+        )
+
+
+class CmsPromotionsCreateView(CmsPromotionsBaseView, View):
+    def get(self, request, *args, **kwargs):
+        typef = self.request.GET.get("type") or ""
+        typef = typef if typef == "page_blocker" else "toaster"
+        form = self.get_form_class(typef)
+        return render(request, self.template_name, {"form": form})
+
+    def post(self, request, *args, **kwargs):
+        promotion_type = request.POST.get("type")
+        FormClass = self.get_form_class(promotion_type)
+        form = FormClass(request.POST, request.FILES)
+        if form.is_valid():
+            promo = form.save(commit=False)
+            if promo.type == "toaster" and request.FILES.get("image"):
+                promo.image = self.save_image_thumbnail(request.FILES["image"])
+            promo.save()
+            messages.success(request, "CmsPromotions created successfully.")
+            return redirect("admin-panel:cms-promotions")
+        messages.error(request, "Please correct the errors below.")
+        return render(request, self.template_name, {"form": form})
+        
+
+class CmsPromotionsEditView(CmsPromotionsBaseView, View):
+    def get(self, request, pk, *args, **kwargs):
+        promotion = get_object_or_404(CmsPromotions, pk=pk)
+        FormClass = self.get_form_class(promotion.type)
+        form = FormClass(instance=promotion)
+        return render(request, self.template_name, {"form": form, "promotion": promotion})
+
+    def post(self, request, pk, *args, **kwargs):
+        promotion = get_object_or_404(CmsPromotions, pk=pk)
+        FormClass = self.get_form_class(promotion.type)
+        form = FormClass(request.POST, request.FILES, instance=promotion)
+        if form.is_valid():
+            promo = form.save(commit=False)
+            if promo.type == "toaster" and request.FILES.get("image"):
+                promo.image = self.save_image_thumbnail(request.FILES["image"])
+            promo.save()
+            messages.success(request, "CmsPromotions updated successfully.")
+            return redirect("admin-panel:cms-promotions")
+        messages.error(request, "Please correct the errors below.")
+        return render(request, self.template_name, {"form": form, "promotion": promotion})
+
+
+class CmsPromotionsDisableView(View):
+    """Toggle disabled flag."""
+    def post(self, request, pk, *args, **kwargs):
+        promotion = get_object_or_404(CmsPromotions, pk=pk)
+        promotion.disabled = True
+        promotion.save(update_fields=["disabled"])
+        messages.success(request, f"CmsPromotions '{promotion.title}' disabled.")
+        return redirect("admin-panel:cms-promotions")
+
 
 
 class EditAdminBannerView(CheckRolesMixin, TemplateView, views.JSONResponseMixin, views.AjaxResponseMixin, View):

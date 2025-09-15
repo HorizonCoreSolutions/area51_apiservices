@@ -818,6 +818,36 @@ class CmsContactDetails(AbstractBaseModel):
     status = models.CharField(max_length=50, null=True, blank=True, default="Active")
 
 
+class CmsPromotions(AbstractBaseModel):
+    TYPE_CHOICES = [
+        ("toaster", "Toaster"),
+        ("page_blocker", "Page Blocker"),
+    ]
+
+    type = models.CharField(max_length=20, choices=TYPE_CHOICES)
+    url = models.URLField(max_length=250, blank=True, default="")
+    title = HTMLField(max_length=350, blank=True, default="")
+    content = HTMLField(max_length=5000) 
+    image = models.ImageField(upload_to="promotion/images/", blank=True, null=True)
+    button_text = HTMLField(max_length=150)
+
+    start_date = models.DateTimeField()
+    end_date = models.DateTimeField()
+    disabled = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ["-start_date"]
+
+    def __str__(self):
+        return f"{self.get_type_display()} - {self.title}"
+
+    @property
+    def is_active(self):
+        from django.utils import timezone
+        now = timezone.now()
+        return (not self.disabled) and (self.start_date <= now <= self.end_date)
+
+
 class CmsPromotionDetails(AbstractBaseModel):
     admin = models.ForeignKey(Users, on_delete=models.CASCADE, default=None, null=True)
     title = models.CharField(max_length=250, null=True, blank=True, default=None)

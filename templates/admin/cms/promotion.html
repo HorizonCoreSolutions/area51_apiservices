@@ -1,0 +1,129 @@
+{% extends "index.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}Admin Promotions{% endblock title %}
+
+{% block content %}
+<style>
+.admin-card{
+    background-color: #ffffff;
+    box-shadow: 0px 0px 6px 6px rgb(204 204 204 / 0.25);
+    padding: 30px 10px;
+}
+.pcode { margin-left: 250px; }
+.pcode.left-spacer { margin-left: 0; }
+
+@media(max-width:991px){
+    .pcode { margin-left: 0px; }
+}
+img.promo-thumbnail { width: 100px; height: 50px; object-fit: cover; }
+.create-button {
+    float:right;margin-right:5%; margin-bottom:20px;
+}
+</style>
+
+<div class="pcode">
+    <div class="container-fluid pt-4">
+        {% include "includes/messages.html" %}
+        <div class="admin-card">
+            <div class="row">
+                <div class="col-12">
+                    <div class="page-content">
+                        <div class="main-heading-wrap">
+                            <h5>{% trans "Promotions" %}</h5>
+                            <a href="{% url 'admin-panel:cms-promotions-create' %}"  
+                               class="btn btn-primary create-button">
+                               {% trans "Create" %}
+                               {{ ping }}
+                               {{ ping }}
+                               {{ ping }}
+                               {{ ping }}
+                               {{ ping }}
+                               {{ ping }}
+                               {{ ping }}
+                               {{ ping }}
+                               {{ ping }}
+                               {{ ping }}
+                               {{ ping }}
+                               {{ ping }}
+                               {{ ping }}
+                               {{ ping }}
+                               {{ ping }}
+                               {{ ping }}
+                               {{ ping }}
+                               {{ ping }}
+                               {{ ping }}
+                               {{ ping }}
+                               {{ ping }}
+                               {{ ping }}
+                               {{ ping }}
+                               {{ ping }}
+                            </a>
+                        </div>
+                        <div class="table-responsive">
+                            <table id="PromotionsTable" class="table table-striped table-sm" width="100%">
+                                <thead>
+                                    <tr>
+                                        <th>{% trans "Title" %}</th>
+                                        <th>{% trans "Type" %}</th>
+                                        <th>{% trans "Start Date" %}</th>
+                                        <th>{% trans "End Date" %}</th>
+                                        <th>{% trans "Active" %}</th>
+                                        <th>{% trans "Action" %}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% if promotions %}
+                                        {% for promo in promotions %}
+                                        <tr>
+                                            <td>{{ promo.title|default:"[No title]"|escape }}</td>
+                                            <td>{{ promo.get_type_display }}</td>
+                                            <td>{{ promo.start_date|date:"d-m-Y H:i" }}</td>
+                                            <td>{{ promo.end_date|date:"d-m-Y H:i" }}</td>
+                                            <td>
+                                                {% if promo.is_active %}
+                                                    <span class="text-success">{% trans "Yes" %}</span>
+                                                {% else %}
+                                                    <span class="text-danger">{% trans "No" %}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <a class="btn btn-warning btn-sm" href="{% url 'admin-panel:cms-promotions-edit' pk=promo.id %}">
+                                                    {% trans "Edit" %}
+                                                </a>
+                                                <a class="btn btn-danger btn-sm" href="{% url 'admin-panel:cms-promotions-disable' pk=promo.id %}">
+                                                    {% trans "Disable" %}
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    {% else %}
+                                        <tr>
+                                            <td colspan="6">No promotions found.</td>
+                                        </tr>
+                                    {% endif %}
+                                    </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock content %}
+
+{% block javascript %}
+<script>
+$(document).ready(function () {
+  $('#PromotionsTable').DataTable({
+      searching: true,
+      ordering: false,
+      pageLength: 10,
+      lengthMenu: [[5, 10, 20, -1], [5, 10, 20, "All"]],
+  });
+});
+</script>
+{% endblock javascript %}

@@ -1,0 +1,129 @@
+{% extends "index.html" %}
+{% load static %}
+{% load i18n %}
+{% block content %}
+<style>
+    #pop-loader {
+        display: none;
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        width: 100%;
+        background: rgba(0,0,0,0.75) url(../../../static/Desktop_static/images/loading2.gif) no-repeat center center;
+        z-index: 10000;
+    }
+    .admin-card{
+        background-color:#fff;
+        box-shadow:0 0 6px 6px rgb(204 204 204 / 0.25);
+        padding:30px 10px;
+    }
+    .pcode{ margin-left:250px; }
+    @media(max-width:767px){ .pcode{ margin-left:0; } }
+    input[type=file]{ width:90px; }
+
+    /* Message styling */
+    .messages {
+        margin-bottom: 20px;
+    }
+    .messages .alert {
+        font-size: 1rem;
+        padding: 12px 20px;
+        border-radius: 5px;
+    }
+    .alert-error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    .alert-success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+    .alert-info { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+    .alert-warning { background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
+
+    label { font-weight: 600; font-size: 0.95rem; }
+    input, textarea { font-size: 0.95rem; }
+</style>
+
+<div id="pop-loader"></div>
+<div class="pcode">
+  <div class="container-fluid pt-4">
+    <div class="admin-card">
+      <div class="row">
+        <div class="col-12">
+          <div class="page-content">
+            <div class="main-heading-wrap">
+              <h5>{% trans "Promotion Form" %}</h5>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Django messages -->
+      {% if messages %}
+      <div class="messages">
+        {% for message in messages %}
+          <div class="alert alert-{{ message.tags }}">
+            {{ message|safe }}
+          </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <!-- form errors -->
+      {% if form.errors %}
+      <div class="alert alert-error">
+          <strong>{% trans "Please correct the errors below:" %}</strong>
+          <ul style="margin: 5px 0 0 15px;">
+          {% for field in form %}
+              {% for error in field.errors %}
+                  <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+              {% endfor %}
+          {% endfor %}
+          {% for error in form.non_field_errors %}
+              <li>{{ error }}</li>
+          {% endfor %}
+          </ul>
+      </div>
+      {% endif %}
+
+      <!-- create / edit -->
+      <form action="" method="post" enctype="multipart/form-data" id="promotion-main">
+          {% csrf_token %}
+          {{ form.media }}
+          <div class="row mb-3">
+              <div class="col-12">
+                  {{ form.as_p }}
+              </div>
+          </div>
+          <div class="row mb-3">
+              <div class="ml-auto col-auto">
+                  <button type="submit" class="btn btn-primary btn-block">{% trans "Save" %}</button>
+              </div>
+          </div>
+      </form>
+
+      {% if promotion %}
+      <!-- disable -->
+      <form action="{% url 'admin-panel:cms-promotions-disable' pk=promotion.pk %}" method="post" class="mt-3">
+          {% csrf_token %}
+          <div class="row">
+              <div class="ml-auto col-auto">
+                  <button type="submit" class="btn btn-danger btn-block"
+                          {% if promotion.disabled %}disabled{% endif %}>
+                      {% trans "Disable" %}
+                  </button>
+              </div>
+          </div>
+      </form>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+{% endblock content %}
+
+{% block javascript %}
+<script>
+  $(document).ready(function(){
+      $('.datetimepicker').datetimepicker({
+          format:'d/m/Y H:i:s',  // date + time
+          step: 15,             // minutes step
+          scrollInput: false    // prevents scrolling on input
+      });
+  });
+</script>
+{% endblock javascript %}

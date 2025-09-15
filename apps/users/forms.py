@@ -4,7 +4,10 @@ from django.forms import ModelForm
 
 from apps.admin_panel.validators import UserNameValidator
 
-from .models import Users
+from .models import Users, CmsPromotions
+
+
+DATETIME_INPUT_FORMATS = ['%d/%m/%Y %H:%M:%S'] 
 
 
 class UserModelForm(ModelForm):
@@ -23,3 +26,82 @@ class UserModelForm(ModelForm):
 
         user = super().save(commit=commit)
         return user
+
+class ToasterCmsPromotionsForm(forms.ModelForm):
+    start_date = forms.DateTimeField(
+        input_formats=DATETIME_INPUT_FORMATS,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control datetimepicker',
+            'placeholder': 'Select start date',
+            'autocomplete': 'off',
+            'readonly': 'true',
+        })
+    )
+    end_date = forms.DateTimeField(
+        input_formats=DATETIME_INPUT_FORMATS,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control datetimepicker',
+            'placeholder': 'Select end date',
+            'autocomplete': 'off',
+            'readonly': 'true',
+        })
+    )
+    
+    class Meta:
+        model = CmsPromotions
+        fields = '__all__'
+        # exclude = ["title"]  # no rich text for toaster
+        widgets = {
+            "type": forms.HiddenInput(attrs={"value": "toaster"}),
+            "start_date": forms.TextInput(attrs={
+                'class': 'form-control datetimepicker',
+                'placeholder': 'Select start date',
+                'autocomplete': 'off',
+                'readonly': 'true',  # optional, to prevent manual typing
+            }),
+            "end_date": forms.TextInput(attrs={
+                'class': 'form-control datetimepicker',
+                'placeholder': 'Select end date',
+                'autocomplete': 'off',
+                'readonly': 'true',
+            }),
+        }
+
+class PageBlockerCmsPromotionsForm(forms.ModelForm):
+    start_date = forms.DateTimeField(
+        input_formats=DATETIME_INPUT_FORMATS,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control datetimepicker',
+            'placeholder': 'Select start date',
+            'autocomplete': 'off',
+            'readonly': 'true',
+        })
+    )
+    end_date = forms.DateTimeField(
+        input_formats=DATETIME_INPUT_FORMATS,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control datetimepicker',
+            'placeholder': 'Select end date',
+            'autocomplete': 'off',
+            'readonly': 'true',
+        })
+    )
+
+    class Meta:
+        model = CmsPromotions
+        exclude = ["image"]  # no image for page blocker
+        widgets = {
+            "type": forms.HiddenInput(attrs={"value": "page_blocker"}),
+            "start_date": forms.TextInput(attrs={
+                'class': 'form-control datetimepicker',
+                'placeholder': 'Select start date',
+                'autocomplete': 'off',
+                'readonly': 'true',
+            }),
+            "end_date": forms.TextInput(attrs={
+                'class': 'form-control datetimepicker',
+                'placeholder': 'Select end date',
+                'autocomplete': 'off',
+                'readonly': 'true',
+            }),
+        }
