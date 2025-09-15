@@ -19,7 +19,7 @@
 }
 img.promo-thumbnail { width: 100px; height: 50px; object-fit: cover; }
 .create-button {
-    float:right;margin-right:5%; margin-bottom:20px;
+    float:right; margin-right:1rem; margin-bottom:20px;
 }
 </style>
 
@@ -34,31 +34,11 @@ img.promo-thumbnail { width: 100px; height: 50px; object-fit: cover; }
                             <h5>{% trans "Promotions" %}</h5>
                             <a href="{% url 'admin-panel:cms-promotions-create' %}"  
                                class="btn btn-primary create-button">
-                               {% trans "Create" %}
-                               {{ ping }}
-                               {{ ping }}
-                               {{ ping }}
-                               {{ ping }}
-                               {{ ping }}
-                               {{ ping }}
-                               {{ ping }}
-                               {{ ping }}
-                               {{ ping }}
-                               {{ ping }}
-                               {{ ping }}
-                               {{ ping }}
-                               {{ ping }}
-                               {{ ping }}
-                               {{ ping }}
-                               {{ ping }}
-                               {{ ping }}
-                               {{ ping }}
-                               {{ ping }}
-                               {{ ping }}
-                               {{ ping }}
-                               {{ ping }}
-                               {{ ping }}
-                               {{ ping }}
+                               {% trans "Create" %} Toaster
+                            </a>
+                            <a href="{% url 'admin-panel:cms-promotions-create' %}?type=page_blocker"  
+                               class="btn btn-primary create-button">
+                               {% trans "Create" %} Page Blocker
                             </a>
                         </div>
                         <div class="table-responsive">
@@ -77,24 +57,25 @@ img.promo-thumbnail { width: 100px; height: 50px; object-fit: cover; }
                                     {% if promotions %}
                                         {% for promo in promotions %}
                                         <tr>
-                                            <td>{{ promo.title|default:"[No title]"|escape }}</td>
+                                            <td class="clean-up">{{ promo.title|default:"[No title]"|escape }}</td>
                                             <td>{{ promo.get_type_display }}</td>
                                             <td>{{ promo.start_date|date:"d-m-Y H:i" }}</td>
                                             <td>{{ promo.end_date|date:"d-m-Y H:i" }}</td>
                                             <td>
-                                                {% if promo.is_active %}
-                                                    <span class="text-success">{% trans "Yes" %}</span>
-                                                {% else %}
+                                                {% if promo.disabled %}
                                                     <span class="text-danger">{% trans "No" %}</span>
+                                                {% else %}
+                                                    <span class="text-success">{% trans "Yes" %}</span>
                                                 {% endif %}
                                             </td>
                                             <td>
                                                 <a class="btn btn-warning btn-sm" href="{% url 'admin-panel:cms-promotions-edit' pk=promo.id %}">
                                                     {% trans "Edit" %}
                                                 </a>
-                                                <a class="btn btn-danger btn-sm" href="{% url 'admin-panel:cms-promotions-disable' pk=promo.id %}">
-                                                    {% trans "Disable" %}
-                                                </a>
+                                                <form action="{% url 'admin-panel:cms-promotions-disable' pk=promo.pk %}" method="post">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-danger btn-sm">{% trans "Disable" %}</button>
+                                                </form>
                                             </td>
                                         </tr>
                                         {% endfor %}
@@ -117,13 +98,28 @@ img.promo-thumbnail { width: 100px; height: 50px; object-fit: cover; }
 
 {% block javascript %}
 <script>
-$(document).ready(function () {
-  $('#PromotionsTable').DataTable({
-      searching: true,
-      ordering: false,
-      pageLength: 10,
-      lengthMenu: [[5, 10, 20, -1], [5, 10, 20, "All"]],
-  });
-});
+    function decodeHtml(encodedStr) {
+        // Create a temporary textarea element
+        var txt = document.createElement('textarea');
+        txt.innerHTML = encodedStr;
+        return txt.value; // returns the decoded HTML
+    }
+    $(document).ready(function () {
+        $('#PromotionsTable').DataTable({
+            searching: true,
+            ordering: false,
+            pageLength: 10,
+            lengthMenu: [[5, 10, 20, -1], [5, 10, 20, "All"]],
+        });
+        $('.clean-up').each(function() {
+            var val = $(this).html(); // get inner HTML
+            if (val) {
+                // Create a temporary div to decode HTML entities
+                var temp = $('<div>').html(decodeHtml(val));
+                var cleanText = temp.text(); // get pure text
+                $(this).text(cleanText);     // replace content with clean text
+            }
+        });
+    });
 </script>
 {% endblock javascript %}

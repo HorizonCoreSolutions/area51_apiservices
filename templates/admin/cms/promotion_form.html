@@ -34,6 +34,8 @@
     .alert-info { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
     .alert-warning { background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
 
+    .custom-margin { margin: 5px 0 0 15px; }
+
     label { font-weight: 600; font-size: 0.95rem; }
     input, textarea { font-size: 0.95rem; }
 </style>
@@ -67,7 +69,7 @@
       {% if form.errors %}
       <div class="alert alert-error">
           <strong>{% trans "Please correct the errors below:" %}</strong>
-          <ul style="margin: 5px 0 0 15px;">
+          <ul class="custom-margin">
           {% for field in form %}
               {% for error in field.errors %}
                   <li><strong>{{ field.label }}:</strong> {{ error }}</li>
@@ -79,6 +81,8 @@
           </ul>
       </div>
       {% endif %}
+
+      <img id="imagePreview" src="#" alt="Preview" style="display:none; max-width:200px; margin-top:10px;" />
 
       <!-- create / edit -->
       <form action="" method="post" enctype="multipart/form-data" id="promotion-main">
@@ -118,11 +122,57 @@
 
 {% block javascript %}
 <script>
-  $(document).ready(function(){
-      $('.datetimepicker').datetimepicker({
-          format:'d/m/Y H:i:s',  // date + time
-          step: 15,             // minutes step
-          scrollInput: false    // prevents scrolling on input
+  document.addEventListener("DOMContentLoaded", function() {
+    const imageInput = document.getElementById('id_image');
+
+    imageInput.addEventListener('change', function() {
+      const file = this.files[0];
+
+      // Remove previous preview if exists
+      const oldPreview = this.parentNode.querySelector('.dynamic-image-preview');
+      if (oldPreview) oldPreview.remove();
+
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const img = document.createElement('img');
+          img.src = e.target.result;
+          img.className = 'dynamic-image-preview';
+          img.style.maxWidth = '150px';
+          img.style.maxHeight = '150px';
+          img.style.marginLeft = '10px';
+          img.style.border = '1px solid #ccc';
+          img.style.padding = '2px';
+
+          // Insert after input
+          imageInput.parentNode.appendChild(img);
+        }
+        reader.readAsDataURL(file);
+      }
+    });
+  });
+  $(document).ready(function() {
+      $('.datetimepicker').each(function() {
+          var $input = $(this);
+
+          // Reformat existing value if present
+          var currentVal = $input.val();
+          if (currentVal) {
+              // Expecting format "Y-m-d H:i:s"
+              var dateObj = currentVal.split(/[- :]/); // [Y, m, d, H, i, s]
+              if (dateObj.length >= 5) {
+                  var formatted = dateObj[2] + '/' + dateObj[1] + '/' + dateObj[0] + ' ' + dateObj[3] + ':' + dateObj[4];
+                  $input.val(formatted);
+              }
+          }
+
+          // Initialize datetimepicker
+          $input.datetimepicker({
+              format: 'd/m/Y H:i', // Display format
+              formatTime: 'H:i',
+              formatDate: 'd/m/Y',
+              step: 15
+          });
       });
   });
 </script>
