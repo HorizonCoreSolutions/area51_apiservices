@@ -131,6 +131,31 @@
   .close-btn:hover {
     color: #495057;
   }
+
+  .sub-table {
+    width:100%;
+    border-collapse:collapse;
+    font-family:sans-serif;
+    padding: 5px;
+  }
+
+  .header-sub-table {
+    background:#f5f5f5; text-align:left;
+  }
+
+  .col-sub-table {
+    padding:8px;
+    border-bottom:1px solid #ccc;
+  }
+
+  .row-sub-table {
+    border-bottom:1px solid #eee;
+  }
+
+  .p-8 {
+    padding: 8px;
+  }
+
 </style>
 {% comment %} Includeeeees {% endcomment %}
 {% include "components/css/utils/gauge.html" %}
@@ -253,22 +278,39 @@
                 <span class="expand-icon">▼</span>
                 Username
             </div>
-            <div class="col-total-usages">Total Usages</div>
-            <div class="col-total-transfer">Total Transfer</div>
+            <div class="col-total-usages text-center">Total Usages</div>
+            <div class="col-total-transfer text-center">Total Transfer</div>
+            <div class="col-total-transfer text-center">Total Transfer Gold</div>
           </div>
           {% for log in promo_logs %}
             <a href="#details{{ forloop.counter }}" class="table-row">
               <div class="col-username">{{ log.user__username }}</div>
-              <div class="col-total-usages">{{ log.total_usages }}</div>
-              <div class="col-total-transfer">{{ log.total_transfer|default:"0"|floatformat:2 }}</div>
+              <div class="col-total-usages text-center">{{ log.total_usages }}</div>
+              <div class="col-total-transfer text-center">{{ log.total_transfer|default:"0"|floatformat:2 }}</div>
+              <div class="col-total-transfer text-center">{{ log.total_transfer_gold|default:"0"|floatformat:2 }}</div>
             </a>
             <div class="extra-content" id="details{{ forloop.counter }}">
               <button class="close-btn" onclick="location.hash=''">×</button>
               <h6>Individual Transfers</h6>
               {% if log.usages %}
-                {% for usage in log.usages %}
-                  <p>{{ usage.date }} → {{ usage.transfer|floatformat:2 }}</p>
-                {% endfor %}
+                <table class="sub-table p-8">
+                  <thead>
+                    <tr class="header-sub-table">
+                      <th class="col-sub-table text-center">Date</th>
+                      <th class="col-sub-table text-center">Transfer</th>
+                      <th class="col-sub-table text-center">Transfer Gold</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for usage in log.usages %}
+                      <tr class="row-sub-table">
+                        <td class="p-8 text-center">{{ usage.date }}</td>
+                        <td class="p-8 text-center">{{ usage.transfer|floatformat:2 }}</td>
+                        <td class="p-8 text-center">{{ usage.transfer_gold|floatformat:2 }}</td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
               {% else %}
                 <p>No transfers</p>
               {% endif %}
@@ -324,81 +366,106 @@ function getFilteredData(range='month') {
 }
 
 function aggregateData(data, start, end) {
-  var mode = document.getElementById('displayMode').value;
-  const coin = mode.split("|")[1]
-  mode = mode.split("|")[0]
+  const modeParts = document.getElementById('displayMode').value.split('|');
+  let mode = modeParts[0];
+  const coin = modeParts[1];
 
-  if(mode==='asIs'){
+  // helper: pick correct numeric field
+  function getAmount(u) {
+    if (u.transfer) {
+      // choose which coin value to use
+      if (coin === 'sc') return parseFloat(u.transfer || 0);
+      if (coin === 'gc') return parseFloat(u.transfer_gold || 0);
+    }
+    return 0;
+  }
+
+  if (mode === 'asIs') {
     // Sum per user
     const labels = [];
     const values = [];
+
     data.forEach(user => {
       const total = user.usages
         .filter(u => {
           const d = new Date(u.date);
           return d >= start && d <= end;
         })
-        .reduce((sum, u) => sum + parseFloat(u.transfer), 0);
+        .reduce((sum, u) => sum + getAmount(u), 0);
+
       labels.push(user.user__username);
       values.push(total);
     });
-    return {type:'bar', labels, datasets:[{label:`Transfer ${coin}`, data: values, backgroundColor:'rgba(54,162,235,0.7)', borderColor:'rgba(54,162,235,1)', borderWidth:1}]};
-  } else if (mode=="total") {
+
+    return {
+      type: 'bar',
+      labels,
+      datasets: [{
+        label: `Transfer ${coin}`,
+        data: values,
+        backgroundColor: 'rgba(54,162,235,0.7)',
+        borderColor: 'rgba(54,162,235,1)',
+        borderWidth: 1
+      }]
+    };
+
+  } else if (mode === 'total') {
     // Over time: aggregate across all users
-    const allDates = new Set();
     const dateSums = {};
 
     data.forEach(user => {
       user.usages.forEach(u => {
         const d = new Date(u.date);
         if (d >= start && d <= end) {
-          const dateStr = d.toISOString().slice(0, 10); // YYYY-MM-DD
-          dateSums[dateStr] = (dateSums[dateStr] || 0) + parseFloat(u.transfer);
-          allDates.add(dateStr);
+          const key = d.toISOString().slice(0, 10);
+          dateSums[key] = (dateSums[key] || 0) + getAmount(u);
         }
       });
     });
 
-    const sortedDates = Array.from(allDates).sort();
+    const sortedDates = Object.keys(dateSums).sort();
 
-    const datasetForChart = {
-      label: 'Total Transfer',
-      data: sortedDates.map(d => dateSums[d] || 0),
-      fill: false,
-      borderWidth: 2,
-      borderColor: 'hsl(200, 70%, 50%)'
+    return {
+      type: 'line',
+      labels: sortedDates,
+      datasets: [{
+        label: `Total Transfer ${coin}`,
+        data: sortedDates.map(d => dateSums[d]),
+        fill: false,
+        borderWidth: 2,
+        borderColor: 'hsl(200, 70%, 50%)'
+      }]
     };
 
-    return { type: 'line', labels: sortedDates, datasets: [datasetForChart] };
-  
   } else {
     // Over time: group by date per user
     const allDates = new Set();
-    const datasets = data.map(user => {
+    const userDatasets = data.map(user => {
       const dateSums = {};
       user.usages.forEach(u => {
         const d = new Date(u.date);
-        if(d >= start && d <= end){
-          const dateStr = d.toISOString().slice(0,10); // YYYY-MM-DD
-          dateSums[dateStr] = (dateSums[dateStr]||0) + parseFloat(u.transfer);
-          allDates.add(dateStr);
+        if (d >= start && d <= end) {
+          const key = d.toISOString().slice(0, 10);
+          dateSums[key] = (dateSums[key] || 0) + getAmount(u);
+          allDates.add(key);
         }
       });
-      return {label:user.user__username, data: dateSums, fill:false, borderWidth:2};
+      return { label: user.user__username, data: dateSums };
     });
 
     const sortedDates = Array.from(allDates).sort();
-    const datasetsForChart = datasets.map(ds=>{
-      return {
-        label: ds.label,
-        data: sortedDates.map(d=>ds.data[d]||0),
-        fill:false,
-        borderWidth:2,
-        borderColor: `hsl(${Math.random()*360},70%,50%)`
-      }
-    });
 
-    return {type:'line', labels:sortedDates, datasets: datasetsForChart};
+    return {
+      type: 'line',
+      labels: sortedDates,
+      datasets: userDatasets.map(ds => ({
+        label: ds.label,
+        data: sortedDates.map(d => ds.data[d] || 0),
+        fill: false,
+        borderWidth: 2,
+        borderColor: `hsl(${Math.random() * 360},70%,50%)`
+      }))
+    };
   }
 }
 
@@ -406,7 +473,7 @@ function filterData(range) {
   currentRange = range;
   const filtered = getFilteredData(range);
   const mode = document.getElementById('displayMode').value;
-  const beginAtZero = mode.split("|")[1] == "sc"
+  {% comment %} const beginAtZero = mode.split("|")[1] == "sc" {% endcomment %}
   if(!filtered) return;
 
   if(chart) chart.destroy();
@@ -421,7 +488,7 @@ function filterData(range) {
       responsive: true,
       maintainAspectRatio: false,
       scales: {
-        y: {beginAtZero:beginAtZero},
+        y: {beginAtZero:true},
         x: {}
       }
     }
