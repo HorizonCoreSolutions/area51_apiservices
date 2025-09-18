@@ -3,6 +3,7 @@
 {% load i18n %}
 {% block content %}
 <style>
+    {% include "components/css/utils/edit_template.html" %}
     #pop-loader {
         display: none;
         position: fixed;
@@ -16,9 +17,13 @@
         box-shadow:0 0 6px 6px rgb(204 204 204 / 0.25);
         padding:30px 10px;
     }
-    .pcode{ margin-left:250px; }
-    @media(max-width:767px){ .pcode{ margin-left:0; } }
-    input[type=file]{ width:90px; }
+    .pcode.left-spacer{ margin-left:250px; }
+    @media(max-width:767px){
+      .pcode{ margin-left:0; }
+      .pcode.left-spacer{ margin-left:0px; }
+    }
+
+    {% comment %} input[type=file]{ width:95px; } {% endcomment %}
 
     /* Message styling */
     .messages {
@@ -38,10 +43,48 @@
 
     label { font-weight: 600; font-size: 0.95rem; }
     input, textarea { font-size: 0.95rem; }
+
+    .dynamic-image-preview {
+      max-width: 150px;
+      max-height: 150px;
+      margin-left: 10px;
+      border: 1px solid #ccc;
+      padding: 2px;
+    }
+    .image-field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin: 1rem 0;
+      max-width: 320px;
+    }
+
+    .image-label {
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    .image-input-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .image-input-wrapper input[type="file"] {
+      padding: 0.4rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      background: #f9f9f9;
+      cursor: pointer;
+    }
+
+    .hidden {
+      display: none;
+    }
 </style>
 
 <div id="pop-loader"></div>
-<div class="pcode">
+<div class="pcode left-spacer" id="nw1">
   <div class="container-fluid pt-4">
     <div class="admin-card">
       <div class="row">
@@ -82,39 +125,91 @@
       </div>
       {% endif %}
 
-      <img id="imagePreview" src="#" alt="Preview" style="display:none; max-width:200px; margin-top:10px;" />
-
       <!-- create / edit -->
       <form action="" method="post" enctype="multipart/form-data" id="promotion-main">
-          {% csrf_token %}
-          {{ form.media }}
-          <div class="row mb-3">
-              <div class="col-12">
-                  {{ form.as_p }}
-              </div>
-          </div>
-          <div class="row mb-3">
-              <div class="ml-auto col-auto">
-                  <button type="submit" class="btn btn-primary btn-block">{% trans "Save" %}</button>
-              </div>
-          </div>
-      </form>
+        {% csrf_token %}
+        {{ form.media }}
 
-      {% if promotion %}
-      <!-- disable -->
-      <form action="{% url 'admin-panel:cms-promotions-disable' pk=promotion.pk %}" method="post" class="mt-3">
-          {% csrf_token %}
-          <div class="row">
-              <div class="ml-auto col-auto">
-                  <button type="submit" class="btn btn-danger btn-block"
-                          {% if promotion.disabled %}disabled{% endif %}>
-                      {% trans "Disable" %}
-                  </button>
-              </div>
-          </div>
-      </form>
-      {% endif %}
+        <div class="row mb-3">
+          <div class="col-12">
+            {# all fields except disabled #}
+            {% for field in form %}
+              {% if field.name == "image" %}
+              <div class="image-field">
+                <div class="image-input-wrapper">
+                  <div class="d-flex align-items-center gap-2">
+                    <label class="image-label mb-0 me-2 pr-4" for="id_image">{{ field.label }}</label>
 
+                    <div class="image-input-wrapper"
+                         title="Toggle to add or remove image support">
+                      <label class="toggle-inverted mb-0">
+                        <input type="checkbox" name="image-clear" id="image-clear_id"
+                          {% if promotion and not promotion.image %}checked{% endif %}>
+                        <span class="slider"></span>
+                        <span id="image_toggle_text" class="label-text">
+                          {% if promotion and not promotion.image %}
+                            No image
+                          {% else %}
+                            With image
+                          {% endif %}
+                        </span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <input type="file" name="image" accept="image/*" id="id_image"
+                  {% if promotion and not promotion.image %}
+                    class="hidden"
+                  {% endif %}
+                  >
+                  {% if promotion and promotion.image %}
+                    <img id="preview_image" height="auto" width="auto" class="dynamic-image-preview"
+                        src="/media/{{ promotion.image }}"
+                        alt="Current image preview">
+                  {% else %}
+                    <img id="preview_image" height="auto" width="auto" class="dynamic-image-preview hidden"
+                        src="#"
+                        alt="Image preview">
+                  {% endif %}
+                </div>
+              </div>
+              {% elif field.name == "type" %}
+                <p class="hidden">{{ field.label_tag }} {{ field }}</p>
+              {% elif field.name == "disabled" %}
+                {# skip this one completely #}
+              {% else %}
+                <p>{{ field.label_tag }} {{ field }}</p>
+              {% endif %}
+            {% endfor %}
+
+            {# custom toggle for disabled -> UI says "Active" #}
+            <p>
+
+              <span id="disabled_text" for="id_disabled">Status: 
+                  {% if promotion %}
+                    {% if not promotion.disabled %}Active{% endif %}
+                  {% endif %}
+              </span>
+              <div class="form-group">
+                <label class="toggle">
+                  <input type="checkbox" id="id_disabled" name="disabled"
+                  {% if promotion %}
+                    {% if not promotion.disabled %}checked{% endif %}
+                  {% endif %}
+                  >
+                  <span class="slider"></span>
+                </label>
+              </div>
+            </p>
+          </div>
+        </div>
+
+        <div class="row mb-3">
+          <div class="ml-auto col-auto">
+            <button type="submit" class="btn btn-primary btn-block">{% trans "Save" %}</button>
+          </div>
+        </div>
+      </form>
     </div>
   </div>
 </div>
@@ -122,6 +217,31 @@
 
 {% block javascript %}
 <script>
+  $(function () {
+      $('#id_disabled').on('change', function () {
+          $('#disabled_text').text(
+              'Status: ' + (this.checked ? 'Active' : 'Disabled')
+          );
+      });
+
+      $('#image-clear_id').on('change', function () {
+          const checked = this.checked;
+          $('#image_toggle_text').text(checked ? 'No image' : 'With image');
+          if (this.checked) {
+              // hide preview and clear src
+              $('#preview_image').attr('src', '#').hide();
+              // optionally clear the file input too
+              $('#id_image').val('').hide();
+          } else {
+              // show file input again
+              $('#id_image').show();
+              // if you want to re-show preview only when it has a valid src
+              if ($('#preview_image').attr('src') !== '#') {
+                  $('#preview_image').show();
+              }
+          }
+      });
+  });
   document.addEventListener("DOMContentLoaded", function() {
     const imageInput = document.getElementById('id_image');
 
@@ -130,27 +250,30 @@
 
       // Remove previous preview if exists
       const oldPreview = this.parentNode.querySelector('.dynamic-image-preview');
-      if (oldPreview) oldPreview.remove();
 
       if (file) {
         const reader = new FileReader();
         reader.onload = function(e) {
-          const img = document.createElement('img');
+          if (oldPreview) {
+            img = oldPreview;
+          } else {
+            const img = document.createElement('img');
+          }
           img.src = e.target.result;
           img.className = 'dynamic-image-preview';
-          img.style.maxWidth = '150px';
-          img.style.maxHeight = '150px';
-          img.style.marginLeft = '10px';
-          img.style.border = '1px solid #ccc';
-          img.style.padding = '2px';
-
+          $('#preview_image').show();
           // Insert after input
-          imageInput.parentNode.appendChild(img);
+          if (img != oldPreview) {
+            imageInput.parentNode.appendChild(img);
+          }
         }
         reader.readAsDataURL(file);
+      } else {
+        if (oldPreview) oldPreview.remove();
       }
     });
   });
+
   $(document).ready(function() {
       $('.datetimepicker').each(function() {
           var $input = $(this);

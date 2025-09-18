@@ -10,62 +10,7 @@ Signup Bonus
 {% endblock title %}
 {% block content %}
 <style>
-
-  /* Base toggle button */
-  .toggle-btn {
-      position: relative;
-      width: 50px;        /* total width */
-      height: 28px;       /* total height */
-      border-radius: 14px;
-      background-color: #ccc; /* off color */
-      border: none;
-      cursor: pointer;
-      transition: background-color 0.3s;
-      outline: none;
-  }
-
-  /* The circle inside the toggle */
-  .toggle-btn::after {
-      content: '';
-      position: absolute;
-      top: 2px;
-      left: 2px;
-      width: 24px;
-      height: 24px;
-      background-color: #fff;
-      border-radius: 50%;
-      transition: transform 0.3s;
-  }
-
-  /* Active state */
-  .toggle-btn.active {
-      background-color: #4cd964; /* green when active */
-  }
-
-  .toggle-btn.active::after {
-      transform: translateX(22px); /* move circle to the right */
-  }
-
-  .fa-btn {
-    display: inline-flex;           /* aligns icon and text properly */
-    align-items: center;            /* vertically center icon and text */
-    justify-content: center;
-    border-radius: 5px;
-    text-transform: capitalize;
-    font-size: 15px;
-    padding: 6px 4px 8px 7px;             /* adjust spacing */
-    cursor: pointer;
-    border: 2px solid;
-    gap: 6px;                       /* space between icon and text */
-    transition: background 0.2s, color 0.2s;
-  }
-
-  .fa-btn i {
-    display: inline-block;          /* ensures icon aligns with text */
-    font-size: 16px;                /* optional, slightly bigger than text */
-  }
-
-
+  {% include "components/css/utils/edit_template.html" %}
   .admin-card{
     background-color: #ffffff;
     box-shadow: 0px 0px 6px 6px rgb(204 204 204 / 0.25);
@@ -448,7 +393,7 @@ Signup Bonus
     </div>
   </div>
 </div>
-{% include './edit_bonuses.html' %}
+{% include "./edit_bonuses.html" %}
 <script>
 
   const dateConfig = (value) => ({

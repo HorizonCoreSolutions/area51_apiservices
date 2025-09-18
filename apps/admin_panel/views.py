@@ -6042,13 +6042,14 @@ class CmsPromotionsEditView(CmsPromotionsBaseView, View):
         return render(request, self.template_name, {"form": form, "promotion": promotion})
 
 
-class CmsPromotionsDisableView(View):
+class CmsPromotionsToggleDisableView(View):
     """Toggle disabled flag."""
     def post(self, request, pk, *args, **kwargs):
         promotion = get_object_or_404(CmsPromotions, pk=pk)
-        promotion.disabled = True
+        promotion.disabled = not promotion.disabled
         promotion.save(update_fields=["disabled"])
-        messages.success(request, f"CmsPromotions '{promotion.title}' disabled.")
+        text = "disabled" if promotion.disabled else "enabled"
+        messages.success(request, f"CmsPromotions '{promotion.title}' {text}.")
         return redirect("admin-panel:cms-promotions")
 
 

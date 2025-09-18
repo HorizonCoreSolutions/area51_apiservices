@@ -52,25 +52,70 @@ class BaseCmsPromotionsForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        if "disabled" in self.fields:
+            current = (
+                self.initial.get("disabled")
+                if "disabled" in self.initial
+                else (self.instance and self.instance.disabled)
+            )
+            self.initial["disabled"] = not bool(current)
         # Format the initial values for display
         for field in ['start_date', 'end_date']:
             if self.instance and getattr(self.instance, field):
                 self.fields[field].initial = getattr(self.instance, field).strftime(DATETIME_FORMAT)
 
+    def clean_disabled(self):
+        # user checks for “Active”, but DB expects disabled=True when *inactive*
+        value = self.cleaned_data["disabled"]
+        # invert so checked = active
+        return not value
+
 
 class ToasterCmsPromotionsForm(BaseCmsPromotionsForm):
     class Meta:
         model = CmsPromotions
-        fields = '__all__'
+        # explicit order:
+        fields = [
+            "title",
+            "content",
+            "url",          # <- position here controls order
+            "button_text",
+            "image",
+            "start_date",
+            "end_date",
+            "disabled",
+            "type",
+        ]
+        labels = {
+            "disabled": "Active",      # show “Active” text
+        }
         widgets = {
             "type": forms.HiddenInput(attrs={"value": "toaster"}),
+            "url": forms.URLInput(attrs={"class": "form-control"}),
+            "disabled": forms.CheckboxInput(attrs={"class": "toggle-checkbox"}),
+            "button_text": forms.TextInput(attrs={"class": "form-control"}),
         }
 
 
 class PageBlockerCmsPromotionsForm(BaseCmsPromotionsForm):
     class Meta:
         model = CmsPromotions
-        exclude = ["image"]
+        fields = [
+            "title",
+            "content",
+            "url",
+            "button_text",
+            "start_date",
+            "end_date",
+            "disabled",
+            "type",
+        ]
+        labels = {
+            "disabled": "Active",
+        }
         widgets = {
             "type": forms.HiddenInput(attrs={"value": "page_blocker"}),
+            "url": forms.URLInput(attrs={"class": "form-control"}),
+            "disabled": forms.CheckboxInput(attrs={"class": "toggle-checkbox"}),
+            "button_text": forms.TextInput(attrs={"class": "form-control"}),
         }

@@ -829,7 +829,7 @@ class CmsPromotions(AbstractBaseModel):
     title = HTMLField(max_length=350, blank=True, default="")
     content = HTMLField(max_length=5000) 
     image = models.ImageField(upload_to="promotion/images/", blank=True, null=True)
-    button_text = HTMLField(max_length=150)
+    button_text = models.CharField(max_length=150, blank=True, default="")
 
     start_date = models.DateTimeField()
     end_date = models.DateTimeField()
