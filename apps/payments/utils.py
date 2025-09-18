@@ -11,7 +11,7 @@ from rest_framework import status
 from apps.users.models import Users
 from apps.users import promo_handler
 
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 from apps.bets.utils import generate_reference
 from django_coinpayments.models import CoinPayments, Payment
 from apps.bets.models import Transactions, DEPOSIT, PENDING
