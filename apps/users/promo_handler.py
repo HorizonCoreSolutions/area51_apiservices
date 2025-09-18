@@ -1,8 +1,8 @@
 from decimal import Decimal
-from datetime import datetime
 from django.conf import settings
 from django.db import transaction
 from django.utils import timezone
+from datetime import datetime, date
 from apps.bets.models import Transactions
 from django.db.models import Count, Q, Sum
 from typing import Optional, Tuple, Literal
@@ -18,6 +18,13 @@ ErrorMessage = Literal[
     "OK",
 ]
 
+def _ensure_date(dt):
+    if isinstance(dt, datetime):
+        return dt.date()   # convert datetime → date
+    elif isinstance(dt, date):
+        return dt         # already date
+    else:
+        raise TypeError(f"Unexpected type: {type(dt)}")
 
 def _get_promo(
     promo_code: str, bonus_type: Optional[str]
@@ -51,6 +58,8 @@ def _is_promo_valid(
     """
     if promo_obj.is_expired:
         return False
+    
+    now = _ensure_date(now)
 
     # If start or end date is missing, or promo is out of range
     if (
