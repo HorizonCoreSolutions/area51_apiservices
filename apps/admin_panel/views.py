@@ -7824,18 +7824,18 @@ class ApproveWithdrawalRequest(CheckRolesMixin, views.JSONResponseMixin,
                             withdrawal_request.save()
                             try:
                                 Transactions.objects.update_or_create(
-                                user=player,
-                                journal_entry="debit",
-                                amount=withdrawal_request.amount,
-                                status="charged",
-                                merchant=request.user,
-                                previous_balance=player.balance-int(withdrawal_request.amount),
-                                new_balance=player.balance,
-                                description=f'withdrawal refund for cancelled amount {withdrawal_request.amount}',
-                                reference=generate_reference(player),
-                                bonus_type= None,
-                                bonus_amount=0
-                            )
+                                    user=player,
+                                    journal_entry="debit",
+                                    amount=withdrawal_request.amount,
+                                    status="charged",
+                                    merchant=request.user,
+                                    previous_balance=player.balance-int(withdrawal_request.amount),
+                                    new_balance=player.balance,
+                                    description=f'withdrawal refund for cancelled amount {withdrawal_request.amount}',
+                                    reference=generate_reference(player),
+                                    bonus_type= None,
+                                    bonus_amount=0
+                                )
                                 send_player_balance_update_notification(player)
                             except Exception as e:
                                 pass 
@@ -7851,18 +7851,18 @@ class ApproveWithdrawalRequest(CheckRolesMixin, views.JSONResponseMixin,
                         player.save()
                         try:
                             Transactions.objects.update_or_create(
-                            user=player,
-                            journal_entry="debit",
-                            amount=withdrawal_request.amount,
-                            status="charged",
-                            merchant=request.user,
-                            previous_balance=player.balance-int(withdrawal_request.amount),
-                            new_balance=player.balance,
-                            description=f'withdrawal refund for cancelled amount {withdrawal_request.amount}',
-                            reference=generate_reference(player),
-                            bonus_type= None,
-                            bonus_amount=0
-                        )
+                                user=player,
+                                journal_entry="debit",
+                                amount=withdrawal_request.amount,
+                                status="charged",
+                                merchant=request.user,
+                                previous_balance=player.balance-int(withdrawal_request.amount),
+                                new_balance=player.balance,
+                                description=f'withdrawal refund for cancelled amount {withdrawal_request.amount}',
+                                reference=generate_reference(player),
+                                bonus_type= None,
+                                bonus_amount=0
+                            )
                             send_player_balance_update_notification(player)
                         except Exception as e:
                             pass

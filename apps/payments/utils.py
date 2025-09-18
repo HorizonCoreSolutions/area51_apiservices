@@ -11,13 +11,13 @@ from rest_framework import status
 from apps.users.models import Users
 from apps.users import promo_handler
 
+from typing import Any, Dict
 from apps.bets.utils import generate_reference
-from django_coinpayments.models import CoinPayments
+from django_coinpayments.models import CoinPayments, Payment
 from apps.bets.models import Transactions, DEPOSIT, PENDING
 from django_coinpayments.exceptions import CoinPaymentsProviderError
 from apps.payments.models import (AlchemypayOrder, MnetTransaction, NowPaymentsTransactions,
     WithdrawalRequests)
-
 
 COIN_PAYMENTS = CoinPayments(settings.COINPAYMENTS_API_KEY, settings.COINPAYMENTS_API_SECRET)
 
@@ -46,7 +46,7 @@ def count_transactions(user: Users):
     )
 
 
-def custom_create_transaction(params):
+def custom_create_transaction(params) -> Dict:
     obj = CoinPayments.get_instance()
     if params is None:
         params = {}
@@ -59,44 +59,52 @@ def custom_create_transaction(params):
     return obj.request('post', **params)
 
 
-def custom_create_tx(payment=None, **kwargs):
+def custom_create_tx(payment: Optional[Payment]=None, **kwargs) -> Optional[Dict[str, Any]]:
+    if payment is None:
+        return
     amount_left = payment.amount - payment.amount_paid
     params = dict(amount=amount_left, currency1=payment.currency_original,
                   currency2=payment.currency_paid)
     params.update(**kwargs)
     result = custom_create_transaction(params)
-    if result['error'] == 'ok':
-        result = result['result']
-        timeout = timezone.now() + datetime.timedelta(seconds=result['timeout'])
-        user_name = kwargs.get('buyer_name', None)
-        user = Users.objects.filter(username=user_name).first()
-        now = str(datetime.datetime.now())
-        reference = user.username + now
-        rates = COIN_PAYMENTS.rates()
-        btc_rate = Decimal(rates["result"][payment.currency_paid]["rate_btc"])
-        operation_rate = Decimal(rates["result"][user.currency]["rate_btc"])
-        amount_btc = Decimal(result['amount']) * btc_rate
-        amount = round(Decimal(amount_btc) / operation_rate, 2)
-        txn = Transactions(txn_id=result['txn_id'],
-                           user=user,
-                           amount=amount,
-                           address=result['address'],
-                           confirms_needed=int(result['confirms_needed']),
-                           timeout=timeout,
-                           journal_entry=DEPOSIT,
-                           status=PENDING,
-                           reference=reference,
-                           description="Coin Payment Transaction Request")
-        txn.save()
+    if result['error'] != 'ok':
+        print("====CoinPayment Deposit api Response====", result)
+        return result
+    result: Dict[str, Any] = result['result']
+    timeout = timezone.now() + datetime.timedelta(seconds=result['timeout'])
+    user_name = kwargs.get('buyer_name', None)
+    user = Users.objects.filter(username=user_name).first()
+    if not user:
+        return
+    now = str(datetime.datetime.now())
+    reference = (user.username or "") + now
+    rates = COIN_PAYMENTS.rates()
+    btc_rate = Decimal(rates["result"][payment.currency_paid]["rate_btc"])
+    operation_rate = Decimal(rates["result"][user.currency]["rate_btc"])
+    amount_btc = Decimal(result['amount']) * btc_rate
+    amount = round(Decimal(amount_btc) / operation_rate, 2)
+    txn = Transactions(
+        txn_id=result['txn_id'],
+        user=user,
+        amount=amount,
+        address=result['address'],
+        confirms_needed=int(result['confirms_needed']),
+        timeout=timeout,
+        journal_entry=DEPOSIT,
+        status=PENDING,
+        reference=reference,
+        description="Coin Payment Transaction Request"
+    )
+    txn.save()
     print("====CoinPayment Deposit api Response====", result)
     return result
 
 
-def create_tx(payment, **kwargs):
+def create_tx(payment: Payment, **kwargs):
     context = {}
     try:
         tx = custom_create_tx(payment=payment, **kwargs)
-        if 'error' in tx:
+        if tx is None or 'error' in tx:
             return tx
         print("transaction response", tx)
         context = {'txid': tx["txn_id"],
@@ -177,6 +185,8 @@ def createnowpaymentswithdrawal(trans_id):
         auth_response.raise_for_status()
         token = auth_response.json()['token']
         withdrawal = WithdrawalRequests.objects.filter(id=trans_id).first()
+        if withdrawal is None:
+            return
         amount = get_withdrawal_amount(withdrawal.currency,withdrawal.amount)
         request_payload={
             "ipn_callback_url": settings.IPN_CALLBACK_URL,
@@ -198,47 +208,48 @@ def createnowpaymentswithdrawal(trans_id):
         }
         payout_response = requests.post(NOWPAYMENTS_API_URL + 'payout', json=request_payload, headers=headers)
         
-        if payout_response.status_code == 200:
-            response_content = payout_response.content.decode('utf-8')
-            response_data = json.loads(response_content)
-            payout_response = response_data.get('withdrawals', [])
-            print(f"####Payout Response {payout_response}", flush=True)
-            if payout_response:
-                for withdrawals in payout_response: 
-                    payment_data = withdrawals
-                    now_payment_tran = NowPaymentsTransactions.objects.create(
-                            user=withdrawal.user,    
-                            payment_id=payment_data['id'],
-                            payment_status=payment_data['status'],
-                            pay_address=payment_data['address'],
-                            price_amount=payment_data['amount'],
-                            pay_currency=payment_data['currency'],
-                            ipn_callback_url=payment_data['ipn_callback_url'],
-                            created_at=payment_data['created_at'],
-                            batch_withdrawal_id=payment_data['batch_withdrawal_id'],
-                            transaction_type='WITHDRAWAL',
-                            requested_at=payment_data['requested_at'],
-                            updated_at=payment_data['created_at']
-                    )
-                    
-                    print(f"NOW_PAYMENT_TRANS {now_payment_tran.__dict__}", flush=True)
-                    withdrawal.transaction_id = now_payment_tran.id
-                    withdrawal.save()
-                    if payment_data and payment_data['status'] in ['REJECTED','FAILED']:
-                        return payment_data['status']
-                    print(f"Now Payment Withdrawal {withdrawal.__dict__}", flush=True)
-                    verification = verify_withdrawal(payment_data['batch_withdrawal_id'])
-                    print(f"VErification {verification}", flush=True)
-                    if verification == True:
-                        return True
-                    return verification
-                return True
-        elif payout_response.status_code == 400:
+        if payout_response.status_code == 400:
             response_content = payout_response.content.decode('utf-8')
             response_data = json.loads(response_content)
             payout_response = response_data.get('message', [])
-            return payout_response   
-        return False
+            return payout_response  
+        if payout_response.status_code != 200:
+            return False
+        response_content = payout_response.content.decode('utf-8')
+        response_data = json.loads(response_content)
+        payout_response = response_data.get('withdrawals', [])
+        print(f"####Payout Response {payout_response}", flush=True)
+        if not payout_response:
+            return False
+        for withdrawals in payout_response: 
+            payment_data = withdrawals
+            now_payment_tran = NowPaymentsTransactions.objects.create(
+                    user=withdrawal.user,    
+                    payment_id=payment_data['id'],
+                    payment_status=payment_data['status'],
+                    pay_address=payment_data['address'],
+                    price_amount=payment_data['amount'],
+                    pay_currency=payment_data['currency'],
+                    ipn_callback_url=payment_data['ipn_callback_url'],
+                    created_at=payment_data['created_at'],
+                    batch_withdrawal_id=payment_data['batch_withdrawal_id'],
+                    transaction_type='WITHDRAWAL',
+                    requested_at=payment_data['requested_at'],
+                    updated_at=payment_data['created_at']
+            )
+            
+            print(f"NOW_PAYMENT_TRANS {now_payment_tran.__dict__}", flush=True)
+            withdrawal.transaction_id = now_payment_tran.id  # type: ignore
+            withdrawal.save()
+            if payment_data and payment_data['status'] in ['REJECTED','FAILED']:
+                return payment_data['status']
+            print(f"Now Payment Withdrawal {withdrawal.__dict__}", flush=True)
+            verification = verify_withdrawal(payment_data['batch_withdrawal_id'])
+            print(f"VErification {verification}", flush=True)
+            if verification == True:
+                return True
+            return verification
+        return True
     except Exception as e:
         print(e)
         return False 
@@ -262,30 +273,33 @@ def get_min_amount(currency_from):
 
 def checkbonus(payment_id, payment_through="nowpayment"):
     try:
-        delta = None
-        player = None
+        delta = Decimal(0)
+        player: Optional[Users] = None
         payment = None
         if payment_through == "nowpayment":
             payment = NowPaymentsTransactions.objects.filter(payment_id=payment_id).first()
+            if payment is None:
+                return
             player = payment.user
-            deposit_count_np = NowPaymentsTransactions.objects.filter(user=player,transaction_type='DEPOSIT',created__date=datetime.date.today()).count()
-            deposit_bonus_given_count = Transactions.objects.filter(user=player, journal_entry='deposit', created__date=datetime.date.today()).count() + deposit_count_np + 1
             delta=payment.price_amount
         elif payment_through == "alchemypay":
             payment = AlchemypayOrder.objects.filter(id=payment_id).first()
+            if payment is None:
+                return
             player = payment.user
-            deposit_count_alchemypay = AlchemypayOrder.objects.filter(user=player,status="finished", created__date=datetime.date.today()).count()
             delta=payment.amount
         elif payment_through == "mnet":
             payment = MnetTransaction.objects.filter(id=payment_id).first()
+            if payment is None:
+                return
             player = payment.user
-            delta=payment.amount
+            delta = payment.amount
+        
+        if not player or not payment:
+            return
         
         if (
-            player
-            and payment
-            and delta
-            and not isinstance(payment, MnetTransaction)
+            not isinstance(payment, MnetTransaction)
             and payment.applied_promo_code
         ):
             promo_handler.redeam_code(
@@ -294,51 +308,55 @@ def checkbonus(payment_id, payment_through="nowpayment"):
                 promo_code=payment.applied_promo_code,
                 bonus_type="deposit")     
 
-        code = player.applied_promo_code
-        if player and code:
+        if player.applied_promo_code:
             promo_handler.redeam_code(
                 user=player,
                 amount_dep=None,
                 bonus_type="welcome",
-                promo_code=code)
-
-        if(player.affiliated_by):
-            affiliate = player.affiliated_by
-            aff_deposit_count = Transactions.objects.filter(user=affiliate,journal_entry='bonus',bonus_type="affiliate_bonus").count()
-            if affiliate.is_lifetime_affiliate or affiliate.affliate_expire_date>datetime.now(timezone.utc):
-                if affiliate.is_bonus_on_all_deposits or aff_deposit_count<affiliate.no_of_deposit_counts:
-                    try:
-                        if affiliate:
-                            commision_percenatge = affiliate.affiliation_percentage
-                            referal_bonus_balance = round(Decimal(float( affiliate.bonus_balance) + float(delta) * float(commision_percenatge / 100)), 2)
-                            referal_bonus = round(Decimal( float(delta) * float(commision_percenatge/ 100)), 2)
-                            previous_bal = affiliate.balance
-                            if affiliate.is_redeemable_amount:
-                                affiliate.balance += referal_bonus
-                            elif affiliate.is_non_redeemable_amount:
-                                affiliate.bonus_balance = referal_bonus_balance
-                                affiliate.balance += referal_bonus
-                            else:
-                                affiliate.bonus_balance = referal_bonus_balance
-                                affiliate.balance += referal_bonus
-                            txn_amount = referal_bonus
-                            bonus_to_be_given = referal_bonus
-                            Transactions.objects.update_or_create(
-                                user=affiliate,
-                                journal_entry="bonus",
-                                amount=float(delta),
-                                status="charged",
-                                previous_balance=previous_bal,
-                                new_balance=affiliate.balance,
-                                description=f"affiliate bonus by {player} on deposit of {delta}",
-                                reference=generate_reference(player),
-                                bonus_type="affiliate_bonus",
-                                bonus_amount=bonus_to_be_given
-                            )
-                            affiliate.save()
-                            send_player_balance_update_notification(affiliate)
-                    except Exception as e:
-                        print(e)
+                promo_code=player.applied_promo_code)
+        affiliate = player.affiliated_by
+        if affiliate is None:
+            return
+        aff_deposit_count = Transactions.objects.filter(user=affiliate,journal_entry='bonus',bonus_type="affiliate_bonus").count()
+        has_expired_affilitation = affiliate.affliate_expire_date < datetime.datetime.now(timezone.utc)
+        if not affiliate.is_lifetime_affiliate and has_expired_affilitation:
+            return
+        has_reached_max_aff = aff_deposit_count >= affiliate.no_of_deposit_counts
+        if not affiliate.is_bonus_on_all_deposits and has_reached_max_aff:
+            return
+        try:
+            if not affiliate:
+                return
+            commision_percenatge = affiliate.affiliation_percentage
+            referal_bonus_balance = round(Decimal(float( affiliate.bonus_balance) + float(delta) * float(commision_percenatge / 100)), 2)
+            referal_bonus = round(Decimal( float(delta) * float(commision_percenatge/ 100)), 2)
+            previous_bal = affiliate.balance
+            if affiliate.is_redeemable_amount:
+                affiliate.balance += referal_bonus
+            elif affiliate.is_non_redeemable_amount:
+                affiliate.bonus_balance = referal_bonus_balance
+                affiliate.balance += referal_bonus
+            else:
+                affiliate.bonus_balance = referal_bonus_balance
+                affiliate.balance += referal_bonus
+            txn_amount = referal_bonus
+            bonus_to_be_given = referal_bonus
+            Transactions.objects.update_or_create(
+                user=affiliate,
+                journal_entry="bonus",
+                amount=float(delta),
+                status="charged",
+                previous_balance=previous_bal,
+                new_balance=affiliate.balance,
+                description=f"affiliate bonus by {player} on deposit of {delta}",
+                reference=generate_reference(player),
+                bonus_type="affiliate_bonus",
+                bonus_amount=bonus_to_be_given
+            )
+            affiliate.save()
+            send_player_balance_update_notification(affiliate)
+        except Exception as e:
+            print(e)
        
     except Exception as e:
         print(e)                        
@@ -372,33 +390,34 @@ def get_validate_address(address, currency):
 
 
 def create_refund_transactions(id):
-            try:  
-                payment = NowPaymentsTransactions.objects.filter(payment_id=id).first()
-                withdrawal_request = WithdrawalRequests.objects.filter(transaction = payment).first()
-                admin = Users.objects.filter(role='admin').first()
-                player=withdrawal_request.user
-                try:
-                    Transactions.objects.update_or_create(
-                    user=player,
-                    journal_entry="debit",
-                    amount=withdrawal_request.amount,
-                    status="charged",
-                    merchant=admin,
-                    previous_balance=player.balance-int(withdrawal_request.amount),
-                    new_balance=player.balance,
-                    description=f'withdrawal refund for cancelled amount {withdrawal_request.amount}',
-                    reference=generate_reference(player),
-                    bonus_type= None,
-                    bonus_amount=0
-                )
-                except Exception as e:
-                    print(e)
-            except Exception as e:
-                print(e)
+    try:  
+        payment = NowPaymentsTransactions.objects.filter(payment_id=id).first()
+        withdrawal_request = WithdrawalRequests.objects.filter(transaction = payment).first()
+        admin = Users.objects.filter(role='admin').first()
+        if withdrawal_request is None:
+            return
+        player=withdrawal_request.user
+        if player is None:
+            return
+        Transactions.objects.update_or_create(
+            user=player,
+            journal_entry="debit",
+            amount=withdrawal_request.amount,
+            status="charged",
+            merchant=admin,
+            previous_balance=player.balance-int(withdrawal_request.amount),
+            new_balance=player.balance,
+            description=f'withdrawal refund for cancelled amount {withdrawal_request.amount}',
+            reference=generate_reference(player),
+            bonus_type= None,
+            bonus_amount=0
+        )
+    except Exception as e:
+        print(e)
 
 import hashlib
 import hmac
-from typing import Dict
+from typing import Dict, Optional
 from apps.users.utils import send_player_balance_update_notification
 
 def generate_hmac_signature(key: str, params: Dict[str, object]) -> str:
