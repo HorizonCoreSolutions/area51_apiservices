@@ -716,7 +716,7 @@ class CmsPromotionsSerializer(serializers.ModelSerializer):
 
     def get_image_url(self, obj):
         if obj.image and hasattr(obj.image, 'url'):
-            return settings.FE_DOMAIN + obj.image.url
+            return settings.BE_DOMAIN + obj.image.url
         return None
 
 

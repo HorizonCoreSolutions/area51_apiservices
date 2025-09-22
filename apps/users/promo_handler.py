@@ -14,6 +14,7 @@ from apps.users.utils import send_player_balance_update_notification
 ErrorMessage = Literal[
     "Invalid promocode",
     "Promo-code Expired",
+    "Invalid deposit amount.",
     "Promo-code use limit exceeded",
     "OK",
 ]
@@ -148,9 +149,7 @@ def redeam_code(
             promo_obj.bonus_distribution_method in {method.mixture, method.deposit}
             and (amount_dep is None or amount_dep <= Decimal("0.00"))
         ):
-            raise ValueError(
-                "Mixture and Deposit should be used with a positive deposit amount"
-            )
+            return False, "Invalid deposit amount."
 
         if not amount_dep:
             amount_dep = Decimal(0)
