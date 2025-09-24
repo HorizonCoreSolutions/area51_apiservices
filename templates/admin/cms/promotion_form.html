@@ -39,6 +39,9 @@
     .alert-info { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
     .alert-warning { background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
 
+    .info-text { color: #00AEFF; }
+    .warning-text { color: #dd1313; }
+
     .custom-margin { margin: 5px 0 0 15px; }
 
     label { font-weight: 600; font-size: 0.95rem; }
@@ -173,6 +176,24 @@
                   {% endif %}
                 </div>
               </div>
+              {% elif field.name == "content" %}
+              <p>
+                <label for="id_content" title="Please write between 3 and 5 lines for better results.">
+                  Content:
+                  <span> 
+                    <i class="fa fa-info-circle info-text"></i>
+                  </span>
+                </label>
+                {{ field }}
+              </p>
+              {% elif field.name == "button_text" %}
+              <p>
+                <label for="id_button_text" title="Required">
+                  Button text:&nbsp;
+                  <span class="warning-text">*</span>
+                </label>
+                {{ field }}
+              </p>
               {% elif field.name == "type" %}
                 <p class="hidden">{{ field.label_tag }} {{ field }}</p>
               {% elif field.name == "disabled" %}

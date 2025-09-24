@@ -52,6 +52,7 @@ class BaseCmsPromotionsForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields['button_text'].required = True
         if "disabled" in self.fields:
             current = (
                 self.initial.get("disabled")
