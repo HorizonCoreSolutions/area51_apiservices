@@ -3629,27 +3629,23 @@ class UpdateAutomatedBonusView(APIView):
         gc_price = Decimal(gc_price).quantize(Decimal("0.01"))
         enabled = str(enabled).lower() in ["true", "1", "yes"]
 
-        gc_start_date = timezone.now()
-        sc_start_date = gc_start_date + timedelta(minutes=5)
+        start_date = timezone.now()
 
-        for bonus_percentage, amount, start_date, usage_limit in [
-            (Decimal("0.00"), sc_price, sc_start_date, 1),
-            (Decimal("1.00"), gc_price, gc_start_date, 1)
-        ]:
-            PromoCodes.objects.update_or_create(
-                bonus=bonus,
-                promo_code=action,
-                dealer=request.user,
-                bonus_percentage=bonus_percentage,
-                defaults={
-                    "bonus_distribution_method": PromoCodes.BonusDistributionMethod.instant,
-                    "instant_bonus_amount": amount,
-                    "max_bonus_limit": Decimal(1),
-                    "start_date": start_date,
-                    "usage_limit": Decimal(usage_limit),
-                    "is_expired": not enabled,
-                }
-            )
+        PromoCodes.objects.update_or_create(
+            bonus=bonus,
+            promo_code=action,
+            dealer=request.user,
+            bonus_percentage=Decimal("0.00"),
+            defaults={
+                "bonus_distribution_method": PromoCodes.BonusDistributionMethod.instant,
+                "instant_bonus_amount": sc_price,
+                "max_bonus_limit": Decimal(1),
+                "start_date": start_date,
+                "gold_bonus": gc_price,
+                "usage_limit": Decimal(1),
+                "is_expired": not enabled,
+            }
+        )
 
         return Response({"message": "Bonus updated successfully."}, status=status.HTTP_200_OK)
 
