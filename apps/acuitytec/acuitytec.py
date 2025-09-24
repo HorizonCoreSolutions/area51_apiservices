@@ -15,7 +15,7 @@ from django.conf import settings
 from django.utils import timezone
 from urllib.parse import urlparse
 from apps.acuitytec.logger import logger
-from apps.core.rate_limiter import limiter
+from apps.core.concurrency import limiter
 from typing import Dict, Any, Optional, Union
 from apps.acuitytec.utils import cache_ips_geo
 from apps.core.custom_types import BasicReturn

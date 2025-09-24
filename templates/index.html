@@ -92,6 +92,11 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.3/css/lightbox.css" integrity="sha512-Woz+DqWYJ51bpVk5Fv0yES/edIMXjj3Ynda+KWTIkGoynAMHrqTcDUQltbipuiaD5ymEo9520lyoVOo9jCQOCA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
 	
+    {% block custom_headers %}
+    {% endblock custom_headers %}
+
+    {% block css %}
+    {% endblock css %}
 
     <script>
         function tinymce_custom_file_picker(cb, value, meta) {
@@ -130,10 +135,8 @@
         }
     </script>
 
-
-
     {% block javascript %}
-    {% endblock %}
+    {% endblock javascript %}
 </head>
 <body>
     {% include "./header.html" %}

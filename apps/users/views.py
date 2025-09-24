@@ -13,7 +13,8 @@ from datetime import datetime,timedelta
 from django.utils import timezone
 
 import requests
-from apps.core.rate_limiter import limiter
+from apps.users import promo_handler
+from apps.core.concurrency import limiter
 from pyhanko_certvalidator import ValidationError
 
 from apps.acuitytec.acuitytec import AcuityTecAPI
@@ -69,8 +70,8 @@ from apps.users.models import (Admin, CashappQr, CmsBonusDetail, CmsFAQ, CmsPriv
                                FortunePandasGameManagement, Introduction, MAX_MULTI_FOUR_EVENTS_AMOUNT,
                                MAX_MULTI_THREE_EVENTS_AMOUNT, MAX_MULTI_TWO_EVENTS_AMOUNT, MAX_MULTIPLE_BET, MAX_ODD,
                                MAX_SINGLE_BET, MAX_SINGLE_BET_OTHER_SPORTS, MAX_SPEND_AMOUNT, MAX_WIN_AMOUNT, MIN_BET,
-                               PlayerBettingLimit, PromoCodes, PromoCodesLogs, SettingsLimits, SocialLink,
-                               SpintheWheelDetails, TermsConditinos, Country, EVENT_REGISTRATION)
+                               PlayerBettingLimit, SettingsLimits, SocialLink, SpintheWheelDetails,
+                               TermsConditinos, Country, EVENT_REGISTRATION)
 from apps.users.serializers import (
     # UserUpdateSerializer, 
     AdminBannerSerializer,
@@ -78,6 +79,7 @@ from apps.users.serializers import (
     CashappQrSerializer,
     ChangePasswordSerializer,
     CmsPromotionSerializer,
+    CmsPromotionsSerializer,
     FortunePandasGameListSerializer,
     FortunePandasManagementGameListSerializer,
     GetOtpSerializer,
@@ -99,7 +101,7 @@ from apps.users.models import Player, Agent, Dealer, AdminBanner, CmsAboutDetail
 from apps.users.utils import check_otp, create_otp, create_otp_password,encrypt, is_only_one
 from apps.admin_panel.templatetags.navigate import is_active
 from apps.users.fortunepandas import FortunePandaAPI
-from .models import ( VERIFICATION_APPROVED, VERIFICATION_PENDING, VERIFICATION_PROCESSING, AdminAdsBanner,CASHBACK_PERCENTAGE, AffiliateRequests, BonusPercentage, ChatHistory, ChatMessage, ChatRoom, CsrQueries, OffMarketGames, OffMarketTransactions, OffmarketWithdrawalRequests,
+from .models import ( VERIFICATION_APPROVED, VERIFICATION_PENDING, VERIFICATION_PROCESSING, AdminAdsBanner,CASHBACK_PERCENTAGE, AffiliateRequests, BonusPercentage, ChatHistory, ChatMessage, ChatRoom, CmsPromotions, CsrQueries, OffMarketGames, OffMarketTransactions, OffmarketWithdrawalRequests,
                     Player, Queue, Staff, SuperAdminSetting, UserGames,
                       Users, CmsContactDetails,ResponsibleGambling,
                       CmsPages,CashAppDeatils
@@ -396,10 +398,10 @@ class SignUpView(APIViewContext):
         cca2 = "US"
         data = request.data.copy()
         if str(request.data.get('tyc')) != "1":
-            return Response({"message" : "You must accept the TYC, tyc != 1"},status=status.HTTP_400_BAD_REQUEST)
+            return Response({"message": "You must accept the TYC."}, status=status.HTTP_400_BAD_REQUEST)
         if str(request.data.get('confirm_age')) != "1":
-            return Response({"message" : "You must confirm you are 18+, confirm_age != 1"},status=status.HTTP_400_BAD_REQUEST)
-        
+            return Response({"message": "You must confirm you are 18+."}, status=status.HTTP_400_BAD_REQUEST)
+
         # check age
         # dob = request.data.get('dob')
         # if dob is None:
@@ -415,8 +417,6 @@ class SignUpView(APIViewContext):
             # return Response({"message": "You must be 18+ to have an account on this platform"}, status.HTTP_400_BAD_REQUEST)
 
         # remove un used
-        
-        # TODO: ADD THE DIVING NAME PART
 
         if request.data.get('country_code', '') == '' or request.data.get('phone_number', '') == "":
             data.pop('countray_code', None)
@@ -440,34 +440,20 @@ class SignUpView(APIViewContext):
         if serializer.is_valid():
             player = serializer.save()
             Thread(target=newuser_email,
-                        args=(player.username,player.email)).start()
-            
+                   args=(player.username, player.email)).start()
+
             redeam_user_event.apply_async(
-                args=(EVENT_REGISTRATION, player.id),
-                countdown=10
-            )
-            promo_obj = PromoCodes.objects.filter(
-                promo_code=player.applied_promo_code,
-                bonus__bonus_type="welcome_bonus",
-                is_expired=False
-            ).first() if player.applied_promo_code else None
-            if  promo_obj and promo_obj.bonus_distribution_method == PromoCodes.BonusDistributionMethod.instant and promo_obj.instant_bonus_amount:
-                player.bonus_balance += promo_obj.instant_bonus_amount
-                player.save()
-                
-                Transactions.objects.update_or_create(
+                    args=(EVENT_REGISTRATION, player.id),
+                    countdown=10
+                    )  # type: ignore
+
+            if player.applied_promo_code:
+                promo_handler.redeam_code(
                     user=player,
-                    journal_entry="bonus",
-                    amount=0,
-                    status="charged",
-                    previous_balance=0,
-                    new_balance=player.balance,
-                    description=f"welcome bonus of {promo_obj.instant_bonus_amount}",
-                    reference=generate_reference(player),
-                    bonus_type="welcome_bonus",
-                    bonus_amount=promo_obj.instant_bonus_amount
-                )
-                
+                    amount_dep=None,
+                    bonus_type='welcome',
+                    promo_code=player.applied_promo_code)
+
             return Response({"message": _("User Created Successfully")}, status.HTTP_201_CREATED)
 
         if serializer.errors.get('non_field_errors', None):
@@ -808,6 +794,7 @@ class OTPActionsView(APIView):
 class VerifyOTPView(APIView):
     # Verifies the otp from number when sign in
     # MarcosAlv: I considere this deprecated and we ("I") are planing to remove it slowly ("next update")
+    # MaecosAlv: This was a really slowly update. There has been 4 months
 
     def post(self, request):
         try:
@@ -876,14 +863,9 @@ class VerifyOTPView(APIView):
                     user.save()
 
                     # Log applied promocode details so that we can track the applied counts and other details mfor the future references
-                    if user_data.get("applied_promo_code", None):
-                        promo_code = PromoCodes.objects.filter(promo_code=user_data.filter("applied_promo_code"), is_expired=False).first()
-                    
-                        promocode_logs = PromoCodesLogs()
-                        promocode_logs.promocode = promo_code
-                        promocode_logs.date = datetime.datetime.now()
-                        promocode_logs.logs = f"Promo-code: {promo_code.promo_code} applied for player: {user.username}"
-                        promocode_logs.save()
+                    promo_code_a = user_data.get("applied_promo_code", None)
+                    if promo_code_a:
+                        promo_handler.claim_code(user=user, promo_code=promo_code_a)
 
                     return Response(
                         {"message": "Signup Successfull"},
@@ -1093,6 +1075,29 @@ class PromotionCmsView(APIView):
         cms_obj = CmsPromotionDetails.objects.order_by('-id')
         serializer = self.serializer_class(cms_obj, many=True)
         return Response({"data": serializer.data}, status.HTTP_200_OK)
+    
+
+class CmsPromotionsView(APIView):
+    # permission_classes = (IsAuthenticated,)
+    permission_classes = (AllowAny,)
+    http_method_names = ["get", ]
+    serializer_class = CmsPromotionsSerializer
+
+    def get(self, request):
+        now = timezone.now()
+        cms_obj = CmsPromotions.objects.filter(
+            disabled=False,
+            start_date__lte=now,
+            end_date__gte=now
+        ).order_by('-start_date')
+        
+        # Apply type filter
+        promo_type = request.GET.get('type', 'toaster')
+        if promo_type in ['toaster', 'page_blocker']:
+            cms_obj = cms_obj.filter(type=promo_type)
+        # if promo_type == 'all', no filter is applied
+        serializer = self.serializer_class(cms_obj, many=True)
+        return Response({"data": serializer.data}, status.HTTP_200_OK)
 
 
 class CmsPrivacyPolicyView(APIView):
@@ -1196,31 +1201,29 @@ class ValidateSignUpPromoCode(APIView):
     def post(self, request):
 
         promo_code = request.data.get("promo_code", None)
+        if promo_code is None:
+            return Response(
+                {
+                    "data": {
+                        "message": "Invalid promocode",
+                        "status": "Failed",
+                    }
+                },
+                status=status.HTTP_200_OK,
+            )
+        
+        user = request.user if request.user.is_authenticated else None
+        
+        is_valid, msg = promo_handler.verify_code(user=user, promo_code=promo_code)
+        
+        status_text = "Success" if is_valid else "Failed"
+        http_status = status.HTTP_200_OK if is_valid else status.HTTP_400_BAD_REQUEST
+        message = "Promo-code applied successfully" if is_valid else msg
 
-        # validate the promocode
-        try:
-            response = { "message":"Promo-code applied succesfully", "status": "success" }
-            promo_obj = PromoCodes.objects.filter(promo_code=promo_code).first()
-
-            if not promo_obj:
-                response = { "message":"Invalid promocode", "status": "Failed" }
-                return Response({"data": response}, status.HTTP_404_NOT_FOUND)
-
-            promo_code_use_count = PromoCodesLogs.objects.filter(promocode=promo_obj).count()
-            
-            if promo_obj.is_expired or promo_obj.start_date > datetime.now().date() or promo_obj.end_date < datetime.now().date():
-                response = { "message":"Promo-code Expired", "status": "Failed" }
-                return Response({"data": response}, status.HTTP_400_BAD_REQUEST)
-
-            elif promo_code_use_count >= promo_obj.usage_limit:
-                response = { "message":"Promo-code use limit exceeded", "status": "Failed" }
-                return Response({"data": response}, status.HTTP_400_BAD_REQUEST)
-
-        except Exception as e:
-            print(e)
-            response = { "message":"Something went wrong", "status": "Failed" }
-
-        return Response({"data": response}, status.HTTP_200_OK)
+        return Response(
+            {"data": {"message": message, "status": status_text}},
+            status=http_status,
+        )
 
 
 class ValidatePromoCode(APIView):
@@ -1230,39 +1233,33 @@ class ValidatePromoCode(APIView):
     permission_classes = (AllowAny,)
     http_method_names = ["post"]
 
-    def post(self, request):
+    def post(self, request) -> Response:
 
         promo_code = request.data.get("promo_code", None)
+        if promo_code is None:
+            return Response(
+                {
+                    "data": {
+                        "message": "Invalid promocode",
+                        "status": "Failed",
+                    }
+                },
+                status=status.HTTP_200_OK,
+            )
+        
+        user = request.user if request.user.is_authenticated else None
+        
+        is_valid, msg = promo_handler.verify_code(user=user, promo_code=promo_code)
+        
+        status_text = "Success" if is_valid else "Failed"
+        http_status = status.HTTP_200_OK if is_valid else status.HTTP_400_BAD_REQUEST
+        message = "Promo-code applied successfully" if is_valid else msg
 
-        # validate the promocode
-        try:
-            response = { "message":"Promo-code applied succesfully", "status": "success" }
-            promo_obj = PromoCodes.objects.filter(promo_code=promo_code)
+        return Response(
+            {"data": {"message": message, "status": status_text}},
+            status=http_status,
+        )
 
-            if promo_obj:
-                promo_obj = promo_obj.first()
-
-                if not promo_obj:
-                    response = { "message":"Invalid promocode", "status": "Failed" }
-                    return Response({"data": response}, status.HTTP_404_NOT_FOUND)
-
-                promo_code_use_count = PromoCodesLogs.objects.filter(promocode=promo_obj).count()
-                if promo_obj.is_expired or promo_obj.start_date > datetime.now().date() or promo_obj.end_date < datetime.now().date():
-                    response = { "message":"Promo-code Expired", "status": "Failed" }
-                    return Response({"data": response}, status.HTTP_400_BAD_REQUEST)
-
-                elif promo_code_use_count > promo_obj.usage_limit:
-                    response = { "message":"Promo-code use limit exceeded", "status": "Failed" }
-                    return Response({"data": response}, status.HTTP_400_BAD_REQUEST)
-            else:
-                response = { "message":"Invalid promocode", "status": "Failed" }
-                return Response({"data": response}, status.HTTP_404_NOT_FOUND)
-
-        except Exception as e:
-            print(e)
-            response = { "message":"Something went wrong", "status": "Failed" }
-
-        return Response({"data": response}, status.HTTP_200_OK)
 
 class ValidateReferralUser(APIView):
     """

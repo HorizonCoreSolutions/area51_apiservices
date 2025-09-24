@@ -1,10 +1,9 @@
 from functools import wraps
 from typing import Dict, Union
-from urllib.parse import quote_plus
-
 from django.conf import settings
-
+from urllib.parse import quote_plus
 from apps.acuitytec.models import IPLog
+from apps.core.concurrency import dynamic_lock
 
 def generate_qr_code_url(data: str, size: str = "150x150") -> str:
     """
@@ -44,25 +43,57 @@ def cache_ips_geo(logger):
             if not ip:
                 raise ValueError("ip must be provided as a keyword argument: ip='1.1.1.1'")
             
-            ip_obj = IPLog.objects.filter(ip=ip).first()
-            
-            if ip_obj:
-                logger.info(f"Cache hit for {ip}")
+            def get_cached_ip():
+                ip_obj = IPLog.objects.filter(ip=ip).first()
+                if ip_obj:
+                    logger.info(f"Cache hit for {ip}")
+                    return ip_obj.parse_geo()
+                return None
+
+            try:
+                with dynamic_lock.lock(f"iplock:{str(ip)}"):
+                    cached = get_cached_ip()
+                    if cached:
+                        return cached
+
+                    res = func(*args, **kwargs)
+                    status = res.get('status')
+
+                    if status not in {0, -1}:
+                        logger.warning(res.get("message"))
+                        return res
+
+                    ip_obj = IPLog.use_or_create(
+                        ip=ip,
+                        defaults={
+                            "status": status,
+                            "error_name" : res.pop("rule"),
+                            "display_message" : res.get('message')
+                        }
+                    )
+                    logger.info(f"Cache created for {ip}")
+                    return ip_obj.parse_geo()
+            except TimeoutError:
+                logger.warning(f"Timeout acquiring lock for IP {ip}. Falling back to DB or fresh lookup.")
+                # fallback to cached or fresh call
+                cached = get_cached_ip()
+                if cached:
+                    return cached
+                res = func(*args, **kwargs)
+                status = res.get('status')
+                if status not in {0, -1}:
+                    logger.warning(res.get("message"))
+                    return res
+                ip_obj = IPLog.use_or_create(
+                    ip=ip,
+                    defaults={
+                        "status": status,
+                        "error_name" : res.pop("rule"),
+                        "display_message" : res.get('message')
+                    }
+                )
+                logger.info(f"Cache created for {ip}")
                 return ip_obj.parse_geo()
-            res = func(*args, **kwargs)
-            status = res.get('status')
-            if status not in {0, -1}:
-                logger.warning(res.get("message"))
-                return res
-            ip_obj = IPLog.use_or_create(
-                ip=ip,
-                defaults={
-                    "status": status,
-                    "error_name" : res.pop("rule"),
-                    "display_message" : res.get('message')
-                }
-            )
-            logger.info(f"Cache created for {ip}")
-            return ip_obj.parse_geo()
+            
         return wrapper
     return decorator

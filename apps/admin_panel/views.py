@@ -1,32 +1,24 @@
 import datetime
-from datetime import date,timedelta
+from datetime import date, timedelta
 from bisect import bisect_right
 from itertools import count
 import json
 import math
 import operator
 import re
-from ast import literal_eval
 from decimal import Decimal
 from threading import Thread
 import traceback
-from unittest import result
-from dateutil.parser import parse
 from functools import reduce
-from requests import request
-from rsa import decrypt
-import  base64
+import base64
+from django.core.exceptions import PermissionDenied
 import pytz
 import boto3
-import base64
 import uuid
 from itertools import chain
 from operator import attrgetter
 from urllib.parse import parse_qs
 from collections import defaultdict
-
-from django.db import transaction
-from dateutil import relativedelta
 
 from PIL import Image
 import sys
@@ -34,8 +26,6 @@ from io import BytesIO
 from django.core.files.storage import default_storage
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from cryptography.fernet import Fernet
-from django.core import serializers
-
 
 from braces import views
 from django.conf import settings
@@ -43,12 +33,11 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.hashers import make_password
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.forms.models import model_to_dict
-from django.http import HttpResponse, HttpResponseRedirect, JsonResponse, response
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from apps.casino.models import (CasinoGameList, CasinoHeaderCategory, CasinoManagement, GSoftTransactions, Tournament,
     TournamentPrize, TournamentTransaction, Providers)
 
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, render
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.utils.decorators import method_decorator
@@ -60,12 +49,10 @@ from django.views.generic.edit import FormMixin
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework import viewsets
-from django.contrib.sessions.models import Session
-from django.db.models import Exists, F, OuterRef, Q, Sum, Count, Value, DecimalField, ExpressionWrapper, \
-    Subquery, Max, CharField, Case, When, BooleanField
-from django.db.models.functions import Coalesce, Lower, ExtractDay,Replace
-
+from django.db.models import Exists, F, OuterRef, Q, Sum, Count, TextField, Value, DecimalField, ExpressionWrapper, \
+    Subquery, Max, CharField, Case, When, BooleanField 
+from django.db.models.functions import Coalesce, Lower, Replace, Cast
+from django.contrib.postgres.aggregates import ArrayAgg
 
 from apps.admin_panel.payments import get_payment_qr_code, get_preference
 from apps.casino.models import (CasinoGameList, CasinoHeaderCategory, CasinoManagement, GSoftTransactions, Tournament,
@@ -79,8 +66,9 @@ from apps.admin_panel.forms import (AdminModelForm, AgentModelForm,
 from apps.casino.tasks import task_update_offmarket_transaction
 from apps.payments.models import (AlchemypayOrder, MnetTransaction, NowPaymentsTransactions,
     WithdrawalCurrency, WithdrawalRequests)
+from apps.users.forms import PageBlockerCmsPromotionsForm, ToasterCmsPromotionsForm
 from apps.users.models import FooterPages, MAX_SPEND_AMOUNT, Permission, ResponsibleGambling, BONUS_EVENTS
-from apps.users.utils import send_message_to_chatlist,send_live_status_to_player, encrypt
+from apps.users.utils import send_message_to_chatlist, send_live_status_to_player, encrypt
 from excel_response import ExcelResponse
 from apps.bets.utils import generate_reference
 from apps.admin_panel.utils import *
@@ -91,7 +79,14 @@ from .tasks import email_template_crm, rejection_mail, send_sms_crm, transaction
 
 
 # from apps.pulls.management.commands.firestore import is_bet_disabled
-from apps.users.models import AccountDetails, BonusPercentage, OtpCredsInfo, PromoCodes, SuperAdminSetting
+from apps.users.models import (
+        AccountDetails,
+        BonusPercentage,
+        OtpCredsInfo,
+        PromoCodes,
+        PromoCodesLogs,
+        SuperAdminSetting,
+        CmsPromotions)
 from apps.bets.models import BONUS, CASHBACK, CREDIT, DEBIT, DEPOSIT, WITHDRAW, Transactions
 from apps.users.utils import send_player_balance_update_notification
 from apps.users.models import (
@@ -157,7 +152,7 @@ class PlayersView(CheckRolesMixin, FormMixin, ListView):
     }
 
     def time_zone_converter(self,date_time_obj,Inverse_Time_flag):
-        
+
 
         try:
             current_timezone = self.request.session['time_zone']
@@ -168,11 +163,11 @@ class PlayersView(CheckRolesMixin, FormMixin, ListView):
         elif(current_timezone=='ru'):
             current_timezone='Europe/Moscow'
         elif(current_timezone=='tr'):
-            current_timezone='Turkey'    
+            current_timezone='Turkey'
         else:
             current_timezone='Europe/Berlin'
         timee=date_time_obj.replace(tzinfo=None)
-        
+
         if(Inverse_Time_flag):
             new_tz=pytz.timezone(current_timezone)
             old_tz=pytz.timezone("EST")
@@ -182,7 +177,7 @@ class PlayersView(CheckRolesMixin, FormMixin, ListView):
         new_timezone_timestamp = old_tz.localize(timee).astimezone(new_tz)
         return new_timezone_timestamp
 
-    
+
     def get_queryset(self):
         agents = self.request.GET.getlist("agents", "")
         dealers = self.request.GET.getlist("dealers", "")
@@ -192,7 +187,7 @@ class PlayersView(CheckRolesMixin, FormMixin, ListView):
         location = self.request.GET.get("location", "")
         zip_code = self.request.GET.get("zip_code", "")
         is_verified = self.request.GET.get('is_verified', '')
-        
+
         if self.request.GET.get("from"):
             start_date = datetime.strptime(self.request.GET.get("from"), self.date_format).strftime("%Y-%m-%d")
             self.queryset = self.queryset.filter(created__gte=start_date)
@@ -228,7 +223,7 @@ class PlayersView(CheckRolesMixin, FormMixin, ListView):
                 )
         if(zip_code):
                 self.queryset = self.queryset.filter(zip_code=zip_code)
-        
+
 
         if order and order in self.ORDER_MAPPING.keys():
             self.queryset = self.queryset.order_by(self.ORDER_MAPPING[order])
@@ -238,7 +233,7 @@ class PlayersView(CheckRolesMixin, FormMixin, ListView):
             self.queryset = self.queryset.filter(dealer=self.request.user)
         if self.request.user.role == "agent":
             self.queryset = self.queryset.filter(agent=self.request.user)
-        
+
         ResponsibleGambling.objects.filter(blackout_expire_time__lt = datetime.now(timezone.utc)) \
                                    .update(blackout_expire_time=None,blackout_expire_hours=None,is_blackout=False)
 
@@ -282,13 +277,13 @@ class PlayersView(CheckRolesMixin, FormMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        
+
         # defaults
         context['selected_dealers'] = Dealer.objects.none()
         context['selected_agents'] = Agent.objects.none()
         context['selected_players'] = Player.objects.none()
         context['data'] = {}
-        
+
         current_date = timezone.now()
         first_day_of_month_UTC = current_date.replace(day=1, hour=0, minute=0)
         first_day_of_month=self.time_zone_converter(first_day_of_month_UTC,True)
@@ -317,7 +312,7 @@ class PlayersView(CheckRolesMixin, FormMixin, ListView):
 
         if agents:
             context["selected_agents"] = Agent.objects.filter(id__in=agents)
-        
+
         if user_name:
             context["selected_players"] = Player.objects.filter(id__in=user_name)
         return context
@@ -339,7 +334,7 @@ class DealerAjaxView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxRespons
         if search:
             dealers = dealers.annotate(username_lower=Lower("username")).filter(
                username__istartswith=search.lower()).order_by('username')
-            
+
         dealers = dealers.values("id", "username")[0:10]
         results = []
         for dealer in dealers:
@@ -360,7 +355,7 @@ class AgentAjaxView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponse
 
 
     def post_ajax(self, request, *args, **kwargs):
-       
+
         term = request.POST.get("search")
         dealer_ids = request.POST.getlist("dealers[]", None)
         agents = Agent.objects.all()
@@ -390,12 +385,12 @@ class AgentAjaxView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponse
 class PlayerAjaxView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseMixin, View):
     http_method_names = ("post",)
     allowed_roles = ("admin", "dealer", "superadmin","agent","staff")
-    
+
 
     def post_ajax(self, request, *args, **kwargs):
         term = request.POST.get("search")
         players = Player.objects.all()
-        
+
         agents = Agent.objects.all()
         dealer_ids = request.POST.getlist("dealer[]", None)
         agent_ids = request.POST.getlist("agent[]",None)
@@ -406,15 +401,15 @@ class PlayerAjaxView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxRespons
         if request.user.role=='dealer':
             agents=agents.filter(dealer=self.request.user)
             players=players.filter(agent_id__in=agents)
-        
+
         if request.user.role == "agent":
             players = players.filter(agent=self.request.user)
-        
+
         elif agent_ids:
             players = players.filter(agent_id__in=agent_ids)
-        
+
         elif dealer_ids:
-    
+
             agents=agents.filter(dealer_id__in=dealer_ids)
             players=players.filter(agent_id__in=agents)
         if term and request.POST.get("affiliate"):
@@ -422,17 +417,17 @@ class PlayerAjaxView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxRespons
             players = players.annotate(username_lower=Lower("username")).filter(
                 username_lower__istartswith=term.lower()
             ).order_by('username')
-        
+
         if term and request.POST.get("affiliate_new"):
             players = Player.objects.filter(affiliate_link__isnull=True)
             players = players.annotate(username_lower=Lower("username")).filter(
                 username_lower__istartswith=term.lower()
             ).order_by('username')
-          
-                
 
-       
-    
+
+
+
+
         # if request.user.role == "dealer":
         #     agents = agents.filter(dealer=self.request.user)
 
@@ -442,7 +437,7 @@ class PlayerAjaxView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxRespons
         results = []
         for player in players:
             results.append({"value": player["id"], "text": player["username"]})
-        
+
         return self.render_json_response(results)
 
     @method_decorator(csrf_exempt)
@@ -472,7 +467,7 @@ class VerifyPlayer(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseM
                     },
                     status=status.HTTP_400_BAD_REQUEST
                 )
-            
+
             if player.get_is_verified():
                 player.set_is_verified(-1)
                 verify = "unverified"
@@ -511,7 +506,7 @@ class CreatePlayer(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseM
             last_name = request.POST.get("last_name", "")
             password = request.POST.get("password", "")
             confirm_password = request.POST.get("confirm_password", "")
-            
+
             if Users.objects.filter(username__iexact=user_name).exists():
                 return self.render_json_response({
                     "status": "Failed", 
@@ -519,7 +514,7 @@ class CreatePlayer(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseM
                     },
                     status=status.HTTP_400_BAD_REQUEST
                 )
-                
+
             email_pattern = r'^[\w\.-]+@[a-zA-Z\d\.-]+\.[a-zA-Z]{2,}$'
             if Users.objects.filter(email=email).exists():
                 return self.render_json_response({
@@ -535,9 +530,9 @@ class CreatePlayer(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseM
                     },
                     status=status.HTTP_400_BAD_REQUEST
                 )
-                
-                
-                
+
+
+
             pattern = re.compile("[A-Za-z0-9]*$")
             if not pattern.fullmatch(user_name):
                 return self.render_json_response(
@@ -549,7 +544,7 @@ class CreatePlayer(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseM
                 )
             # past = datetime.datetime.strptime(dob, "%Y-%m-%d")
             # present = datetime.datetime.now()
-            
+
             if len(user_name) < 4:
                 return self.render_json_response(
                     {
@@ -567,7 +562,7 @@ class CreatePlayer(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseM
                     },
                     status=status.HTTP_400_BAD_REQUEST
                 )
-            
+
             if password != confirm_password:
                 return self.render_json_response(
                     {
@@ -576,7 +571,7 @@ class CreatePlayer(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseM
                     },
                     status=status.HTTP_400_BAD_REQUEST
                 )
-            
+
             # if (phone_number.isdigit()!=True):
             #     return self.render_json_response(
             #         {
@@ -600,7 +595,7 @@ class CreatePlayer(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseM
             #         },
             #         status=status.HTTP_400_BAD_REQUEST
             #     )  
-            
+
             # if (zip_code.isdigit()!=True):
             #     return self.render_json_response(
             #         {
@@ -621,10 +616,10 @@ class CreatePlayer(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseM
                     },
                     status=status.HTTP_400_BAD_REQUEST
                 )
-            
+
             # if(past > present):
-            
-                
+
+
             #     return self.render_json_response(
             #         {
             #             "status": "Failed",
@@ -633,7 +628,7 @@ class CreatePlayer(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseM
             #         status=status.HTTP_400_BAD_REQUEST
             #     )
             print(dob.split("-")[0], "**********************************")
-                
+
             player = Player()
 
             player.username = user_name
@@ -676,7 +671,7 @@ class CreatePlayer(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseM
             player.is_active = True
             player.last_activity_time = timezone.now()
             player.mnet_password = make_password(f"{user_name}{random.randint(1000, 9999)}")[:30]
-            
+
 
             player.is_redeemable_amount = True
             default_val = DefaultAffiliateValues.objects.first()
@@ -691,11 +686,11 @@ class CreatePlayer(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseM
             player.ensure_country_obj()
             player.save()
 
-            
+
 
             #########################  Affiliate Changes Start  ########################
             player = Users.objects.filter(id=player.id).first()
-            
+
             project_domain = settings.PROJECT_DOMAIN
             key = str(settings.SECRET_KEY)[0:32]
             fernet_key = base64.urlsafe_b64encode(key.encode())
@@ -703,7 +698,7 @@ class CreatePlayer(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseM
             encry_msg = fernet_obj.encrypt((str(player.id)).encode())
             encry_user = encry_msg.decode()
             player.affiliate_link = project_domain + "/affiliate-invite?affiliate_code=" + encry_user
-            
+
             player.save()
             #########################  Affiliate Changes End  ########################
 
@@ -766,11 +761,11 @@ class CheckLogin(TemplateView, views.JSONResponseMixin, views.AjaxResponseMixin,
 
 class UpdatePlayer(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseMixin, View):
     allowed_roles = ("agent",)
-    
+
     # def handle_no_permission(self):
     #     return HttpResponseRedirect(settings.LOGIN_URL)
 
-    def post_ajax(self, request, *args, **kwargs):
+def post_ajax(self, request, *args, **kwargs):
         user_name = request.POST.get("username", "")
         password = request.POST.get("password", "")
         confirm_password = request.POST.get("confirm_password", "")
@@ -786,12 +781,12 @@ class UpdatePlayer(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseM
         # zipcode = request.POST.get("zip_code","")       
         # profile_pic=request.FILES.get("profile_pic","")                      
         player = Player.objects.get(username__iexact=user_name)
-        
+
         # if phone_number!=player.phone_number and  Users.objects.filter(phone_number=phone_number).exists():
         #     return self.render_json_object_response(
         #         {"status": "Failed", "message": "phone number already exists"}
         #     )
-          
+
         # if not pattern.fullmatch(user_name):
         #     return self.render_json_response(
         #         {"status": "Failed", "message": "Username must be Alphanumeric"}
@@ -812,7 +807,7 @@ class UpdatePlayer(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseM
                     "message": _("The password has to be at least 8 characters"),
                 },status=status.HTTP_400_BAD_REQUEST
             )
-        
+
         if password and (password != confirm_password):
                 return self.render_json_response(
                     {
@@ -821,7 +816,7 @@ class UpdatePlayer(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseM
                     },
                     status=status.HTTP_400_BAD_REQUEST
                 )
-        
+
         email_pattern = r'^[\w\.-]+@[a-zA-Z\d\.-]+\.[a-zA-Z]{2,}$'
         if player.email!=email and Users.objects.filter(email=email).exists():
             return self.render_json_response({
@@ -837,7 +832,7 @@ class UpdatePlayer(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseM
                 },
                 status=status.HTTP_400_BAD_REQUEST
             )
-        
+
         # if((player.phone_number!= phone_number) or (player.country_code!= country_code)):
         #     if Users.objects.filter(phone_number=phone_number,country_code=country_code).exists():
         #             return self.render_json_response({
@@ -846,7 +841,7 @@ class UpdatePlayer(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseM
         #             },
         #             status=status.HTTP_400_BAD_REQUEST
         #         )    
-        
+
         # if (country_code.isdigit()!=True):
         #         return self.render_json_response(
         #             {
@@ -865,7 +860,7 @@ class UpdatePlayer(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseM
             player.first_name = first_name
             player.last_name = last_name
             # player.zip_code = int(zipcode)
-            
+
             # if profile_pic:     
             #     filename_format = profile_pic.name.split(".")
             #     name, format = filename_format[-2], filename_format[-1]
@@ -987,7 +982,7 @@ class AgentsView(CheckRolesMixin, FormMixin, ListView):
             old_tz=pytz.timezone(current_timezone)
             new_tz=pytz.timezone("EST")
         new_timezone_timestamp = old_tz.localize(timee).astimezone(new_tz)
-        
+
         return new_timezone_timestamp
 
 
@@ -996,7 +991,7 @@ class AgentsView(CheckRolesMixin, FormMixin, ListView):
         dealers = self.request.GET.get("dealers")
         user_name = self.request.GET.get("user_name", "").split(",")
         order = self.request.GET.get("order", "7")
-        
+
         if self.request.GET.get("from"):
             start_date = datetime.strptime(self.request.GET.get("from"), self.date_format).strftime("%Y-%m-%d")
             self.queryset = self.queryset.filter(created__gte=start_date)
@@ -1039,7 +1034,7 @@ class AgentsView(CheckRolesMixin, FormMixin, ListView):
         context["dealers"] = Dealer.objects.all().order_by("username")
         context["to"] = self.request.GET.get("to", current_time.strftime(self.date_format))
         context["from"] = self.request.GET.get("from", first_day_of_month.strftime(self.date_format))
-        
+
         dealers = self.request.GET.get("dealers", "")
 
         if self.request.user.role == "dealer":
@@ -1086,7 +1081,7 @@ class CreateAgent(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseMi
                     "message": _("The password has to be at least 5 characters"),
                 }
             )
-        
+
         if password != confirm_password:
             return self.render_json_response(
                 {
@@ -1106,7 +1101,7 @@ class CreateAgent(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseMi
         agent.is_active = True
         agent.save()
 
-      
+
         CronInfo.objects.create(
             agent=agent,
         )
@@ -1181,7 +1176,7 @@ class DealerView(CheckRolesMixin, FormMixin, ListView):
     #     return HttpResponseRedirect(settings.LOGIN_URL)
 
     def time_zone_converter(self,date_time_obj,Inverse_Time_flag):
-        
+
 
         try:
             current_timezone = self.request.session['time_zone']
@@ -1248,7 +1243,7 @@ class DealerView(CheckRolesMixin, FormMixin, ListView):
 
         if self.request.user.role in ("admin", "superadmin", "dealer"):
             context["username"] = self.request.GET.get("user_name", "")
-        
+
         return context
 
 
@@ -1287,7 +1282,7 @@ class CreateDealer(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseM
                     "message": _("The password has to be at least 5 characters"),
                 }
             )
-        
+
         if password != confirm_password:
             return self.render_json_response(
                 {
@@ -1312,7 +1307,7 @@ class CreateDealer(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseM
             dealer.is_active = True
             dealer.save()
 
-           
+
 
             return self.render_json_response({"status": "Success", "message": _("Master Agent has been created.")})
 
@@ -1366,7 +1361,7 @@ class CreditAjaxView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxRespons
     http_method_names = ("post",)
     allowed_roles = ("admin", "dealer", "superadmin", "agent")
     input_fields = ("value", "player_id", "type")
-    
+
     # def handle_no_permission(self):
     #     return HttpResponseRedirect(settings.LOGIN_URL)
 
@@ -1378,7 +1373,7 @@ class CreditAjaxView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxRespons
                 and Player.objects.filter(id=request.POST["player_id"])
                 and request.POST["value"].isnumeric()
             ):  
-                
+
                 admin = Admin.objects.filter(id=request.user.admin.id).first()
                 if(request.POST["type"] == "decrease"):
                     player_id = request.POST["player_id"]
@@ -1389,7 +1384,7 @@ class CreditAjaxView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxRespons
                     except:
                         current_time = timezone.now()
                         time_differnce = timedelta( minutes = 50 )
-        
+
                     resettlement_time = timedelta( minutes = 5 )
                     if(time_differnce < resettlement_time):
                         waiting_time = resettlement_time - time_differnce
@@ -1402,15 +1397,15 @@ class CreditAjaxView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxRespons
                         return self.render_json_response(
                             {"status": "Wait", "message": msg}
                         )
-    
+
                 player = Player.objects.filter(id=request.POST["player_id"]).first()
                 deposit_count_np = NowPaymentsTransactions.objects.filter(user=player,transaction_type='DEPOSIT',payment_status='finished',created__date=date.today()).count()
-                
+
                 deposit_bonus_given_count = Transactions.objects.filter(user=player, journal_entry='deposit', created__date=date.today()).count() + deposit_count_np + 1
 
                 # increase
                 if request.POST["type"] == "increase":
-                    
+
                     # bonus_percentage_obj = BonusPercentage.objects.filter(bonus_type="deposit_bonus").first()
                     # if bonus_percentage_obj.deposit_bonus_per_day_limit < deposit_bonus_given_count + 1:
                     #     return self.render_json_response(
@@ -1432,7 +1427,7 @@ class CreditAjaxView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxRespons
                     player = Player.objects.filter(id=request.POST["player_id"]).first()
                     if(player.balance < Decimal(request.POST["value"])):
                          return self.render_json_response({"status": "Failed", "message": f"you cannot withdraw max amount you can withdraw {player.balance}"})
-                    
+
                     delta = "-" + request.POST["value"]
                     journal_entry = "withdraw"
                     description = "Withdraw by Agent from player"
@@ -1444,7 +1439,7 @@ class CreditAjaxView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxRespons
                 bonus_to_be_given=0
                 admin = Admin.objects.filter(id=request.user.admin.id).first()
                 bonus_type = None
-                
+
                 player.save()
 
                 send_player_balance_update_notification(player)
@@ -1466,7 +1461,7 @@ class CreditAjaxView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxRespons
 
             player = Player.objects.get(id=request.POST["player_id"])
             admin = Admin.objects.filter(id=request.user.admin.id).first()
-          
+
             # try:
             #     bonus_percentage_obj = BonusPercentage.objects.filter(bonus_type="deposit_bonus").first()
             #     perc = bonus_percentage_obj.percentage if bonus_percentage_obj else 0
@@ -1488,13 +1483,13 @@ class CreditAjaxView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxRespons
             #                 player.balance += bonus_percentage_obj.deposit_bonus_limit
             #                 bonus_to_be_given = bonus_percentage_obj.deposit_bonus_limit
             #                 bonus_type="deposit_bonus"
-                    
+
             #             if bonus_percentage_obj.deposit_bonus_per_day_limit >= deposit_bonus_given_count and request.POST["type"] == "increase":
 
             #                 calculated_bonus = (Decimal(delta)/100)* Decimal(perc)
             #                 if calculated_bonus > bonus_percentage_obj.deposit_bonus_limit:
             #                     bonus = bonus_percentage_obj.deposit_bonus_limit
-                            
+
             #                 Transactions.objects.update_or_create(
             #                         user=player,
             #                         journal_entry="bonus",
@@ -1510,7 +1505,7 @@ class CreditAjaxView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxRespons
             #                 )
             #             player.save()                   
             #             send_player_balance_update_notification(player)                   
-                       
+
             deposit_count_np_wl = NowPaymentsTransactions.objects.filter(user=player,transaction_type='DEPOSIT',payment_status='finished').count()
             deposit_count = Transactions.objects.filter(user=player, journal_entry='deposit').count() + deposit_count_np_wl
             promo_obj = PromoCodes.objects.filter(promo_code=player.applied_promo_code, is_expired=False).first() if player.applied_promo_code else None
@@ -1520,7 +1515,7 @@ class CreditAjaxView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxRespons
                     bonus_to_be_given = min(welcome_bonus, promo_obj.max_bonus_limit)
                     previous_bal = player.balance
                     player.bonus_balance = round(Decimal(float(player.bonus_balance)+float(bonus_to_be_given)),2)
-                    
+
                     Transactions.objects.update_or_create(
                         user=player,
                         journal_entry="bonus",
@@ -1537,7 +1532,7 @@ class CreditAjaxView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxRespons
                     send_player_balance_update_notification(player)
                 except Exception as e:
                     print(e)
-            
+
             player = Player.objects.get(id=request.POST["player_id"])
             if(player.affiliated_by and request.POST["type"] == "increase"):
                 affiliate = player.affiliated_by
@@ -1642,15 +1637,15 @@ class PaymentDelayView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxRespo
             latest_settled_bet_time = Transactions.objects.filter(user__id = id, journal_entry='debit').exclude(betslip__isnull=True).latest('modified').modified
             current_time = timezone.now()
             time_differnce = current_time - latest_settled_bet_time
-         
+
         except:
             current_time = timezone.now()
             time_differnce = timedelta( minutes = 50 )
-        
+
         resettlement_time = timedelta( minutes = 5 )
         if(time_differnce > resettlement_time):
             response_data['status'] = "na"
-           
+
             response_data['message'] = 'na'
         else:
             response_data['status'] = "wait"
@@ -1660,10 +1655,10 @@ class PaymentDelayView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxRespo
             minutes,seconds = waiting_time.split(":")
             waiting_time = minutes + " M" + " : " + seconds + " S"
             response_data['message'] = _("You can withdraw after : ") + waiting_time
-    
+
 
         return self.render_json_response(response_data)
-    
+
     @method_decorator(csrf_exempt)
     def dispatch(self, *args, **kwargs):
         return super().dispatch(*args, **kwargs)
@@ -1750,7 +1745,7 @@ class AdminView(CheckRolesMixin, ListView):
             self.queryset = self.queryset.filter(username__iexact=user_name)
         if self.queryset.count() == 0:
             messages.error(self.request, _("Admin Not Found!"))
-        
+
 
 
 
@@ -1835,7 +1830,7 @@ class CreateAdmin(CheckRolesMixin, CreateView):
         self.object.is_superuser = False
         self.object.is_active = True
 
-        
+
 
         return super().form_valid(form)
 
@@ -1870,7 +1865,7 @@ class TransactionListView(CheckRolesMixin, ListView):
             queryset = queryset.filter(reduce(operator.or_, filter_clauses))
 
         if self.request.GET.get("username"):
-         
+
             queryset = queryset.annotate(
                 user_username_lower=Lower("user__username"),
                 merchant_username_lower=Lower("merchant__username"),
@@ -1880,7 +1875,7 @@ class TransactionListView(CheckRolesMixin, ListView):
             )
         if self.request.GET.get("dropdown"):
              queryset=queryset.filter(journal_entry=self.request.GET.get("dropdown"))
-             
+
         if self.request.GET.get("from"):
             start_date = datetime.strptime(self.request.GET.get("from"), self.date_format).strftime("%Y-%m-%d")
             queryset = queryset.filter(created__gte=start_date)
@@ -1903,7 +1898,7 @@ class TransactionListView(CheckRolesMixin, ListView):
 
         context = super().get_context_data(**kwargs)
         context["username"] = self.request.GET.get("username", "")
-  
+
         context["from"] = self.request.GET.get("from", first_day_of_month)
         context["to"] = self.request.GET.get("to", timezone.now().strftime(self.date_format))
         context["dropdown"]=self.request.GET.get("dropdown", "")
@@ -2011,11 +2006,11 @@ class ProfitView(CheckRolesMixin, TemplateView,views.JSONResponseMixin,views.Aja
         return new_timezone_timestamp
 
     def get_ajax(self, request, *args, **kwargs):
-        
+
         # currency=request.session['currency']
 
         # user_currency = self.request.user.currency
-        
+
         # result=self.result
         context=dict()
 
@@ -2114,7 +2109,7 @@ class ProfitView(CheckRolesMixin, TemplateView,views.JSONResponseMixin,views.Aja
 
         # context["from"] = (first_day_of_month.strftime(self.date_format))
         # context["to"] =(current_time.strftime(self.date_format))
-        
+
         context["username"] = self.request.GET.get("username", "")
         context["from"] = start_date.strftime(self.date_format)
         context["to"] = end_date.strftime(self.date_format)
@@ -2128,9 +2123,9 @@ class ProfitView(CheckRolesMixin, TemplateView,views.JSONResponseMixin,views.Aja
 
                 .aggregate(cashback_amount=Sum("bonus_amount"))
         )
-        
+
         # Casino Profit Calculation - Starts
-        
+
         casino_in_sum = (
             GSoftTransactions.objects.filter(reduce(operator.and_, filter_clauses))
             .filter(request_type=GSoftTransactions.RequestType.wager)
@@ -2142,14 +2137,14 @@ class ProfitView(CheckRolesMixin, TemplateView,views.JSONResponseMixin,views.Aja
             .filter(request_type__in=[GSoftTransactions.RequestType.result, GSoftTransactions.RequestType.rollback])
             .aggregate(out_sum=Sum("amount"))
         )
-        
+
         context["bonus"]=round((bonus_sum["cashback_amount"] or 0),2)
         context["casino_in_sum"] = round(Decimal(casino_in_sum.get("in_sum") or 0), 2)
         context["casino_out_sum"] = round(Decimal(casino_out_sum.get("out_sum") or 0), 2)
         context["casino_book_profit"] = context["casino_in_sum"] - context["casino_out_sum"]
         # Casino Profit Calculation - Ends
-        
-        
+
+
         # Offmarket Profit Calculation - Starts
         offmarket_bonus = 0
         # NOTE: Commenting because Offmarket bonus is not added to users bonus balance
@@ -2159,23 +2154,23 @@ class ProfitView(CheckRolesMixin, TemplateView,views.JSONResponseMixin,views.Aja
         # ).aggregate(
         #     bonus_amount=Sum("bonus")
         # ).get("bonus_amount")
-        
+
         offmarket_in_sum = OffMarketTransactions.objects.filter(reduce(operator.and_, filter_clauses)).filter(
             transaction_type = OffMarketTransactions.TransactionStatus.success,
             journal_entry = "credit"
         ).aggregate(in_sum=Sum("amount"))
-            
+
         offmarket_out_sum = OffMarketTransactions.objects.filter(reduce(operator.and_, filter_clauses)).filter(
             transaction_type = OffMarketTransactions.TransactionStatus.success,
             journal_entry__in = ["debit", "refund"]
         ).aggregate(out_sum=Sum("amount"))
-        
+
         context["bonus"] = -round((context["bonus"] + (offmarket_bonus or 0)), 2)
         context["offmarket_in_sum"] = round(Decimal(offmarket_in_sum.get("in_sum") or 0), 2)
         context["offmarket_out_sum"] = round(Decimal(offmarket_out_sum.get("out_sum") or 0), 2)
         context["offmarket_profit"] = context["offmarket_in_sum"] - context["offmarket_out_sum"]
         # Offmarket Profit Calculation - Ends
-        
+
         # Sports Book Out Sum Adjusted - Starts
 
         context["sports_book_out_sum"] = (
@@ -2186,7 +2181,7 @@ class ProfitView(CheckRolesMixin, TemplateView,views.JSONResponseMixin,views.Aja
             # Sports Book Out Sum Adjusted - Ends
 
             # Sports Book Profit - Starts
-     
+
             # Sports Book Profit - Ends
 
         # Total In Sum - Starts
@@ -2317,7 +2312,7 @@ class CashbackPermissionView(CheckRolesMixin, views.JSONResponseMixin, views.Aja
                     user.cashback_status = True
                     agents.update(cashback_status = True)
                     players.update(cashback_status = True)
-                    
+
                     user.save()
                     message = _("Cashback has been enabled successfully.")
                 else:
@@ -2335,7 +2330,7 @@ class CashbackPermissionView(CheckRolesMixin, views.JSONResponseMixin, views.Aja
                     user.save()
 
                     message = _("Cashback has been disabled successfully.")
-            
+
             elif user.role == "agent":
                 players = Player.objects.filter(agent=user)
 
@@ -2346,7 +2341,7 @@ class CashbackPermissionView(CheckRolesMixin, views.JSONResponseMixin, views.Aja
                     cron_obj.save()
                     user.cashback_status = True
                     players.update(cashback_status = True)
-                    
+
                     user.save()
                     message = _("Cashback has been enabled successfully.")
                 else:
@@ -2360,7 +2355,7 @@ class CashbackPermissionView(CheckRolesMixin, views.JSONResponseMixin, views.Aja
 
                     user.save()
                     message = _("Cashback has been disabled successfully.")
-            
+
             elif user.role == "player":
 
                 if cashback_status == "true":
@@ -2525,7 +2520,7 @@ class ActivateDeactivatePlayerView(CheckRolesMixin, views.JSONResponseMixin, vie
                 responsible_gambling.blackout_expire_hours = None
                 message = _("Player has been removed from blackout successfully.")
             responsible_gambling.save()
-            
+
         player.save()
         return self.render_json_response({"status": "Success", "message": message})
 
@@ -2632,12 +2627,12 @@ class PlayerTransactionsView(CheckRolesMixin, views.JSONResponseMixin, views.Aja
                 elif "bonus" in description.lower() or (obj.bonus_type and  "bonus" in obj.bonus_type.lower()):
                     trans_type = obj.bonus_type.replace('_', ' ')
                     amount = round(obj.bonus_amount,2)
-                    
+
                 else:
                     # if obj.journal_entry == CREDIT:
                     #     amount = -amount
                     trans_type = "Betting"
-        
+
                 timezone = request.session._session_cache['user_timezone'] 
                 created = obj.created + timedelta(minutes=int(timezone))
                 response = {
@@ -2660,7 +2655,7 @@ class PlayerTransactionsView(CheckRolesMixin, views.JSONResponseMixin, views.Aja
 
 
 class CasinoTransactionsView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseMixin, View):
-    
+
     http_method_names = [
         "get",
     ]
@@ -2727,9 +2722,9 @@ class UserProfitView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxRespons
     http_method_names = ["get"]
     date_format = "%d/%m/%Y"
     allowed_roles = ("superadmin", "admin", "dealer", "agent")
-    
+
     def time_zone_converter(self,date_time_obj,Inverse_Time_flag):
-        
+
 
         try:
             current_timezone = self.request.session['time_zone']
@@ -2750,11 +2745,11 @@ class UserProfitView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxRespons
         else:
             old_tz=pytz.timezone(current_timezone)
             new_tz=pytz.timezone("EST")
-        
+
         new_timezone_timestamp = old_tz.localize(timee).astimezone(new_tz)
         return new_timezone_timestamp
 
-    
+
     def get_total_out(self, sports_book_out_sum_records):
         sports_book_out_sum_value = 0
         for betslip in sports_book_out_sum_records:
@@ -2780,7 +2775,7 @@ class UserProfitView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxRespons
 
         if isinstance(to_date, str):
             to_date = datetime.strptime(to_date, self.date_format)
-            
+
         # if from_date:
         #     from_date = self.time_zone_converter(from_date, False)
         # else:
@@ -2800,13 +2795,13 @@ class UserProfitView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxRespons
         #     filter_clauses.append(Q(created__gte=from_date))
         #     filter_clauses_cashout.append(Q(created__gte=from_date))
         #     filter_clauses_bonus.append(Q(created__gte=from_date))
-        
+
 
         # if to_date:
         #     filter_clauses.append(Q(created__lte=to_date))
         #     filter_clauses_cashout.append(Q(created__lte=to_date))
         #     filter_clauses_bonus.append(Q(created__lte=to_date))
-    
+
         user_id = kwargs.get("user_id")
         user = Users.objects.get(pk=user_id)
 
@@ -2820,19 +2815,19 @@ class UserProfitView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxRespons
             filter_clauses.append(Q(user__dealer__id=user_id))
             filter_clauses_bonus.append(Q(user__dealer__id=user_id))
 
-       
+
         player_bonus_amount = Transactions.objects.filter(
             reduce(operator.and_, filter_clauses_bonus),
             bonus_type__in=['welcome_bonus','deposit_bonus','affiliate_bonus', "bet_bonus"]
         ).aggregate(bonus_amount=Sum("bonus_amount")).get("bonus_amount")
-        
+
         offmarket_bonus_amount = 0
         # NOTE: Commenting because Offmarket bonus is not added to users bonus balance
         # offmarket_bonus_amount = OffMarketTransactions.objects.filter(
         #     reduce(operator.and_, filter_clauses_bonus),
         #     bonus__gt= 0
         # ).aggregate(bonus_amount=Sum("bonus")).get("bonus_amount")
-        
+
         # casino provider
         casino_in_sum = (
             GSoftTransactions.objects.filter(reduce(operator.and_, filter_clauses))
@@ -2845,19 +2840,19 @@ class UserProfitView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxRespons
             .filter(request_type__in=[GSoftTransactions.RequestType.result, GSoftTransactions.RequestType.rollback])
             .aggregate(out_sum=Sum("amount"))
         )
-        
+
         # Offmarket Profit Calculation - Starts
-        
+
         offmarket_in_sum = OffMarketTransactions.objects.filter(reduce(operator.and_, filter_clauses)).filter(
             transaction_type = OffMarketTransactions.TransactionStatus.success,
             journal_entry = "credit"
         ).aggregate(in_sum=Sum("amount"))
-            
+
         offmarket_out_sum = OffMarketTransactions.objects.filter(reduce(operator.and_, filter_clauses)).filter(
             transaction_type = OffMarketTransactions.TransactionStatus.success,
             journal_entry__in = ["debit", "refund"]
         ).aggregate(out_sum=Sum("amount"))
-        
+
         response = {}
         response["offmarket_in_sum"] = round(Decimal(offmarket_in_sum.get("in_sum") or 0), 2)
         response["offmarket_out_sum"] = round(Decimal(offmarket_out_sum.get("out_sum") or 0), 2)
@@ -2868,7 +2863,7 @@ class UserProfitView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxRespons
         response["casino_out_sum"] = round(Decimal(casino_out_sum.get("out_sum") or 0), 2)
         response["casino_book_profit"] = response["casino_in_sum"] - response["casino_out_sum"]
 
-     
+
 
 
         response["all_in"] = (
@@ -2893,7 +2888,7 @@ class UserProfitView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxRespons
 def SettingsView(request):
     if not request.user.is_authenticated:
         return HttpResponseRedirect(settings.LOGIN_URL)
-    
+
     try:
         permission_value = SuperAdminSetting.objects.first().is_bet_disabled
     except:
@@ -2907,7 +2902,7 @@ def PaymentGatewayView(request):
     preference_id = preference.get('id')
     init_point = preference.get('init_point')
     return render(request, "includes/payment_gateway.html", {"preference_id":preference_id, "init_point":init_point})
-    
+
 
 class InitiatePaymentView(APIView):
     http_method_names = ("get",)
@@ -2952,7 +2947,7 @@ class SaveAccountDetails(CheckRolesMixin, UpdateView):
             return HttpResponse("access_token not provided")
         if "public_key" not in data:
             return HttpResponse("public_key not provided")
-        
+
         account_detail = AccountDetails.objects.filter(user=user_id)
         if account_detail:
             account_detail.update(**data)
@@ -2995,7 +2990,7 @@ class DashboardView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponse
                 profit_range = 30*12
         id = self.request.user.id
         total_profit_data = {}
-        
+
         if request.user.role =='staff':
             player_count =  Queue.objects.filter(is_active=True,user__agent=request.user.agent).count() 
             tip_amount = Transactions.objects.filter(created__gte=created_gte,description__icontains=self.request.user.username).aggregate(Sum('amount'))
@@ -3027,8 +3022,8 @@ class DashboardView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponse
             context["total_profit_data"] = total_profit_data
             context['pending_ca_req'] = CashAppDeatils.objects.filter(user__agent_id = id, status = CashAppDeatils.StatusType.pending,is_active = True, created__gte=created_gte).count()
             return self.render_json_response(context)
-            
-    
+
+
         if request.user.role=='superadmin':
             total_players=Users.objects.filter(role="player").count()
             new_registrations = Users.objects.filter(role="player",created__gte=created_gte).count()
@@ -3038,7 +3033,7 @@ class DashboardView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponse
             total_agents=Users.objects.filter(role="agent").count()
             total_profit_data["credit"] = Transactions.objects.filter(journal_entry__in=["credit","withdraw"]).aggregate(Sum("amount"))
             total_profit_data["debit"] = Transactions.objects.filter(journal_entry__in=["debit","deposit"]).aggregate(Sum("amount")) 
-               
+
         if request.user.role=="admin":
                 total_players=Users.objects.filter(admin_id=id,role="player").count()
                 total_earned_by_affiliates = Transactions.objects.filter(created__gte=created_gte,journal_entry='bonus',bonus_type='affiliate_bonus').aggregate(Sum("amount"))['amount__sum']
@@ -3082,10 +3077,10 @@ class DashboardView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponse
             context["website_headers"] = list(CasinoHeaderCategory.objects.order_by("position").values("id", "name", "image", "is_active"))[:3]
             context["total_banners"] = AdminBanner.objects.filter(admin=admin_id, created__gte=created_gte).count()
             context["total_pages"] = CmsPages.objects.filter(created__gte=created_gte).count()
-            
+
         context["total_withdraws"]=Transactions.objects.filter(created__gte=created_gte,journal_entry="withdraw").count()
         context["total_deposits"]=Transactions.objects.filter(created__gte=created_gte,journal_entry="deposit").count()
-        
+
         if request.user.role in ["superadmin", "admin", "dealer", "agent", "staff"]:
             context["total_players"]=total_players
             context["verified_players"]=verified_players
@@ -3094,7 +3089,7 @@ class DashboardView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponse
             context["total_agents"]=total_agents
             context['is_staff'] = 'false'
             context["new_registrations"]=new_registrations
-            
+
             now = datetime.now()
             total_profit_data['profitrange']=profit_range
             for days in range(profit_range):
@@ -3104,7 +3099,7 @@ class DashboardView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponse
                 total_wager_amount = GSoftTransactions.objects.filter(request_type=GSoftTransactions.RequestType.wager, created__date=day).aggregate(Sum("amount"))['amount__sum'] or 0
                 total_amount = (Decimal(total_deposit_amount) + Decimal(total_wager_amount))
                 total_profit_data[total_profit_data[days]] = {"amount__sum":int(total_amount)}
-    
+
             context["total_profit_data"] = total_profit_data
             # data = self.calculate_profit_view(request.user, request.GET.get("data_range"))
             # context["top_chart_data"] = data
@@ -3131,7 +3126,7 @@ class TransactionReportView(CheckRolesMixin, ListView):
             queryset = queryset.filter(Q(user=self.request.user) | Q(merchant=self.request.user))
         elif user.role == "player":
             queryset = queryset.filter(Q(user=self.request.user))
-        
+
         if(self.request.GET.getlist("players", None)):
             queryset = queryset.filter(user__id__in=self.request.GET.getlist("players"))
 
@@ -3146,10 +3141,10 @@ class TransactionReportView(CheckRolesMixin, ListView):
 
         if self.request.GET.get("journal-entry") and self.request.GET.get("journal-entry") != "all":
             queryset = queryset.filter(journal_entry=self.request.GET.get("journal-entry"))
-        
+
         if self.request.GET.get("role"):
             queryset = queryset.filter(user__role = self.request.GET.get("role"))
-            
+
         if self.request.GET.get("transactionid") and self.request.GET.get("transactionid").isdigit():
             queryset = queryset.filter(id=self.request.GET.get("transactionid"))
 
@@ -3184,7 +3179,7 @@ class TransactionReportView(CheckRolesMixin, ListView):
                 last_month = datetime.today() - timedelta(days=30)
                 duration_start_date = last_month.strftime("%Y-%m-%d")
             queryset = queryset.filter(created__gte=duration_start_date).filter(created__date__lte=duration_end_date)
-        
+
         if self.request.GET.getlist("dealers"):
             dealers = self.request.GET.getlist("dealers")
             queryset = queryset.filter(user__dealer__in=dealers)
@@ -3192,7 +3187,7 @@ class TransactionReportView(CheckRolesMixin, ListView):
         if self.request.GET.getlist("agents"):
             agents = self.request.GET.getlist("agents")
             queryset = queryset.filter(user__agent__in=agents)
- 
+
         self.context_deposit = queryset.filter(journal_entry="deposit").aggregate(Sum("amount"))
         self.context_withdraw = queryset.filter(journal_entry="withdraw").aggregate(Sum("amount"))
         self.context_sum = queryset.filter(journal_entry__in=['deposit', 'withdraw']).aggregate(Sum("amount"))
@@ -3304,7 +3299,7 @@ class DownloadTransactionReport(View):
 
         if self.request.GET.get("journal-entry") and self.request.GET.get("journal-entry") != "all":
             queryset = queryset.filter(journal_entry=self.request.GET.get("journal-entry"))
-        
+
         if self.request.GET.get("role"):
             queryset = queryset.filter(user__role = self.request.GET.get("role"))
 
@@ -3320,7 +3315,7 @@ class DownloadTransactionReport(View):
         if self.request.GET.get("to"):
             end_date = datetime.strptime(self.request.GET.get("to"), self.date_format)
             queryset = queryset.filter(created__date__lte=end_date)
-        
+
         return ExcelResponse(queryset)
 
 
@@ -3332,11 +3327,11 @@ class SignUpBonusPermissionView(CheckRolesMixin, views.JSONResponseMixin, views.
     #     return HttpResponseRedirect(settings.LOGIN_URL)
 
     def post_ajax(self, request, *args, **kwargs):
-        
+
         admin_id = self.request.POST.get("adminID", None)
         sign_up_bonus_enabled = self.request.POST.get("isSignUpBonusEnabled", None)
         admin = Admin.objects.get(id=admin_id)
-        
+
 
         if sign_up_bonus_enabled == "true":
             sign_up_bonus_enabled = True
@@ -3344,7 +3339,7 @@ class SignUpBonusPermissionView(CheckRolesMixin, views.JSONResponseMixin, views.
         else:
             sign_up_bonus_enabled = False
             message = "Sign up bonus Disabled Successfully"
-        
+
         admin.is_welcome_bonus_enabled = sign_up_bonus_enabled
         admin.save()
 
@@ -3373,7 +3368,7 @@ def HeathCheckView(request):
 
 class OtpPermissionView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseMixin, View):
     allowed_roles = ("superadmin",)
-    
+
     # def handle_no_permission(self):
     #     return HttpResponseRedirect(settings.LOGIN_URL)
 
@@ -3438,18 +3433,127 @@ class BonusesView(CheckRolesMixin, ListView):
             context["losing_end_date"] = promo_obj.end_date.strftime(self.date_format)
             context["bonus_type"] = bonus_obj.bonus_type
             context["promo_code_usage_limit"] = promo_obj.usage_limit
+            context["promo_code_user_limit"] = promo_obj.limit_per_user
         except:
             context["losing_bonus"] = 0
             context["losing_start_date"] = timezone.now().strftime(self.date_format)
             context["losing_end_date"] = timezone.now().strftime(self.date_format)
             context["promo_code_usage_limit"] = 1
+            context["promo_code_user_limit"] = 1
+        return context
+
+
+class DetailBonusView(CheckRolesMixin, ListView):
+    """
+    This shows all the important info, as usage and times, from every promo_code
+    """
+    template_name = "admin/bonuses/bonus_info.html"
+    model = PromoCodesLogs
+    queryset = PromoCodesLogs.objects.none()
+    context_object_name = "bonus"
+    allowed_roles = ("admin")
+    date_format = "%d/%m/%Y"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        if not self.request.user.is_authenticated:
+            raise PermissionDenied
+        user = self.request.user
+
+        promo_code = self.kwargs.get("promo_code")
+        if not promo_code:
+            context['promo_code'] = None
+            return context
+
+        promo = PromoCodes.objects.filter(
+            dealer=user,
+            promo_code=promo_code,
+            bonus__bonus_type="welcome_bonus",
+        ).first()
+
+        if not promo:
+            return context
+
+        context["promo_code"] = promo_code
+        context["promo"] = promo
+
+        promos = PromoCodesLogs.objects.filter(
+                promocode=promo,
+                transfer__isnull=False
+            )
+
+        # Fetch raw logs
+        promos = PromoCodesLogs.objects.filter(
+            promocode=promo,
+            transfer__isnull=False
+        ).values("user__username", "created", "transfer", "transfer_gold")
+
+        # Build per-user usage data manually
+        promo_logs_dict = defaultdict(list)
+        for log in promos:
+            promo_logs_dict[log["user__username"]].append({
+                "date": log["created"],
+                "transfer": log["transfer"],
+                "transfer_gold": log["transfer_gold"]
+            })
+
+        # Convert dict to list with totals
+        promo_logs_list = []
+        for username, usages in promo_logs_dict.items():
+            promo_logs_list.append({
+                "user__username": username,
+                "total_usages": len(usages),
+                "total_transfer": sum(u["transfer"] for u in usages),
+                "total_transfer_gold": sum(u["transfer_gold"] for u in usages),
+                "usages": usages
+            })
+
+        # Sort by total_transfer descending
+        promo_logs_list = sorted(promo_logs_list, key=lambda x: x["total_transfer"], reverse=True)
+
+        context["promo_logs"] = promo_logs_list
+        # total days of promo
+        total_days = 0
+        days_passed = 0
+        if (promo.start_date and promo.end_date):
+            total_days = (promo.end_date - promo.start_date).days + 1
+            days_passed = min((date.today() - promo.start_date).days, total_days)
+        
+        day_units = f"{days_passed}/{total_days}"
+
+        if total_days - days_passed < 14:
+            day_units = f"{total_days - days_passed} left"
+        elif total_days > 50:
+            days_passed = round((days_passed / total_days) * 100, 2)
+            total_days = 100
+            day_units = f"{days_passed}%"
+            
+        transfer = round(sum(log["transfer"] for log in promos) if promos else 0, 2)
+        transfer_gold = round(sum(log["transfer_gold"] for log in promos) if promos else 0, 2)
+        usages = len(promos)
+        if not promos:
+            context["promo_logs"] = None
+        
+
+        # Overall analytics
+        context["analytics"] = {
+            "total_days": total_days,
+            "passed_days": days_passed,
+            "midle_text_days": day_units,
+            "total_midle_text": f"{transfer}",
+            "total_usages": len(promos),
+            "total_transfer": transfer,
+            "total_transfer_gold": transfer_gold,
+            "total_midle_text_gold": f"{transfer_gold}",
+        }
+
         return context
 
 
 class AutomatedBonusView(CheckRolesMixin, ListView):
     """
     Sign Up bonus view - Renamed from welcome bonus percentage
-    Ref: https://trello.com/c/xoCgHWtk
     """
     template_name = "admin/bonuses/automated_bonuses.html"
     model = PromoCodes
@@ -3459,32 +3563,36 @@ class AutomatedBonusView(CheckRolesMixin, ListView):
     date_format = "%d/%m/%Y"
 
     def get_queryset(self):
-        queryset = super().get_queryset()
+        try:
+            queryset = super().get_queryset()
+        except Exception:
+            queryset = PromoCodes.objects.none()
         queryset = queryset.filter(
             dealer=self.request.user, bonus__bonus_type="automated_promos"
         )
         data = {}
         for item in queryset:
             pres = {
-                ("gc" if item.bonus_percentage > 0 else "sc"): item.instant_bonus_amount,
+                "sc": item.instant_bonus_amount,
+                "gc": item.gold_bonus,
                 "enabled" : not bool(item.is_expired)
             }
             if item.promo_code in data:
                 data[item.promo_code].update(pres)
             else:
                 data[item.promo_code] = pres
-        
+
         return data
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["available_events"] = BONUS_EVENTS.items()
         return context
-    
+
 
 class UpdateAutomatedBonusView(APIView):
     permission_classes = [IsAdmin]
-    
+
     def post(self, request):
         bonus = BonusPercentage.objects.filter(dealer=request.user, bonus_type="automated_promos").first()
         if not bonus:
@@ -3521,31 +3629,27 @@ class UpdateAutomatedBonusView(APIView):
         sc_price = Decimal(sc_price).quantize(Decimal("0.01"))
         gc_price = Decimal(gc_price).quantize(Decimal("0.01"))
         enabled = str(enabled).lower() in ["true", "1", "yes"]
-        
-        gc_start_date = timezone.now()
-        sc_start_date = gc_start_date + timedelta(minutes=5)
-        
-        for bonus_percentage, amount, start_date, usage_limit in [
-            (Decimal("0.00"), sc_price, sc_start_date, 1),
-            (Decimal("1.00"), gc_price, gc_start_date, 1)
-        ]:
-            PromoCodes.objects.update_or_create(
-                bonus=bonus,
-                promo_code=action,
-                dealer=request.user,
-                bonus_percentage=bonus_percentage,
-                defaults={
-                    "bonus_distribution_method": PromoCodes.BonusDistributionMethod.instant,
-                    "instant_bonus_amount": amount,
-                    "max_bonus_limit": Decimal(1),
-                    "start_date": start_date,
-                    "usage_limit": Decimal(usage_limit),
-                    "is_expired": not enabled,
-                }
-            )
+
+        start_date = timezone.now()
+
+        PromoCodes.objects.update_or_create(
+            bonus=bonus,
+            promo_code=action,
+            dealer=request.user,
+            bonus_percentage=Decimal("0.00"),
+            defaults={
+                "bonus_distribution_method": PromoCodes.BonusDistributionMethod.instant,
+                "instant_bonus_amount": sc_price,
+                "max_bonus_limit": Decimal(1),
+                "start_date": start_date,
+                "gold_bonus": gc_price,
+                "usage_limit": Decimal(1),
+                "is_expired": not enabled,
+            }
+        )
 
         return Response({"message": "Bonus updated successfully."}, status=status.HTTP_200_OK)
-    
+
 
 
 class SignUpBonusView(CheckRolesMixin, ListView):
@@ -3580,11 +3684,13 @@ class SignUpBonusView(CheckRolesMixin, ListView):
             # context["losing_end_date"] = promo_obj.end_date.strftime(self.date_format) if promo_obj else timezone.now().strftime(self.date_format)
             context["bonus_type"] = bonus_obj.bonus_type if promo_obj else "welcome_bonus"
             # context["promo_code_usage_limit"] = promo_obj.usage_limit if promo_obj else 0
+            context["promo_code_user_limit"] = -1
         except BonusPercentage.DoesNotExist:
             context["welcome_bonus"] = 0
             # context["losing_start_date"] = timezone.now().strftime(self.date_format)
             # context["losing_end_date"] = timezone.now().strftime(self.date_format)
             context["promo_code_usage_limit"] = 1
+            context["promo_code_user_limit"] = -1
 
         return context
 
@@ -3623,11 +3729,13 @@ class LosingBonusView(CheckRolesMixin, ListView):
             context["losing_end_date"] = promo_obj.end_date.strftime(self.date_format) if promo_obj else timezone.now().strftime(self.date_format)
             context["bonus_type"] = bonus_obj.bonus_type if promo_obj else "losing_bonus"
             context["promo_code_usage_limit"] = promo_obj.usage_limit if promo_obj else 0
+            context["promo_code_user_limit"] = -1
         except BonusPercentage.DoesNotExist:
             context["losing_bonus"] = 0
             context["losing_start_date"] = timezone.now().strftime(self.date_format)
             context["losing_end_date"] = timezone.now().strftime(self.date_format)
             context["promo_code_usage_limit"] = 1
+            context["promo_code_user_limit"] = -1
 
         return context
 
@@ -3665,9 +3773,11 @@ class ReferralBonusView(CheckRolesMixin, ListView):
             context["losing_promo_code"] = promo_obj.promo_code if promo_obj else 0
             context["bonus_type"] = bonus_obj.bonus_type if promo_obj else 0
             context["promo_code_usage_limit"] = promo_obj.usage_limit if promo_obj else 0
+            context["promo_code_user_limit"] = -1
         except BonusPercentage.DoesNotExist:
             context["referral_bonus"] = 0
             context["promo_code_usage_limit"] = 1
+            context["promo_code_user_limit"] = -1
 
         return context
 
@@ -3737,7 +3847,7 @@ class ReferralBonusView(CheckRolesMixin, ListView):
 
 
 #             try:
-#                 promo_obj = PromoCodes()
+#                 promo_obj = PromoCode/s()
 #                 promo_obj.bonus = bonus_obj
 #                 # promo_obj.promo_code = promo_code
 #                 # promo_obj.start_date = start_date
@@ -3762,16 +3872,47 @@ class BonusPercentageView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxRe
     #     return HttpResponseRedirect(settings.LOGIN_URL)
 
     def post_ajax(self, request, *args, **kwargs):
-        percentage = self.request.POST.get("percentage", 0.00)
         bonus_type = self.request.POST.get("bonusType", None)
-        usage_limit = self.request.POST.get("usage_limit", 1)
-        bet_bonus_per_day_limit = self.request.POST.get("per_day_usage_limit", 1)
-        deposit_per_day_usage_limit = self.request.POST.get("deposit_per_day_usage_limit", 1)
+        promocode_bonus_type = self.request.POST.get("signup_bonus_type")
+
+        try:
+            gold_percentage = Decimal(self.request.POST.get("gold_percentage", 0.00) or 0)
+            bonus_percentage = Decimal(self.request.POST.get("percentage", 0.00) or 0)
+            if gold_percentage < 0 or bonus_percentage < 0:
+                raise ValueError
+        except ValueError:
+            return self.render_json_response({"status": "error", "message": _(f"Percentages are not valid.")},400)
+
+        try:
+            instant_gold_amount = Decimal(self.request.POST.get("instant_gold_amount", 0) or 0)
+            instant_bonus_amount = Decimal(self.request.POST.get("instant_bonus_amount", 0) or 0)
+
+            if instant_gold_amount < 0 or instant_gold_amount < 0:
+                raise ValueError
+        except ValueError:
+            return self.render_json_response({"status": "error", "message": _(f"Instant values are not valid.")},400)
+
+
+
+        try:
+            user_limit = int(self.request.POST.get("user_limit", 1))
+            bonus_limit = int(self.request.POST.get("bonus_limit", 1))
+            usage_limit = int(self.request.POST.get("usage_limit", 1))
+
+            if user_limit < 1 or bonus_limit < 1 or usage_limit < 1:
+                raise ValueError
+        except ValueError:
+            return self.render_json_response({"status": "error", "message": _(f"Limits are not valid.")},400)
+
         start_date = self.request.POST.get("start_time")
         end_date = self.request.POST.get("end_time")
-        signup_bonus_type = self.request.POST.get("signup_bonus_type")
-        instant_bonus_amount = self.request.POST.get("instant_bonus_amount")
-        
+
+        deposit_per_day_usage_limit = self.request.POST.get("deposit_per_day_usage_limit", 1)
+        bet_bonus_per_day_limit = self.request.POST.get("per_day_usage_limit", 1)
+
+        if start_date is None or end_date is None:
+            return self.render_json_response({"status": "error", "message": _(f"Dates are not valid.")},400)
+
         if start_date:
             start_date = timezone.datetime.strptime(
                 start_date, self.date_format
@@ -3783,22 +3924,26 @@ class BonusPercentageView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxRe
             ).date()
 
         promo_code = self.request.POST.get("promo_code", None)
-        
+        if bonus_type not in {"deposit_bonus", "welcome_bonus", "bet_bonus"}:
+            return self.render_json_response({"status": "error", "message": _(f"Bonus type: '{bonus_type}' does not exists.")},400)
         if promo_code and PromoCodes.objects.filter(promo_code=promo_code, bonus__bonus_type=bonus_type).exists():
             return self.render_json_response({"status": "error", "message": _(f"Promo code with the name '{promo_code}' already exists. Please choose a unique name.")},400)
+        if promo_code is None:
+            return self.render_json_response({"status": "error", "message": _(f"Promo code with the name must not be none.")},400)
 
         bonus_obj = BonusPercentage.objects.filter(dealer=self.request.user, bonus_type=bonus_type).first()
         if not bonus_obj:
             bonus_obj = BonusPercentage()
             bonus_obj.dealer = self.request.user
             bonus_obj.bonus_type = bonus_type
-        
+
         if bonus_type == "deposit_bonus":
             bonus_obj.deposit_bonus_limit = usage_limit
             bonus_obj.deposit_bonus_per_day_limit = deposit_per_day_usage_limit if deposit_per_day_usage_limit !='' else 1
             bonus_obj.percentage = percentage
         elif bonus_type == "welcome_bonus":
-            bonus_obj.welcome_bonus_limit = usage_limit
+            pass
+            # bonus_obj.welcome_bonus_limit = usage_limit
         elif bonus_type == "bet_bonus":
             bonus_obj.bet_bonus_per_day_limit = bet_bonus_per_day_limit if bet_bonus_per_day_limit !='' else 1
             bonus_obj.percentage = percentage
@@ -3806,34 +3951,45 @@ class BonusPercentageView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxRe
 
         bonus_obj.save()
 
-        if bonus_type in ["welcome_bonus", "deposit_bonus"]:
-            try:
-                promo_obj = PromoCodes()
-                promo_obj.bonus = bonus_obj
-                promo_obj.promo_code = promo_code
-                promo_obj.start_date = start_date
-                promo_obj.end_date = end_date
-                promo_obj.dealer = self.request.user
-                if bonus_type == "welcome_bonus":
-                    if signup_bonus_type in ["deposit", "", None]:
-                        promo_obj.bonus_percentage = percentage
-                        promo_obj.max_bonus_limit = usage_limit
-                    else:
-                        promo_obj.instant_bonus_amount = instant_bonus_amount
-                        promo_obj.bonus_distribution_method = PromoCodes.BonusDistributionMethod.instant
-                else:
-                    promo_obj.bonus_percentage = percentage
-                    promo_obj.max_bonus_limit = usage_limit
-                    promo_obj.usage_limit = deposit_per_day_usage_limit if deposit_per_day_usage_limit !='' else 1
-                promo_obj.save()
-            except Exception:
-                bonus_obj.percentage = 0
-                bonus_obj.save()
-                return self.render_json_response({"status": "error", "message": _("Something Went Wrong")})
-
-            return self.render_json_response({"status": "success", "message": _("Promo code created successfully")})
-        else:
+        if bonus_type not in ["welcome_bonus", "deposit_bonus"]:
             return self.render_json_response({"status": "success", "message": _("Bonus details saved successfully")})
+
+        if promocode_bonus_type not in {"deposit", "mixture", "instant"}:
+            return self.render_json_response({"status": "error", "message": _(f"Promo code type is not valid.")},400)
+
+        try:
+            promo_obj = PromoCodes()
+            promo_obj.bonus_distribution_method = promocode_bonus_type
+            promo_obj.bonus = bonus_obj
+            promo_obj.promo_code = promo_code
+            promo_obj.start_date = start_date
+            promo_obj.end_date = end_date
+            promo_obj.dealer = self.request.user
+
+            promo_obj.is_deleted = True
+            promo_obj.is_expired = True
+
+            print(usage_limit)
+            promo_obj.usage_limit = usage_limit
+            promo_obj.limit_per_user = user_limit
+            promo_obj.max_bonus_limit = bonus_limit
+
+            if promocode_bonus_type == "deposit":
+                promo_obj.gold_percentage = gold_percentage
+                promo_obj.bonus_percentage = bonus_percentage
+            elif promocode_bonus_type == "mixture":
+                promo_obj.gold_bonus = instant_gold_amount
+                promo_obj.bonus_percentage = bonus_percentage
+            else:
+                promo_obj.gold_bonus = instant_gold_amount
+                promo_obj.instant_bonus_amount = instant_bonus_amount
+            promo_obj.save()
+        except Exception:
+            bonus_obj.percentage = 0
+            bonus_obj.save()
+            return self.render_json_response({"status": "error", "message": _("Something Went Wrong")})
+
+        return self.render_json_response({"status": "success", "message": _("Promo code created successfully")})
 
 
 class DisableLosingBonusView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseMixin, View):
@@ -3909,12 +4065,16 @@ class EditBonusView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponse
         bonus_id = request.POST.get("bonus_id")
 
         promo_code = request.POST.get("losing_promo_code")
-        promoUsageLimit = request.POST.get("promoUsageLimit")
         bonus_percentage = request.POST.get("losing_bonus_percentage")
+        gold_percentage = request.POST.get("losing_gold_percentage")
+        
         start_date = request.POST.get("losing_start_time")
         end_date = request.POST.get("losing_end_time")
         bonus_type = request.POST.get("bonus_type")
+        promoUsageLimit = request.POST.get("promoUsageLimit")
+        user_limit = request.POST.get("promoUserLimit")
         max_bonus_limit = request.POST.get("max_bonus_limit")
+        instant_gold_amount = request.POST.get("instant_gold_amount", "")
         instant_bonus_amount = request.POST.get("instant_bonus_amount", "")
 
         if start_date:
@@ -3926,12 +4086,16 @@ class EditBonusView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponse
         try:
             promo_obj = PromoCodes.objects.get(id=bonus_id)
             promo_obj.usage_limit = promoUsageLimit
+            promo_obj.limit_per_user = user_limit
             promo_obj.bonus_percentage = bonus_percentage if bonus_percentage not in ["None", None, ""] else 0
+            promo_obj.gold_percentage = gold_percentage if gold_percentage not in ["None", None, ""] else 0
             promo_obj.end_date = end_date
             promo_obj.start_date = start_date
             promo_obj.max_bonus_limit = max_bonus_limit
             if promo_obj.bonus_distribution_method == "instant" and instant_bonus_amount.isdigit():
                 promo_obj.instant_bonus_amount = instant_bonus_amount
+            if promo_obj.bonus_distribution_method in {"instant", "mixture"} and instant_gold_amount.isdigit():
+                promo_obj.gold_bonus = instant_gold_amount
             promo_obj.save()
             response = { "message":"Promo code updated succesfully", "status": "success" }
 
@@ -3944,7 +4108,7 @@ class EditBonusView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponse
 
 class BonusPermissionView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseMixin, View):
     allowed_roles = ("superadmin",)
-    
+
     # def handle_no_permission(self):
     #     return HttpResponseRedirect(settings.LOGIN_URL)
 
@@ -4146,7 +4310,7 @@ class SpecialAgentLogoView(
         agent_id = self.request.POST.get("agentId", "")
         logo = self.request.FILES.get("logo", None)
         logo_format = logo.name.split('.')[-1]
-        
+
         if logo_format != "png":
             return self.render_json_response(
                 {
@@ -4198,7 +4362,7 @@ class SpecialAgentLogoView(
             pass
 
         try:
-           
+
             bucket = s3.Bucket(settings.AWS_S3_BUCKET_NAME)
             bucket.put_object(
                 Key=logo_filename,
@@ -4238,9 +4402,9 @@ class SpecialAgentLogoDeleteView(CheckRolesMixin, views.JSONResponseMixin,
 
     def post_ajax(self, request, *args, **kwargs):
         agent_id = self.request.POST.get("agentId")
-    
+
         logo_format = 'png'
-        
+
         agent = Agent.objects.filter(
             id=agent_id, is_deleted=False, is_special_agent=True
         )
@@ -4328,7 +4492,7 @@ class GetSpecialAgentLogoView(CheckRolesMixin, views.JSONResponseMixin,
                 },
                 status=200
             )
-    
+
 class AdminBetslipBonusPermissionAjax(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseMixin, View):
     allowed_roles = "superadmin"
 
@@ -4423,7 +4587,7 @@ class SetCashbackView(CheckRolesMixin, UpdateView):
 
         except Exception:
             return HttpResponseRedirect(reverse_lazy("admin-panel:dealers"))
-    
+
 
     @method_decorator(csrf_exempt)
     def dispatch(self, *args, **kwargs):
@@ -4470,7 +4634,7 @@ class CreateAdminBannerView(CheckRolesMixin, TemplateView, View):
             mobile_betslip_banner_count = AdminBanner.objects.filter(admin_id=admin_id,banner_type="BETSLIP",banner_category="MOBILE_RESPONSIVE").count()
             mobile_app_homepage_banner_count = AdminBanner.objects.filter(admin_id=admin_id,banner_type="HOMEPAGE",banner_category="MOBILE_APP").count()
             mobile_app_betslip_banner_count = AdminBanner.objects.filter(admin_id=admin_id,banner_type="BETSLIP",banner_category="MOBILE_APP").count()
-            
+
 
             return render(request, template_name=self.template_name,
                             context={"form": form,
@@ -4524,7 +4688,7 @@ class CreateAdminBannerView(CheckRolesMixin, TemplateView, View):
                 admin_banner.save()
                 messages.success(request, "Banner created successfully")
                 return redirect('admin-panel:admin-banner')
-                
+
             messages.error(request, _("Please provide valid banner details!"))
             return redirect('admin-panel:create-admin-banner')
 
@@ -4563,7 +4727,7 @@ class DeleteAdminBanner(CheckRolesMixin, views.JSONResponseMixin,
                 status=404
             )
 
-            
+
 class AffiliatePLayerPermission(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseMixin, View):
     allowed_roles = ("superadmin", "admin", "dealer")
     http_method_names = ["post"]
@@ -4575,7 +4739,7 @@ class AffiliatePLayerPermission(CheckRolesMixin, views.JSONResponseMixin, views.
         user_id = self.request.POST.get("user_id", None)
         is_affiliate_player_enabled = self.request.POST.get("is_affiliate_player_enabled", None)
         user_obj = Users.objects.get(id=user_id)
-        
+
         if is_affiliate_player_enabled == "true":
             is_affiliate_player_enabled = True
             message = "Affiliate PLayer Enabled Successfully"
@@ -4613,7 +4777,7 @@ class CMSAboutView(CheckRolesMixin, TemplateView, views.JSONResponseMixin, views
         try:
             if not request.POST.get("title"):
                 return self.render_json_response({"status": "error", "message": "Title should not be empty"})
-           
+
             banner = request.FILES.get('banner')
             cms_obj = CmsAboutDetails.objects.first()
             if not cms_obj:
@@ -4669,11 +4833,11 @@ class CMSContactView(CheckRolesMixin, ListView, views.JSONResponseMixin, views.A
         if subject_search:
             context["subject_content"] = subject_search
         return context
-    
+
     def post_ajax(self, request, *args, **kwargs):
         try:
             contact_id = request.POST.get("contact_id")
-           
+
             contact_obj = CmsContactDetails.objects.get(id=contact_id)
             if request.POST.get("is_change_status") == "true":
                 if contact_obj.status == "Active":
@@ -4739,7 +4903,7 @@ class CMSPromotionView(CheckRolesMixin, TemplateView, views.JSONResponseMixin, v
         except Exception as e:
             print(e)
             messages.error(request, "Something Went Wrong")
-        return redirect('admin-panel:cms-promotion')
+        return redirect('admin-panel:cms-promotions')
 
 
 class CRMView(CheckRolesMixin, ListView):
@@ -4763,19 +4927,19 @@ class CRMView(CheckRolesMixin, ListView):
             self.queryset = self.queryset.filter(status=status)
         if notification_category:
             self.queryset = self.queryset.filter(category=notification_category)
-        
+
         if self.request.GET.get("to") and self.request.GET.get("from"):
             to_date = datetime.strptime(self.request.GET.get("to"), self.date_format).strftime("%Y-%m-%d")
             from_date = datetime.strptime(self.request.GET.get("from"), self.date_format).strftime("%Y-%m-%d")
             self.queryset = self.queryset.filter(scheduled_at__range=[from_date, to_date])
-        
+
         return self.queryset
 
     def get_context_data(self, **kwargs):
         subject_search = self.request.GET.get("subject_content", None)
         status = self.request.GET.get("status",None)
         notification_category  = self.request.GET.get('notification_category',None)
-        
+
         # current_date = timezone.now()
         # first_day_of_month = current_date.replace(day=1, hour=0, minute=0).strftime(self.date_format)
 
@@ -4786,7 +4950,7 @@ class CRMView(CheckRolesMixin, ListView):
             context["status"] = status
         if notification_category:
             context["notification_category"] = notification_category
-        
+
         # context["from"] = self.request.GET.get("from", first_day_of_month)
         # context["to"] = self.request.GET.get("to", timezone.now().strftime(self.date_format))
         context["from"] = self.request.GET.get("from", "")
@@ -4794,7 +4958,7 @@ class CRMView(CheckRolesMixin, ListView):
 
 
         return context
-    
+
 
 class SMSView(CheckRolesMixin, ListView):
     model = SMSDetails
@@ -4814,18 +4978,18 @@ class SMSView(CheckRolesMixin, ListView):
             self.queryset = self.queryset.filter(subject__icontains=subject_search)
         if status:
             self.queryset = self.queryset.filter(status=status)
-        
+
         if self.request.GET.get("to") and self.request.GET.get("from"):
             to_date = datetime.strptime(self.request.GET.get("to"), self.date_format).strftime("%Y-%m-%d")
             from_date = datetime.strptime(self.request.GET.get("from"), self.date_format).strftime("%Y-%m-%d")
             self.queryset = self.queryset.filter(scheduled_at__range=[from_date, to_date])
-        
+
         return self.queryset
 
     def get_context_data(self, **kwargs):
         subject_search = self.request.GET.get("subject_content", None)
         status = self.request.GET.get("status",None)
-        
+
         # current_date = timezone.now()
         # first_day_of_month = current_date.replace(day=1, hour=0, minute=0).strftime(self.date_format)
 
@@ -4834,7 +4998,7 @@ class SMSView(CheckRolesMixin, ListView):
             context["subject_content"] = subject_search
         if status:
             context["status"] = status
-        
+
         # context["from"] = self.request.GET.get("from", first_day_of_month)
         # context["to"] = self.request.GET.get("to", timezone.now().strftime(self.date_format))
         context["from"] = self.request.GET.get("from", "")
@@ -4854,7 +5018,7 @@ class CreateCrmTemplateView(CheckRolesMixin, TemplateView, views.JSONResponseMix
 
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
-    
+
     def post_ajax(self, request, *args, **kwargs):
         try:
             subject = request.POST.get("subject", None)
@@ -4881,7 +5045,7 @@ class CreateCrmTemplateView(CheckRolesMixin, TemplateView, views.JSONResponseMix
         except Exception as e:
             print("Exception in Create CRM: ",e)
             return self.render_json_response({"status": "error", "message": "Something Went Wrong"})
-        
+
 
 class CreateSMSTemplateView(CheckRolesMixin, TemplateView, views.JSONResponseMixin, views.AjaxResponseMixin, View):
     template_name = "admin/crm_cms/create_sms_template.html"
@@ -4893,7 +5057,7 @@ class CreateSMSTemplateView(CheckRolesMixin, TemplateView, views.JSONResponseMix
 
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
-    
+
     def post_ajax(self, request, *args, **kwargs):
         try:
             subject = request.POST.get("subject", None)
@@ -5038,7 +5202,7 @@ class EditCrmTemplateAjax(CheckRolesMixin, TemplateView, views.JSONResponseMixin
         except Exception as e:
             print("Exception in EditCrmTemplateAjax :", e)
             return self.render_json_response({"status": "error", "message": "Something Went Wrong"})
-        
+
 
 class EditSMSTemplateAjax(CheckRolesMixin, TemplateView, views.JSONResponseMixin, views.AjaxResponseMixin, View):
     template_name = "admin/crm_cms/edit_sms_template.html"
@@ -5493,10 +5657,10 @@ class SetPlayerBettingLimitView(CheckRolesMixin, views.JSONResponseMixin, views.
             player = Player.objects.filter(id=player_id).first()
             if player:
                 responsible_gambling = ResponsibleGambling.objects.get_or_create(user=player)[0]
-                
+
                 if max_spending_limit > MAX_SPEND_AMOUNT:
                     return self.render_json_response({"status":"error","message": f"Max spending limit cannot be greater than {MAX_SPEND_AMOUNT}"}, status.HTTP_400_BAD_REQUEST)
-                        
+
                 responsible_gambling.max_spending_limit = max_spending_limit
                 responsible_gambling.daily_spendings = 0
                 responsible_gambling.is_max_spending_limit_set_by_admin = True
@@ -5510,11 +5674,11 @@ class SetPlayerBettingLimitView(CheckRolesMixin, views.JSONResponseMixin, views.
             return self.render_json_response({"status":"error","message":"Player doesn't exist"}, status.HTTP_400_BAD_REQUEST, )
         except Exception as err:
             return self.render_json_response({"status":"error","message": str(err)}, status.HTTP_400_BAD_REQUEST)
-            
+
 
 class LosingBonusPermissionView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseMixin, View):
     allowed_roles = ("superadmin",)
-    
+
     def post_ajax(self, request, *args, **kwargs):
         admin = Admin.objects.get(id=request.POST.get("adminID"))
         bonus_type = request.POST.get("bonus_type")
@@ -5544,7 +5708,7 @@ class DepositPermission(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResp
         user_id = self.request.POST.get("adminID", None)
         is_deposit_bonus_enabled = self.request.POST.get("is_deposit_bonus_enabled", None)
         user_obj = Users.objects.get(id=user_id)
-        
+
         if is_deposit_bonus_enabled == "true":
             is_deposit_bonus_enabled = True
             message = "Deposit Bonus Enabled Successfully"
@@ -5590,7 +5754,7 @@ class DepositBonusView(CheckRolesMixin, ListView):
     #         context["deposit_bonus"] = bonus_obj.percentage
     #         context["deposit_bonus_limit"] = bonus_obj.deposit_bonus_limit
     #         context["deposit_bonus_per_day_limit"] = bonus_obj.deposit_bonus_per_day_limit
-            
+
     #     except BonusPercentage.DoesNotExist:
     #         context["deposit_bonus"] = 0
 
@@ -5607,7 +5771,7 @@ class ReferAFriendBonusPermission(CheckRolesMixin, views.JSONResponseMixin, view
         user_id = self.request.POST.get("adminID", None)
         is_referral_bonus_enabled = self.request.POST.get("isReferralBonusEnabled", None)
         user_obj = Users.objects.get(id=user_id)
-        
+
         if is_referral_bonus_enabled == "true":
             is_referral_bonus_enabled = True
             message = "Refer-A-Friend Bonus Enabled Successfully"
@@ -5736,13 +5900,13 @@ class EditPromotionPageAjax(CheckRolesMixin, TemplateView, views.JSONResponseMix
     # def handle_no_permission(self):
     #     return HttpResponseRedirect(settings.LOGIN_URL)
 
-    
+
     def get(self, request, *args, **kwargs):
         template_id = self.request.GET.get("template_id", "")
         about_detail = CmsPromotionDetails.objects.get(id=template_id)
         form = PromotionForm(instance=about_detail)
         banner_thumbnail = about_detail.page_thumbnail if about_detail else ''
-        
+
         return render(request, template_name=self.template_name,
                       context={"page_thumbnail": banner_thumbnail,
                                "form": form, 
@@ -5791,6 +5955,102 @@ class EditPromotionPageAjax(CheckRolesMixin, TemplateView, views.JSONResponseMix
         return redirect('admin-panel:promotion-page')
 
 
+class CmsPromotionsView(CheckRolesMixin, TemplateView):
+    allowed_roles = ["admin"]
+    template_name = "admin/cms/promotion.html"
+    context_object_name = "promotions"
+
+    def get_context_data(self, **kwargs):
+        # Always call super() first
+        context = super().get_context_data(**kwargs)
+        # Add your promotions queryset
+        context['promotions'] = CmsPromotions.objects.all().order_by('-created')
+        return context
+
+
+class CmsPromotionsBaseView(CheckRolesMixin, TemplateView):
+    """Shared helpers for create/edit views."""
+    template_name = "admin/cms/promotion_form.html"
+    allowed_roles = ("admin", "superadmin")
+
+    def get_form_class(self, promotion_type=None):
+        if promotion_type == "toaster":
+            return ToasterCmsPromotionsForm
+        elif promotion_type == "page_blocker":
+            return PageBlockerCmsPromotionsForm
+        return ToasterCmsPromotionsForm
+
+    def save_image_thumbnail(self, image_file):
+        """Resize and return thumbnail InMemoryUploadedFile."""
+        filename_format = image_file.name.split(".")
+        name, ext = filename_format[-2], filename_format[-1]
+        filename = f"{name}{uuid.uuid4()}.{ext}"
+        thumb = Image.open(image_file)
+        thumb.thumbnail((750, 400))
+        thumb_io = BytesIO()
+        fmt = "JPEG" if ext.lower() == "jpg" else ext.upper()
+        thumb.save(thumb_io, format=fmt)
+        return InMemoryUploadedFile(
+            thumb_io, "ImageField", filename, fmt, sys.getsizeof(thumb_io), None
+        )
+
+
+class CmsPromotionsCreateView(CmsPromotionsBaseView, View):
+    def get(self, request, *args, **kwargs):
+        typef = self.request.GET.get("type") or ""
+        typef = typef if typef == "page_blocker" else "toaster"
+        form = self.get_form_class(typef)
+        return render(request, self.template_name, {"form": form})
+
+    def post(self, request, *args, **kwargs):
+        promotion_type = request.POST.get("type")
+        FormClass = self.get_form_class(promotion_type)
+        form = FormClass(request.POST, request.FILES)
+        if form.is_valid():
+            promo = form.save(commit=False)
+            if promo.type == "toaster" and request.FILES.get("image"):
+                promo.image = self.save_image_thumbnail(request.FILES["image"])
+            promo.save()
+            messages.success(request, "CmsPromotions created successfully.")
+            return redirect("admin-panel:cms-promotions")
+        messages.error(request, "Please correct the errors below.")
+        return render(request, self.template_name, {"form": form})
+        
+
+class CmsPromotionsEditView(CmsPromotionsBaseView, View):
+    def get(self, request, pk, *args, **kwargs):
+        promotion = get_object_or_404(CmsPromotions, pk=pk)
+        FormClass = self.get_form_class(promotion.type)
+        form = FormClass(instance=promotion)
+        return render(request, self.template_name, {"form": form, "promotion": promotion})
+
+    def post(self, request, pk, *args, **kwargs):
+        promotion = get_object_or_404(CmsPromotions, pk=pk)
+        FormClass = self.get_form_class(promotion.type)
+        form = FormClass(request.POST, request.FILES, instance=promotion)
+        if form.is_valid():
+            promo = form.save(commit=False)
+            if promo.type == "toaster" and request.FILES.get("image"):
+                promo.image = self.save_image_thumbnail(request.FILES["image"])
+            promo.save()
+            messages.success(request, "CmsPromotions updated successfully.")
+            return redirect("admin-panel:cms-promotions")
+        messages.error(request, "Please correct the errors below.")
+        return render(request, self.template_name, {"form": form, "promotion": promotion})
+
+
+class CmsPromotionsToggleDisableView(View):
+    """Toggle disabled flag."""
+    def post(self, request, pk, *args, **kwargs):
+        promotion = get_object_or_404(CmsPromotions, pk=pk)
+        promotion.disabled = not promotion.disabled
+        promotion.save(update_fields=["disabled"])
+        text = "disabled" if promotion.disabled else "enabled"
+        messages.success(request, f"CmsPromotions '{promotion.title}' {text}.")
+        return redirect("admin-panel:cms-promotions")
+
+
+
 class EditAdminBannerView(CheckRolesMixin, TemplateView, views.JSONResponseMixin, views.AjaxResponseMixin, View):
     template_name = "admin/edit_admin_banner.html"
     allowed_roles = ("admin", "superadmin")
@@ -5800,7 +6060,7 @@ class EditAdminBannerView(CheckRolesMixin, TemplateView, views.JSONResponseMixin
     # def handle_no_permission(self):
     #     return HttpResponseRedirect(settings.LOGIN_URL)
 
-    
+
     def get(self, request, *args, **kwargs):
         banner_id = self.request.GET.get("banner_id", "")
         admin_banner = AdminBanner.objects.get(id=banner_id)
@@ -5812,8 +6072,8 @@ class EditAdminBannerView(CheckRolesMixin, TemplateView, views.JSONResponseMixin
         mobile_betslip_banner_count = AdminBanner.objects.filter(admin_id=admin_id,banner_type="BETSLIP",banner_category="MOBILE_RESPONSIVE").count()
         mobile_app_homepage_banner_count = AdminBanner.objects.filter(admin_id=admin_id,banner_type="HOMEPAGE",banner_category="MOBILE_APP").count()
         mobile_app_betslip_banner_count = AdminBanner.objects.filter(admin_id=admin_id,banner_type="BETSLIP",banner_category="MOBILE_APP").count()
-                
-      
+
+
         return render(request, template_name=self.template_name,
                       context={
                                "form": form, 
@@ -5965,19 +6225,19 @@ class CasinoBetslipReportView(CheckRolesMixin, ListView):
             if self.request.GET.getlist("agents"):
                 agents = self.request.GET.getlist("agents")
                 queryset = queryset.filter(user__agent__in=agents)
-            
+
             if self.request.GET.get("provider"):
                 games = CasinoGameList.objects.filter(vendor_name=self.request.GET.get("provider"))
                 queryset = queryset.filter(Q(game_id__in=games.values('game_id')))
-                
+
             if self.request.GET.get("games"):
                 queryset = queryset.filter(Q(game_id=self.request.GET.get("provider")))
-                
+
 
         except Exception as e:
             return queryset
         return queryset
-    
+
     def get_context_data(self, **kwargs):
         # by default show results from first day of month
         current_date = timezone.now()
@@ -5986,7 +6246,7 @@ class CasinoBetslipReportView(CheckRolesMixin, ListView):
         context = super().get_context_data(**kwargs)
         context["from"] = self.request.GET.get("from", first_day_of_month)
         context["to"] = self.request.GET.get("to", timezone.now().strftime(self.date_format))
-        
+
         if self.request.GET.getlist("dealers"):
             dealers = self.request.GET.getlist("dealers")
             context["selected_dealers"] = Dealer.objects.filter(id__in=dealers)
@@ -6247,14 +6507,14 @@ class PagesView(CheckRolesMixin, TemplateView, View):
 class PagesContentView(CheckRolesMixin, View, views.JSONResponseMixin, views.AjaxResponseMixin):
     allowed_roles = ["admin", "superadmin"]
     template_name = "admin/cms/pages/page.html"
-    
+
     def get(self, request, *args, **kwargs):
         page_id = request.GET.get("page_id", None)
         page = CmsPages.objects.filter(id=page_id).first()
 
         if not page:
             return self.render_json_response({"status": "error", "message": "Invalid page ID"}, 400)
-        
+
         return self.render_json_response({
             "title": page.title,
             "content": page.page_content,
@@ -6315,7 +6575,7 @@ class CreatePageView(CheckRolesMixin, TemplateView, views.JSONResponseMixin, vie
             page_obj.json_metadata = request.POST.get("json_metadata")
             page_obj.preview_type = request.POST.get("preview_type")
             page_obj.save()
-            
+
             if images:
                 for image in images:
                     PageMedia.objects.create(page=page_obj, media=image)
@@ -6451,10 +6711,10 @@ class EditPageAjax(CheckRolesMixin, TemplateView, views.JSONResponseMixin, views
         if not about_detail:
             messages.error(request, "Invalid Id")
             return redirect('admin-panel:pages')
-            
+
         form = CMSPagesForm(instance=about_detail)
         page_thumbnail = about_detail.page_thumbnail if about_detail else ''
-        
+
         return render(request, template_name=self.template_name,
                       context={"page_thumbnail": page_thumbnail,
                                "form": form, 
@@ -6514,7 +6774,7 @@ class EditPageAjax(CheckRolesMixin, TemplateView, views.JSONResponseMixin, views
             page_obj.json_metadata = request.POST.get("json_metadata")
             page_obj.preview_type = request.POST.get("preview_type")
             page_obj.save()
-            
+
             if page_obj.preview_type == "none":
                 media = PageMedia.objects.filter(page=page_obj)
                 PageMedia.bulk_delete_media(media)
@@ -6527,12 +6787,12 @@ class EditPageAjax(CheckRolesMixin, TemplateView, views.JSONResponseMixin, views
             if(type(e) != ValueError):
                 messages.error(request, "Something Went Wrong")
         return redirect('admin-panel:pages')
-    
+
     def put_ajax(self, request, *args, **kwargs):
         try:
             data = parse_qs(self.request.body.decode('utf-8'))
             id = data['id'][0]
-            
+
             if not id:
                 return JsonResponse({"status": "error", "message": _("ID is required")}, status=400)
 
@@ -6596,7 +6856,7 @@ class CreateCategoryView(CheckRolesMixin, TemplateView, views.JSONResponseMixin,
             if FooterCategory.objects.filter(name__icontains=request.POST.get("name")).exists():
                 messages.error(request, "This Category Already Exists")
                 return redirect('admin-panel:category')
-            
+
             page_obj = FooterCategory()
             page_obj.name = request.POST.get("name")
             page_obj.position = request.POST.get("position")
@@ -6721,20 +6981,20 @@ class CasinoManagementView(CheckRolesMixin, ListView):
         game_ids = self.request.GET.get("game_id")
         category = self.request.GET.get("category", None)
         device_type = self.request.GET.get("device_type", None)
-        
+
         # if brands and len(brands) > 0:
         #     brands = [x for x in brands.split(",") ]
         #     if brands and len(brands) > 0 :
         #         queryset = queryset.filter(game__vendor_name__in=brands)
         #     return queryset
-        
+
         queryset = queryset.filter(admin=self.request.user)
 
         if game_ids and len(game_ids) > 0 :
             game_ids = [int(x) for x in game_ids.split(",") if x.isdigit()]
             print(game_ids)
             queryset = queryset.filter(id__in=game_ids)
-        
+
         if category:
             category = category.split(",")
             queryset = queryset.filter(game__game_category__in=category)
@@ -6745,13 +7005,13 @@ class CasinoManagementView(CheckRolesMixin, ListView):
             queryset = queryset.filter(game__is_desktop_supported=True)
 
         queryset = queryset.filter(admin = self.request.user)
-        
+
         return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         games = self.request.GET.get("game_id", None)
-        
+
         casino_categories = CasinoGameList.objects.all().distinct("game_category").values_list("game_category", flat=True)
         context["casino_categories"] = casino_categories
         if games:
@@ -6784,15 +7044,15 @@ class CasinoManagementProviderView(CheckRolesMixin, ListView):
         if brands:
             brands = [int(x) for x in brands.split(",") if x.isdigit()]
             queryset = queryset.filter(admin=self.request.user)
-        
+
             if brands and len(brands) > 0 :
                 brand_filter = [int(x) for x in brands]
                 print(brand_filter)
                 queryset = queryset.filter(game__id__in=brand_filter)
             return queryset
-       
+
         queryset = queryset.filter(admin=self.request.user).distinct("game__vendor_name")
-        
+
         return queryset
 
 
@@ -6806,14 +7066,14 @@ class ProviderView(CheckRolesMixin, ListView):
         provider_name = self.request.GET.get("provider_name")
         if not provider_name:
             return Providers.objects.none()
-        
+
         provider = Providers.objects.filter(name=provider_name)
         if provider.exists():
             return provider.first()
-        
+
         if CasinoGameList.objects.filter(vendor_name=provider_name).exists():
             return Providers.objects.create(name=provider_name)
-        
+
         return Providers.objects.none()
 
 
@@ -6829,10 +7089,10 @@ class EditProviderView(APIView):
         # Request check
         if not logo:
             return Response({"message" : "Should upload an image (logo)"}, status=status.HTTP_400_BAD_REQUEST)
-        
+
         if not id:
             return Response({"message" : "Must pass id in the body"}, status=status.HTTP_400_BAD_REQUEST)
-        
+
         # Provider checks (if exists id)
         provider = Providers.objects.filter(id=id)
         if not provider.exists():
@@ -6845,7 +7105,7 @@ class EditProviderView(APIView):
         allow_format = ['JPEG', 'WEBP', 'PNG']
         if not format in allow_format:
             return Response({"message" : "The IMG should be of type " + ', '.join(allow_format) + " o JPG"}, status=status.HTTP_400_BAD_REQUEST)
-        
+
         # Save the logo
         provider = provider.first()
         provider.logo = logo
@@ -6861,7 +7121,7 @@ class CasinoCategoryHeaderManagementView(CheckRolesMixin, TemplateView, views.JS
     def get(self, request, *args, **kwargs):
         casinocategories = CasinoHeaderCategory.objects.all().order_by("position")
         return render(request, template_name=self.template_name, context={"casinocategories": casinocategories})
-    
+
 
     def post(self, request, *args, **kwargs):
         try:
@@ -6904,7 +7164,7 @@ class CasinoCategoryHeaderManagementView(CheckRolesMixin, TemplateView, views.JS
                 "message": _("Internal Error")
             },status=200)
 
-    
+
     def put_ajax(self, request, *args, **kwargs):
         try:
             data = parse_qs(self.request.body.decode('utf-8'))
@@ -6937,7 +7197,7 @@ class CasinoCategoryHeaderManagementView(CheckRolesMixin, TemplateView, views.JS
                     "title": _("Categories updated"),
                     "message": f"Categories updated in {new_position.lower()} order",
                 },status=200)
-            
+
             casino_category = CasinoHeaderCategory.objects.filter(id=category_id).first()
             if new_position == "last":
                 categories = CasinoHeaderCategory.objects.filter(position__gt=casino_category.position)
@@ -6984,7 +7244,7 @@ class CasinoHeaderCategoryStatus(CheckRolesMixin, views.JSONResponseMixin, views
         casino_header.save()
         message = "Category Enabled" if casino_header.is_active else "Category Disabled"
         return self.render_json_response({"status": "Success", "message": message})
-    
+
 
 class SpinToWinProviderStatus(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseMixin, View):
     '''accounts/manage-spin-to-win-provider-status/'''
@@ -6993,7 +7253,7 @@ class SpinToWinProviderStatus(CheckRolesMixin, views.JSONResponseMixin, views.Aj
     @method_decorator(csrf_exempt)
     def dispatch(self, *args, **kwargs):
         return super().dispatch(*args, **kwargs)
-    
+
     def post_ajax(self, request, *args, **kwargs):
         provider = request.POST.get("provider")
 
@@ -7001,7 +7261,7 @@ class SpinToWinProviderStatus(CheckRolesMixin, views.JSONResponseMixin, views.Aj
             admin = self.request.user, 
             game__vendor_name= provider,
         )
-        
+
         if casino_obj.exists() and casino_obj.first().enabled:
             casino_obj.update(enabled = False)
             message = "Provider disabled"
@@ -7010,15 +7270,15 @@ class SpinToWinProviderStatus(CheckRolesMixin, views.JSONResponseMixin, views.Aj
             message = "Provider enabled"
 
         return self.render_json_response({"status": "Success", "message": message})
-    
-    
+
+
 class SpinToWinGameStatus(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseMixin, View):
     allowed_roles = ("admin")
 
     @method_decorator(csrf_exempt)
     def dispatch(self, *args, **kwargs):
         return super().dispatch(*args, **kwargs)
-    
+
     def post_ajax(self, request, *args, **kwargs):
         game_id = request.POST.get("game_id")
         switch_field = request.POST.get("switch")
@@ -7030,11 +7290,11 @@ class SpinToWinGameStatus(CheckRolesMixin, views.JSONResponseMixin, views.AjaxRe
         else:
             casino_obj.game_enabled = not casino_obj.game_enabled
             message = "Game enabled" if casino_obj.game_enabled else "Game disabled"
-        
+
         casino_obj.save()
 
         return self.render_json_response({"status": "Success", "message": message})
-    
+
 class CasinoProviderAjaxView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseMixin, View):
     http_method_names = ("post",)
     allowed_roles = ("admin", "dealer", "superadmin", "tenant_manager")
@@ -7056,11 +7316,11 @@ class CasinoProviderAjaxView(CheckRolesMixin, views.JSONResponseMixin, views.Aja
                     }
                 )
         return self.render_json_response(results)
-    
+
     @method_decorator(csrf_exempt)
     def dispatch(self, *args, **kwargs):
         return super().dispatch(*args, **kwargs)
-    
+
 class CasinoGameAjaxView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseMixin, View):
     http_method_names = ("post",)
     allowed_roles = ("admin", "dealer", "superadmin", "tenant_manager")
@@ -7071,7 +7331,7 @@ class CasinoGameAjaxView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxRes
         games = CasinoManagement.objects.filter(admin = self.request.user)
         if search:
             games = games.filter(game__game_name__icontains = search)
-            
+
         results = []
         for game in games:
             results.append(
@@ -7081,11 +7341,11 @@ class CasinoGameAjaxView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxRes
                 }
             )
         return self.render_json_response(results)
-    
+
     @method_decorator(csrf_exempt)
     def dispatch(self, *args, **kwargs):
         return super().dispatch(*args, **kwargs)
-    
+
 class AdminSponserView(CheckRolesMixin, TemplateView, View):
     allowed_roles = ["admin", ]
     template_name = "admin/ads_sponser.html"
@@ -7129,7 +7389,7 @@ class CreateAdminSponserView(CheckRolesMixin, TemplateView, View):
                 mobile_betslip_banner_count = AdminAdsBanner.objects.filter(admin_id=request.user.id,banner_type="BETSLIP",banner_category="MOBILE_RESPONSIVE").count()
                 mobile_app_homepage_banner_count = AdminAdsBanner.objects.filter(admin_id=request.user.id,banner_type="HOMEPAGE",banner_category="MOBILE_APP").count()
                 mobile_app_betslip_banner_count = AdminAdsBanner.objects.filter(admin_id=request.user.id,banner_type="BETSLIP",banner_category="MOBILE_APP").count()
-                
+
 
                 return render(request, template_name=self.template_name,
                               context={"form": form,
@@ -7182,7 +7442,7 @@ class CreateAdminSponserView(CheckRolesMixin, TemplateView, View):
                     admin_banner.save()
                     messages.success(request, "Banner created successfully")
                     return redirect('admin-panel:admin-ads')
-                    
+
                 messages.error(request, _("Please provide valid banner details!"))
                 return redirect('admin-panel:create-admin-banner')
             else:
@@ -7234,7 +7494,7 @@ class EditAdminSponserView(CheckRolesMixin, TemplateView, views.JSONResponseMixi
     # def handle_no_permission(self):
     #     return HttpResponseRedirect(settings.LOGIN_URL)
 
-    
+
     def get(self, request, *args, **kwargs):
         banner_id = self.request.GET.get("banner_id", "")
         admin_banner = AdminAdsBanner.objects.get(id=banner_id)
@@ -7245,8 +7505,8 @@ class EditAdminSponserView(CheckRolesMixin, TemplateView, views.JSONResponseMixi
         mobile_betslip_banner_count = AdminAdsBanner.objects.filter(admin_id=request.user.id,banner_type="BETSLIP",banner_category="MOBILE_RESPONSIVE").count()
         mobile_app_homepage_banner_count = AdminAdsBanner.objects.filter(admin_id=request.user.id,banner_type="HOMEPAGE",banner_category="MOBILE_APP").count()
         mobile_app_betslip_banner_count = AdminAdsBanner.objects.filter(admin_id=request.user.id,banner_type="BETSLIP",banner_category="MOBILE_APP").count()
-                
-      
+
+
         return render(request, template_name=self.template_name,
                       context={
                                "form": form, 
@@ -7314,7 +7574,7 @@ class CreateAffiliates(CheckRolesMixin, views.JSONResponseMixin, ListView):
     #     return HttpResponseRedirect(settings.LOGIN_URL)
 
     def get_queryset(self):
-       
+
         user = self.request.GET.get('user_name',[])
         if user:
             self.queryset = self.queryset.filter(id=user)
@@ -7331,8 +7591,8 @@ class CreateAffiliates(CheckRolesMixin, views.JSONResponseMixin, ListView):
 
         dealers = self.request.GET.get('dealers', [])
         agents = self.request.GET.get('agents', [])
-        
-        
+
+
         if dealers:
             context["selected_dealers"] = Dealer.objects.filter(id__in=dealers.split(","))
 
@@ -7369,7 +7629,7 @@ class CreateAffiliates(CheckRolesMixin, views.JSONResponseMixin, ListView):
         except Exception as e:
             print(e)
             return self.render_json_response({"message": "Something Went Wrong"}, status.HTTP_500_INTERNAL_SERVER_ERROR)
-        
+
 
 class AffiliatedPlayersAjaxView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseMixin, View):
     http_method_names = ("get",)
@@ -7383,7 +7643,7 @@ class AffiliatedPlayersAjaxView(CheckRolesMixin, views.JSONResponseMixin, views.
         player = Player.objects.filter(id=user_id,affiliate_link__isnull=False).first()
 
         results = []
-        
+
         results.append({"player_id": player.id, 
                             'affiliate_link':player.affiliate_link,
                             'commision':player.affiliation_percentage,
@@ -7435,14 +7695,16 @@ class BetBonusView(CheckRolesMixin, ListView):
             # context["losing_end_date"] = promo_obj.end_date.strftime(self.date_format) if promo_obj else timezone.now().strftime(self.date_format)
             context["bonus_type"] = bonus_obj.bonus_type if promo_obj else "bet_bonus"
             # context["promo_code_usage_limit"] = promo_obj.usage_limit if promo_obj else 0
+            context["promo_code_user_limit"] = -1
         except BonusPercentage.DoesNotExist:
             context["bet_bonus"] = 0
             # context["losing_start_date"] = timezone.now().strftime(self.date_format)
             # context["losing_end_date"] = timezone.now().strftime(self.date_format)
             context["promo_code_usage_limit"] = 1
+            context["promo_code_user_limit"] = -1
 
         return context
-    
+
 class PendingWithdrawalsview(CheckRolesMixin, views.JSONResponseMixin, ListView):
     template_name = "admin/pendingwithdrawals.html"
     allowed_roles = ("admin")
@@ -7450,28 +7712,28 @@ class PendingWithdrawalsview(CheckRolesMixin, views.JSONResponseMixin, ListView)
     model = WithdrawalRequests
     queryset = WithdrawalRequests.objects.order_by("-modified").all()
     date_format = "%d/%m/%Y"
-   
+
 
 
     # def handle_no_permission(self):
     #     return HttpResponseRedirect(settings.LOGIN_URL)
-    
-    
+
+
     def get_queryset(self):
         queryset = super().get_queryset()
         user = Users.objects.get(username=self.request.user)
-        
+
         if(self.request.GET.getlist("players", None)):
-    
+
             queryset = queryset.filter(user__id__in=self.request.GET.getlist("players"))
 
 
         if self.request.GET.get("status") and self.request.GET.get("status") != "all":
             queryset = queryset.filter(status=self.request.GET.get("status"))
-        
+
         if self.request.GET.get("type"):
             queryset = queryset.filter(type = self.request.GET.get("type"))
-            
+
 
         if self.request.GET.get("from"):
             start_date = datetime.strptime(self.request.GET.get("from"), self.date_format).strftime("%Y-%m-%d")
@@ -7559,6 +7821,33 @@ class ApproveWithdrawalRequest(CheckRolesMixin, views.JSONResponseMixin,
                             withdrawal_request.save()
                             try:
                                 Transactions.objects.update_or_create(
+                                    user=player,
+                                    journal_entry="debit",
+                                    amount=withdrawal_request.amount,
+                                    status="charged",
+                                    merchant=request.user,
+                                    previous_balance=player.balance-int(withdrawal_request.amount),
+                                    new_balance=player.balance,
+                                    description=f'withdrawal refund for cancelled amount {withdrawal_request.amount}',
+                                    reference=generate_reference(player),
+                                    bonus_type= None,
+                                    bonus_amount=0
+                                )
+                                send_player_balance_update_notification(player)
+                            except Exception as e:
+                                pass 
+
+                            Thread(target=transaction_mail,
+                            args=(withdrawal_request.id,)).start()
+                            return JsonResponse({'status': 'error', 'message': 'Something went wrong'})
+                    else:
+                        withdrawal_request.status = check
+                        withdrawal_request.save()
+                        player=withdrawal_request.user
+                        player.balance += withdrawal_request.amount  
+                        player.save()
+                        try:
+                            Transactions.objects.update_or_create(
                                 user=player,
                                 journal_entry="debit",
                                 amount=withdrawal_request.amount,
@@ -7571,57 +7860,30 @@ class ApproveWithdrawalRequest(CheckRolesMixin, views.JSONResponseMixin,
                                 bonus_type= None,
                                 bonus_amount=0
                             )
-                                send_player_balance_update_notification(player)
-                            except Exception as e:
-                                pass 
-                            
-                            Thread(target=transaction_mail,
-                            args=(withdrawal_request.id,)).start()
-                            return JsonResponse({'status': 'error', 'message': 'Something went wrong'})
-                    else:
-                        withdrawal_request.status = check
-                        withdrawal_request.save()
-                        player=withdrawal_request.user
-                        player.balance += withdrawal_request.amount  
-                        player.save()
-                        try:
-                            Transactions.objects.update_or_create(
-                            user=player,
-                            journal_entry="debit",
-                            amount=withdrawal_request.amount,
-                            status="charged",
-                            merchant=request.user,
-                            previous_balance=player.balance-int(withdrawal_request.amount),
-                            new_balance=player.balance,
-                            description=f'withdrawal refund for cancelled amount {withdrawal_request.amount}',
-                            reference=generate_reference(player),
-                            bonus_type= None,
-                            bonus_amount=0
-                        )
                             send_player_balance_update_notification(player)
                         except Exception as e:
                             pass
-                      
+
                         Thread(target=transaction_mail,
                         args=(withdrawal_request.id,)).start() 
                         return JsonResponse({'status': 'error', 'message':check})
-                        
+
                 except Exception as e:
                     print(e)         
-        
-      
+
+
             return JsonResponse({'status': 'success', 'message': 'Status updated successfully.'})
         except WithdrawalRequests.DoesNotExist:
             return JsonResponse({'status': 'error', 'message': 'Withdrawal request not found.'})
-        
-        
+
+
 class NowPaymentsReportView(CheckRolesMixin, ListView):
     template_name = "report/nowpayments_report.html"
     model = GSoftTransactions
     queryset = NowPaymentsTransactions.objects.order_by("-created").all()
     withdrawal_amounts = WithdrawalRequests.objects.filter(transaction_id=OuterRef('pk')).values('amount')
     queryset = queryset.annotate(withdrawal_amount=Subquery(withdrawal_amounts))
-   
+
     context_object_name = "casinobetslipreport"
     paginate_by = 20
     allowed_roles = ("admin", "superadmin", "dealer", "agent")
@@ -7654,18 +7916,18 @@ class NowPaymentsReportView(CheckRolesMixin, ListView):
             if self.request.GET.getlist("agents"):
                 agents = self.request.GET.getlist("agents")
                 queryset = queryset.filter(user__agent__in=agents)
-            
+
             if self.request.GET.get("payment_status"):
                 queryset = queryset.filter(payment_status=self.request.GET.get("payment_status"))
-                
+
             if self.request.GET.get("transaction_type"):
                 queryset = queryset.filter(transaction_type=self.request.GET.get("transaction_type"))
-                
+
 
         except Exception as e:
             return queryset
         return queryset
-    
+
     def get_context_data(self, **kwargs):
         # by default show results from first day of month
         current_date = timezone.now()
@@ -7676,7 +7938,7 @@ class NowPaymentsReportView(CheckRolesMixin, ListView):
         context["to"] = self.request.GET.get("to", timezone.now().strftime(self.date_format))
         context["payment_status"] = self.request.GET.get("payment_status", None)
         context["transaction_type"] = self.request.GET.get("transaction_type", None)
-        
+
         return context
 
 class WithdrawalCurrenciesView(CheckRolesMixin, ListView):
@@ -7693,13 +7955,13 @@ class WithdrawalCurrenciesView(CheckRolesMixin, ListView):
         currency = self.request.GET.get("currency_id")
         if currency and len(currency) > 0:
             currency = [int(x) for x in currency.split(",") if x.isdigit()]
-        
+
             if currency and len(currency) > 0 :
                 currency_filter = [int(x) for x in currency]
                 print(currency_filter)
                 queryset = queryset.filter(id__in=currency_filter)
             return queryset
-        
+
         return queryset
 
 class WithdrawalCurrencyStatus(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseMixin, View):
@@ -7708,14 +7970,14 @@ class WithdrawalCurrencyStatus(CheckRolesMixin, views.JSONResponseMixin, views.A
     @method_decorator(csrf_exempt)
     def dispatch(self, *args, **kwargs):
         return super().dispatch(*args, **kwargs)
-    
+
     def post_ajax(self, request, *args, **kwargs):
         currency = request.POST.get("currency")
         print(currency)
         currency_obj = WithdrawalCurrency.objects.filter(
             id=currency,
         )
-        
+
 
         if currency_obj.exists() and currency_obj.first().enabled:
             currency_obj.update(enabled = False)
@@ -7725,8 +7987,8 @@ class WithdrawalCurrencyStatus(CheckRolesMixin, views.JSONResponseMixin, views.A
             message = "Currency enabled"
 
         return self.render_json_response({"status": "Success", "message": message})
-    
-    
+
+
 class WithdrawalCurrencyAjaxView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseMixin, View):
     http_method_names = ("post",)
     allowed_roles = ("admin", "dealer", "superadmin", "tenant_manager")
@@ -7749,11 +8011,11 @@ class WithdrawalCurrencyAjaxView(CheckRolesMixin, views.JSONResponseMixin, views
                     }
                 )
         return self.render_json_response(results)
-    
+
     @method_decorator(csrf_exempt)
     def dispatch(self, *args, **kwargs):
         return super().dispatch(*args, **kwargs)
-    
+
 
 class CreateNotes(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseMixin, View):
     allowed_roles = ("admin", )
@@ -7772,10 +8034,10 @@ class CreateNotes(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseMi
 
             user = Users.objects.get(id=dealer_id)
             user_note = UserNotes.objects.create(user=user, notes=note, admin=request.user)
-        
+
             if user_note:
                 message = _("Note has been saved successfully.")
-            
+
             return self.render_json_response({"status": "success", "message": message})
 
         except:
@@ -7797,10 +8059,10 @@ class DeleteNoteAjaxView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxRes
             note.delete()
             # return self.render_json_response({"status": "success", "message": " Player Note Deleted Successfully."})
             return JsonResponse({'success': True})
-        
+
         except:
            return self.render_json_response({"status": "error", "message": "Something went wrong"})
-        
+
 
     @method_decorator(csrf_exempt)
     def dispatch(self, *args, **kwargs):
@@ -7813,21 +8075,21 @@ class UpdateNoteAjaxView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxRes
 
     def post_ajax(self, request, *args, **kwargs):
         try:
-       
+
             note_content = request.POST.get("note", None).strip()
             note_id = request.POST.get("note_id", None)
             if note_content == "":
                 return self.render_json_response({"status": "error", "message": "Please enter the notes first."})
-            
+
             note = UserNotes.objects.get(id=note_id)
             note.notes = note_content
             note.save()
             return self.render_json_response({"status": "success", "message": "Note Updated Successfully."})
             # return JsonResponse({'success': True})
-        
+
         except:
            return self.render_json_response({"status": "error", "message": "Something went wrong"})
-        
+
 
     @method_decorator(csrf_exempt)
     def dispatch(self, *args, **kwargs):
@@ -7836,7 +8098,7 @@ class UpdateNoteAjaxView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxRes
 
 class ComingSoonPermissionView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseMixin, View):
     allowed_roles = ("superadmin",)
-    
+
     # def handle_no_permission(self):
     #     return HttpResponseRedirect(settings.LOGIN_URL)
 
@@ -7897,7 +8159,7 @@ class ComingSoonAjaxView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxRes
 
         admin.save()
 
-        
+
 
         return self.render_json_response({"status": "success", "message": _("Coming Soon Page Updated Successfully")})
 
@@ -7909,28 +8171,28 @@ class PendingAffiliateRequests(CheckRolesMixin, views.JSONResponseMixin, ListVie
     model = AffiliateRequests
     queryset = AffiliateRequests.objects.order_by("-modified").all()
     date_format = "%d/%m/%Y"
-   
+
 
 
     # def handle_no_permission(self):
     #     return HttpResponseRedirect(settings.LOGIN_URL)
-    
-    
+
+
     def get_queryset(self):
         queryset = super().get_queryset()
         user = Users.objects.get(username=self.request.user)
-        
+
         if(self.request.GET.getlist("players", None)):
-    
+
             queryset = queryset.filter(user__id__in=self.request.GET.getlist("players"))
 
 
         if self.request.GET.get("status") and self.request.GET.get("status") != "all":
             queryset = queryset.filter(status=self.request.GET.get("status"))
-        
+
         if self.request.GET.get("type"):
             queryset = queryset.filter(type = self.request.GET.get("type"))
-            
+
 
         if self.request.GET.get("from"):
             start_date = datetime.strptime(self.request.GET.get("from"), self.date_format).strftime("%Y-%m-%d")
@@ -7971,7 +8233,7 @@ class StaffsView(CheckRolesMixin, FormMixin, ListView):
     context_object_name = "staffs"
     date_format = "%d/%m/%Y"
     queryset = Staff.objects.all()
-    
+
 
     ORDER_MAPPING = {
         "1": "-last_login",
@@ -8008,7 +8270,7 @@ class StaffsView(CheckRolesMixin, FormMixin, ListView):
             old_tz=pytz.timezone(current_timezone)
             new_tz=pytz.timezone("EST")
         new_timezone_timestamp = old_tz.localize(timee).astimezone(new_tz)
-        
+
         return new_timezone_timestamp
 
 
@@ -8023,7 +8285,7 @@ class StaffsView(CheckRolesMixin, FormMixin, ListView):
         user_name = self.request.GET.get("user_name",None)
         print(user_name)
         order = self.request.GET.get("order", "7")
-        
+
         if self.request.GET.get("from"):
             start_date = datetime.strptime(self.request.GET.get("from"), self.date_format).strftime("%Y-%m-%d")
             self.queryset = self.queryset.filter(created__gte=start_date)
@@ -8052,10 +8314,10 @@ class StaffsView(CheckRolesMixin, FormMixin, ListView):
 
 class UpdateStaff(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseMixin, View):
     allowed_roles = ("agent",)
-    
+
     # def handle_no_permission(self):
     #     return HttpResponseRedirect(settings.LOGIN_URL) 
-    
+
     def post_ajax(self, request, *args, **kwargs):
         user_name = request.POST.get("username", "")
         password = request.POST.get("password", "")
@@ -8106,7 +8368,7 @@ class ApproveAffiliateRequest(CheckRolesMixin, views.JSONResponseMixin,
                 affiliate_request = AffiliateRequests.objects.get(id=id)
                 affiliate_request.status = new_status  
                 affiliate_request.save()
-               
+
             elif new_status == 'approved':
                 affiliate_request = AffiliateRequests.objects.get(id=id)
                 affiliate_request.status = new_status
@@ -8118,11 +8380,11 @@ class ApproveAffiliateRequest(CheckRolesMixin, views.JSONResponseMixin,
                 player.save()
                 affiliate_request.save()
             return JsonResponse({'status': 'success', 'message': 'Status updated successfully.'})    
-                                  
+
         except Exception as e:
                 print(e)         
                 return JsonResponse({'status': 'error', 'message': 'Something went wrong'})
-      
+
 
 
 class CreateStaff(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseMixin, View):
@@ -8160,7 +8422,7 @@ class CreateStaff(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseMi
                     "message": _("The password has to be at least 5 characters"),
                 }
             )
-        
+
         if password != confirm_password:
             return self.render_json_response(
                 {
@@ -8181,7 +8443,7 @@ class CreateStaff(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseMi
         staff.is_active = True
         staff.save()
 
-      
+
         return self.render_json_response({"status": "Success", "message": "Staff created"})
 
 
@@ -8212,15 +8474,15 @@ class DefaultAffiliateSetingsView(CheckRolesMixin, views.JSONResponseMixin, view
                 if percentage:
                     default_val.default_affiliation_percentage = percentage
                 default_val.save()
-                
+
             return self.render_json_response({"status": "success", "message": _("Changes Done")})
         except Exception as e:
             print(e)
             return self.render_json_response({"status": "error", "message": _("Something Went Wrong")})
 
-        
+
 class DefaultSettingsView(CheckRolesMixin, ListView):
- 
+
     template_name = "admin/affiliate/default_affiliate_settings.html"
     model = DefaultAffiliateValues
     queryset = DefaultAffiliateValues.objects.order_by("-created").all()
@@ -8240,7 +8502,7 @@ class DefaultSettingsView(CheckRolesMixin, ListView):
         context = super().get_context_data(**kwargs)
         try:
             default_obj = self.queryset.first()
-            
+
             if default_obj:
 
                 context["no_of_days"] = default_obj.default_no_of_days
@@ -8250,9 +8512,9 @@ class DefaultSettingsView(CheckRolesMixin, ListView):
                 context["no_of_days"] = 0
                 context["deposit_count"] = 0
                 context["percentage"] = 0
-                
-                
-            
+
+
+
         except DefaultAffiliateValues.DoesNotExist:
             context["no_of_days"] = 0
             context["deposit_count"] = 0
@@ -8278,7 +8540,7 @@ class StaffWalletAndTransactionsView(CheckRolesMixin, ListView, views.JSONRespon
             "tips": Transactions.objects.filter(description__icontains=self.request.user.username).order_by("-created").all()
         }
         return myset
-    
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         try:
@@ -8290,12 +8552,12 @@ class StaffWalletAndTransactionsView(CheckRolesMixin, ListView, views.JSONRespon
         except Exception as e:
             print("Exception",e)
             return context
-        
+
     def post_ajax(self, request, *args, **kwargs):
         try:
             wallet_address = request.POST.get("wallet_address")
             wallet_currency = request.POST.get("wallet_currency")
-            
+
             user = Users.objects.filter(id=self.request.user.id).first()
             if user:
                 user.wallet_address = wallet_address
@@ -8306,12 +8568,12 @@ class StaffWalletAndTransactionsView(CheckRolesMixin, ListView, views.JSONRespon
                 # if wallet_currency in user.staff_currencies:
                 #     existing_currencies = user.staff_currencies
                 existing_currencies = user.staff_currencies if user.staff_currencies else {}
-                
+
                 existing_currencies.update(currencies)
                 user.staff_currencies = existing_currencies
                 user.save()
                 return self.render_json_response({"status": "Success", "message": "Wallet Details Updated Successfully"}, 200)
-               
+
         except:
             print(traceback.format_exc(), flush=True)
             return self.render_json_response({"status": "error", "message": "Something Went Wrong"})
@@ -8328,7 +8590,7 @@ class ChatRoomView(CheckRolesMixin, TemplateView, views.JSONResponseMixin, views
     # def handle_no_permission(self):
     #     return HttpResponseRedirect(settings.LOGIN_URL)
 
-    
+
     def get(self, request, *args, **kwargs):
         staff_agent = request.user.agent
         players_in_queue  = Queue.objects.filter(Q(pick_by=request.user) | Q(pick_by__isnull=True), user__agent=staff_agent,is_active = True)
@@ -8343,19 +8605,19 @@ class ChatRoomView(CheckRolesMixin, TemplateView, views.JSONResponseMixin, views
         game_names = list(OffMarketGames.objects.values_list('title', flat=True))
         game_data = list(zip(game_codes, game_names))
         print(game_data)
-        
+
 
         return render(request,template_name=self.template_name,
                 context={
                         'players_count_in_queue' : players_in_queue_count,
                         'players_in_queue' : players_in_queue,
                         'game_data': game_data
-                       
+
 
                     })
     def post_ajax(self, request, *args, **kwargs):
         try:
-            
+
             operation = self.request.POST.get('type',None)
             if operation == 'players_count_in_queue':
                 staff_agent = request.user.agent
@@ -8370,7 +8632,7 @@ class ChatRoomView(CheckRolesMixin, TemplateView, views.JSONResponseMixin, views
                 }
                 for entry in recent_ten_players_in_queue]
                 return self.render_json_response({"status": "Success", "players_count_in_queue": players_in_queue_count,'players_in_queue':players_in_queue,"is_staff_active":is_staff_active}, 200)
-                
+
             elif operation == 'toggle_status':
                 staff_status =  True if self.request.POST.get('staff_status') == 'true' else False
                 staff = Users.objects.filter(id=self.request.user.id).first()
@@ -8421,12 +8683,12 @@ class ChatRoomView(CheckRolesMixin, TemplateView, views.JSONResponseMixin, views
                     })
 
                 return self.render_json_response({"status": "Success", "messages": messages}, status=200)
-            
+
             elif operation == 'update_queue_status':
                 queue_id = self.request.POST.get("queue_id", None)
                 queue_entry = Queue.objects.filter(id=queue_id).update(pick_by = request.user)
                 return self.render_json_response({"status": "Success"}, 200)
-            
+
             else:
                 # chatroom,is_created = ChatRoom.objects.get_or_create(name='P5Chat')
                 staff_agent = request.user.agent
@@ -8522,7 +8784,7 @@ class ChatHistoryView(CheckRolesMixin, ListView, views.JSONResponseMixin, views.
             to_date = timezone.now().replace(tzinfo=None)
         if(from_date == to_date):
             to_date = to_date + timedelta(days=1)
-        
+
         if player_search.strip() != '':
             self.queryset = self.queryset.filter(player__username=player_search.strip())
         if staff_search.strip() != '':
@@ -8533,10 +8795,10 @@ class ChatHistoryView(CheckRolesMixin, ListView, views.JSONResponseMixin, views.
 
 
         return self.queryset
-    
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        
+
         try:
             current_date = datetime.now()
             current_time = self.time_zone_converter(timezone.now(), True)
@@ -8553,7 +8815,7 @@ class ChatHistoryView(CheckRolesMixin, ListView, views.JSONResponseMixin, views.
                 context["to"] = self.request.GET.get("to")
             else:
                 context["to"] = current_time.strftime(self.date_format)
-            
+
             context['player_search'] = self.request.GET.get("player_search",'')
             context['staff_search'] = self.request.GET.get("staff_search",'')
 
@@ -8563,13 +8825,13 @@ class ChatHistoryView(CheckRolesMixin, ListView, views.JSONResponseMixin, views.
         except Exception as e:
             print("Exception",e)
             return context
-        
+
 class CreateWithdrawalRequest(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseMixin, View):
     allowed_roles = ("staff",)
-    
+
     # def handle_no_permission(self):
     #     return HttpResponseRedirect(settings.LOGIN_URL) 
-    
+
     def post_ajax(self, request, *args, **kwargs):
         try:
             amount = request.POST.get("amount", "")
@@ -8613,7 +8875,7 @@ class ChatHistoryTabView(CheckRolesMixin, TemplateView, views.JSONResponseMixin,
     context_object_name = "messages"
     queryset = ChatMessage.objects.all().order_by('-sent_time')
 
-   
+
     def get(self, request, *args, **kwargs):
         chat_history_id = request.GET.get('ch_id')
         if chat_history_id:
@@ -8633,7 +8895,7 @@ class ChatHistoryTabView(CheckRolesMixin, TemplateView, views.JSONResponseMixin,
                             })
         return render(request,template_name=self.template_name,
                         context={
-                          
+
                             })
 
 
@@ -8648,7 +8910,7 @@ class UserCashtag(CheckRolesMixin, views.JSONResponseMixin, ListView):
 
 
     # def get_queryset(self):
-       
+
     #     user = self.request.GET.get('user_name',[])
     #     if user:
     #         self.queryset = self.queryset.filter(id=user)
@@ -8665,8 +8927,8 @@ class UserCashtag(CheckRolesMixin, views.JSONResponseMixin, ListView):
 
     #     dealers = self.request.GET.get('dealers', [])
     #     agents = self.request.GET.get('agents', [])
-        
-        
+
+
     #     if dealers:
     #         context["selected_dealers"] = Dealer.objects.filter(id__in=dealers.split(","))
 
@@ -8697,7 +8959,7 @@ class UserCashtag(CheckRolesMixin, views.JSONResponseMixin, ListView):
         except Exception as e:
             print(e)
             return self.render_json_response({"message": "Something Went Wrong"}, status.HTTP_500_INTERNAL_SERVER_ERROR)
-        
+
 
 
 
@@ -8707,7 +8969,7 @@ class OffMarketGamessView(CheckRolesMixin, TemplateView, View):
 
     # def handle_no_permission(self):
     #     return HttpResponseRedirect(settings.LOGIN_URL)
-    
+
     def get(self, request):
         try:
             if request.user.role == 'admin':
@@ -8740,7 +9002,7 @@ class CreateOffMarketGameView(CheckRolesMixin, TemplateView, View):
         try:
             if request.user.role == 'admin':
                 form = OffMarketGameForm()
-                
+
 
                 return render(request, template_name=self.template_name,
                               context={"form": form
@@ -8770,7 +9032,7 @@ class CreateOffMarketGameView(CheckRolesMixin, TemplateView, View):
                     if OffMarketGames.objects.filter(code=game_code.strip()).exists():
                         messages.error(request, _("Game already exists"))
                         return redirect('admin-panel:create-offmarket-game')
-                    
+
                     filename_format = game_img.name.split(".")
                     name, format = filename_format[-2], filename_format[-1]
                     filename = f"{name}{uuid.uuid4()}.{format}"
@@ -8778,7 +9040,7 @@ class CreateOffMarketGameView(CheckRolesMixin, TemplateView, View):
 
                     game_img = Image.open(game_img)                    
                     game_img_io = BytesIO()
-                    
+
                     format = 'JPEG' if format.lower() == 'jpg' else format.upper()
 
                     game_img.save(game_img_io, format=format,optimize=True)
@@ -8801,7 +9063,7 @@ class CreateOffMarketGameView(CheckRolesMixin, TemplateView, View):
                     game_obj.save()
                     messages.success(request, "Game successfully Added")
                     return redirect('admin-panel:offmarket-games')
-                    
+
                 messages.error(request, _("Please provide valid game details!"))
                 return redirect('admin-panel:create-offmarket-game')
             else:
@@ -8825,13 +9087,13 @@ class EditOffMarketGameView(CheckRolesMixin, TemplateView, views.JSONResponseMix
     # def handle_no_permission(self):
     #     return HttpResponseRedirect(settings.LOGIN_URL)
 
-    
+
     def get(self, request, *args, **kwargs):
         game_id = self.request.GET.get("game_id", "")
         game_obj = OffMarketGames.objects.filter(id=game_id).first()
         form = OffMarketGameForm(instance=game_obj)
-        
-      
+
+
         return render(request, template_name=self.template_name,
                       context={
                                "form": form,
@@ -8844,7 +9106,7 @@ class EditOffMarketGameView(CheckRolesMixin, TemplateView, views.JSONResponseMix
             title = request.POST.get("title", None)
             code = request.POST.get("code", None)
             bonus_percentage = request.POST.get("bonus_percentage", None)
-            
+
             game_img = request.FILES.get('url', None)
             game_id = request.GET.get('game_id', None)
             coming_soon = True if request.POST.get('coming_soon', None) == 'on' else False 
@@ -8876,7 +9138,7 @@ class EditOffMarketGameView(CheckRolesMixin, TemplateView, views.JSONResponseMix
                                                                  filename,
                                                                  format,
                                                                  sys.getsizeof(game_img_io), None)
-                    
+
                 game_obj.url = game_img_io_inmemory
 
             game_obj.title = title
@@ -8895,13 +9157,13 @@ class EditOffMarketGameView(CheckRolesMixin, TemplateView, views.JSONResponseMix
         except Exception as e:
             messages.error(request, "Something Went Wrong")
         return redirect('admin-panel:offmarket-games')
-    
-    
+
+
 
 class UserGamesView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseMixin, View):
     http_method_names = ("get",)
     allowed_roles = ("admin", "dealer", "superadmin","agent","staff")
-    
+
 
     def get_ajax(self, request, *args, **kwargs):
         context=dict()
@@ -8933,7 +9195,7 @@ class CreateUserGamesView(CheckRolesMixin,views.JSONResponseMixin, views.AjaxRes
                     },
                     status=status.HTTP_400_BAD_REQUEST
                 )
-            
+
             if UserGames.objects.filter(username=username, game=game).exists():
                 return self.render_json_response({
                     "status": "Failed", 
@@ -8941,7 +9203,7 @@ class CreateUserGamesView(CheckRolesMixin,views.JSONResponseMixin, views.AjaxRes
                     },
                     status=status.HTTP_400_BAD_REQUEST
                 )
-            
+
             usergame=UserGames()
             usergame.user_id=user
             usergame.game_id=game
@@ -8989,12 +9251,12 @@ class EditUserGamesView(CheckRolesMixin,views.JSONResponseMixin, views.AjaxRespo
 class StaffAjaxView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseMixin, View):
     http_method_names = ("post",)
     allowed_roles = ("admin", "dealer", "superadmin","agent")
-    
+
 
     def post_ajax(self, request, *args, **kwargs):
         term = request.POST.get("search")
         staffs = Staff.objects.all()
-        
+
         agents = Agent.objects.all()
         dealer_ids = request.POST.getlist("dealer[]", None)
         agent_ids = request.POST.getlist("agent[]",None)
@@ -9005,32 +9267,32 @@ class StaffAjaxView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponse
         if request.user.role=='dealer':
             agents=agents.filter(dealer=self.request.user)
             staffs=staffs.filter(agent_id__in=agents)
-        
+
         if request.user.role == "agent":
             staffs = staffs.filter(agent=self.request.user)
-        
+
         elif agent_ids:
             staffs = staffs.filter(agent_id__in=agent_ids)
-        
+
         elif dealer_ids:
-    
+
             agents=agents.filter(dealer_id__in=dealer_ids)
             staffs=staffs.filter(agent_id__in=agents)
-        
+
         staffs = staffs.values("id", "username")[0:10]
 
         results = []
         for staff in staffs:
             results.append({"value": staff["id"], "text": staff["username"]})
-        
+
         return self.render_json_response(results)
 
     @method_decorator(csrf_exempt)
     def dispatch(self, *args, **kwargs):
         return super().dispatch(*args, **kwargs)
-    
-    
-    
+
+
+
 class CsrQueryView(CheckRolesMixin, ListView, views.JSONResponseMixin, views.AjaxResponseMixin, View):
     template_name = "admin/unresolved_queries.html"
     model = CsrQueries
@@ -9078,7 +9340,7 @@ class CsrQueryView(CheckRolesMixin, ListView, views.JSONResponseMixin, views.Aja
         first_day_of_month = self.time_zone_converter(first_day_of_month_UTC, True).replace(
             day=1, hour=0, minute=0, second=0
         )
-        
+
         if(self.request.GET.getlist("players", None)):
             self.queryset = self.queryset.filter(user__id__in=self.request.GET.getlist("players"))
         if self.request.GET.get("from"):
@@ -9094,7 +9356,7 @@ class CsrQueryView(CheckRolesMixin, ListView, views.JSONResponseMixin, views.Aja
             to_date = timezone.now().replace(tzinfo=None)
         if(from_date == to_date):
             to_date = to_date + timedelta(days=1)
-        
+
         if player_search.strip() != '':
             self.queryset = self.queryset.filter(player__username=player_search.strip())
         if staff_search.strip() != '':
@@ -9105,10 +9367,10 @@ class CsrQueryView(CheckRolesMixin, ListView, views.JSONResponseMixin, views.Aja
 
 
         return self.queryset
-    
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        
+
         try:
             current_date = datetime.now()
             current_time = self.time_zone_converter(timezone.now(), True)
@@ -9125,7 +9387,7 @@ class CsrQueryView(CheckRolesMixin, ListView, views.JSONResponseMixin, views.Aja
                 context["to"] = self.request.GET.get("to")
             else:
                 context["to"] = current_time.strftime(self.date_format)
-            
+
             context['player_search'] = self.request.GET.get("player_search",'')
             context['staff_search'] = self.request.GET.get("staff_search",'')
 
@@ -9143,11 +9405,11 @@ class QueryStatus(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseMi
     @method_decorator(csrf_exempt)
     def dispatch(self, *args, **kwargs):
         return super().dispatch(*args, **kwargs)
-    
+
     def post_ajax(self, request, *args, **kwargs):
         id = request.POST.get("provider")
         query_obj = CsrQueries.objects.filter(id=id)
-        
+
 
         if query_obj.exists() and query_obj.first().is_active:
             query_obj.update(is_active = False)
@@ -9157,8 +9419,8 @@ class QueryStatus(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseMi
             message = "Query Status Changed To Unresolved"
 
         return self.render_json_response({"status": "Success", "message": message})
-    
-    
+
+
 class DeleteOffmarketGame(CheckRolesMixin, views.JSONResponseMixin,
                                  views.AjaxResponseMixin, View):
     allowed_roles = ("admin",)
@@ -9187,7 +9449,7 @@ class DeleteOffmarketGame(CheckRolesMixin, views.JSONResponseMixin,
                 },
                 status=404
             )
-            
+
 class OffmarketPendingWithdrawalsview(CheckRolesMixin, views.JSONResponseMixin, ListView):
     template_name = "offmarkets/offmarket_withdrawal_requests.html"
     allowed_roles = ("admin","agent")
@@ -9195,31 +9457,31 @@ class OffmarketPendingWithdrawalsview(CheckRolesMixin, views.JSONResponseMixin, 
     model = OffmarketWithdrawalRequests
     queryset = OffmarketWithdrawalRequests.objects.order_by("-modified").all()
     date_format = "%d/%m/%Y"
-   
+
 
     # def handle_no_permission(self):
     #     return HttpResponseRedirect(settings.LOGIN_URL)
-    
-    
+
+
     def get_queryset(self):
         queryset = super().get_queryset()
         user = Users.objects.get(username=self.request.user)
-        
+
         if(self.request.GET.getlist("players", None)):
-    
+
             queryset = queryset.filter(user__id__in=self.request.GET.getlist("players"))
 
 
         if self.request.GET.get("status") and self.request.GET.get("status") != "all":
             queryset = queryset.filter(status=self.request.GET.get("status"))
-        
+
         if self.request.GET.get("type"):  
             queryset = queryset.filter(type = self.request.GET.get("type"))
 
         if user.role=='agent':
             queryset = queryset.filter(user__agent = user)
 
-        
+
         if self.request.GET.get("from"):
             start_date = datetime.strptime(self.request.GET.get("from"), self.date_format).strftime("%Y-%m-%d")
             queryset = queryset.filter(created__gte=start_date)
@@ -9288,8 +9550,8 @@ class ApproveOffmarketWithdrawalRequest(CheckRolesMixin, views.JSONResponseMixin
             return JsonResponse({'status': 'success', 'message': 'Status updated successfully.'})
         except OffmarketWithdrawalRequests.DoesNotExist:
             return JsonResponse({'status': 'error', 'message': 'Withdrawal request not found.'})
-        
-   
+
+
 class EditOffmarketTransactionGame(APIView):
     http_method_names = ["post"]
     def post(self, request):
@@ -9320,7 +9582,7 @@ class EditOffmarketTransactionGame(APIView):
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
             }
-            
+
             response = requests.put(off_market_api_url + 'update', params=request_payload, headers=headers)
             print(response.status_code == status.HTTP_201_CREATED)
             if response.status_code == status.HTTP_200_OK:
@@ -9338,7 +9600,7 @@ class EditOffmarketTransactionGame(APIView):
 
 class DeleteOffmarketTransaction(APIView):
     http_method_names = ["post"]
-    
+
     def post(self, request):
         try:
             secret_key = settings.OFF_MARKET_SECRETKEY
@@ -9359,10 +9621,10 @@ class DeleteOffmarketTransaction(APIView):
                 transaction.id=transaction_id
                 transaction.delete()
             return Response({"message": "User Deleted Successfully"}, status=status.HTTP_200_OK)
-        
+
         except Users.DoesNotExist:
             return Response({"message": "User not found"}, status=status.HTTP_404_NOT_FOUND)
-        
+
         except:
             return Response({"message": "Something Went Wrong"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -9429,7 +9691,7 @@ def Check_staff(request):
     room_deatils = []
     return JsonResponse(room_deatils,safe=False)
 
-    
+
 
 
 class SpintheWheelView(CheckRolesMixin, ListView):
@@ -9454,7 +9716,7 @@ class SpintheWheelView(CheckRolesMixin, ListView):
         context = super().get_context_data(**kwargs)
 
         return context
-    
+
 
 
 
@@ -9509,7 +9771,7 @@ class MinimumSpinAmountView(CheckRolesMixin, views.JSONResponseMixin, views.Ajax
                 return self.render_json_response({"status": "error", "message": _("Something Went Wrong")})
         else:
             return self.render_json_response({"status": "error", "message": _("Something Went Wrong")})
-        
+
 
 class RemoveSpinDetailsView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseMixin, View):
     http_method_names = ["post"]
@@ -9582,7 +9844,7 @@ class CashDeatilsView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxRespon
             response = { "error": "failed" }
 
         return self.render_json_response(response)
-    
+
     def put_ajax(self, request, *args, **kwargs):
         try:
             data = json.loads(self.request.body.decode('utf-8'))
@@ -9601,7 +9863,7 @@ class CashDeatilsView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxRespon
             print(err)
             response = {"message": "something went wrong", "status":"error", "error": "failed" }
             return self.render_json_response(response, status=500)
-        
+
     def delete_ajax(self, request, *args, **kwargs):
         try:
             data = json.loads(self.request.body.decode('utf-8'))
@@ -9617,7 +9879,7 @@ class CashAppReportView(CheckRolesMixin, ListView):
     template_name = "report/cash_app.html"
     model = Transactions
     queryset = Transactions.objects.order_by("-created").all()
-   
+
     context_object_name = "transactionreport"
     paginate_by = 20
     allowed_roles = ("admin", "superadmin", "dealer", "agent")
@@ -9651,16 +9913,16 @@ class CashAppReportView(CheckRolesMixin, ListView):
             if self.request.GET.getlist("agents"):
                 agents = self.request.GET.getlist("agents")
                 queryset = queryset.filter(user__agent__in=agents)
-            
+
             if self.request.GET.get("payment_status"):
                 queryset = queryset.filter(status=self.request.GET.get("payment_status"))
-                
-                
+
+
 
         except Exception as e:
             return queryset
         return queryset
-    
+
     def get_context_data(self, **kwargs):
         # by default show results from first day of month
         current_date = timezone.now()
@@ -9670,7 +9932,7 @@ class CashAppReportView(CheckRolesMixin, ListView):
         context["from"] = self.request.GET.get("from", first_day_of_month)
         context["to"] = self.request.GET.get("to", timezone.now().strftime(self.date_format))
         context["payment_status"] = self.request.GET.get("payment_status", None)
-        
+
         return context
 
 from django.core.management import call_command
@@ -9708,7 +9970,7 @@ class CashappQrView(CheckRolesMixin, TemplateView, views.JSONResponseMixin, view
         form = CashappDetailForm()
         user=CashappQr.objects.filter(user=self.request.user, is_active=True).last()
         return render(request, template_name=self.template_name, context={"form": form,"image":user.image})
-    
+
     def post(self, request, *args, **kwargs):
         try:
             cashapp_obj = CashappQr.objects.filter(user=self.request.user).last()
@@ -9725,7 +9987,7 @@ class CashappQrView(CheckRolesMixin, TemplateView, views.JSONResponseMixin, view
             print(e)
             messages.error(request, "Something Went Wrong")
         return redirect('admin-panel:cashapp-detail')
-    
+
 
 
 class ChatInboxView(CheckRolesMixin, TemplateView, views.JSONResponseMixin, views.AjaxResponseMixin, View):
@@ -9747,7 +10009,7 @@ class ChatInboxView(CheckRolesMixin, TemplateView, views.JSONResponseMixin, view
             per_page = request.GET.get('per_page', 10)
             message_from = request.GET.get('message_from', None)
             is_history = request.GET.get('is_history', False)
-            
+
             chat_room = ChatRoom.objects.filter(id=chatroom_id).first()
             if message_from:
                 messages = ChatMessage.objects.filter(room_id=chatroom_id, id__lt=message_from).order_by("-created")
@@ -9790,7 +10052,7 @@ class ChatInboxView(CheckRolesMixin, TemplateView, views.JSONResponseMixin, view
                             "type": message.type,
                             "is_comment":message.is_comment
                        })
-                    
+
             except PageNotAnInteger:
                 messages = paginator.page(1)
             except EmptyPage:
@@ -9816,7 +10078,7 @@ class ChatInboxView(CheckRolesMixin, TemplateView, views.JSONResponseMixin, view
             return self.render_json_response(response_data)
 
         chat_count = chats.count()
-        
+
         game_data = list(OffMarketGames.objects.filter(
             game_status=True,
         ).values_list('id', "code", "title"))
@@ -9893,7 +10155,7 @@ class ChatInboxView(CheckRolesMixin, TemplateView, views.JSONResponseMixin, view
                 chatroom = ChatRoom.objects.filter(id=chat_id).last()
                 if chatroom.pick_by is not None and chatroom.pick_by != self.request.user:
                     return self.render_json_response({"status": "already_picked", "message":"Player already picked", "chat_id":chatroom.id}, 405)
-                    
+
                 chatroom.pick_by = self.request.user if assign in [True, "true"] else None
                 chatroom.save()
                 chat_message = ChatMessage.objects.filter(~Q(sender__role="player"), room=chatroom, type="join").first()
@@ -9978,14 +10240,14 @@ class ChatInboxHistoryListView(CheckRolesMixin, ListView, views.JSONResponseMixi
             self.queryset = queryset.filter(player_id__in=self.request.GET.getlist("players"))
         if self.request.GET.getlist("staff", None):
             self.queryset = queryset.filter(pick_by__in=self.request.GET.getlist("staff"))
-            
+
         self.queryset = self.queryset.distinct().annotate(
             last_message_timestamp=Max('messages__created'),
         )
 
         return self.queryset
-    
-    
+
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         try:
@@ -10016,7 +10278,7 @@ class ChatInboxHistoryDetailView(CheckRolesMixin, TemplateView, views.JSONRespon
     date_format = "%Y-%m-%d %H:%M:%S.%f%z"
     context_object_name = "messages"
 
-   
+
     def get(self, request, *args, **kwargs):
         chat_history_id = request.GET.get('ch_id')
         if chat_history_id:
@@ -10074,14 +10336,14 @@ class CashAppListView(CheckRolesMixin, ListView, views.JSONResponseMixin, views.
             queryset = queryset.filter(created__date__lte=end_date)
 
         return queryset
-    
-    
+
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         try:
             current_date = timezone.now()
             first_day_of_month = current_date.replace(day=1, hour=0, minute=0).strftime(self.date_format)
-            
+
             context["player_search"] = self.request.GET.get('player_search', "")
             context["status"] = self.request.GET.get('status', None)
             context['timezone'] = Admin.objects.first().timezone
@@ -10091,7 +10353,7 @@ class CashAppListView(CheckRolesMixin, ListView, views.JSONResponseMixin, views.
         except Exception as e:
             print("Exception", e)
             return context
-        
+
     def post(self, *args, **kwargs):
         try:
             cashapp_id = self.request.POST.get("cashapp_id")
@@ -10142,7 +10404,7 @@ class BonusTransactionReportView(CheckRolesMixin, ListView):
         elif self.request.user.role == "agent":
             transaction_queryset = transaction_queryset.filter(Q(user=self.request.user) | Q(merchant=self.request.user))
             offmarket_queryset = offmarket_queryset.filter(user__agent=self.request.user)
-        
+
         if self.request.GET.get("username"):
             transaction_queryset = transaction_queryset.annotate(
                 user_username_lower=Lower("user__username"),
@@ -10154,7 +10416,7 @@ class BonusTransactionReportView(CheckRolesMixin, ListView):
             offmarket_queryset = offmarket_queryset.filter(
                 user__username__iexact=self.request.GET.get("username").split(",").lower()
             )
-                        
+
         if self.request.GET.get("from"):
             start_date = datetime.strptime(self.request.GET.get("from"), self.date_format).strftime("%Y-%m-%d")
             transaction_queryset = transaction_queryset.filter(created__gte=start_date)
@@ -10175,7 +10437,7 @@ class BonusTransactionReportView(CheckRolesMixin, ListView):
         if(self.request.GET.getlist("players", None)):
             transaction_queryset = transaction_queryset.filter(user__id__in=self.request.GET.getlist("players"))
             offmarket_queryset = offmarket_queryset.filter(user__id__in=self.request.GET.getlist("players"))
-        
+
         if self.request.GET.getlist("dealers"):
             dealers = self.request.GET.getlist("dealers")
             transaction_queryset = transaction_queryset.filter(user__dealer__in=dealers)
@@ -10186,13 +10448,13 @@ class BonusTransactionReportView(CheckRolesMixin, ListView):
             transaction_queryset = transaction_queryset.filter(user__agent__in=agents)
             offmarket_queryset = offmarket_queryset.filter(user__agent__in=agents)
 
-        
+
         if self.request.GET.get("bonus-type") and self.request.GET.get("bonus-type") != "all":
             transaction_queryset = transaction_queryset.filter(bonus_type=self.request.GET.get("bonus-type"))
             if self.request.GET.get("bonus-type") != "offmarket_bonus":
                 offmarket_queryset = []
 
- 
+
         queryset = list(chain(transaction_queryset, offmarket_queryset))
         queryset = sorted(queryset, key=attrgetter('created'), reverse=True)
         return queryset
@@ -10233,7 +10495,7 @@ class OffMarketCreditAjaxView(CheckRolesMixin, views.JSONResponseMixin, views.Aj
     http_method_names = ("post",)
     allowed_roles = ("admin", "dealer", "superadmin", "agent","staff")
     input_fields = ("value", "player_id", "type","game_id")
-    
+
     # def handle_no_permission(self):
     #     return HttpResponseRedirect(settings.LOGIN_URL)
 
@@ -10248,7 +10510,7 @@ class OffMarketCreditAjaxView(CheckRolesMixin, views.JSONResponseMixin, views.Aj
                 return self.render_json_response({"status":"Failed","message": "Invalid Payment ID"}, 400)
             elif OffMarketTransactions.objects.filter(txn_id=deposit_id).exists():
                 return self.render_json_response({"status":"Failed","message": "Payment ID Already Exists"}, 400)
-            
+
             amount = Decimal(amount)
             secret_key = settings.OFF_MARKET_SECRETKEY
             off_market_api_url = settings.OFFMARKET_API_URL
@@ -10306,7 +10568,7 @@ class OffMarketCreditAjaxView(CheckRolesMixin, views.JSONResponseMixin, views.Aj
                 if response.status_code == status.HTTP_200_OK:
                     deposit.status="Completed"
                     deposit.save()
-                    
+
                 task_update_offmarket_transaction.apply_async(args=[deposit.id], countdown=19)
 
                 return self.render_json_response({"message": "Request Submitted Successfully"}, 200)
@@ -10338,7 +10600,7 @@ class CasinoCategoryView(CheckRolesMixin, APIView):
         ).values('value', 'text')
 
         return Response(casino_categories)
-    
+
 
     def post(self, *args, **kwargs):
         try:
@@ -10346,7 +10608,7 @@ class CasinoCategoryView(CheckRolesMixin, APIView):
             category_name = self.request.POST.get("category_name")
             is_edit = self.request.POST.get("is_edit", False)
             is_bulk_change = self.request.POST.get("is_bulk_change", False)
-            
+
             if is_edit in ['true', True]:
                 CasinoGameList.objects.filter(game_category=game_id).update(game_category=category_name)
             elif is_bulk_change in ['true', True]:
@@ -10356,7 +10618,7 @@ class CasinoCategoryView(CheckRolesMixin, APIView):
                 casino_game = CasinoManagement.objects.get(id=game_id).game
                 casino_game.game_category = category_name
                 casino_game.save()
-            
+
             if not CasinoHeaderCategory.objects.filter(name=category_name).exists():
                 casino_header = CasinoHeaderCategory.objects.order_by("position").last()
                 position = casino_header.position + 1 if casino_header else 1
@@ -10393,7 +10655,7 @@ class TournamentListView(CheckRolesMixin, ListView, views.JSONResponseMixin, vie
             queryset = queryset.filter(is_active=True)
         elif status == "inactive":
             queryset = queryset.filter(is_active=False)
-        
+
         if tournament_start_date:
             queryset = queryset.filter(start_date__date__gte=tournament_start_date)
         if tournament_end_date:
@@ -10434,7 +10696,7 @@ class TournamentListView(CheckRolesMixin, ListView, views.JSONResponseMixin, vie
             ).values("value", "text"))
 
         return self.render_json_response(tournaments)
-        
+
 
 class TournamentDetailView(CheckRolesMixin, TemplateView, View):
     allowed_roles = ["admin", ]
@@ -10504,8 +10766,8 @@ class CreateTournamentView(CheckRolesMixin, TemplateView, views.JSONResponseMixi
             else:
                 tournament_prize.non_cash_prize = winner_prize
             tournament_prize.save()
-        
-    
+
+
     def post(self, request, *args, **kwargs):
         try:
             if not self.request.POST.get("tournament_name").strip():
@@ -10578,7 +10840,7 @@ class EditTournamentView(CheckRolesMixin, TemplateView, views.JSONResponseMixin,
     date_format = "%d/%m/%Y %H:%M"
     context_object_name = "crm_template"
 
-    
+
     def get(self, request, *args, **kwargs):
         tournament_id = self.request.GET.get("id")
         tournament = Tournament.objects.filter(id=tournament_id).first() if tournament_id.isdigit() else None
@@ -10608,7 +10870,7 @@ class EditTournamentView(CheckRolesMixin, TemplateView, views.JSONResponseMixin,
             "is_tournament_started":is_tournament_started,
             "current_date": timezone.now().strftime('%Y-%m-%dT%H:%M'),
         })
-    
+
 
     def update_tournament_prize(self, tournament):
         number_of_winners = int(self.request.POST.get("number_of_winners"))
@@ -10624,7 +10886,7 @@ class EditTournamentView(CheckRolesMixin, TemplateView, views.JSONResponseMixin,
 
             tournament_prize.type = prize_type
             tournament_prize.save()
-            
+
         last_rank = tournament_prizes.last().rank if tournament_prizes.last() else 0
         if number_of_winners > last_rank:
             for rank in range(last_rank+1, number_of_winners+1):
@@ -10639,7 +10901,7 @@ class EditTournamentView(CheckRolesMixin, TemplateView, views.JSONResponseMixin,
                 else:
                     tournament_prize.non_cash_prize = winner_prize
                 tournament_prize.save()
-            
+
 
         tournament.tournamentprize_set.filter(rank__gt=number_of_winners).delete()
 
@@ -10650,7 +10912,7 @@ class EditTournamentView(CheckRolesMixin, TemplateView, views.JSONResponseMixin,
             tournament = Tournament.objects.filter(id=tournament_id).first()
             if not tournament:
                 return self.render_json_response({"status": "error", "message": "Invalid tournament ID"}, 400)
-            
+
             image = self.request.FILES.get("tournament_image")
             number_of_winners = int(self.request.POST.get("number_of_winners"))
             is_tournament_enabled = True if self.request.POST.get("is_tournament_enabled") == "on" else False
@@ -10694,7 +10956,7 @@ class EditTournamentView(CheckRolesMixin, TemplateView, views.JSONResponseMixin,
             tournament.min_player_limit = min_player_limit
             tournament.is_rebuy_enabled = is_rebuy_enabled
             tournament.is_active = is_tournament_enabled
-            
+
             if is_rebuy_enabled:
                 tournament.rebuy_fees = rebuy_fees
                 tournament.rebuy_limit = rebuy_limit
@@ -10709,7 +10971,7 @@ class EditTournamentView(CheckRolesMixin, TemplateView, views.JSONResponseMixin,
             tournament.save()
 
             self.update_tournament_prize(tournament)
-            
+
             return self.render_json_response({"success":True, "message": "Tournament Updated Successfully"}, 200)
         except Exception as e:
             print(traceback.format_exc())
@@ -10743,13 +11005,13 @@ class AddEmailTemplateView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxR
 
         if not category or not template_id:
             return self.render_json_response({"status": "error", "message": _("Incomplete Entries")})
-        
+
         if EmailTemplateDetails.objects.filter(category=category).exists():
             return self.render_json_response({"status": "error", "message": _("Category Already Exists")})
-        
+
         elif EmailTemplateDetails.objects.filter(template_id=template_id).exists():
             return self.render_json_response({"status": "error", "message": _("Template ID Already Exists")})
-        
+
         EmailTemplateDetails.objects.create(
             category=category,
             admin=self.request.user,
@@ -10757,7 +11019,7 @@ class AddEmailTemplateView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxR
         )
 
         return self.render_json_response({"status": "success", "message": _("Email Template Added Successfully")})
-    
+
 
 class ManageEmailTemplateAjax(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseMixin, View):
     allowed_roles = ("admin", "superadmin")
@@ -10804,7 +11066,7 @@ class EditEmailTemplateAjax(CheckRolesMixin, TemplateView, views.JSONResponseMix
 
             elif EmailTemplateDetails.objects.filter(template_id=template_id).exists():
                 return self.render_json_response({"status": "error", "message": _("Template ID Already Exists")})
-            
+
             crm_obj = EmailTemplateDetails.objects.filter(id=t_id).first()
             crm_obj.template_id = template_id
             crm_obj.save()
@@ -10816,12 +11078,12 @@ class EditEmailTemplateAjax(CheckRolesMixin, TemplateView, views.JSONResponseMix
 
 
 class CmsImageUploadView(APIView):
-    
+
     def post(self, *args, **kwargs):
         try:
             if self.request.FILES.get('file'):
                 image_file = self.request.FILES['file']
-                
+
                 filename, extension = os.path.splitext(image_file.name)
                 filename = f"{filename}_{uuid.uuid4()}{extension}"
 
@@ -10860,7 +11122,7 @@ class CmsBonusDetailListView(CheckRolesMixin, TemplateView, View):
                 return render(request, template_name=self.template_name, status=status.HTTP_401_UNAUTHORIZED)
         except Exception as e:
             return render(request, template_name=self.template_name, context={"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-            
+
 
 class CreateCmsBonusDetailView(CheckRolesMixin, TemplateView, views.JSONResponseMixin, views.AjaxResponseMixin, View):
     allowed_roles = ["admin",]
@@ -10872,11 +11134,11 @@ class CreateCmsBonusDetailView(CheckRolesMixin, TemplateView, views.JSONResponse
                 available_bonuses = CmsBonusDetail.BonusType.labels
                 available_bonuses_keys = set(CmsBonusDetail.BonusType.labels.keys())
                 stored_details = set(CmsBonusDetail.objects.values_list("bonus_type", flat=True))
-                
+
                 if sorted(list(available_bonuses_keys)) == sorted(list(stored_details)):
                     messages.error(request, _("All types of bonus details are already added!"))
                     return redirect('admin-panel:bonus-details')
-                
+
                 allowed_to_create = list(available_bonuses_keys - stored_details)
                 promo_codes = None
                 if len(allowed_to_create)>0:
@@ -10885,9 +11147,9 @@ class CreateCmsBonusDetailView(CheckRolesMixin, TemplateView, views.JSONResponse
                         is_expired = False,
                         end_date__gte = timezone.now().date()
                     ).values_list("promo_code", flat=True)
-                    
+
                 bonuses = {bonus:available_bonuses.get(bonus) for bonus in allowed_to_create}
-                
+
                 return render(request, template_name=self.template_name, context={
                     "admin": self.request.user.id,
                     "available_bonuses": bonuses,
@@ -10898,8 +11160,8 @@ class CreateCmsBonusDetailView(CheckRolesMixin, TemplateView, views.JSONResponse
         except Exception as e:
             print(traceback.format_exc())
             return render(request, template_name=self.template_name, context={"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        
-    
+
+
     def post_ajax(self, request, *args, **kwargs):
         try:
             bonus_type = request.POST.get("bonus_type", None)
@@ -10910,7 +11172,7 @@ class CreateCmsBonusDetailView(CheckRolesMixin, TemplateView, views.JSONResponse
 
             if CmsBonusDetail.objects.filter(bonus_type=bonus_type).exists():
                 return self.render_json_response({"status": "error", "message": _(f"Details for {bonus_type} already exists.")})
-            
+
             bonus_detail = CmsBonusDetail()
             bonus_detail.bonus_type = bonus_type
             bonus_detail.promo_code = promo_code
@@ -10939,7 +11201,7 @@ class EditCmsBonusDetailView(CheckRolesMixin, TemplateView, views.JSONResponseMi
                 if not bonus_detail:
                     messages.error(request, _("Please provide valid id!"))
                     return redirect('admin-panel:bonus-details')
-                
+
                 promo_codes = None
                 if bonus_detail.bonus_type in [CmsBonusDetail.BonusType.welcome_bonus, CmsBonusDetail.BonusType.deposit_bonus]:
                     promo_codes = list(PromoCodes.objects.filter(
@@ -10949,7 +11211,7 @@ class EditCmsBonusDetailView(CheckRolesMixin, TemplateView, views.JSONResponseMi
                     ).values_list("promo_code", flat=True))
                     if bonus_detail.promo_code not in promo_codes:
                         promo_codes.insert(0, bonus_detail.promo_code)
-                    
+
                 return render(request, template_name=self.template_name, context={
                     "admin": self.request.user.id,
                     "bonus_detail": bonus_detail,
@@ -10961,9 +11223,9 @@ class EditCmsBonusDetailView(CheckRolesMixin, TemplateView, views.JSONResponseMi
             print(traceback.format_exc())
             messages.error(request, _("Something went wrong!"))
             return redirect('admin-panel:bonus-details')
-        
-    
-        
+
+
+
     def post_ajax(self, request, *args, **kwargs):
         try:
             bonus_id = request.POST.get("bonus_id", None)
@@ -10974,7 +11236,7 @@ class EditCmsBonusDetailView(CheckRolesMixin, TemplateView, views.JSONResponseMi
 
             if not CmsBonusDetail.objects.filter(id=bonus_id).exists():
                 return self.render_json_response({"status": "error", "message": _(f"Invalid ID.")})
-            
+
             bonus_detail = CmsBonusDetail.objects.get(id=bonus_id)
             bonus_detail.promo_code = promo_code
             bonus_detail.content = content
@@ -10986,7 +11248,7 @@ class EditCmsBonusDetailView(CheckRolesMixin, TemplateView, views.JSONResponseMi
             return self.render_json_response({"status": "Success", "message": "Bonus details successfully updated."})
         except Exception as e:
             return self.render_json_response({"status": "error", "message": "Something Went Wrong"})
-        
+
 
 class DeleteCmsBonusDetailView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseMixin, View):
     allowed_roles = ["admin",]
@@ -11013,8 +11275,8 @@ class DeleteCmsBonusDetailView(CheckRolesMixin, views.JSONResponseMixin, views.A
                 },
                 status=404
             )
-            
-        
+
+
 class PromoCodeAjaxView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseMixin, View):
     allowed_roles = ["admin", "superadmin"]
 
@@ -11029,8 +11291,8 @@ class PromoCodeAjaxView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResp
             return self.render_json_response(promo_codes)
         except Exception as e:
             return self.render_json_response({"status": "error", "message": "Something Went Wrong"})
-            
-            
+
+
 class RolesView(CheckRolesMixin, ListView, views.JSONResponseMixin, views.AjaxResponseMixin, View):
     model = Role
     paginate_by = 20
@@ -11072,11 +11334,11 @@ class RolesView(CheckRolesMixin, ListView, views.JSONResponseMixin, views.AjaxRe
         role_id = self.request.GET.getlist("role_name")
         order = self.request.GET.get("order", "3")
         role = self.kwargs.get('role')
-        
+
         self.queryset = self.queryset.filter(admin=self.request.user)
         if role:
             self.queryset = self.queryset.filter(name=role)
-            
+
         if self.request.GET.get("from"):
             start_date = datetime.strptime(self.request.GET.get("from"), self.date_format)
             self.queryset = self.queryset.filter(created__gte=start_date)
@@ -11113,12 +11375,12 @@ class RolesView(CheckRolesMixin, ListView, views.JSONResponseMixin, views.AjaxRe
         context["order"] = self.request.GET.get("order", "2")
         context["grouped_permissions"] = dict(grouped_permissions)
         context["selected_roles"] = Role.objects.filter(id__in=role_id)
-        
+
         if self.request.user.role in ("admin", "superadmin", "dealer"):
             context["username"] = self.request.GET.get("user_name", "")
-        
+
         return context
-    
+
     def post_ajax(self, request, *args, **kwargs):
         search = request.POST.get("search")
         result = []
@@ -11127,14 +11389,14 @@ class RolesView(CheckRolesMixin, ListView, views.JSONResponseMixin, views.AjaxRe
             # roles = roles.values(value=F("id"), text=F("name"))[:10]
             for role in roles[:10]:
                 result.append({"value": role.id, "text": role.name.title().replace("_", " ")})
-            
+
         return self.render_json_response(result)
-    
-    
+
+
 class CreateRoleView(CheckRolesMixin, TemplateView, views.JSONResponseMixin, views.AjaxResponseMixin, View):
     template_name = "admin/roles/create_role.html"
     allowed_roles = ("admin",)
-    
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         permissions = Permission.objects.filter(~Q(code="can_view_dashboard"))
@@ -11144,7 +11406,7 @@ class CreateRoleView(CheckRolesMixin, TemplateView, views.JSONResponseMixin, vie
 
         context["grouped_permissions"] = dict(grouped_permissions)
         return context
-    
+
     def post(self, request, *args, **kwargs):
         try:
             available_permissions = list(Permission.objects.values_list("code", flat=True))
@@ -11152,7 +11414,7 @@ class CreateRoleView(CheckRolesMixin, TemplateView, views.JSONResponseMixin, vie
             allowed_permissions = self.request.POST.get("allowed_permissions", "").split(",")
 
             pattern = re.compile("[A-Za-z0-9]*$")
-            
+
             if not role:
                 return self.render_json_response({"status": "error", "message": _("All fields are required")}, 400)
             elif Role.objects.filter(name=role.lower().replace(" ", "_")).exists():
@@ -11161,12 +11423,12 @@ class CreateRoleView(CheckRolesMixin, TemplateView, views.JSONResponseMixin, vie
                 return self.render_json_response({"status": "Failed","message": _("The role has to be at least 4 characters")}, 400)
             elif not all([permission in available_permissions or permission=="" for permission in allowed_permissions]):
                 return self.render_json_response({"status": "Failed","message": _("Invalid Permission.")}, 400)
-            
+
             role = Role.objects.create(
                 admin=self.request.user,
                 name=role.lower().replace(" ", "_"),
             )
-            
+
             allowed_permissions.append("can_view_dashboard")
             permissions_to_add = [Permission.objects.get(code=permission) for permission in allowed_permissions if permission!=""]                
 
@@ -11177,16 +11439,16 @@ class CreateRoleView(CheckRolesMixin, TemplateView, views.JSONResponseMixin, vie
             print(tb)
             print(e)
             return self.render_json_response({"success":False, "message": "Internal error"}, 500)
-        
-            
+
+
 class UpdateRoleView(CheckRolesMixin, TemplateView, views.JSONResponseMixin, views.AjaxResponseMixin, View):
     allowed_roles = ("admin",)
-    
+
     def post(self, request, *args, **kwargs):
         try:
             id = self.request.POST.get("id", "")
             role_name = self.request.POST.get("role", "")
-            
+
             if not role_name:
                 return self.render_json_response({"status": "error", "message": _("All fields are required")}, 400)
             elif not Role.objects.filter(id=id).exists():
@@ -11195,7 +11457,7 @@ class UpdateRoleView(CheckRolesMixin, TemplateView, views.JSONResponseMixin, vie
                 return self.render_json_response({"status": "Failed", "message": _("Role already exists")}, 400)
             elif len(role_name) < 4:
                 return self.render_json_response({"status": "Failed","message": _("The role has to be at least 4 characters")}, 400)
-            
+
             role = Role.objects.get(id=id)
             role.name = role_name.lower().replace(" ", "_")
             role.save()
@@ -11205,7 +11467,7 @@ class UpdateRoleView(CheckRolesMixin, TemplateView, views.JSONResponseMixin, vie
             print(tb)
             print(e)
             return self.render_json_response({"success":False, "message": "Internal error"}, 500)
-        
+
     def put_ajax(self, request, *args, **kwargs):
         try:
             data = parse_qs(self.request.body.decode('utf-8'))
@@ -11213,7 +11475,7 @@ class UpdateRoleView(CheckRolesMixin, TemplateView, views.JSONResponseMixin, vie
             role_id = data.get('role_id')[0]
             status = data.get("status")[0]
             available_permissions = list(Permission.objects.values_list("code", flat=True))
-            
+
             if not Role.objects.filter(id=role_id).exists():
                 return self.render_json_response({
                     "status": "error",
@@ -11224,7 +11486,7 @@ class UpdateRoleView(CheckRolesMixin, TemplateView, views.JSONResponseMixin, vie
                     "status": "error",
                     "message": _("Invalid Permission"),
                 },status=400)
-            
+
             role = Role.objects.get(id=role_id)
             for permission in permission_to_update:
                 permission = Permission.objects.get(code=permission)
@@ -11232,7 +11494,7 @@ class UpdateRoleView(CheckRolesMixin, TemplateView, views.JSONResponseMixin, vie
                     role.permissions.add(permission)
                 else:
                     role.permissions.remove(permission)
-                
+
             return self.render_json_response({
                 "status": "success",
                 "title": _("Permission updated"),
@@ -11288,7 +11550,7 @@ class UserListByRoleView(CheckRolesMixin, ListView, views.JSONResponseMixin, vie
         role = self.kwargs.get('role')
         user_id = self.request.GET.getlist("user_id")
         order = self.request.GET.get("order", "3")
-        
+
         self.queryset = self.queryset.filter(role=role, admin=self.request.user)
         if self.request.GET.get("from"):
             start_date = datetime.strptime(self.request.GET.get("from"), self.date_format)
@@ -11327,12 +11589,12 @@ class UserListByRoleView(CheckRolesMixin, ListView, views.JSONResponseMixin, vie
         context["user_role"] = self.kwargs.get('role').title().replace("_", " ")
         context["permissions"] = Permission.objects.all()
         context["selected_roles"] = Role.objects.filter(id__in=role_id)
-        
+
         if self.request.user.role in ("admin", "superadmin", "dealer"):
             context["username"] = self.request.GET.get("user_name", "")
-        
+
         return context
-    
+
     def post_ajax(self, request, *args, **kwargs):
         role = self.kwargs.get('role', "").lower().replace(" ", "_")
         search = request.POST.get("search")
@@ -11340,13 +11602,13 @@ class UserListByRoleView(CheckRolesMixin, ListView, views.JSONResponseMixin, vie
         if search:
             roles = Users.objects.filter(role=role.lower(), username__istartswith=search.lower()).order_by('username')
             roles = roles.values(value=F("id"), text=F("username"))[:10]
-            
+
         return self.render_json_response(list(roles))
-    
+
 
 class CreateUserByRole(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseMixin, View):
     allowed_roles = ("admin",)
-    
+
     def post_ajax(self, request, *args, **kwargs):
         try:
             role = self.kwargs.get("role", "").lower().replace(" ", "_")
@@ -11355,11 +11617,11 @@ class CreateUserByRole(CheckRolesMixin, views.JSONResponseMixin, views.AjaxRespo
             last_name = request.POST.get("last_name", "")
             password = request.POST.get("password", "")
             confirm_password = request.POST.get("confirm_password", "")
-            
+
             pattern = re.compile("[A-Za-z0-9]*$")
             none_validation = [username, role, first_name, last_name, password, confirm_password]
             print(role)
-            
+
             if None in none_validation or '' in none_validation:
                 return self.render_json_response({"status": "error", "message": _("All fields are required")}, 400)
             elif not pattern.fullmatch(username):
@@ -11376,7 +11638,7 @@ class CreateUserByRole(CheckRolesMixin, views.JSONResponseMixin, views.AjaxRespo
                 return self.render_json_response({"status": "Failed","message": _("Passwords do not match.")}, 400)
             elif not role in list(Role.objects.values_list("name", flat=True)):
                 return self.render_json_response({"status": "Failed","message": _("Invalid role.")}, 400)
-            
+
             user = Users.objects.create(
                 username = username,
                 first_name = first_name,
@@ -11390,7 +11652,7 @@ class CreateUserByRole(CheckRolesMixin, views.JSONResponseMixin, views.AjaxRespo
                 is_superuser = False,
                 is_active = True,
             )
-                
+
             return self.render_json_response({"status": "Success","message": _("User Created Successfully.")}, 200)
         except Exception as e:
             print(traceback.format_exc())
@@ -11399,11 +11661,11 @@ class CreateUserByRole(CheckRolesMixin, views.JSONResponseMixin, views.AjaxRespo
                 "status": "error",
                 "message": _("Internal Error")
             },status=500)
-    
-            
+
+
 class UpdateUserByRole(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseMixin, View):
     allowed_roles = ("admin",)
-    
+
     def post_ajax(self, request, *args, **kwargs):
         try:
             username = request.POST.get("username", "").lower()
@@ -11419,7 +11681,7 @@ class UpdateUserByRole(CheckRolesMixin, views.JSONResponseMixin, views.AjaxRespo
                 return self.render_json_response({"status": "error","message": _("The password has to be at least 5 characters")}, 400)
             elif password != confirm_password:
                 return self.render_json_response({"status": "error","message": _("Passwords do not match.")}, 400)
-            
+
             user = Users.objects.get(username=username)
             user.password = make_password(password)
             user.save()
@@ -11434,9 +11696,9 @@ class UpdateUserByRole(CheckRolesMixin, views.JSONResponseMixin, views.AjaxRespo
                 "status": "error",
                 "message": _("Internal Error")
             },status=500)
-                       
-    
-            
+
+
+
 class FortunepandasGamesManagementView(CheckRolesMixin, ListView):
     allowed_roles = ["admin",]
     template_name = "admin/fortunepandas-management.html"
@@ -11450,20 +11712,20 @@ class FortunepandasGamesManagementView(CheckRolesMixin, ListView):
         queryset = super().get_queryset()
         game_ids = self.request.GET.get("game_id")
         category = self.request.GET.get("category", None)
-                
+
         queryset = queryset.filter(admin=self.request.user)
 
         if game_ids and len(game_ids) > 0 :
             game_ids = [int(x) for x in game_ids.split(",") if x.isdigit()]
             print(game_ids)
             queryset = queryset.filter(id__in=game_ids)
-        
+
         if category:
             category = category.split(",")
             queryset = queryset.filter(game__game_category__in=category)
 
         queryset = queryset.filter(admin = self.request.user)
-        
+
         return queryset
 
     def get_context_data(self, **kwargs):
@@ -11487,14 +11749,14 @@ class FortunepandasGameAjaxView(CheckRolesMixin, APIView):
         games = FortunePandasGameManagement.objects.filter(admin = self.request.user)
         if search:
             games = games.filter(game__game_name__icontains = search)
-            
+
         results = []
         games = games.values(
             value=F("id"),
             text=F("game__game_name")
         )
         return Response(games)
-        
+
 
 class FortunepandasCategoryView(CheckRolesMixin, APIView):
     allowed_roles = ["admin",]
@@ -11511,11 +11773,11 @@ class FortunepandasCategoryView(CheckRolesMixin, APIView):
         ).values('value', 'text')
 
         return Response(categories)
-    
+
 
 class FortunepandasGameStatus(CheckRolesMixin, APIView):
     allowed_roles = ("admin")
-    
+
     def get(self, request, *args, **kwargs):
         game_id = self.request.GET.get("game_id")
         casino_obj = FortunePandasGameManagement.objects.filter(admin=self.request.user, game__game_id=game_id).first()
@@ -11524,7 +11786,7 @@ class FortunepandasGameStatus(CheckRolesMixin, APIView):
         casino_obj.save()
 
         return self.render_json_response({"status": "Success", "message": message})
-    
+
 
 class MnetReportView(CheckRolesMixin, ListView):
     template_name = "report/mnet_report.html"
@@ -11546,7 +11808,7 @@ class MnetReportView(CheckRolesMixin, ListView):
                 queryset = self.queryset.filter(user__agent = self.request.user)
             elif self.request.user.role != "superadmin":
                 queryset = self.queryset.filter(user__admin = self.request.user.admin)
-                
+
             if self.request.GET.getlist("players", None):
                 queryset = self.queryset.filter(user__in = self.request.GET.getlist("players"))
 
@@ -11570,29 +11832,29 @@ class MnetReportView(CheckRolesMixin, ListView):
             if self.request.GET.getlist("agents"):
                 agents = self.request.GET.getlist("agents")
                 queryset = queryset.filter(user__agent__in=agents)
-            
+
             if self.request.GET.get("payment_status"):
                 queryset = queryset.filter(status=self.request.GET.get("payment_status"))
-                
+
             if self.request.GET.get("transaction_type"):
                 queryset = queryset.filter(transaction_type=self.request.GET.get("transaction_type"))
-            
+
             return queryset
         except Exception as e:
             return queryset
-        
+
     def get_context_data(self, **kwargs):
         current_date = timezone.now()
         first_day_of_month = current_date.replace(day=1, hour=0, minute=0).strftime(self.date_format)
-        
+
         context = super().get_context_data(**kwargs)
         context["payment_status"] = self.request.GET.get("payment_status")
         context["transaction_type"] = self.request.GET.get("transaction_type")
         context["from"] = self.request.GET.get("from", first_day_of_month)
         context["to"] = self.request.GET.get("to", timezone.now().strftime(self.date_format))
         return context
-    
-    
+
+
 class MaintenanceModeAjaxView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseMixin, View):
     allowed_roles = ("admin")
 

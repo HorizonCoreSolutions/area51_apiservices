@@ -1,0 +1,122 @@
+{% comment %} To use this please import components/charjs {% endcomment %}
+
+<div class="chart-wrapper" id="{{ indepotent_key }}chart-wrapper" style="width: {{ size|default:150 }}px; max-height: calc({{ size|default:150 }} * 1.4px); height: auto;">
+    <canvas id="{{ indepotent_key }}chartJSContainer"></canvas>
+</div>
+<script>
+    const {{ indepotent_key }}degToRad = deg => (deg * Math.PI) / 180;
+
+    const {{ indepotent_key }}partialLimit = {{ partial|default:150 }};
+    const {{ indepotent_key }}totalLimit = {{ total|default:200 }};
+    const {{ indepotent_key }}y_at = {{ y|default:25 }};
+    const {{ indepotent_key }}r_at = {{ r|default:50 }};
+
+    const {{ indepotent_key }}data = gauge_values({{ indepotent_key }}totalLimit, {{ indepotent_key }}partialLimit, {{ indepotent_key }}y_at, {{ indepotent_key }}r_at);
+    const {{ indepotent_key }}total = {{ indepotent_key }}data.reduce((a, b) => a + b, 0);
+
+    var {{ indepotent_key }}options = {
+      type: 'doughnut',
+      data: {
+        datasets: [{
+          data: {{ indepotent_key }}data,
+          backgroundColor: ["#22c55e", "#ffd552", "#ef4444", "#ccc"],
+          borderWidth: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        cutout: '80%',
+        rotation: 250,
+        circumference: 220,
+        maintainAspectRatio: false,
+        layout: {
+          padding: { top: 0, bottom: 10 }
+        },
+        plugins: {
+          legend: { display: false },
+          tooltip: { enabled: false },
+        },
+      },
+      plugins: [
+        {
+          id: '{{ indepotent_key }}centerText',
+          afterDraw: chart => {
+            const {ctx, chartArea: {width, height}} = chart;
+            ctx.save();
+            ctx.fillStyle = "#444";
+
+            const text = `{{ midle_text }}`;
+            const fontSize = gauge_fitTextToWidth(text, width * 0.55, height * 0.35);
+            ctx.font = `bold ${fontSize}px Arial`;
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+
+            ctx.fillText(text, width / 2, height / 1.7);
+            ctx.restore();
+          }
+        },
+        {
+          id: '{{ indepotent_key }}subTitle',
+          afterDraw: chart => {
+            const {ctx, chartArea: {width, height}} = chart;
+            ctx.save();
+            ctx.fillStyle = "#444";
+
+            const text = "{{ sub_title|default:'None' }}";
+            const maxWidth = width * 0.7;
+            let fontSize = Math.min(width, height) * 0.20;
+
+            ctx.font = `bold ${fontSize}px Arial`;
+            let lines = gauge_wrapText(ctx, text, maxWidth);
+            let maxHeight = height * 0.3;
+
+            while (lines.length * fontSize > maxHeight && fontSize > 5) {
+              fontSize -= 1;
+              ctx.font = `bold ${fontSize}px Arial`;
+              lines = gauge_wrapText(ctx, text, maxWidth);
+            }
+
+            ctx.textAlign = "center";
+            ctx.textBaseline = "top";
+
+            $('#{{ indepotent_key }}chart-wrapper').not('[data-height-adjusted]').each(function(){
+              $(this).data('removed', fontSize * lines.length);
+            });
+
+            const lineHeight = fontSize * 1.2;
+            const startY = height / 1.4;
+            lines.forEach((line, i) => {
+              ctx.fillText(line, width / 2, startY + i * lineHeight);
+            });
+
+            ctx.restore();
+          }
+        },
+        {
+          id: '{{ indepotent_key }}moveUp',
+          beforeDraw(chart) {
+            const {ctx, chartArea} = chart;
+            ctx.save();
+
+            ctx.translate(0, -$('#{{ indepotent_key }}chart-wrapper').data("removed")*0.15);
+            $('#{{ indepotent_key }}chart-wrapper').each(function(){
+              let $el = $(this);
+              let count = $el.data('height-adjusted-count') || 0;
+
+              if (count < 2) {
+                $el.height({{ size }} * 0.8);
+                $el.data('height-adjusted-count', count + 1);
+              }
+            });
+          },
+          afterDraw(chart) {
+            chart.ctx.restore();
+          }
+        }
+      ]
+    };
+
+    const {{ indepotent_key }}ctx = document.getElementById('{{ indepotent_key }}chartJSContainer').getContext('2d');
+    new Chart({{ indepotent_key }}ctx, {{ indepotent_key }}options);
+
+</script>

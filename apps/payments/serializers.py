@@ -8,8 +8,10 @@ from rest_framework import serializers
 from rest_framework.response import Response
 from rest_framework import status
 
+from apps.users import promo_handler
+
 from .models import AlchemypayOrder, CoinFlowTransaction, CoinWithdrawal, MnetTransaction, NowPaymentsTransactions
-from apps.users.models import PromoCodes, Users
+from apps.users.models import Users
 from apps.bets.models import Transactions, DEPOSIT, ROLLBACK, CHARGED, WITHDRAW
 from apps.casino.utils import ErrorResponseMsg
 from .utils import COIN_PAYMENTS,get_min_amount,get_validate_address
@@ -125,24 +127,13 @@ class CreatePaymentSerializer(serializers.Serializer):
             if data['price_amount'] < min_amount['fiat_equivalent']:
                 raise serializers.ValidationError(f"amount must be greater than or equal to {math.ceil(min_amount['fiat_equivalent'])}")
         if data.get("promo_code"):
-            promo_obj = PromoCodes.objects.filter(promo_code=data.get("promo_code"), bonus__bonus_type="deposit_bonus").first()
-            nowpayment_promo_deposit_transactions = NowPaymentsTransactions.objects.filter(
+            is_valid, msg = promo_handler.verify_code(
+                promo_code=data.get("promo_code"),
                 user=self.context.get("user"),
-                applied_promo_code=data.get("promo_code"),
-                created__date=datetime.date.today()
-            ).count()
-            alchemypay_promo_deposit_transactions = AlchemypayOrder.objects.filter(
-                user=self.context.get("user"),
-                applied_promo_code=data.get("promo_code"),
-                created__date=datetime.date.today()
-            ).count()
-            if not promo_obj:
-                raise serializers.ValidationError(f"Invalid promo code")
-            elif promo_obj.is_expired or promo_obj.end_date < timezone.now().date():
-                raise serializers.ValidationError(f"Promo code expired")
-            elif nowpayment_promo_deposit_transactions + alchemypay_promo_deposit_transactions >= promo_obj.usage_limit:
-                raise serializers.ValidationError(f"Maximum limit for using '{promo_obj.promo_code}' reached")
-                 
+                bonus_type="deposit")
+            if not is_valid:
+                raise serializers.ValidationError(msg)
+            
         return data
    
 class CreateWithdrawalSerializer(serializers.Serializer):
@@ -221,24 +212,12 @@ class CreatePaymentQrSerializer(serializers.Serializer):
         data['price_currency'] = 'usd'
         
         if data.get("promo_code"):
-            promo_obj = PromoCodes.objects.filter(promo_code=data.get("promo_code"), bonus__bonus_type="deposit_bonus").first()
-            nowpayment_promo_deposit_transactions = NowPaymentsTransactions.objects.filter(
+            is_valid, msg = promo_handler.verify_code(
                 user=self.context.get("user"),
-                applied_promo_code=data.get("promo_code"),
-                created__date=datetime.date.today()
-            ).count()
-            alchemypay_promo_deposit_transactions = AlchemypayOrder.objects.filter(
-                user=self.context.get("user"),
-                applied_promo_code=data.get("promo_code"),
-                created__date=datetime.date.today()
-            ).count()
-                
-            if not promo_obj:
-                raise serializers.ValidationError(f"Invalid promo code")
-            elif promo_obj.is_expired or promo_obj.end_date < timezone.now().date():
-                raise serializers.ValidationError(f"Promo code expired")
-            elif nowpayment_promo_deposit_transactions + alchemypay_promo_deposit_transactions >= promo_obj.usage_limit:
-                raise serializers.ValidationError(f"Maximum limit for using '{promo_obj.promo_code}' reached")
+                promo_code=data.get("promo_code"),
+                bonus_type="deposit")
+            if not is_valid:
+                raise serializers.ValidationError(msg)
             
         return data
 
