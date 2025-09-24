@@ -3573,7 +3573,8 @@ class AutomatedBonusView(CheckRolesMixin, ListView):
         data = {}
         for item in queryset:
             pres = {
-                ("gc" if item.bonus_percentage > 0 else "sc"): item.instant_bonus_amount,
+                "sc": item.instant_bonus_amount,
+                "gc": item.gold_bonus,
                 "enabled" : not bool(item.is_expired)
             }
             if item.promo_code in data:
