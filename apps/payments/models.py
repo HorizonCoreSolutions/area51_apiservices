@@ -1,7 +1,7 @@
 from django.db import models
 from decimal import Decimal
 from apps.core.models import AbstractBaseModel
-from apps.users.models import Users
+from apps.users.models import PromoCodesLogs, Users
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from djchoices import ChoiceItem, DjangoChoices
@@ -208,7 +208,16 @@ class CoinFlowTransaction(AbstractBaseModel):
     transaction_type = models.CharField(max_length=50,choices=TransactionType)
     status = models.CharField(max_length=50,choices=StatusType, default=StatusType.pending)
     account_type = models.CharField(max_length=20, choices=AccountType,null=True,blank=True)
-    
+
+    applied_promo_code = models.CharField(_("Applied Promo Code"), max_length=50, null=True, blank=True, default=None)
+    promo_log = models.OneToOneField(
+        PromoCodesLogs,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        default=None,
+        related_name="coinflow_transaction"
+    )
     confimation_needed = models.BooleanField(default=False)
     
     processor_name = models.CharField(max_length=20,null=True,blank=True)

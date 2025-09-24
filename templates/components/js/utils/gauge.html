@@ -1,0 +1,49 @@
+<script>
+  
+  function gauge_values(t, p, y, r) {
+    if (r < y) [r, y] = [y, r];
+    if (p > t) return [0, 0, t, 0];
+    const a = (t * y / 100);
+    if (p < a) return [p, 0, 0, t - p];
+    const b = (t * r / 100);
+    if (p < b) return [a, p - a, 0, t - p];
+    return [a, b - a, p - b, t - p];
+  }
+
+  function gauge_wrapText(ctx, text, maxWidth) {
+    const words = text.split(" ");
+    const lines = [];
+    let line = "";
+
+    for (const word of words) {
+      const testLine = line ? line + " " + word : word;
+      if (ctx.measureText(testLine).width > maxWidth && line) {
+        lines.push(line);
+        line = word;
+      } else {
+        line = testLine;
+      }
+    }
+    if (line) lines.push(line);
+    return lines;
+  }
+
+  function gauge_fitTextToWidth(text, maxWidth, maxHeight, fontFamily = "Arial") {
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+
+    // Start with the maximum allowed font size (height or width)
+    let fontSize = Math.min(maxWidth, maxHeight);
+    ctx.font = `bold ${fontSize}px ${fontFamily}`;
+
+    // Reduce font size until it fits within maxWidth or until fontSize is 1
+    while (ctx.measureText(text).width > maxWidth && fontSize > 1) {
+      fontSize--;
+      ctx.font = `bold ${fontSize}px ${fontFamily}`;
+    }
+
+    return fontSize;
+  }
+
+
+</script>

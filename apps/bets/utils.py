@@ -1,9 +1,5 @@
 import datetime
-import math
-import traceback
 
-from django.db.models import Q
-from apps.users.models import PromoCodesLogs, PromoCodes
 
 def generate_reference(user):
     now = str(datetime.datetime.now())
@@ -16,8 +12,6 @@ def validate_date(date):
         return True
     except ValueError:
         return False
-
-
 
 
 

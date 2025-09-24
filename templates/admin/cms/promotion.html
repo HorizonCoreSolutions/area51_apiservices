@@ -1,0 +1,143 @@
+{% extends "index.html" %}
+{% load static %}
+{% load i18n %}
+{% block title %}
+  Admin Promotions
+{% endblock title %}
+{% block content %}
+  <style>
+
+    {% include "components/css/utils/edit_template.html" %}
+
+    .admin-card {
+      background-color: #ffffff;
+      box-shadow: 0px 0px 6px 6px rgb(204 204 204 / 0.25);
+      padding: 30px 10px;
+    }
+
+    .pcode {
+      margin-left: 250px;
+    }
+
+    .pcode.left-spacer {
+      margin-left: 0;
+    }
+
+    @media(max-width:991px) {
+      .pcode {
+        margin-left: 0px;
+      }
+    }
+
+    img.promo-thumbnail {
+      width: 100px;
+      height: 50px;
+      object-fit: cover;
+    }
+
+    .create-button {
+      float: right;
+      margin-right: 1rem;
+      margin-bottom: 20px;
+    }
+  </style>
+  <div class="pcode">
+    <div class="container-fluid pt-4">
+      {% include "includes/messages.html" %}
+      <div class="admin-card">
+        <div class="row">
+          <div class="col-12">
+            <div class="page-content">
+              <div class="main-heading-wrap">
+                <h5>{% trans "Promotions" %}</h5>
+                <a href="{% url 'admin-panel:cms-promotions-create' %}"
+                   class="btn btn-primary create-button">{% trans "Create" %} Toaster</a>
+                <a href="{% url 'admin-panel:cms-promotions-create' %}?type=page_blocker"
+                   class="btn btn-primary create-button">{% trans "Create" %} Page Blocker</a>
+              </div>
+              <p>*All times are UTC +00:00, take this into consideration while edit.</p>
+              <div class="table-responsive">
+                <table id="PromotionsTable"
+                       class="table table-data2 table-hover text-center"
+                       width="100%">
+                  <thead class="thead-dark">
+                    <tr>
+                      <th>{% trans "Title" %}</th>
+                      <th>{% trans "Type" %}</th>
+                      <th>{% trans "Start Date" %}</th>
+                      <th>{% trans "End Date" %}</th>
+                      <th>{% trans "Active" %}</th>
+                      <th>{% trans "Action" %}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% if promotions %}
+                      {% for promo in promotions %}
+                        <tr>
+                          <td class="clean-up align-middle">{{ promo.title|default:"[No title]"|escape }}</td>
+                          <td class="align-middle">{{ promo.get_type_display }}</td>
+                          <td class="align-middle">{{ promo.start_date|date:"d-m-Y H:i" }}</td>
+                          <td class="align-middle">{{ promo.end_date|date:"d-m-Y H:i" }}</td>
+                          <td class="align-middle">
+                            {% if promo.disabled %}
+                              <span class="text-danger">{% trans "No" %}</span>
+                            {% else %}
+                              <span class="text-success">{% trans "Yes" %}</span>
+                            {% endif %}
+                          </td>
+                          <td class="align-middle">
+                            <a class="fa-btn btn-primary"
+                               href="{% url 'admin-panel:cms-promotions-edit' pk=promo.id %}"><i class="fas fa-edit"></i></a>
+                            <form action="{% url 'admin-panel:cms-promotions-toggle' pk=promo.pk %}"
+                                  method="post">
+                              {% csrf_token %}
+                              <button type="submit" class="toggle-btn {% if not promo.disabled %}active{% endif %}"></button>
+                            </form>
+                          </td>
+                        </tr>
+                      {% endfor %}
+                    {% else %}
+                      <tr>
+                        <td colspan="6">No promotions found.</td>
+                      </tr>
+                    {% endif %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock content %}
+{% block javascript %}
+  <script>
+    function decodeHtml(encodedStr) {
+      // Create a temporary textarea element
+      var txt = document.createElement('textarea');
+      txt.innerHTML = encodedStr;
+      return txt.value; // returns the decoded HTML
+    }
+    $(document).ready(function() {
+      $('#PromotionsTable').DataTable({
+        searching: false,
+        ordering: true,
+        pageLength: 10,
+        lengthMenu: [
+          [5, 10, 20, -1],
+          [5, 10, 20, "All"]
+        ],
+      });
+      $('.clean-up').each(function() {
+        var val = $(this).html(); // get inner HTML
+        if (val) {
+          // Create a temporary div to decode HTML entities
+          var temp = $('<div>').html(decodeHtml(val));
+          var cleanText = temp.text(); // get pure text
+          $(this).text(cleanText); // replace content with clean text
+        }
+      });
+    });
+  </script>
+{% endblock javascript %}

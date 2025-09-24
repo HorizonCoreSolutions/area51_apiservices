@@ -9,538 +9,529 @@ Nowpayment Report
 {% endblock title %}
 
 {% block content %}
+  <style>
+    .admin-card{
+      background-color: #ffffff;
+      box-shadow: 0px 0px 6px 6px rgb(204 204 204 / 0.25);
+      padding: 30px 10px;
+    }
+    .user-name-wrap p{
+      margin-bottom: 0;
 
-    <style>
-        .admin-card{
-            background-color: #ffffff;
-            box-shadow: 0px 0px 6px 6px rgb(204 204 204 / 0.25);
-            padding: 30px 10px;
-        }
-        .user-name-wrap p{
-            margin-bottom: 0;
-
-        }
-        @media(max-width:767px){
-            .transactions-table{
-                width: 400px;
-            }
-        }
-            
-        .pcode.left-spacer {
-        margin-left: 0px;
-        }
-        .pcode{
-        margin-left: 250px;
-        }
-        @media(max-width:991px){
-            .pcode{
-            margin-left: 0px;
-        }
-        }
-        .hidedata{
-            display: none;
-        }
-        .tokenize {
-            margin-bottom: 20px;
-        }
-    </style>
-    <div class="pcode" id='nw1' >
-    <div >
-        <div class="container-fluid pt-4" >
-            <div class="admin-card">
-            <div class="row">
-                <div class="col-xs-12 col-lg-12">
-                    <div class="page-content" >
-                        <div class="main-heading-wrap">
-                            <h6>{% trans "NowPayment Report" %}</h6>
+    }
+    @media(max-width:767px){
+      .transactions-table{
+        width: 400px;
+      }
+    }
+      
+    .pcode.left-spacer {
+    margin-left: 0px;
+    }
+    .pcode{
+    margin-left: 250px;
+    }
+    @media(max-width:991px){
+      .pcode{
+      margin-left: 0px;
+    }
+    }
+    .hidedata{
+      display: none;
+    }
+    .tokenize {
+      margin-bottom: 20px;
+    }
+    .mt-n20px { margin-top:-20px; }
+    .min-w-210 { min-width:210px; }
+    .pt-2px { padding-top:2px; }
+    .text-important { font-weight: bold; color: black; }
+    .bg-transparent { background-color: transparent }
+  </style>
+  <div class="pcode" id="nw1">
+    <div class="container-fluid pt-4">
+      <div class="admin-card">
+        <div class="row">
+          <div class="col-xs-12 col-lg-12">
+            <div class="page-content" >
+              <div class="main-heading-wrap">
+                <h6>{% trans "NowPayment Report" %}</h6>
+              </div>
+              <div class="container-fluid" >
+                {% include "includes/messages.html" %}
+                <div class="table-data__tool">
+                  <div class="p-0">
+                    <form method="get">
+                      <div class="row flex-sm-nowrap flex-wrap mb-3">
+                        <div class="col-md-4 min-w-210 pt-2px">
+                          <div class="rs-select2--light rs-select2--md">
+                            <select id="input-search" name="players" class="js-example-basic-multiple tokenize-open">
+                              {% if selected_players %}
+                                {% for player in selected_players %}
+                                  <option  selected="selected" value="{{ player.id }}">
+                                    {{ player.username }}
+                                  </option>
+                                {% endfor %}
+                              {% endif %}   
+                            </select>
+                          </div>
                         </div>
-                        <div class="container-fluid" >
-                            
-                            {% include "includes/messages.html" %}
-                
-                            <div class="table-data__tool">
-                                <div  style="padding: 0;">
-                                    <form method="get">
-                                        <div class="row flex-sm-nowrap flex-wrap mb-3">
-                                            <div class="col-md-4" style="min-width: 210px; padding-top:2px;">
-                                                <div class="rs-select2--light rs-select2--md">
-                                                    <select id="input-search" name="players" class="js-example-basic-multiple tokenize-open">
-                                                        {% if selected_players %}
-                                                            {% for player in selected_players %}
-                                                                <option  selected="selected"
-                                                                        value="{{ player.id }}">{{ player.username }}</option>
-                                                            {% endfor %}
-                                                        {% endif %}   
-                                                    </select>
-                                                </div>
-                                            </div>
-                                            <!--Dealer select -->
-                                            <div class="col-md-4"> 
-                                                <div class="form-group" style="margin-top:-18px;">
-                                                    <span style="font-weight: bold; color: black; ">{% trans "Payment Status" %}</span>
-                                                    <select class="form-control select-input" id="payment_status" name="payment_status" >
-                                                        <option {% if payment_status == None %}selected="selected" {% endif %} value="">{% trans "--All--" %}</option>
-                                                        <option {% if payment_status == 'finished' %}selected="selected" {% endif %} value="finished">{% trans "Finished" %}</option>
-                                                        <option {% if payment_status == 'waiting' %}selected="selected" {% endif %} value="waiting">{% trans "Waiting" %}</option>
-                                                        <option {% if payment_status == 'rejected' %}selected="selected" {% endif %} value="rejected">{% trans "Rejected" %}</option>
-                                                        <option {% if payment_status == 'failed' %}selected="selected" {% endif %} value="failed">{% trans "Failed" %}</option>
-                                                        <option {% if payment_status == 'expired' %}selected="selected" {% endif %} value="expired">{% trans "Expired" %}</option>
-                                                        <option {% if payment_status == 'refunded' %}selected="selected" {% endif %} value="refunded">{% trans "Refunded" %}</option>
-                                                        <option {% if payment_status == 'confirmed' %}selected="selected" {% endif %} value="confirmed">{% trans "Confirmed" %}</option>
-                                                        <option {% if payment_status == 'sending' %}selected="selected" {% endif %} value="sending">{% trans "Sending" %}</option>
-                                                        <option {% if payment_status == 'processing' %}selected="selected" {% endif %} value="processing">{% trans "Processing" %}</option>
-                                                    </select>
-                                                    <div class="dropDownSelect2" ></div>
-                                                </div>    
-                                            </div>
-                                            
-                                            <div class="col-md-4"> 
-                                                <div class="form-group" style="margin-top:-18px;">
-                                                    <span style="font-weight: bold; color: black;">{% trans "Trans Type" %}</span>
-                                                    <select class="form-control select-input" id="transaction_type" name="transaction_type" >
-                                                        <option {% if transaction_type == None %}selected="selected" {% endif %} value="">{% trans "--All--" %}</option>
-                                                        <option {% if transaction_type == 'DEPOSIT' %}selected="selected" {% endif %} value="DEPOSIT">{% trans "Deposit" %}</option>
-                                                        <option {% if transaction_type == 'WITHDRAWAL' %}selected="selected" {% endif %} value="WITHDRAWAL">{% trans "Withdrawal" %}</option>
-                                                       
-                                                    </select>
-                                                    <div class="dropDownSelect2" ></div>
-                                                </div>    
-                                            </div>
-
-                                            <!-- Search -->
-                                            
-                                            
-                                        </div>
-                                        
-                                        <div class="row" style="margin-top:-20px">
-                                            <!-- Date filters -->
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                <div class="date-input">
-                                                    <span>{% trans "From date" %}</span>
-                                                    <input  type="text" value="{{from}}" class="form-control" id="search-date-created-from" placeholder='{% trans "Select from date" %}' onChange="validateDateRange(this)" name="from" readonly="true" style="background-color:transparent">
-                                                </div>
-                                            </div>
-                                            </div>
-                
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                <div class="date-input">
-                                                    <span>{% trans "To date" %}</span>
-                                                    <input type="text" value="{{to}}" class="form-control" id="search-date-created-to" placeholder='{% trans "Select to date" %}' onChange="validateDateRange(this)" name="to" readonly="true" style="background-color:transparent">
-                                                </div>
-                                            </div>
-                                            
-                                            </div>
-                                            
-                                            
-                                            </div>
-                                            <!-- Role and Trans Type -->
-                                           {% comment %} <div class="col-md-3"> 
-                                                <div class="form-group">
-                                                    <span style="font-weight: bold; color: black;">{% trans "Role" %}</span>
-                                                    <select class="form-control select-input" id="role-id" name="role" >
-                                                        <option {% if role == None %}selected="selected" {% endif %} value="">{% trans "--All--" %}</option>
-                                                        <option {% if role == 'dealer' %}selected="selected" {% endif %} value="dealer">{% trans "Master Agent" %}</option>
-                                                        <option {% if role == 'agent' %}selected="selected" {% endif %} value="agent">{% trans "Agent" %}</option>
-                                                        <option {% if role == 'player' %}selected="selected" {% endif %} value="player">{% trans "Player" %}</option>
-                                                    </select>
-                                                    <div class="dropDownSelect2" ></div>
-                                                </div>    
-                                            </div> {% endcomment %}
-                                            {% comment %} <div class="col-md-3">
-                                                <div class="form-group">
-                                                    <span style="font-weight: bold; color: black;">{% trans "Transaction Type" %}</span>
-                                                    <select class="form-control select-input" id="journal-entry" name="journal-entry" >
-                                                        <option {% if journal_entry == None or journal_entry == 'all' %}selected="selected" {% endif %} value="all">{% trans "--All--" %}</option>
-                                                        <option {% if journal_entry == 'credit' %}selected="selected" {% endif %} value="credit">{% trans "Credit" %}</option>
-                                                        <option {% if journal_entry == 'debit' %}selected="selected" {% endif %} value="debit">{% trans "Debit" %}</option>
-                                                        <option {% if journal_entry == 'deposit' %}selected="selected" {% endif %} value="deposit">{% trans "Deposit" %}</option>
-                                                        <option {% if journal_entry == 'withdraw' %}selected="selected" {% endif %} value="withdraw">{% trans "Withdraw" %}</option>
-                                                        <option {% if journal_entry == 'cashback' %}selected="selected" {% endif %} value="cashback">{% trans "Cashback" %}</option>
-                                                    </select>
-                                                    <div class="dropDownSelect2" ></div>
-                                                </div>
-                                            </div> {% endcomment %}
-
-                                            <!-- Duration Filter -->
-                                            {% comment %} <div class="col-md-3">
-                                                <div class="form-group">
-                                                    <span style="font-weight: bold; color: black;">{% trans "Duration Filter" %}</span>
-                                                    <select class="form-control select-input" id="duration-id" name="duration" >
-                                                        <option {% if duration == None %}selected="selected" {% endif %} value="">{% trans "--All--" %}</option>
-                                                        <option {% if duration == 'today' %} selected="selected" {% endif %} value="today">{% trans "Today" %}</option>
-                                                        <option {% if duration == 'yesterday' %} selected="selected" {% endif %} value="yesterday">{% trans "Yesterday" %}</option>
-                                                        <option {% if duration == 'lastweek' %} selected="selected" {% endif %} value="lastweek">{% trans "Last Week" %}</option>
-                                                        <option {% if duration == 'lastmonth' %} selected="selected" {% endif %} value="lastmonth">{% trans "Last Month" %}</option>
-                                                    </select>
-                                                    <div class="dropDownSelect2" ></div>
-                                                </div>    
-                                            </div> {% endcomment %}
-                                        </div>
-                                        <div class="row" >
-                                            {% if request.user.role == 'superadmin' %}
-                                            <div class="input-group-btn mb-2 ml-3" style="position: relative;" >
-                                                <button class="btn btn-primary " style="width: 120px;" id="button-report-download">
-                                                    {% trans "Download" %}
-                                                </button>
-                                            </div>
-                                        {% endif %}
-                                        <div class="input-group-btn mb-2 ml-3" style="position: relative;">
-                                            <button class="btn btn-primary" id="button-search">
-                                                {% trans "Search" %}
-                                            </button>
-                                        </div>
-
-                                        </div>
-                                        
-                                        
-                                    </form>
-                                </div>
-                            </div>
-                            
-                    
-                        
-                                    <div class="table-responsive table-responsive-data2 mt-2">
-                                        <table class="table table-data2 transactions-table table-bordered" width="100%" id="reporttable">
-                                            <thead class="thead-dark">
-                                                <tr>
-                                                    <th>{% trans "Payment Id" %} </th>
-                                                    <th>{% trans "Created At" %} </th>
-                                                    {% comment %} <th>{% trans "Time" %}</th> {% endcomment %}
-                                                    <th>{% trans "User" %}</th>
-                                                    {% comment %} <th>{% trans "Player" %} </th> {% endcomment %}
-                                                    {% comment %} <th>{% trans "Create Date" %}</th> {% endcomment %}
-                                                    <th class="hidedata">{% trans "Event Id" %} </th>
-                                                    <th class="hidedata">{% trans "Fixture Id" %} </th>
-                                                    <th>{% trans "Amount(USD)" %} </th>
-                                                    <th>{% trans "Currency" %} </th>
-                                                    <th>{% trans "Transaction Type" %}</th>
-                                                    <th>{% trans "Payment Status" %} </th>
-                                                
-                                                </tr>
-                                            </thead>
-                        
-                                            <tbody class='bg-light'>
-                                                {%  for sport in casinobetslipreport %}
-                                                <tr class="tr-collapse table-row tr-player">
-                                                    <td>
-                                                        <span>
-                                                            {% if sport.payment_id %}
-                                                                {{ sport.payment_id }}
-                                                            {% else %}
-                                                                {{ sport.invoice_id }}
-                                                                <small>
-                                                                    (invoice id)
-                                                                </small>
-                                                            {% endif %}
-                                                                
-                                                        </span>
-                                                    </td>
-                                                    <td>
-                                                        <span>
-                                                            {{ sport.created_at|local_date:request.session.user_timezone |date:"d-m-y H:i"}}
-                                                        </span>
-                                                    </td>
-                                                   
-                                                    <td>
-                                                        <span>
-                                                            {{ sport.user }}
-                                                        </span>
-                                                    </td>
-                                                    <td>
-                                                        <span>
-                                                            {% if sport.transaction_type == 'DEPOSIT' %}
-                                                                {{ sport.price_amount }}
-                                                            {% else %}
-                                                                {{ sport.withdrawal_amount }}
-                                                            {% endif %}
-                                                        </span>
-                                                    </td>
-                                                    <td>
-                                                        <span>
-                                                            {% if sport.pay_currency %}
-                                                                {{ sport.pay_currency|upper }}
-                                                            {% else %}
-                                                                {{ "-" }}
-                                                            {% endif %}
-                                                                
-
-                                                        </span>
-                                                    </td>
-                                                    <td>
-                                                        <span>
-                                                            {{ sport.transaction_type }}
-                                                        </span>
-                                                    </td>
-                                                    <td>
-                                                        <span>
-                                                            {{ sport.payment_status|upper }}
-                                                        </span>
-                                                    </td>
-                                                   
-                
-                                                </tr>
-                                                {% endfor %}
-                                            </tbody>
-                                        </table>
-                                        {% include 'includes/pagination.html' %}
-                                    </div>
-                                </div>
-                            </div>
+                        <!--Dealer select -->
+                        <div class="col-md-4"> 
+                          <div class="form-group mt-n20px">
+                            <span class="text-important" >{% trans "Payment Status" %}</span>
+                            <select class="form-control select-input" id="payment_status" name="payment_status" >
+                              <option {% if payment_status == None %}selected="selected" {% endif %} value="">{% trans "--All--" %}</option>
+                              <option {% if payment_status == 'finished' %}selected="selected" {% endif %} value="finished">{% trans "Finished" %}</option>
+                              <option {% if payment_status == 'waiting' %}selected="selected" {% endif %} value="waiting">{% trans "Waiting" %}</option>
+                              <option {% if payment_status == 'rejected' %}selected="selected" {% endif %} value="rejected">{% trans "Rejected" %}</option>
+                              <option {% if payment_status == 'failed' %}selected="selected" {% endif %} value="failed">{% trans "Failed" %}</option>
+                              <option {% if payment_status == 'expired' %}selected="selected" {% endif %} value="expired">{% trans "Expired" %}</option>
+                              <option {% if payment_status == 'refunded' %}selected="selected" {% endif %} value="refunded">{% trans "Refunded" %}</option>
+                              <option {% if payment_status == 'confirmed' %}selected="selected" {% endif %} value="confirmed">{% trans "Confirmed" %}</option>
+                              <option {% if payment_status == 'sending' %}selected="selected" {% endif %} value="sending">{% trans "Sending" %}</option>
+                              <option {% if payment_status == 'processing' %}selected="selected" {% endif %} value="processing">{% trans "Processing" %}</option>
+                            </select>
+                            <div class="dropDownSelect2" ></div>
+                          </div>  
                         </div>
-                    </div>
+                        
+                        <div class="col-md-4"> 
+                          <div class="form-group mt-n20px">
+                            <span class="text-important">{% trans "Trans Type" %}</span>
+                            <select class="form-control select-input" id="transaction_type" name="transaction_type" >
+                              <option {% if transaction_type == None %}selected="selected" {% endif %} value="">{% trans "--All--" %}</option>
+                              <option {% if transaction_type == 'DEPOSIT' %}selected="selected" {% endif %} value="DEPOSIT">{% trans "Deposit" %}</option>
+                              <option {% if transaction_type == 'WITHDRAWAL' %}selected="selected" {% endif %} value="WITHDRAWAL">{% trans "Withdrawal" %}</option>
+                            </select>
+                            <div class="dropDownSelect2" ></div>
+                          </div>  
+                        </div>
+                        <!-- Search -->                        
+                      </div>
+                      
+                      <div class="row mt-n20px">
+                        <!-- Date filters -->
+                        <div class="col-md-6">
+                          <div class="form-group">
+                            <div class="date-input">
+                              <span>{% trans "From date" %}</span>
+                              <input  type="text" value="{{ from }}" class="form-control bg-transparent" id="search-date-created-from" placeholder='{% trans "Select from date" %}' onChange="validateDateRange(this)" name="from" readonly="true">
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                          <div class="form-group">
+                            <div class="date-input">
+                              <span>{% trans "To date" %}</span>
+                              <input type="text" value="{{ to }}" class="form-control bg-transparent" id="search-date-created-to" placeholder='{% trans "Select to date" %}' onChange="validateDateRange(this)" name="to" readonly="true">
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                        
+                        
+                      <!-- Role and Trans Type -->
+                      {% comment %}
+                      <div class="col-md-3"> 
+                        <div class="form-group">
+                          <span style="font-weight: bold; color: black;">{% trans "Role" %}</span>
+                          <select class="form-control select-input" id="role-id" name="role" >
+                            <option {% if role == None %}selected="selected" {% endif %} value="">{% trans "--All--" %}</option>
+                            <option {% if role == 'dealer' %}selected="selected" {% endif %} value="dealer">{% trans "Master Agent" %}</option>
+                            <option {% if role == 'agent' %}selected="selected" {% endif %} value="agent">{% trans "Agent" %}</option>
+                            <option {% if role == 'player' %}selected="selected" {% endif %} value="player">{% trans "Player" %}</option>
+                          </select>
+                          <div class="dropDownSelect2" ></div>
+                        </div>  
+                      </div>
+                      {% endcomment %}
+                      {% comment %}
+                      <div class="col-md-3">
+                        <div class="form-group">
+                          <span style="font-weight: bold; color: black;">{% trans "Transaction Type" %}</span>
+                          <select class="form-control select-input" id="journal-entry" name="journal-entry" >
+                            <option {% if journal_entry == None or journal_entry == 'all' %}selected="selected" {% endif %} value="all">{% trans "--All--" %}</option>
+                            <option {% if journal_entry == 'credit' %}selected="selected" {% endif %} value="credit">{% trans "Credit" %}</option>
+                            <option {% if journal_entry == 'debit' %}selected="selected" {% endif %} value="debit">{% trans "Debit" %}</option>
+                            <option {% if journal_entry == 'deposit' %}selected="selected" {% endif %} value="deposit">{% trans "Deposit" %}</option>
+                            <option {% if journal_entry == 'withdraw' %}selected="selected" {% endif %} value="withdraw">{% trans "Withdraw" %}</option>
+                            <option {% if journal_entry == 'cashback' %}selected="selected" {% endif %} value="cashback">{% trans "Cashback" %}</option>
+                          </select>
+                          <div class="dropDownSelect2" ></div>
+                        </div>
+                      </div>
+                      {% endcomment %}
+
+                      <!-- Duration Filter -->
+                      {% comment %}
+                      <div class="col-md-3">
+                        <div class="form-group">
+                          <span style="font-weight: bold; color: black;">{% trans "Duration Filter" %}</span>
+                          <select class="form-control select-input" id="duration-id" name="duration" >
+                            <option {% if duration == None %}selected="selected" {% endif %} value="">{% trans "--All--" %}</option>
+                            <option {% if duration == 'today' %} selected="selected" {% endif %} value="today">{% trans "Today" %}</option>
+                            <option {% if duration == 'yesterday' %} selected="selected" {% endif %} value="yesterday">{% trans "Yesterday" %}</option>
+                            <option {% if duration == 'lastweek' %} selected="selected" {% endif %} value="lastweek">{% trans "Last Week" %}</option>
+                            <option {% if duration == 'lastmonth' %} selected="selected" {% endif %} value="lastmonth">{% trans "Last Month" %}</option>
+                          </select>
+                          <div class="dropDownSelect2" ></div>
+                        </div>  
+                      </div>
+                      {% endcomment %}
+                      <div class="row" >
+                        {% if request.user.role == 'superadmin' %}
+                        <div class="input-group-btn mb-2 ml-3 position-relative" >
+                          <button class="btn btn-primary" id="button-report-download">
+                            {% trans "Download" %}
+                          </button>
+                        </div>
+                        {% endif %}
+                        <div class="input-group-btn mb-2 ml-3 position-relative">
+                          <button class="btn btn-primary" id="button-search">
+                            {% trans "Search" %}
+                          </button>
+                        </div>
+                      </div>
+                    </form>
+                  </div>
                 </div>
+
+                <div class="table-responsive table-responsive-data2 mt-1">
+                  <table class="table table-data2 transactions-table  position-relativtable-bordered" width="100%" id="reporttable">
+                    <thead class="thead-dark">
+                      <tr>
+                        <th>{% trans "Payment Id" %} </th>
+                        <th>{% trans "Created At" %} </th>
+                        {% comment %} <th>{% trans "Time" %}</th> {% endcomment %}
+                        <th>{% trans "User" %}</th>
+                        {% comment %} <th>{% trans "Player" %} </th> {% endcomment %}
+                        {% comment %} <th>{% trans "Create Date" %}</th> {% endcomment %}
+                        <th class="hidedata">{% trans "Event Id" %} </th>
+                        <th class="hidedata">{% trans "Fixture Id" %} </th>
+                        <th>{% trans "Amount(USD)" %} </th>
+                        <th>{% trans "Currency" %} </th>
+                        <th>{% trans "Transaction Type" %}</th>
+                        <th>{% trans "Payment Status" %} </th>
+                      </tr>
+                    </thead>
+                    <tbody class="bg-light">
+                      {% for sport in casinobetslipreport %}
+                      <tr class="tr-collapse table-row tr-player">
+                        <td>
+                          <span>
+                            {% if sport.payment_id %}
+                              {{ sport.payment_id }}
+                            {% else %}
+                              {{ sport.invoice_id }}
+                              <small>
+                                (invoice id)
+                              </small>
+                            {% endif %}
+                          </span>
+                        </td>
+                        <td>
+                          <span>
+                            {{ sport.created_at|local_date:request.session.user_timezone |date:"d-m-y H:i" }}
+                          </span>
+                        </td>
+                        <td>
+                          <span>
+                            {{ sport.user }}
+                          </span>
+                        </td>
+                        <td>
+                          <span>
+                            {% if sport.transaction_type == 'DEPOSIT' %}
+                              {{ sport.price_amount }}
+                            {% else %}
+                              {{ sport.withdrawal_amount }}
+                            {% endif %}
+                          </span>
+                        </td>
+                        <td>
+                          <span>
+                            {% if sport.pay_currency %}
+                              {{ sport.pay_currency|upper }}
+                            {% else %}
+                              {{ "-" }}
+                            {% endif %}
+                          </span>
+                        </td>
+                        <td>
+                          <span>
+                            {{ sport.transaction_type }}
+                          </span>
+                        </td>
+                        <td>
+                          <span>
+                            {{ sport.payment_status|upper }}
+                          </span>
+                        </td>
+                      </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                  {% include "includes/pagination.html" %}
+                </div>
+              </div>
             </div>
+          </div>
         </div>
+      </div>
     </div>
+  </div>
 
 {% endblock content %}
 
 {% block javascript %}
 
-    <script>
-        function validateDateRange(input){
-        
-        var from_date = $("#search-date-created-from").val();
-        var to_date = $("#search-date-created-to").val();
-        error_msg = "";
-        if(input.id == "search-date-created-from"){
-            error_msg = "From date must be less than To date!!"
-        }
-        else{
-            error_msg = "To date must be greater than From date!!"
-        }
-        from_day = parseInt(from_date.split("/")[0]);
-        from_month = parseInt(from_date.split("/")[1]);
-        from_year = from_date.split("/")[2];
-        from_year = from_year.split(" ")[0];
-        from_hour = parseInt(from_date.split(" ")[1].split(":")[0]);
-        from_minute = parseInt(from_date.split(" ")[1].split(":")[1]);
+  <script>
+    function validateDateRange(input){
+    
+    var from_date = $("#search-date-created-from").val();
+    var to_date = $("#search-date-created-to").val();
+    error_msg = "";
+    if(input.id == "search-date-created-from"){
+      error_msg = "From date must be less than To date!!"
+    }
+    else{
+      error_msg = "To date must be greater than From date!!"
+    }
+    from_day = parseInt(from_date.split("/")[0]);
+    from_month = parseInt(from_date.split("/")[1]);
+    from_year = from_date.split("/")[2];
+    from_year = from_year.split(" ")[0];
+    from_hour = parseInt(from_date.split(" ")[1].split(":")[0]);
+    from_minute = parseInt(from_date.split(" ")[1].split(":")[1]);
 
-        to_day = parseInt(to_date.split("/")[0]);
-        to_month = parseInt(to_date.split("/")[1]);
-        to_year = to_date.split("/")[2];
-        to_year = to_year.split(" ")[0];
-        to_hour = parseInt(to_date.split(" ")[1].split(":")[0]);
-        to_minute = parseInt(to_date.split(" ")[1].split(":")[1]);
-        // from date should be less than to date
-        if(from_year > to_year){
+    to_day = parseInt(to_date.split("/")[0]);
+    to_month = parseInt(to_date.split("/")[1]);
+    to_year = to_date.split("/")[2];
+    to_year = to_year.split(" ")[0];
+    to_hour = parseInt(to_date.split(" ")[1].split(":")[0]);
+    to_minute = parseInt(to_date.split(" ")[1].split(":")[1]);
+    // from date should be less than to date
+    if(from_year > to_year){
+      Swal.fire({
+        icon: 'error',
+        title: 'Oops...',
+        text: error_msg,
+      });
+      $("#search-date-created-from").val("{{from}}");
+      $("#search-date-created-to").val("{{to}}");
+      return false;
+    }else if(from_year == to_year){
+      if(from_month > to_month){
+        Swal.fire({
+          icon: 'error',
+          title: 'Oops...',
+          text: error_msg,
+        });
+        $("#search-date-created-from").val("{{from}}");
+        $("#search-date-created-to").val("{{to}}");
+        return false;
+      }else if(from_month == to_month){
+        if(from_day > to_day){
+          Swal.fire({
+            icon: 'error',
+            title: 'Oops...',
+            text: error_msg,
+          });
+          $("#search-date-created-from").val("{{from}}");
+          $("#search-date-created-to").val("{{to}}");
+          return false;
+        }else if(from_day == to_day){
+          if(from_hour > to_hour){
             Swal.fire({
-                icon: 'error',
-                title: 'Oops...',
-                text: error_msg,
+              icon: 'error',
+              title: 'Oops...',
+              text: error_msg,
             });
             $("#search-date-created-from").val("{{from}}");
             $("#search-date-created-to").val("{{to}}");
             return false;
-        }else if(from_year == to_year){
-            if(from_month > to_month){
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Oops...',
-                    text: error_msg,
-                });
-                $("#search-date-created-from").val("{{from}}");
-                $("#search-date-created-to").val("{{to}}");
-                return false;
-            }else if(from_month == to_month){
-                if(from_day > to_day){
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Oops...',
-                        text: error_msg,
-                    });
-                    $("#search-date-created-from").val("{{from}}");
-                    $("#search-date-created-to").val("{{to}}");
-                    return false;
-                }else if(from_day == to_day){
-                    if(from_hour > to_hour){
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Oops...',
-                            text: error_msg,
-                        });
-                        $("#search-date-created-from").val("{{from}}");
-                        $("#search-date-created-to").val("{{to}}");
-                        return false;
-                    }else if(from_hour == to_hour){
-                        if(from_minute > to_minute){
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Oops...',
-                                text: error_msg,
-                            });
-                            $("#search-date-created-from").val("{{from}}");
-                            $("#search-date-created-to").val("{{to}}");
-                            return false;
-                        }
-                    }
-                }
+          }else if(from_hour == to_hour){
+            if(from_minute > to_minute){
+              Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: error_msg,
+              });
+              $("#search-date-created-from").val("{{from}}");
+              $("#search-date-created-to").val("{{to}}");
+              return false;
             }
-        }        
-    }   
-        $(document).ready(function(){
-            
-            $("#search-date-created-from").datetimepicker({
-                format: 'd/m/Y',
-                timepicker: false,
+          }
+        }
+      }
+    }    
+  }   
+  $(document).ready(function(){
+    
+    $("#search-date-created-from").datetimepicker({
+      format: 'd/m/Y',
+      timepicker: false,
+    });
+
+    $('#mobile-collapse').click(function () { 
+      $("#nw1").toggleClass('left-spacer');
+    });
+
+    $("#search-date-created-to").datetimepicker({
+      format: 'd/m/Y',
+      timepicker: false,
+      
+    });
+
+    $('#input-search').tokenize2({
+      dropdownMaxItems:"5",
+      placeholder: '{% trans "Search by Player" %}',
+      searchMinLength:3,
+      tokensMaxItems:"1",
+      dataSource: function(term, object){
+        var dealer = $('#select-dealer').val();
+        var agent=$('#select-agent').val();
+
+        $.ajax("{% url 'admin-panel:player-ajax' %}", {
+          type: "POST",
+          
+          data: { search:term,start:0,dealer: dealer, agent: agent },
+          global: false, 
+          dataType: 'json',
+          success: function(data){
+            var $items = [];
+            $.each(data, function(k, v){
+              $items.push(v);
             });
-
-            $('#mobile-collapse').click(function () { 
-                $("#nw1").toggleClass('left-spacer');
-            });
-
-            $("#search-date-created-to").datetimepicker({
-                format: 'd/m/Y',
-                timepicker: false,
-                
-            });
-
-            $('#input-search').tokenize2({
-                dropdownMaxItems:"5",
-                placeholder: '{% trans "Search by Player" %}',
-                searchMinLength:3,
-                tokensMaxItems:"1",
-                dataSource: function(term, object){
-                    var dealer = $('#select-dealer').val();
-                    var agent=$('#select-agent').val();
-
-                    $.ajax("{% url 'admin-panel:player-ajax' %}", {
-                        type: "POST",
-                        
-                        data: { search:term,start:0,dealer: dealer, agent: agent },
-                        global: false, 
-                        dataType: 'json',
-                        success: function(data){
-                            var $items = [];
-                            $.each(data, function(k, v){
-                                $items.push(v);
-                            });
-                            object.trigger('tokenize:dropdown:fill', [$items]);
-                        }
-                    });
-                }
-            });
-
-            $('#select-agent').tokenize2({
-                dropdownMaxItems:"10",
-                tags: [],
-                placeholder: '{% trans "Search by Agent" %}',
-                searchMinLength:3,
-                multiple: true,
-                dataSource: function(term, object){
-                    var project = $('#select-project').val();
-                    var tenant_manager = $('#select-tenant-manager').val();
-
-                    $.ajax("{% url 'admin-panel:agent-ajax' %}", {
-                        type: "POST",
-                        data: {
-                            search: term,
-                            start: 0,
-                            dealers: $('#select-dealer').val(),
-                            project: project,
-                            tenant_manager:tenant_manager
-                        },
-                        global: false,
-                        dataType: 'json',
-                        success: function(data){
-                            var $items = [];
-                            $.each(data, function(k, v){
-                                $items.push(v);
-                            });
-                            object.trigger('tokenize:dropdown:fill', [$items]);
-                        }
-                    });
-                }
-            });
-
-            $('#select-dealer').tokenize2({
-                dropdownMaxItems:"10",
-                multiple: true,
-                placeholder: '{% trans "Search by Master Agent" %}',
-                searchMinLength:3,
-                dataSource: function(term, object){
-                    var project = $('#select-project').val();
-                    var tenant_manager = $('#select-tenant-manager').val();
-
-                    $.ajax("{% url 'admin-panel:dealer-ajax' %}", {
-                        type: "POST",
-                        data: { search: term, start: 0, project:project, tenant_manager:tenant_manager },
-                        global: false,
-                        dataType: 'json',
-                        success: function(data){
-                            var $items = [];
-                            $.each(data, function(k, v){
-                                $items.push(v);
-                            });
-                            object.trigger('tokenize:dropdown:fill', [$items]);
-                        }
-                    });
-                }
-            });
-            $('#provider-search').tokenize2({
-                dropdownMaxItems:"5",
-                placeholder: '{% trans "Search by Provider" %}',
-                searchMinLength:3,
-                tokensMaxItems:"1",
-                dataSource: function(term, object){
-                    var provider = $('#provider-search').val();
-
-                    $.ajax("{% url 'admin-panel:casino-provider-ajax' %}", {
-                        type: "POST",
-                        
-                        data: { search:term,start:0,provider:provider},
-                        global: false, 
-                        dataType: 'json',
-                        success: function(data){
-                            var $items = [];
-                            $.each(data, function(k, v){
-                                $items.push({text: v.text, value: v.text});
-                            });
-                            object.trigger('tokenize:dropdown:fill', [$items]);
-                        }
-                    });
-                }
-            });
-
-            $("#reporttable").DataTable({
-                responsive: true,
-                searching: false,
-                order: [],
-                dom: 'Bfrtip',
-                buttons: [
-                    {
-                        extend: 'copy',
-                        filename: 'NowpaymentsReport',
-						className: 'dwnldbgcolor'
-                    },
-                    {
-                        extend: 'csv',
-                        filename: 'NowpaymentsReport',
-						className: 'dwnldbgcolor'
-                    },
-                    {
-                        extend: 'excel',
-                        filename: 'NowpaymentsReport',
-						className: 'dwnldbgcolor'
-                    },
-                    {
-                        extend: 'pdf',
-                        filename: 'NowpaymentsReport',
-						orientation: 'landscape',
-						className: 'dwnldbgcolor'
-                    },
-                    {
-                        extend: 'print',
-                        filename: 'NowpaymentsReport',
-						orientation: 'landscape',
-						className: 'dwnldbgcolor'
-                    }
-                ]
-            });
-
+            object.trigger('tokenize:dropdown:fill', [$items]);
+          }
         });
-    </script>
+      }
+    });
+
+    $('#select-agent').tokenize2({
+      dropdownMaxItems:"10",
+      tags: [],
+      placeholder: '{% trans "Search by Agent" %}',
+      searchMinLength:3,
+      multiple: true,
+      dataSource: function(term, object){
+        var project = $('#select-project').val();
+        var tenant_manager = $('#select-tenant-manager').val();
+
+        $.ajax("{% url 'admin-panel:agent-ajax' %}", {
+          type: "POST",
+          data: {
+            search: term,
+            start: 0,
+            dealers: $('#select-dealer').val(),
+            project: project,
+            tenant_manager:tenant_manager
+          },
+          global: false,
+          dataType: 'json',
+          success: function(data){
+            var $items = [];
+            $.each(data, function(k, v){
+              $items.push(v);
+            });
+            object.trigger('tokenize:dropdown:fill', [$items]);
+          }
+        });
+      }
+    });
+
+    $('#select-dealer').tokenize2({
+      dropdownMaxItems:"10",
+      multiple: true,
+      placeholder: '{% trans "Search by Master Agent" %}',
+      searchMinLength:3,
+      dataSource: function(term, object){
+        var project = $('#select-project').val();
+        var tenant_manager = $('#select-tenant-manager').val();
+
+        $.ajax("{% url 'admin-panel:dealer-ajax' %}", {
+          type: "POST",
+          data: { search: term, start: 0, project:project, tenant_manager:tenant_manager },
+          global: false,
+          dataType: 'json',
+          success: function(data){
+            var $items = [];
+            $.each(data, function(k, v){
+              $items.push(v);
+            });
+            object.trigger('tokenize:dropdown:fill', [$items]);
+          }
+        });
+      }
+    });
+    $('#provider-search').tokenize2({
+      dropdownMaxItems:"5",
+      placeholder: '{% trans "Search by Provider" %}',
+      searchMinLength:3,
+      tokensMaxItems:"1",
+      dataSource: function(term, object){
+        var provider = $('#provider-search').val();
+
+        $.ajax("{% url 'admin-panel:casino-provider-ajax' %}", {
+          type: "POST",
+          
+          data: { search:term,start:0,provider:provider},
+          global: false, 
+          dataType: 'json',
+          success: function(data){
+            var $items = [];
+            $.each(data, function(k, v){
+              $items.push({text: v.text, value: v.text});
+            });
+            object.trigger('tokenize:dropdown:fill', [$items]);
+          }
+        });
+      }
+    });
+
+    $("#reporttable").DataTable({
+      responsive: true,
+      searching: false,
+      order: [],
+      dom: 'Bfrtip',
+      buttons: [
+        {
+          extend: 'copy',
+          filename: 'NowpaymentsReport',
+          className: 'dwnldbgcolor'
+        },
+        {
+          extend: 'csv',
+          filename: 'NowpaymentsReport',
+          className: 'dwnldbgcolor'
+        },
+        {
+          extend: 'excel',
+          filename: 'NowpaymentsReport',
+          className: 'dwnldbgcolor'
+        },
+        {
+          extend: 'pdf',
+          filename: 'NowpaymentsReport',
+          orientation: 'landscape',
+          className: 'dwnldbgcolor'
+        },
+        {
+          extend: 'print',
+          filename: 'NowpaymentsReport',
+          orientation: 'landscape',
+          className: 'dwnldbgcolor'
+        }
+      ],
+      initComplete: function () {
+        $(this.api().buttons().container()).addClass('mb-2');
+      }
+    });
+
+  });
+  </script>
 
 {% endblock javascript %}

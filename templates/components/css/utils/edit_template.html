@@ -1,0 +1,166 @@
+.toggle-btn {
+    position: relative;
+    width: 50px;        /* total width */
+    height: 28px;       /* total height */
+    border-radius: 14px;
+    background-color: #ccc; /* off color */
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    outline: none;
+}
+
+.toggle-btn::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 24px;
+    height: 24px;
+    background-color: #fff;
+    border-radius: 50%;
+    transition: transform 0.3s;
+}
+
+.toggle-btn.active {
+    background-color: #4cd964; /* green when active */
+}
+
+.toggle-btn.active::after {
+    transform: translateX(22px); /* move circle to the right */
+}
+
+.toggle-btn:checked {
+    background-color: #4cd964;
+}
+.toggle-btn:checked::after {
+    transform: translateX(22px);
+}
+.toggle-btn:disabled {
+    background-color: #999;
+    cursor: not-allowed;
+}
+.toggle-btn:disabled::after {
+    background-color: #e6e6e6;
+}
+
+/* container */
+.toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;          /* space before text */
+    cursor: pointer;
+}
+
+/* hide native box but keep focus/keyboard */
+.toggle input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+/* track */
+.toggle .slider {
+    position: relative;
+    width: 50px;
+    height: 28px;
+    background: #ccc;
+    border-radius: 14px;
+    transition: background .3s;
+}
+
+/* knob */
+.toggle .slider::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 24px;
+    height: 24px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform .3s;
+}
+
+/* checked */
+.toggle input:checked + .slider {
+    background: #4cd964;
+}
+.toggle input:checked + .slider::after {
+    transform: translateX(22px);
+}
+
+/* disabled */
+.toggle input:disabled + .slider {
+    background: #999;
+    cursor: not-allowed;
+}
+.toggle input:disabled + .slider::after {
+    background: #e6e6e6;
+}
+
+.toggle-inverted {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    cursor: pointer;
+}
+
+/* hide native box */
+.toggle-inverted input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+/* track */
+.toggle-inverted .slider {
+    position: relative;
+    width: 50px;
+    height: 28px;
+    background: #4cd964;
+    border-radius: 14px;
+    transition: background .3s;
+}
+
+/* knob */
+.toggle-inverted .slider::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 24px;
+    width: 24px;
+    height: 24px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform .3s;
+}
+
+/* normal checked styling */
+.toggle-inverted input:checked + .slider {
+    background: #ccc;
+}
+.toggle-inverted input:checked + .slider::after {
+    transform: translateX(-22px);
+}
+
+.fa-btn {
+    display: inline-flex;           /* aligns icon and text properly */
+    align-items: center;            /* vertically center icon and text */
+    justify-content: center;
+    border-radius: 5px;
+    text-transform: capitalize;
+    font-size: 15px;
+    padding: 6px 4px 8px 7px;             /* adjust spacing */
+    cursor: pointer;
+    border: 2px solid;
+    gap: 6px;                       /* space between icon and text */
+    transition: background 0.2s, color 0.2s;
+}
+
+.fa-btn i {
+    display: inline-block;          /* ensures icon aligns with text */
+    font-size: 16px;                /* optional, slightly bigger than text */
+}

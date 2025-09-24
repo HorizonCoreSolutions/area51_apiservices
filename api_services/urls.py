@@ -109,6 +109,8 @@ urlpatterns = [
     url(r'^footer-links/', GetFooterLinks.as_view(), name="footer-links"),
     url(r'^GSoft/', GsoftCasinoView.as_view(), name="gsoft-casino"),
     url(r'^tinymce/', include('tinymce.urls')),
+
+    path('', include('django_prometheus.urls')),
 ]
 
 

@@ -144,10 +144,12 @@ BONUS_EVENTS = {
 
 BONUS_EVENTS_CHOICES = [(k, v) for k, v in BONUS_EVENTS.items()]
 
+
 class CoinflowAuthState(DjangoChoices):
     pending = ChoiceItem('PNDG', 'pending')
     created = ChoiceItem('CRTD', 'created')
     verified = ChoiceItem('VRFD', 'verified')
+
 
 def get_default_country():
     return Country.objects.get(code_cca2="US").id if Country.objects.filter(code_cca2="US").exists() else None
@@ -173,7 +175,7 @@ class Permission(AbstractBaseModel):
     code = models.CharField(max_length=100, unique=True)
     description = models.TextField()
     group = models.CharField(max_length=100)
-    
+
     def __str__(self):
         return self.name
 
@@ -186,10 +188,10 @@ class Role(AbstractBaseModel):
 
     def __str__(self):
         return self.name
-    
+
     def get_name(self):
         return self.name.title().replace("_", " ")
-    
+
     def has_permissions(self, permission_code):
         return self.permissions.filter(code=permission_code).exists()
 
@@ -421,20 +423,20 @@ class Users(AbstractBaseUser, AbstractBaseModel, PermissionsMixin):
     USERNAME_FIELD = "username"
 
     objects = UserManager()
-    
+
     def get_is_verified(self):
         """
         Returns True if all given fields are exactly 1.
         """
         return all(getattr(self, field, None) == 1 for field in self.VERIFICATION_FIELDS)
-    
+
     def set_is_verified(self, value: int):
         self.is_verified = (value == 1)
-        
+
         for field in self.VERIFICATION_FIELDS:
             setattr(self, field, value)
         return
-    
+
     def verification_steps_left(self):
         return [label for field, label in self.VERIFICATION_FIELDS.items() if getattr(self, field, None) != 1]
 
@@ -465,7 +467,7 @@ class Users(AbstractBaseUser, AbstractBaseModel, PermissionsMixin):
 
     def save(self, *args, **kwargs):
         self.is_verified = (self.phone_verified == 1 and self.document_verified == 1)
-        
+
         if self.role == "player":
             self.is_staff = False
             self.is_superuser = False
@@ -733,6 +735,7 @@ class PromoCodes(AbstractBaseModel):
     # Currently used for checking when the bonus will be given for signup bonuses
     class BonusDistributionMethod(DjangoChoices):
         deposit = ChoiceItem("deposit", "Deposit")
+        mixture = ChoiceItem("mixture", "Mixture")
         instant = ChoiceItem("instant", "Instant")
 
     dealer = models.ForeignKey(Users, on_delete=models.CASCADE, default=None, null=True)
@@ -743,21 +746,43 @@ class PromoCodes(AbstractBaseModel):
     end_date = models.DateField(_("End Date"), auto_now=False, null=True, blank=True, default=None)
     # When the Bonus percentage is automated, this is going to be used as a promo event_type
     # When 1 it is GC, when it is SC
-    bonus_percentage = models.FloatField(_("bonus percentage"), default=None, null=True, blank=True, validators=[MinValueValidator(Decimal("0.00"))])
+    # Both of this should be treated as integers.
+    bonus_percentage = models.FloatField(
+        _("bonus percentage"), default=None, null=True, blank=True,
+        validators=[MinValueValidator(Decimal("0.00"))]
+    )
+    gold_percentage = models.FloatField(
+        _("gold percentage"), default=None, null=True, blank=True,
+        validators=[MinValueValidator(Decimal("0.00"))]
+    )
     is_expired = models.BooleanField(_("Is Expired"), default=False)
     usage_limit = models.IntegerField(_("usage limit"), default=1, null=False, blank=False, validators=[MinValueValidator(1)])
+    limit_per_user = models.IntegerField(_("User usage limit"), default=1, null=False, blank=False, validators=[MinValueValidator(1)])
     max_bonus_limit = models.IntegerField(_("Max bonus amount limit"), default=1, null=False, blank=False, validators=[MinValueValidator(1)])
     bonus_distribution_method = models.CharField(max_length=100, choices=BonusDistributionMethod,blank=True, null=True,default=BonusDistributionMethod.deposit)
     instant_bonus_amount = models.DecimalField(
-        _("Instant Bonus Amount"), max_digits=15, decimal_places=2, default=0.00, null=False, blank=False
+        _("Instant Bonus Amount"), max_digits=15, decimal_places=2,
+        default=0.00, null=False, blank=False
+    )
+    gold_bonus = models.DecimalField(
+        _("Gold Coins Bonus Amount"), max_digits=15, decimal_places=2,
+        default=0.00, null=False, blank=False
     )
 
     class Meta:
         unique_together = ("bonus", "promo_code", "start_date", "end_date")
 
+
 class PromoCodesLogs(AbstractBaseModel):
     promocode = models.ForeignKey(PromoCodes, on_delete=models.CASCADE, default=None, null=True)
     date = models.DateTimeField(_("Date"), null=False, blank=False, editable=False)
+    # When none, means user has claimed it tho has not used it
+    transfer = models.DecimalField(
+        _("transfer"), max_digits=15, decimal_places=4, default=Decimal('0.0000'), null=True, blank=True
+    )
+    transfer_gold = models.DecimalField(
+        _("transfer"), max_digits=15, decimal_places=4, default=Decimal('0.0000'), null=True, blank=True
+    )
     log = models.CharField(max_length=2048, null=False, blank=False, editable=False)
     user = models.ForeignKey(Users, on_delete=models.CASCADE, default=None, null=True)
 
@@ -775,7 +800,7 @@ class AdminBanner(AbstractBaseModel):
     content = HTMLField(blank=True, null=True,max_length=2000)
     header = HTMLField(blank=True, null=True,max_length=2000)
     button_text = models.CharField(_("button text"), max_length=250, null=True, blank=True, default="Play Now")
-    
+
 class CmsAboutDetails(AbstractBaseModel):
     title = models.CharField(max_length=250, null=True, blank=True, default=None)
     more_info = models.CharField(max_length=250, null=True, blank=True, default=None)
@@ -791,7 +816,37 @@ class CmsContactDetails(AbstractBaseModel):
     phone = models.CharField(max_length=100, null=True, blank=True, default=None)
     query = models.CharField(max_length=300, null=True, blank=True, default=None)
     status = models.CharField(max_length=50, null=True, blank=True, default="Active")
-    
+
+
+class CmsPromotions(AbstractBaseModel):
+    TYPE_CHOICES = [
+        ("toaster", "Toaster"),
+        ("page_blocker", "Page Blocker"),
+    ]
+
+    type = models.CharField(max_length=20, choices=TYPE_CHOICES)
+    url = models.URLField(max_length=250, blank=True, default="")
+    title = HTMLField(max_length=350, blank=True, default="")
+    content = HTMLField(max_length=5000) 
+    image = models.ImageField(upload_to="promotion/images/", blank=True, null=True)
+    button_text = models.CharField(max_length=150, blank=True, default="")
+
+    start_date = models.DateTimeField()
+    end_date = models.DateTimeField()
+    disabled = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ["-start_date"]
+
+    def __str__(self):
+        return f"{self.get_type_display()} - {self.title}"
+
+    @property
+    def is_active(self):
+        from django.utils import timezone
+        now = timezone.now()
+        return (not self.disabled) and (self.start_date <= now <= self.end_date)
+
 
 class CmsPromotionDetails(AbstractBaseModel):
     admin = models.ForeignKey(Users, on_delete=models.CASCADE, default=None, null=True)
@@ -803,7 +858,7 @@ class CmsPromotionDetails(AbstractBaseModel):
     url = models.URLField(_("url"), max_length=250, null=True, blank=True, default=None)
     meta_description = models.TextField(null=True, blank=True)
     json_metadata = models.TextField(null=True, blank=True)
-    
+
     def get_page_content(self):
         return self.page_content.replace('../../media/', f"{settings.BE_DOMAIN}/media/")
 
@@ -827,7 +882,7 @@ class CrmDetails(AbstractBaseModel):
     content = models.CharField(max_length=2000, null=True, blank=True, default=None)
     status = models.CharField(max_length=50, null=True, blank=True, default=None)
     emails = models.CharField(max_length=2000, null=True, blank=True, default=None)
-    
+
     def get_crm_content(self):
         return self.content.replace('../../media/', f"{settings.BE_DOMAIN}/media/")
 
@@ -902,13 +957,13 @@ class SocialLink(AbstractBaseModel):
 def remove_file_from_s3(sender, instance, using, **kwargs):
     instance.logo.delete(save=False)
 
-    
+
 class CmsPages(AbstractBaseModel):
     class PreviewType(DjangoChoices):
         none = ChoiceItem("none", "None")
         single = ChoiceItem("single", "SINGLE")
         slider = ChoiceItem("slider", "SLIDER")
-        
+
     title = models.CharField(max_length=250, null=False, blank=False, unique=True)
     more_info = models.CharField(max_length=250, null=True, blank=True, default=None)
     page = models.FileField(upload_to='about/page/', null=True, blank=True, default=None)
@@ -928,7 +983,7 @@ class CmsPages(AbstractBaseModel):
     def save(self, *args, **kwargs):
         self.slug = self.title.lower().replace(" " ,"_")
         return super().save(*args, **kwargs)
-    
+
     def get_page_content(self):
         return self.page_content.replace('../../media/', f"{settings.BE_DOMAIN}/media/")
 
@@ -936,13 +991,13 @@ class CmsPages(AbstractBaseModel):
 class PageMedia(AbstractBaseModel):
     page =  models.ForeignKey(CmsPages, on_delete=models.CASCADE, related_name="media")
     media = models.FileField(upload_to='about/page/', null=True, blank=True, default=None)
-    
+
     @classmethod
     def bulk_delete_media(cls, instances):
         for instance in instances:
             if instance.media:
                 instance.media.delete(save=False)
-                
+
         cls.objects.filter(id__in=list(instances.values_list("id", flat=True))).delete()
 
 class FooterCategory(AbstractBaseModel):
@@ -984,7 +1039,7 @@ class AdminAdsBanner(AbstractBaseModel):
     redirect_url = models.URLField(_("redirect url"), max_length=250, null=True, blank=True, default=None)
     url = models.URLField(_("url"), max_length=250, null=True, blank=True, default=None)
     clicks = models.IntegerField(_("clicks"), default=0, null=True, blank=True)
-    
+
 
 @receiver(models.signals.post_delete, sender=AdminAdsBanner)
 def remove_file_from_s3(sender, instance, using, **kwargs):
@@ -1000,7 +1055,7 @@ class UserNotes(AbstractBaseModel):
     user = models.ForeignKey(Users, on_delete=models.CASCADE)
     notes = models.TextField(max_length=500, blank=False, null=False)
     admin = models.ForeignKey(Users, on_delete=models.CASCADE, related_name='notes')
-    
+
 
 class AffiliateRequests(AbstractBaseModel):
 
@@ -1015,16 +1070,13 @@ class AffiliateRequests(AbstractBaseModel):
     is_bonus_on_all_deposits = models.BooleanField(default=False, null=True)
     is_lifetime_affiliate = models.BooleanField(default=False, null=True)
     status = models.CharField(max_length=100, choices=StatusType,blank=True, null=True,default=StatusType.pending)
-    
-    
-    
+
+
 class DefaultAffiliateValues(AbstractBaseModel):
 
     default_no_of_days = models.IntegerField(default=0)
     default_no_of_deposit_counts = models.IntegerField(default=0)
     default_affiliation_percentage = models.FloatField(_("affiliation_percentage"),default=0,null=True, blank=True)
-   
-
 
 
 class StaffManager(models.Manager):
@@ -1039,7 +1091,6 @@ class Staff(Users):
         proxy = True
 
 
-
 class ChatRoom(AbstractBaseModel):
     name = models.CharField(max_length=255)
     player = models.ForeignKey(Users, on_delete=models.CASCADE, default=None, null=True, blank=True, related_name="chat")
@@ -1047,12 +1098,13 @@ class ChatRoom(AbstractBaseModel):
 
     # other fields for the chat room (e.g. description, members, etc.)
 
+
 class ChatMessage(AbstractBaseModel):
     class MessageType(DjangoChoices):
         message = ChoiceItem('message', 'Message')
         offmarket_signup = ChoiceItem('offmarket_signup', 'Offmarket Signup')
         join = ChoiceItem('join', 'Join')
-        
+
     room = models.ForeignKey(ChatRoom, on_delete=models.CASCADE, related_name="messages")
     sender = models.ForeignKey(Users, on_delete=models.CASCADE)
     message_text = models.TextField()
@@ -1063,17 +1115,15 @@ class ChatMessage(AbstractBaseModel):
     is_read = models.BooleanField(default=False)
     type = models.CharField(null=True, blank=True, choices = MessageType.choices, max_length=500)
     tip_user = models.ForeignKey(Users, on_delete=models.CASCADE,related_name="received_by_tip",default=None, null=True, blank=True)
-    is_comment =  models.BooleanField(default=False)
-     
+    is_comment = models.BooleanField(default=False)
 
- 
-    
+
     class Meta:
         ordering = ['-sent_time']
 
     def __str__(self):
         return f"{self.sender.username} - {self.message_text}"
-    
+
 
 class ChatHistory(AbstractBaseModel):
     player = models.ForeignKey(Player, on_delete=models.CASCADE,blank=False, null=True, related_name='player_chathistory')
@@ -1087,24 +1137,25 @@ class ChatHistory(AbstractBaseModel):
 
 class Queue(AbstractBaseModel):
     user = models.ForeignKey(Users, on_delete=models.CASCADE)
-    is_active = models.BooleanField(default=False,null=True,blank=True)
-    is_remove = models.BooleanField(default=False,null=True,blank=True)
+    is_active = models.BooleanField(default=False, null=True, blank=True)
+    is_remove = models.BooleanField(default=False, null=True, blank=True)
     pick_by = models.ForeignKey(Users, on_delete=models.CASCADE,related_name="staff_user",default=None, null=True,blank=True)
 
 
 class OffMarketGames(AbstractBaseModel):
     title = models.CharField(max_length=100)
-    url = models.FileField(upload_to='admin/offmarket_games/',max_length=500, default=None,null=True)
-    code = models.CharField(max_length=100,unique=True,null=True,blank=True)
+    url = models.FileField(upload_to='admin/offmarket_games/', max_length=500, default=None, null=True)
+    code = models.CharField(max_length=100, unique=True, null=True, blank=True)
     bonus_percentage = models.FloatField(
         _("game bonus percentage"),
         validators=[MinValueValidator(Decimal("0.00"))],
     )
     game_status = models.BooleanField(default=True)
     coming_soon = models.BooleanField(default=False)
-    download_url  = models.URLField(_("download url"), max_length=250, null=True, blank=True, default=None)
-    game_user = models.CharField(max_length=15,null=True,blank=True)
-    game_pass = models.CharField(max_length=15,null=True,blank=True)
+    is_api_prefix = models.BooleanField(default=False)
+    download_url = models.URLField(_("download url"), max_length=250, null=True, blank=True, default=None)
+    game_user = models.CharField(max_length=15, null=True, blank=True)
+    game_pass = models.CharField(max_length=15, null=True, blank=True)
 
 
 class UserGames(AbstractBaseModel):
@@ -1139,16 +1190,16 @@ class UserGames(AbstractBaseModel):
         ],
     )
 
-    
-    
+
+
 
 class OffMarketTransactions(AbstractBaseModel):
     class TransactionStatus(DjangoChoices):
         failed = ChoiceItem('FAILED', 'failed')
         success = ChoiceItem('SUCCESS', 'success')
         pending = ChoiceItem('PENDING', 'pending')
-    
-        
+
+
     user = models.ForeignKey(Users, on_delete=models.CASCADE, blank=False)
     amount = models.DecimalField(
         _("amount"), max_digits=15, decimal_places=4, default=0.0000, null=False, blank=False
@@ -1167,14 +1218,14 @@ class OffMarketTransactions(AbstractBaseModel):
     bonus = models.DecimalField(
         _("bonus"), max_digits=15, decimal_places=4, default=0.0000, null=False, blank=False
     )
-    
+
 
 class CsrQueries(AbstractBaseModel):
     user = models.ForeignKey(Users, on_delete=models.CASCADE)
     subject = models.CharField(max_length=50, null=True, blank=True, default=None)
     text = models.CharField(max_length=150, null=True, blank=True, default=None)
     is_active = models.BooleanField(default=False,null=True,blank=True)
-    
+
 
 class OffmarketWithdrawalRequests(AbstractBaseModel):
 
@@ -1194,7 +1245,7 @@ class SpintheWheelDetails(AbstractBaseModel):
     value = models.IntegerField(null=True, blank=True)
     code = models.CharField(max_length=250, null=True, blank=True, default=None)
 
-    
+
 class CashAppDeatils(AbstractBaseModel):
     class StatusType(DjangoChoices):
         pending = ChoiceItem("pending", "PENDING")
@@ -1245,25 +1296,24 @@ class CmsBonusDetail(AbstractBaseModel):
         welcome_bonus = ChoiceItem("welcome_bonus", "Joining Bonus")
         deposit_bonus = ChoiceItem("deposit_bonus", "Deposit Bonus")
         bet_bonus = ChoiceItem("bet_bonus", "Bet Bonus")
-        
+
     admin = models.ForeignKey(Users, on_delete=models.CASCADE, default=None, null=True)
     bonus_type = models.CharField(max_length=100, choices=BonusType,blank=True, null=True)
     promo_code = models.CharField(_("Promo Code"), max_length=50, null=True, blank=True, default=None)
     content = HTMLField(blank=True, null=True,max_length=2000)
     meta_description = models.TextField(null=True, blank=True)
     json_metadata = models.TextField(null=True, blank=True)
-    
-    
+
+
 class FortunePandasGameList(AbstractBaseModel):
     game_name = models.CharField(max_length=250,blank=True,null=True)
     game_id = models.CharField(max_length=250,blank=True,null=True)
     game_image = models.FileField(upload_to='fortunepandas/', null=True, blank=True, default=None)
     game_category = models.CharField(max_length=250,blank=True,null=True)
     game_type = models.CharField(max_length=250,blank=True,null=True)
-    
+
 
 class FortunePandasGameManagement(AbstractBaseModel):
     admin = models.ForeignKey(Admin, on_delete=models.CASCADE,null=True, blank=True)
     game = models.ForeignKey(FortunePandasGameList, default=None, on_delete=models.CASCADE, null=True, blank=True)
     enabled = models.BooleanField(default=True, null=True, blank=True)
-
