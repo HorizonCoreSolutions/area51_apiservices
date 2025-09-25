@@ -169,12 +169,12 @@ class OneGameHub:
             extra = f"&{urlencode(params, quote_via=quote)}"
         return f"{self.url}?action={action}&secret={self.secret}{extra}"
 
-    def get_available_games(self):
+    def get_games(self):
         response = requests.get(url=self.get_url(self.actions.available_games))
         if response.status_code != 200:
             print(response)
 
-        return response.json()
+        return response.json().get("response", [])
 
     def get_available_currencies(self):
         response = requests.get(url=self.get_url(
