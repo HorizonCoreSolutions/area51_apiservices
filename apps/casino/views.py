@@ -1378,6 +1378,7 @@ class OneGameHubApiView(APIView):
         save_request(service="OneGameHub", request=request)
 
         params = request.GET.dict()
+        save_request(service="OneGameHub", request=params, is_response=True)
 
         ogh = OneGameHub()
         ogh_func: Dict[str, Callable] = {
