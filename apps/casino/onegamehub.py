@@ -362,8 +362,13 @@ class OneGameHub:
             if not session:
                 logger.debug("not session found.")
                 return self.parse_to_message("ERR001"), status.HTTP_400_BAD_REQUEST
-            
-            if session.filter(game_status=GSoftTransactions.GameStatus.completed).exists():
+
+            total = session.count()
+            cancels = session.filter(
+                request_type=GSoftTransactions.RequestType.rollback
+            ).count()
+
+            if total <= cancels + cancels:
                 logger.debug("Session has already ended.")
                 return self.get_formated_balance(
                         user=user,
