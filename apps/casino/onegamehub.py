@@ -134,7 +134,7 @@ class OneGameHub:
         balance = user.balance if is_real_play else user.bonus_balance
         cur = REAL_COIN if is_real_play else FAKE_COIN
         return {"status": 200,
-                "balance": Decimal(balance or 0)*100,
+                "balance": int(Decimal(balance or 0)*100),
                 "currency": cur}
 
     def parse_to_message(self,
