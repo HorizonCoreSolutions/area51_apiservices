@@ -344,7 +344,7 @@ class OneGameHub:
             transaction_id = data.get("transaction_id")
 
             round_id = data.get("round_id")
-            payout = Decimal(data.get("amount", 0))
+            payout = Decimal(data.get("amount", 0)) / 100
 
             # Idempotency by transaction_id (single credit per provider order)
             session = GSoftTransactions.objects.filter(
@@ -385,8 +385,6 @@ class OneGameHub:
 
             transfer_bonus = Decimal(0) if is_real_play else payout
             transfer_balance = payout if is_real_play else Decimal(0)
-            
-            logger.debug(f"{transfer_balance} SC {transfer_bonus} GC")
 
             user.bonus_balance = transfer_bonus + Decimal(user.bonus_balance or 0)
             user.balance = transfer_balance + Decimal(user.balance or 0)
