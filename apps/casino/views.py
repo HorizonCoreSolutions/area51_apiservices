@@ -886,7 +886,7 @@ class Casino25APIView(APIView):
                     cp = OneGameHub()
                     success, response = cp.start_game(
                         request_param=request.data,
-                        ip=get_user_ip_from_request(request=request)
+                        ip=get_user_ip_from_request(request=self.request)
                     )
                 elif provider[0] == "CPgames":
                     cp = CPgames()
