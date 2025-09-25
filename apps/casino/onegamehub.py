@@ -340,11 +340,12 @@ class OneGameHub:
                 callerId=settings.ONE_GAME_HUB_ID,
             ).order_by("-created").first()
 
-            if not last_game:
+            # TODO: READ BETTER THIS PART OF THE DOCS
+            if last_game and last_game.game_status == GSoftTransactions.GameStatus.completed:
                 logger.debug("not last game found.")
                 return self.parse_to_message("ERR001"), status.HTTP_400_BAD_REQUEST
 
-            if transaction_id and last_game.game_status == GSoftTransactions.GameStatus.completed:
+            if transaction_id and last_game and last_game.game_status == GSoftTransactions.GameStatus.completed:
                 # Already processed this provider order:
                 # return success with current balance
                 return self.get_formated_balance(
