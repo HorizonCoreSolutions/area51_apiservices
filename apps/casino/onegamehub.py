@@ -317,8 +317,10 @@ class OneGameHub:
             player_id: str = data.get("player_id")
             user, error = self.select_user_for_update(player_id=player_id)
             if error is not None:
+                logger.debug("Some error has ocurre during user selection for update.")
                 return error, status.HTTP_400_BAD_REQUEST
             if user is None:
+                logger.warning(f"User {player_id}, does not exist")
                 return self.parse_to_message("ERR001"), status.HTTP_400_BAD_REQUEST
 
             is_real_play = data.get("currency", "") == REAL_COIN
@@ -339,6 +341,7 @@ class OneGameHub:
             ).order_by("-created").first()
 
             if not last_game:
+                logger.debug("not last game found.")
                 return self.parse_to_message("ERR001"), status.HTTP_400_BAD_REQUEST
 
             if transaction_id and last_game.game_status == GSoftTransactions.GameStatus.completed:
@@ -351,6 +354,7 @@ class OneGameHub:
             # CHECK: win_amount is higher or equals to 0
             # 3.2: 7.
             if payout < 0:
+                logger.debug(f"Payout {payout} does not make sence.")
                 return self.parse_to_message("ERR001"), status.HTTP_400_BAD_REQUEST
 
             last_game.game_status = GSoftTransactions.GameStatus.completed
@@ -384,12 +388,10 @@ class OneGameHub:
                     user=user,
                     is_real_play=is_real_play), status.HTTP_200_OK
         except AttributeError as e:
-            print("grep here")
-            print(e)
+            logger.debug(f"This is {e}")
             return self.parse_to_message("ERR001"), status.HTTP_200_OK
         except TypeError as e:
-            print("grep here")
-            print(e)
+            logger.debug(f"This is {e}")
             return self.parse_to_message("ERR001"), status.HTTP_200_OK
 
     @db_transaction.atomic
