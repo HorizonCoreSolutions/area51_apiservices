@@ -637,7 +637,6 @@ class GetCasinoCategoryGameListAdmin(ListAPIView):
             self.queryset = self.queryset.filter(admin=self.request.user.admin,game__game_category=category,enabled=True,game_enabled=True)
 
         if vendor:
-            vendor = vendor.replace('-', ' ').replace('%20', " ")
             self.queryset = self.queryset.filter(admin=self.request.user.admin,game__vendor_name=vendor,enabled=True,game_enabled=True)
 
         if search:
@@ -666,7 +665,6 @@ class GameSearchView(APIView):
         if category:
             queryset = CasinoManagement.objects.filter(admin=request.user.admin,game__game_category=category,game_enabled=True)
         if vendor:
-            vendor = vendor.replace('-', ' ').replace('%20', " ")
             queryset = CasinoManagement.objects.filter(admin=request.user.admin,game__vendor_name=vendor,game_enabled=True)
         if game_name:
             queryset = CasinoManagement.objects.filter(admin=request.user.admin,game__game_name__icontains=game_name,game_enabled=True)
@@ -787,7 +785,6 @@ class GetCasinoProviderGameListAdmin(APIView):
     def get(self, request, **kwargs):
         from .serializers import GameListSerializer
         vendor = request.query_params.get("vendor")
-        vendor = vendor.replace('-', ' ').replace('%20', " ")
         casino_games = CasinoManagement.objects.filter(admin=request.user.admin,game__vendor_name=vendor)
         
         response =  CasinoManagementSerializer(casino_games,many=True,context={
@@ -1026,9 +1023,6 @@ class Casino25GameListAdmin(ListAPIView):
             self.queryset = self.queryset.filter(admin=self.request.user.admin,game__game_category=category)
 
         if provider:
-            # TODO: remove monkey patch:
-            provider = provider.replace('-', ' ').replace('%20', " ")
-            print(provider, flush=True)
             self.queryset = self.queryset.filter(admin=self.request.user.admin,game__vendor_name=provider)
 
         if search:

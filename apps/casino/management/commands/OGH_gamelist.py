@@ -78,7 +78,7 @@ class Command(BaseCommand):
                     "game_name": game.get("name"),
                     "section_id": "OneGameHub",
                     "game_image": game.get('media', {}).get('thumbnails', {}).get('500x500'),
-                    "vendor_name": provider,
+                    "vendor_name": provider.replace(' ', '-'),
                     "game_category": game_cat,
                     "is_mobile_supported": True,
                     "is_desktop_supported": True,
