@@ -80,12 +80,7 @@ class OneGameHub:
             params = {}
 
         # Sort the params
-        param_keys: List[str] = list(params.keys())
-        param_keys = sorted(param_keys)
-
-        # (sorted by name)
-        d = "&".join(
-            [f"{p}={params.get(p)}" for p in param_keys if (p != "hash")])
+        d = urlencode(sorted(params.items()))
         # Following the docs: Calculate HMAC with sha256 of payload with salt
         return hmac.new(self.salt.encode(), d.encode(), sha256).hexdigest()
 
