@@ -336,6 +336,7 @@ class OneGameHub:
             is_real_play, error = self.get_is_real_play(coin=data.get("currency", ""))
             if error or is_real_play is None:
                 return self.parse_to_message("ERR008"), status.HTTP_400_BAD_REQUEST
+
             freerounds_id = data.get("freerounds_id")
 
             game_id = data.get("game_id")
@@ -346,22 +347,32 @@ class OneGameHub:
             payout = Decimal(data.get("amount", 0))
 
             # Idempotency by transaction_id (single credit per provider order)
-            last_game = GSoftTransactions.objects.filter(
+            session = GSoftTransactions.objects.filter(
+                user=user,
+                round_id=round_id,
+                callerId=settings.ONE_GAME_HUB_ID,
+            ).order_by("-created").first()
+            bet = GSoftTransactions.objects.filter(
                 user=user,
                 transaction_id=transaction_id,
                 callerId=settings.ONE_GAME_HUB_ID,
             ).order_by("-created").first()
 
             # TODO: READ BETTER THIS PART OF THE DOCS
-            if last_game and last_game.game_status != GSoftTransactions.GameStatus.completed:
-                last_game.game_status = GSoftTransactions.GameStatus.completed
-                last_game.save()
-                logger.debug("not last game found.")
+            if not session:
+                logger.debug("not session found.")
                 return self.parse_to_message("ERR001"), status.HTTP_400_BAD_REQUEST
 
-            if transaction_id and last_game and last_game.game_status == GSoftTransactions.GameStatus.completed:
+            if session.game_status == GSoftTransactions.GameStatus.completed:
+                logger.debug("Session has already ended.")
+                return self.get_formated_balance(
+                        user=user,
+                        is_real_play=is_real_play), status.HTTP_200_OK
+
+            if bet:
                 # Already processed this provider order:
                 # return success with current balance
+                logger.debug("Bet already exist.")
                 return self.get_formated_balance(
                         user=user,
                         is_real_play=is_real_play), status.HTTP_200_OK
