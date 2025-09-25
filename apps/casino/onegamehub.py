@@ -223,7 +223,7 @@ class OneGameHub:
             if error is not None:
                 return error, status.HTTP_400_BAD_REQUEST
             if user is None:
-                logger.debug(f"User {player_id}, does not exist")
+                logger.warning(f"User {player_id}, does not exist")
                 return self.parse_to_message("ERR001"), status.HTTP_400_BAD_REQUEST
 
             is_real_play = data.get("currency", "") == REAL_COIN
@@ -241,14 +241,17 @@ class OneGameHub:
                     user=user,
                     callerId=settings.ONE_GAME_HUB_ID,
                     transaction_id=transaction_id)
-            rollback_exist = ext_round_id.filter(
+            rollback_exist = existing_objs.filter(
                 request_type=GSoftTransactions.RequestType.rollback
             ).exists()
+            # If rollback exist return error
+            # Due to unespectec behaiviour
             if rollback_exist:
                 logger.debug(f"Rollback already exist")
                 return self.parse_to_message("ERR001"), status.HTTP_400_BAD_REQUEST
-            if not existing_objs.exists():
-                logger.debug(f"Transaction does not exist exist")
+            if existing_objs.exists():
+                # If transaction already exist return OK, cuz this is 
+                # Deduplication
                 return self.get_formated_balance(
                         user=user,
                         is_real_play=is_real_play), status.HTTP_200_OK
@@ -263,7 +266,6 @@ class OneGameHub:
             # Check if user  has enought money to bet
             if balance < amount:
                 response_data = self.parse_to_message("ERR003")
-                logger.debug(f"Not enought founds")
                 return response_data, status.HTTP_200_OK
 
             transfer_balance = - abs(amount)
@@ -298,13 +300,9 @@ class OneGameHub:
                     is_real_play=is_real_play), status.HTTP_200_OK
         except AttributeError as e:
             logger.debug(f"This is {e}")
-            print("grep here")
-            print(e)
             return self.parse_to_message("ERR001"), status.HTTP_200_OK
         except TypeError as e:
             logger.debug(f"This is {e}")
-            print("grep here")
-            print(e)
             return self.parse_to_message("ERR001"), status.HTTP_200_OK
 
     @db_transaction.atomic
