@@ -13,8 +13,8 @@ from django.db import transaction as db_transaction
 from typing import Dict, Optional, Any, List, Tuple, Union
 from urllib.parse import urlencode, quote, unquote, parse_qs
 
-FAKE_COIN = "USD"
-REAL_COIN = "EUR"
+FAKE_COIN = "GOC"
+REAL_COIN = "SSC"
 
 logger = SimpleLogger(name="OGH", log_file='logs/OGH.log').get_logger()
 
@@ -174,7 +174,7 @@ class OneGameHub:
         if response.status_code != 200:
             print(response)
 
-        data = response.json()
+        return response.json()
 
     def get_available_currencies(self):
         response = requests.get(url=self.get_url(
