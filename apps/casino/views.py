@@ -47,7 +47,7 @@ from .utils import (ValidateRequest,
                     ErrorResponseMsg,
                     return_possible_game_error,
                     GSoftUtils)
-from apps.core.utils.network import save_request
+from apps.core.utils.network import get_user_ip_from_request, save_request
 from .gsoft import GsoftCasino
 
 
@@ -879,7 +879,16 @@ class Casino25APIView(APIView):
 
             casino = Casino25(user=self.request.user, tournament_id=tournament_id, user_tournament=user_tournament, debug=True, request_data=request.data)
             if request_type == "startgame":
-                if CasinoGameList.objects.filter(game_id=game_id, vendor_name="CPgames").exists():
+                provider = CasinoGameList.objects.filter(game_id=game_id).values_list("section_id",flat=True)
+                if not provider:
+                    pass
+                elif provider[0] == "OneGameHub":
+                    cp = OneGameHub()
+                    success, response = cp.start_game(
+                        request_param=request.data,
+                        ip=get_user_ip_from_request(request=request)
+                    )
+                elif provider[0] == "CPgames":
                     cp = CPgames()
                     success, response = cp.start_game(request.data)
                 else:
@@ -1279,7 +1288,7 @@ class Casino25ProviderWiseGameList(ListAPIView):
     def get_queryset(self):
         device_type = self.request.GET.get("device", "desktop")
         # Todo: REMOVE WHEN MORE PROVIDERS ARE SETUP
-        casino_games = CasinoGameList.objects.filter(vendor_name="CPgames")
+        casino_games = CasinoGameList.objects.filter(section_id__in=["CPgames", "OneGameHub"])
         if device_type == "desktop":
             casino_games =  casino_games.filter(is_desktop_supported=True)
         else:
