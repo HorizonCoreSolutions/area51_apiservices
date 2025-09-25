@@ -367,6 +367,9 @@ class OneGameHub:
             cancels = session.filter(
                 request_type=GSoftTransactions.RequestType.rollback
             ).count()
+            
+            if total == 2 and cancels == 1:
+                return self.parse_to_message("ERR001"), status.HTTP_400_BAD_REQUEST
 
             if total <= cancels + cancels:
                 logger.debug("Session has already ended.")
