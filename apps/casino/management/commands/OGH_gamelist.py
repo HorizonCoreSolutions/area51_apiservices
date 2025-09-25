@@ -16,7 +16,6 @@ class Command(BaseCommand):
     help = 'Get Casino25 game list'
 
     ogh = OneGameHub()
-    games = ogh.get_games()
     # name_en
     # game_id
     # type
@@ -45,9 +44,12 @@ class Command(BaseCommand):
                   'Kagaming2', 'BGaming'}
 
     def handle(self, *args, **kwargs):
+        print("Getting Games")
+        self.games = self.ogh.get_games()
         if not self.games:
             print("No games where given by the api")
             return
+        print("Process started")
 
         existing_categories = CasinoGameList.objects.distinct(
             "game_category"
@@ -68,7 +70,7 @@ class Command(BaseCommand):
             casino_game_ids.append(game_id)
             cat_key = game.get('categories')[0] if game.get('categories') else 'slots'
             game_cat = self.change_to_stable.get(cat_key, "Slots")
-            print(f"Game saved: {game.get('name_en')}\nType: {game_cat}\nID: {game_id}")
+            print(f"Game saved: {game.get('name')}\nType: {game_cat}\nID: {game_id}")
 
             obj, created = CasinoGameList.objects.update_or_create(
                 game_id=game_id,
@@ -93,7 +95,7 @@ class Command(BaseCommand):
                 self.update_or_create_casino_categories()
 
         CasinoGameList.objects.filter(
-                Q(vendor_name="CPgames") & ~Q(game_id__in=casino_game_ids)
+                Q(section_id="OneGameHub") & ~Q(game_id__in=casino_game_ids)
                 ).delete()
 
     def update_or_create_casino_management(self, game):
