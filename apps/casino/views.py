@@ -1025,6 +1025,7 @@ class Casino25GameListAdmin(ListAPIView):
         if provider:
             # TODO: remove monkey patch:
             provider = provider.replace('-', ' ')
+            print(provider, flush=True)
             self.queryset = self.queryset.filter(admin=self.request.user.admin,game__vendor_name=provider)
 
         if search:
