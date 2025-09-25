@@ -197,6 +197,8 @@ class OneGameHub:
             if user is None:
                 return self.parse_to_message("ERR001"), status.HTTP_400_BAD_REQUEST
             is_real_play = data.get("currency", "") == REAL_COIN
+            if not is_real_play and data.get("currency", "") != FAKE_COIN:
+                return self.parse_to_message("ERR008"), status.HTTP_400_BAD_REQUEST
             return self.get_formated_balance(
                     user=user,
                     is_real_play=is_real_play), status.HTTP_200_OK
