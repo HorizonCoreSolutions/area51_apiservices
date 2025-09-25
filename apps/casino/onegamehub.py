@@ -234,7 +234,7 @@ class OneGameHub:
             transaction_id = data.get("transaction_id")
 
             round_id = data.get("round_id")
-            amount = Decimal(0 if freerounds_id else data.get("amount", 0))
+            amount = Decimal(0 if freerounds_id else data.get("amount", 0)) / 100
 
             # CHECK: if the bet already exist
             existing_objs = GSoftTransactions.objects.filter(
