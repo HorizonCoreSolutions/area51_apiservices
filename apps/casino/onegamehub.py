@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from django.utils import timezone
 from rest_framework import status
 from apps.users.models import Users
+from apps.core.file_logger import SimpleLogger
 from apps.casino.models import GSoftTransactions
 from django.db import transaction as db_transaction
 from typing import Dict, Optional, Any, List, Tuple, Union
@@ -15,6 +16,7 @@ from urllib.parse import urlencode, quote, unquote, parse_qs
 FAKE_COIN = "EUR"
 REAL_COIN = "USD"
 
+logger = SimpleLogger(name="OGH", log_file='logs/OGH.log').get_logger()
 
 @dataclass
 class Actions:
@@ -221,6 +223,7 @@ class OneGameHub:
             if error is not None:
                 return error, status.HTTP_400_BAD_REQUEST
             if user is None:
+                logger.debug(f"User {player_id}, does not exist")
                 return self.parse_to_message("ERR001"), status.HTTP_400_BAD_REQUEST
 
             is_real_play = data.get("currency", "") == REAL_COIN
@@ -242,8 +245,10 @@ class OneGameHub:
                 request_type=GSoftTransactions.RequestType.rollback
             ).exists()
             if rollback_exist:
+                logger.debug(f"Rollback already exist")
                 return self.parse_to_message("ERR001"), status.HTTP_400_BAD_REQUEST
-            if existing_objs.exists():
+            if not existing_objs.exists():
+                logger.debug(f"Transaction does not exist exist")
                 return self.get_formated_balance(
                         user=user,
                         is_real_play=is_real_play), status.HTTP_200_OK
@@ -257,7 +262,8 @@ class OneGameHub:
 
             # Check if user  has enought money to bet
             if balance < amount:
-                response_data = self.parse_to_message(1117)
+                response_data = self.parse_to_message("ERR003")
+                logger.debug(f"Not enought founds")
                 return response_data, status.HTTP_200_OK
 
             transfer_balance = - abs(amount)
@@ -291,10 +297,12 @@ class OneGameHub:
                     user=user,
                     is_real_play=is_real_play), status.HTTP_200_OK
         except AttributeError as e:
+            logger.debug(f"This is {e}")
             print("grep here")
             print(e)
             return self.parse_to_message("ERR001"), status.HTTP_200_OK
         except TypeError as e:
+            logger.debug(f"This is {e}")
             print("grep here")
             print(e)
             return self.parse_to_message("ERR001"), status.HTTP_200_OK
