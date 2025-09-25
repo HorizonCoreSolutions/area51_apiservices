@@ -180,6 +180,12 @@ class OneGameHub:
         response = requests.get(url=self.get_url(
             self.actions.available_currencies))
         return response.json()
+    
+    def get_is_real_play(self, coin: str) -> Tuple[Optional[bool], bool]:
+        is_real_play = coin == REAL_COIN
+        if not is_real_play and coin != FAKE_COIN:
+            return None, True
+        return is_real_play, False
 
     @db_transaction.atomic
     def get_balance(self, data) -> Tuple[Dict, int]:
@@ -196,8 +202,8 @@ class OneGameHub:
                 return error, status.HTTP_400_BAD_REQUEST
             if user is None:
                 return self.parse_to_message("ERR001"), status.HTTP_400_BAD_REQUEST
-            is_real_play = data.get("currency", "") == REAL_COIN
-            if not is_real_play and data.get("currency", "") != FAKE_COIN:
+            is_real_play, error = self.get_is_real_play(data.get("currency", ""))
+            if error or is_real_play is None:
                 return self.parse_to_message("ERR008"), status.HTTP_400_BAD_REQUEST
             return self.get_formated_balance(
                     user=user,
@@ -228,7 +234,9 @@ class OneGameHub:
                 logger.warning(f"User {player_id}, does not exist")
                 return self.parse_to_message("ERR001"), status.HTTP_400_BAD_REQUEST
 
-            is_real_play = data.get("currency", "") == REAL_COIN
+            is_real_play, error = self.get_is_real_play(coin=data.get("currency", ""))
+            if error or is_real_play is None:
+                return self.parse_to_message("ERR008"), status.HTTP_400_BAD_REQUEST
             freerounds_id = data.get("freerounds_id")
 
             game_id = data.get("game_id")
@@ -325,7 +333,9 @@ class OneGameHub:
                 logger.warning(f"User {player_id}, does not exist")
                 return self.parse_to_message("ERR001"), status.HTTP_400_BAD_REQUEST
 
-            is_real_play = data.get("currency", "") == REAL_COIN
+            is_real_play, error = self.get_is_real_play(coin=data.get("currency", ""))
+            if error or is_real_play is None:
+                return self.parse_to_message("ERR008"), status.HTTP_400_BAD_REQUEST
             freerounds_id = data.get("freerounds_id")
 
             game_id = data.get("game_id")
@@ -434,7 +444,9 @@ class OneGameHub:
             deposit = Decimal(0)
             withdraw = Decimal(0)
 
-            is_real_play = coin == REAL_COIN
+            is_real_play, error = self.get_is_real_play(coin=data.get("currency", ""))
+            if error or is_real_play is None:
+                return self.parse_to_message("ERR008"), status.HTTP_400_BAD_REQUEST
             if to_rollback:
                 if to_rollback.request_type == GSoftTransactions.RequestType.rollback:
                     return self.get_formated_balance(
