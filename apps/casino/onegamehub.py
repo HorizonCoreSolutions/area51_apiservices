@@ -351,7 +351,7 @@ class OneGameHub:
                 user=user,
                 round_id=round_id,
                 callerId=settings.ONE_GAME_HUB_ID,
-            ).order_by("-created").first()
+            ).order_by("-created")
             bet = GSoftTransactions.objects.filter(
                 user=user,
                 transaction_id=transaction_id,
@@ -362,8 +362,8 @@ class OneGameHub:
             if not session:
                 logger.debug("not session found.")
                 return self.parse_to_message("ERR001"), status.HTTP_400_BAD_REQUEST
-
-            if session.game_status == GSoftTransactions.GameStatus.completed:
+            
+            if session.filter(game_status=GSoftTransactions.GameStatus.completed).exists():
                 logger.debug("Session has already ended.")
                 return self.get_formated_balance(
                         user=user,
@@ -403,7 +403,7 @@ class OneGameHub:
             transaction_obj.sessionalternativeid = ext_round_id
             transaction_obj.action_type = GSoftTransactions.ActionType.win
             transaction_obj.request_type = GSoftTransactions.RequestType.result
-            transaction_obj.game_status = GSoftTransactions.GameStatus.completed
+            transaction_obj.game_status = GSoftTransactions.GameStatus.pending
             transaction_obj.time = timezone.now()
             transaction_obj.save()
 
