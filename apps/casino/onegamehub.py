@@ -341,7 +341,9 @@ class OneGameHub:
             ).order_by("-created").first()
 
             # TODO: READ BETTER THIS PART OF THE DOCS
-            if last_game and last_game.game_status == GSoftTransactions.GameStatus.completed:
+            if last_game and last_game.game_status != GSoftTransactions.GameStatus.completed:
+                last_game.game_status = GSoftTransactions.GameStatus.completed
+                last_game.save()
                 logger.debug("not last game found.")
                 return self.parse_to_message("ERR001"), status.HTTP_400_BAD_REQUEST
 
@@ -357,9 +359,6 @@ class OneGameHub:
             if payout < 0:
                 logger.debug(f"Payout {payout} does not make sence.")
                 return self.parse_to_message("ERR001"), status.HTTP_400_BAD_REQUEST
-
-            last_game.game_status = GSoftTransactions.GameStatus.completed
-            last_game.save()
 
             transfer_bonus = Decimal(0) if is_real_play else payout
             transfer_balance = payout if is_real_play else Decimal(0)
