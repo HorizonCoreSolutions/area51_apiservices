@@ -13,8 +13,8 @@ from django.db import transaction as db_transaction
 from typing import Dict, Optional, Any, List, Tuple, Union
 from urllib.parse import urlencode, quote, unquote, parse_qs
 
-FAKE_COIN = "EUR"
-REAL_COIN = "USD"
+FAKE_COIN = "USD"
+REAL_COIN = "EUR"
 
 logger = SimpleLogger(name="OGH", log_file='logs/OGH.log').get_logger()
 
