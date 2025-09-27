@@ -1648,7 +1648,10 @@ class CoinflowWithdraws(APIView):
             sliding=True
             )
         if not is_allowed:
-            return Response({"message" : "Please try again later."}, status=status.HTTP_429_TOO_MANY_REQUESTS)
+            return Response(
+                {"message" : "Please try again later."},
+                status=status.HTTP_429_TOO_MANY_REQUESTS
+            )
 
         card = request.data.get('cardId')
         bank = request.data.get('bankId')
@@ -1839,7 +1842,8 @@ class WithdrawInfoView(APIView):
 
         # 1. Get today at midnight (timezone-aware)
         # Get timezone-aware "today at midnight"
-        start_of_day = timezone.now().replace(
+        now = timezone.now()
+        start_of_day = now.replace(
                 hour=0,
                 minute=0,
                 second=0,
@@ -1847,6 +1851,8 @@ class WithdrawInfoView(APIView):
 
         # Shift forward by N hours (e.g. day starts at 5 AM)
         shifted_start = start_of_day + timedelta(hours=DAY_SHIFT_HOURS)
+        if now < shifted_start:
+            shifted_start -= timedelta(days=1)
 
         qs = CoinFlowTransaction.objects.filter(
             user=request.user,

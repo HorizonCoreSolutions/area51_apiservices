@@ -996,7 +996,7 @@ class CoinFlowClient:
             post_balance=new_balance,
             ip_address=ip,
             signature=signature,
-            account_type= map_type[withdraw_type]
+            account_type=map_type[withdraw_type]
         )
         logger.info(f"User {user.id}-{user.username} succesfully created a ${round(Decimal(cents) / 100, 2)} withdraw")
         return BasicReturn(success=True, data={})
