@@ -304,7 +304,9 @@ class Casino25GameListSerializer(serializers.ModelSerializer):
         return False
     
     def get_game_image(self, instance):
-        if instance.vendor_name == "CPgames":
+        if instance.section_id == "OneGameHub":
+            return instance.game_image
+        elif instance.section_id == "CPgames":
             return f"{settings.FE_DOMAIN}static/cpgames_icons/{instance.game_id[2:]}.png"
         return f"{settings.CASINO_25_IMAGE_URL}/{instance.game_id}.jpg"
     
