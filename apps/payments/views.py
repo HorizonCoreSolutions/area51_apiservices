@@ -1652,7 +1652,7 @@ class CoinflowWithdraws(APIView):
 
         card = request.data.get('cardId')
         bank = request.data.get('bankId')
-        
+        venmo = request.data.get('venmoId')
         
         cents = request.data.get('cents')
         if cents is None:
@@ -1664,18 +1664,29 @@ class CoinflowWithdraws(APIView):
         
         cents = int(cents)
         if cents < 500 or cents > 50000:
-            return Response(data={'message' : '@cents min depossit of 500 cents. Max depossit is 50000 cents'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        
-        if card is None and bank is None:
-            return Response(data={'message' : 'Please use @cardId or @bankId'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        if card and bank:
-            return Response(data={'message' : 'Please only use @cardId or @bankId'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        prefix = 'card:' if card else 'bank:'
-        token = card if card else bank
-        data = redis_client.get(prefix+token)
+            return Response(
+                data={'message' : '@cents min depossit of 500 cents. Max depossit is 50000 cents'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        pairs = []
+        if card:  pairs.append(("card", card))
+        if bank:  pairs.append(("bank", bank))
+        if venmo: pairs.append(("venmo", venmo))
+
+        if not pairs:
+            return Response(
+                data={'message' : 'Please use @cardId, @bankId or @venmoId'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if len(pairs) > 1:
+            return Response(
+                data={'message' : 'Please only use @cardId, @bankId or @venmoId'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        data = redis_client.get(":".join(pairs[0]))
         
         if not data:
             return Response(data={'message' : 'Please use and available card, For security reasons once started a transaction this id only last 30 min'}, status=status.HTTP_400_BAD_REQUEST)
@@ -1690,7 +1701,7 @@ class CoinflowWithdraws(APIView):
         if registration_result.error:
             return Response(data={'message' : registration_result.error}, status=status.HTTP_400_BAD_REQUEST)  
         ip = get_user_ip_from_request(request)
-        result = cf.create_transaction_withdraw(user, data, prefix, cents, ip)
+        result = cf.create_transaction_withdraw(user, data, pairs[0][0], cents, ip)
         
         if result.data:
             return Response(data=result.data, status=result.data.get("status"))

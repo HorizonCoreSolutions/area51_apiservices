@@ -164,6 +164,7 @@ class CoinFlowTransaction(AbstractBaseModel):
     class AccountType(DjangoChoices):
         card = ChoiceItem("card", _("Card"))
         bank = ChoiceItem("bank", _("Bank"))
+        venmo = ChoiceItem("venmo", "Venmo")
         
     class StatusType(DjangoChoices):
         # Common statuses

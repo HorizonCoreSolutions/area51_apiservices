@@ -848,7 +848,7 @@ class CoinFlowClient:
     def create_transaction_withdraw(self,
                                     user: Users,
                                     data: dict,
-                                    type: str,
+                                    withdraw_type: str,
                                     cents: int,
                                     ip: str) -> BasicReturn:
 
@@ -908,7 +908,7 @@ class CoinFlowClient:
 
         payload = {
             "amount": { "cents": cents },
-            "speed": "card" if type.startswith("card") else "same_day",
+            "speed": "same_day" if withdraw_type == "bank" else withdraw_type,
             "account": data.get("token"),
             "userId": self._generate_user_id(user),
             "waitForConfirmation": True,
@@ -978,6 +978,13 @@ class CoinFlowClient:
             logger.warning(f"data \n{data}")
             return BasicReturn(success=False, error="This service is down, please try again later. If the problem persist contact support.")
 
+        act = CoinFlowTransaction.AccountType
+        map_type = {
+            "card": act.card,
+            "bank": act.bank,
+            "venmo": act.venmo
+        }
+
         CoinFlowTransaction.objects.create(
             user=user,
             amount=(Decimal(cents) / 100),
@@ -989,7 +996,7 @@ class CoinFlowClient:
             post_balance=new_balance,
             ip_address=ip,
             signature=signature,
-            account_type= CoinFlowTransaction.AccountType.card if type.startswith("card") else CoinFlowTransaction.AccountType.bank
+            account_type= map_type[withdraw_type]
         )
         logger.info(f"User {user.id}-{user.username} succesfully created a ${round(Decimal(cents) / 100, 2)} withdraw")
         return BasicReturn(success=True, data={})
@@ -1100,7 +1107,7 @@ class CoinFlowClient:
 
         if venmo:
             venmo_id = str(uuid4())
-            redis_client.setex(f"bank:{venmo_id}", TTL_SECONDS, json.dumps(venmo))
+            redis_client.setex(f"venmo:{venmo_id}", TTL_SECONDS, json.dumps(venmo))
             result['venmo'].append({
                 "venmoId": venmo_id,
                 "alias": venmo.get("alias")
