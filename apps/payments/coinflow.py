@@ -1069,7 +1069,8 @@ class CoinFlowClient:
 
         result = {
             "cards": [],
-            "bankAccounts": []
+            "bankAccounts": [],
+            "venmo": []
         }
 
         # Process cards
@@ -1095,6 +1096,15 @@ class CoinFlowClient:
                 "rtpEligible": bank.get("rtpEligible")
             })
 
+        venmo: Optional[Dict] = withdrawer.get('venmo')
+
+        if venmo:
+            venmo_id = str(uuid4())
+            redis_client.setex(f"bank:{venmo_id}", TTL_SECONDS, json.dumps(venmo))
+            result['venmo'].append({
+                "venmoId": venmo_id,
+                "alias": venmo.get("alias")
+            })
 
         return BasicReturn(success=True, data=result)
 
