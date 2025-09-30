@@ -1228,7 +1228,7 @@ class ValidateSignUpPromoCode(APIView):
 
 class ValidatePromoCode(APIView):
     """
-    API to validate the promo-code user will apply at the time of sign-up
+    API to validate the promo-code user will apply at the time of deposit
     """
     permission_classes = (AllowAny,)
     http_method_names = ["post"]
@@ -1236,6 +1236,11 @@ class ValidatePromoCode(APIView):
     def post(self, request) -> Response:
 
         promo_code = request.data.get("promo_code", None)
+        promo_type = request.data.get("promo_type", "deposit")
+
+        if promo_type not in {'welcome', 'deposit'}:
+            promo_type = "deposit"
+
         if promo_code is None:
             return Response(
                 {
@@ -1249,11 +1254,15 @@ class ValidatePromoCode(APIView):
         
         user = request.user if request.user.is_authenticated else None
         
-        is_valid, msg = promo_handler.verify_code(user=user, promo_code=promo_code)
+        is_valid, msg = promo_handler.verify_code(
+            user=user,
+            bonus_type=promo_type,
+            promo_code=promo_code,
+        )
         
         status_text = "Success" if is_valid else "Failed"
         http_status = status.HTTP_200_OK if is_valid else status.HTTP_400_BAD_REQUEST
-        message = "Promo-code applied successfully" if is_valid else msg
+        message = "Promo-code is valid" if is_valid else msg
 
         return Response(
             {"data": {"message": message, "status": status_text}},
