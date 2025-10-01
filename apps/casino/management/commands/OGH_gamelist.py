@@ -36,12 +36,32 @@ class Command(BaseCommand):
         "video-poker": "Video Poker",
         "virtual-game": "Slots",
     }
-    ALLOWED_PROVIDERS = {'TaDa Gaming (Social Casinos)', 'MrSlotty', 'King Show Games',
-                  'Spadegaming', 'Fa Chai Gaming', 'Espresso', 'GameArt', 'Rogue Games',
-                  'CT Interactive', 'BoldPlay', 'Chilli Games Sweepstakes',
-                  'Felix Gaming', 'Inbet', 'Netgame', 'EURASIAN Gaming', '1Spin4Win',
-                  'Mancala', 'Funky Games', '7777 Gaming', 'Spinoro', 'Zeus Play',
-                  'Kagaming2', 'BGaming'}
+
+    ALLOWED_PROVIDERS = {
+        '1Spin4Win',
+        '7777 Gaming',
+        'BGaming',
+        'BoldPlay',
+        'Chilli Games Sweepstakes',
+        'CT Interactive',
+        'Espresso',
+        'EURASIAN Gaming',
+        'Fa Chai Gaming',
+        'Felix Gaming',
+        'Funky Games',
+        'GameArt', # This is not necesary
+        'Inbet',
+        'Kagaming2',
+        'King Show Games',
+        'Mancala',
+        'MrSlotty',
+        'Netgame',
+        'Rogue Games',
+        'Spadegaming',
+        'Spinoro',
+        'TaDa Gaming (Social Casinos)',
+        'Zeus Play',
+    }
 
     def handle(self, *args, **kwargs):
         print("Getting Games")
@@ -50,6 +70,7 @@ class Command(BaseCommand):
             print("No games where given by the api")
             return
         print("Process started")
+        resumen = {}
 
         existing_categories = CasinoGameList.objects.distinct(
             "game_category"
@@ -67,6 +88,9 @@ class Command(BaseCommand):
             provider = game.get("provider")
             if provider not in self.ALLOWED_PROVIDERS:
                 continue
+
+            resumen[provider] = resumen.get(provider, 0) + 1
+
             casino_game_ids.append(game_id)
             cat_key = game.get('categories')[0] if game.get('categories') else 'slots'
             game_cat = self.change_to_stable.get(cat_key, "Slots")
@@ -97,6 +121,8 @@ class Command(BaseCommand):
         CasinoGameList.objects.filter(
                 Q(section_id="OneGameHub") & ~Q(game_id__in=casino_game_ids)
                 ).delete()
+
+        print(resumen)
 
     def update_or_create_casino_management(self, game):
         users = Users.objects.filter(role="admin")
