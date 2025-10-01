@@ -723,7 +723,7 @@ class UploadGsoftGames(APIView):
 class GetCasinoProviders(APIView):
     """accounts/get-casino-vendor/"""
     http_method_name = ["get"]
-    
+
 
     def get(self, request, **kwargs):
         device_type = self.request.GET.get("device", "desktop")
@@ -733,6 +733,7 @@ class GetCasinoProviders(APIView):
             casino_management__enabled=True,
             casino_management__game_enabled=True
         ).distinct()
+
         if device_type == "desktop":
             casino_games =  casino_games.filter(is_desktop_supported=True)
         else:
@@ -744,7 +745,7 @@ class GetCasinoProviders(APIView):
 
         if not 'img_urls' in self.request.GET:
             return Response(casino_providers, status=status.HTTP_200_OK)
-        
+
         res_providers = Providers.objects.filter(name__in=casino_providers)
         serializer = ProviderSerializer(res_providers, many=True)
         serialized_data = serializer.data
@@ -763,7 +764,7 @@ class GetCasinoProviders(APIView):
                 "providers" : serialized_data
             }, status=status.HTTP_200_OK
         )
-    
+
 
 class GetCasinoProviderGameList(APIView):
     http_method_name = ["get"]
@@ -1297,7 +1298,7 @@ class Casino25ProviderWiseGameList(ListAPIView):
         casino_providers = casino_games.values("vendor_name").annotate(
             num_games=Count("vendor_name")
         ).filter(num_games__gt=0).order_by("-num_games").values_list("vendor_name", flat=True)
-        
+
         return casino_providers
     
     def list(self, request, *args, **kwargs):
