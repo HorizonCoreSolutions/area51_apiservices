@@ -208,16 +208,16 @@ class LoginAPIView(APIViewContext):
         if serializer.is_valid():
             response = serializer.validated_data
             user = Users.objects.filter(id=response["user"].pk).first()
-            
+
             ip = AcuityTecAPI.get_ip_from_request(request=request)
             data = AcuityTecAPI.parse_user_to_geo(user=user, ip=ip)
-            
+
             if not response["user"].username in settings.ACUITYTEC_EXCEPTIONS:
                 result_geo = AcuityTecAPI.is_geo_verified(**data)
-                
+
                 if result_geo['status'] == -1:
                     return Response(result_geo['message'], status.HTTP_401_UNAUTHORIZED)
-                   
+
             if user.is_currently_active:
                 if user.last_activity_time < timezone.now()-timedelta(minutes=15):  
                     user.last_activity_time = timezone.now()
@@ -248,8 +248,8 @@ class LoginAPIView(APIViewContext):
                         },
                         status.HTTP_200_OK,
                     )
-                    
-                    
+
+
         return Response(serializer.errors, status.HTTP_401_UNAUTHORIZED)
 
 
@@ -321,7 +321,7 @@ class VerifyToken(APIView):
         )
 
 class CashbackView(APIView):
-   
+
     permission_classes = (AllowAny,)
     http_method_names = [
         "get",
@@ -486,20 +486,20 @@ class UserUpdateView(APIViewContext):
             player = request.user
             if not player:
                 return Response({"message": "User not found", },status.HTTP_400_BAD_REQUEST)
-            
+
             if player.document_verified == VERIFICATION_APPROVED:
                 return Response({"message": "User Updated Successfully."},status.HTTP_200_OK)
-            
+
             # Handle user personal data
             cca2 = "US"
             phone_number = request.data.get("phone_number")
             country_code = request.data.get("country_code")
             cashtag = request.data.get("cashtag")
-            
+
             # Handle profile picture
             profile_pic_data = request.data.get("profile_pic")
             profile_pic = player.profile_pic
-            
+
             if(profile_pic_data and not profile_pic_data.startswith("https")):
                 format, profile_pic = self.decode_base64_image(profile_pic_data)
                 filename_format = profile_pic.name.split(".")
@@ -509,14 +509,14 @@ class UserUpdateView(APIViewContext):
                 player.profile_pic = profile_pic
                 # page_thumbnail_inmemory = self.create_thumbnail(image_file=profile_pic, filename=filename, ext=format)
                 # user.profile_pic_thumbnail = page_thumbnail_inmemory
-                
+
             if request.data.get("profile_pic", "https").startswith("https"):
                 profile_pic = player.profile_pic
-                
+
             if Country.objects.filter(code_cca2=cca2).exists():
                 player.country = cca2
                 player.country_obj = Country.objects.get(code_cca2=cca2)
-            
+
             if phone_number and country_code:
                 # if Users.objects.filter(phone_number=phone_number, country_code=country_code).exclude(Q(username=request.data.get('username')) | Q(phone_verified=1)).exists():
                 #     return Response({"message": "Phone number belongs to another user."}, status.HTTP_400_BAD_REQUEST)
@@ -548,20 +548,20 @@ class UserUpdateView(APIViewContext):
             for field, value in update_fields.items():
                 if value is not None:
                     setattr(player, field, value)
-            
+
             # player.document_verified = VERIFICATION_PROCESSING if player.document_verified == VERIFICATION_PROCESSING else VERIFICATION_PENDING
-            
+
             player.save()
-            
+
             # ip = get_user_ip_from_request(request=request)
             # register_or_update_user.delay(ip, timezone.now().isoformat(), player.id)
             return Response({"message": "User Updated Successfully"},status.HTTP_200_OK)
-            
+
         except Exception as e:
             print(f"Error in update-user-details : {e}")
             return Response({"message": "something went wrong", },status.HTTP_500_INTERNAL_SERVER_ERROR)
-        
-       
+
+
 class GetOTPView(APIViewContext):
     serializer_class = GetOtpSerializer
     permission_classes = (AllowAny,)
@@ -661,7 +661,7 @@ class GetOTPView(APIViewContext):
                         {"message": _("This mobile number already exist")},
                         status.HTTP_400_BAD_REQUEST,
                     )
-            
+
             serializer = self.get_serializer(data=data)
             if serializer.is_valid():
                 response_data = serializer.validated_data
@@ -942,7 +942,7 @@ class PlayerDeActiveView(APIViewContext):
             if player:
                 agent = Agent.objects.filter(id=player.agent_id).first()
                 agent_email = "" if not agent.email else f"at {agent.email}"
-                
+
                 responsible_gambling = ResponsibleGambling.objects.get_or_create(user=player)[0]
                 if responsible_gambling.is_account_cancelled:
                     return Response({"message": _(f'Account has been already deactivated. Please contact your administrator {agent_email} to reactivate.')},
@@ -961,7 +961,7 @@ class PlayerDeActiveView(APIViewContext):
 class SetPlayerMaxSpendLimitView(APIViewContext):
     permission_classes = (IsPlayer,)
     http_method_names = ["post"]
-    
+
     def post(self, request):
         max_spending_limit = int(request.data.get("max_spending_limit", MAX_SPEND_AMOUNT))
         from datetime import timezone
@@ -972,10 +972,10 @@ class SetPlayerMaxSpendLimitView(APIViewContext):
                 if responsible_gambling.max_spending_limit_expire_time:
                     if datetime.now(timezone.utc) < responsible_gambling.max_spending_limit_expire_time.astimezone(pytz.utc):
                         return Response({"message": _("Max spending limit already set for the next 24hrs.")}, status.HTTP_400_BAD_REQUEST)
-                    
+
                 if max_spending_limit > MAX_SPEND_AMOUNT:
                     return Response({"message": _(f"Max spending limit cannot be greater than {MAX_SPEND_AMOUNT}")}, status.HTTP_400_BAD_REQUEST)
-                        
+
                 responsible_gambling.max_spending_limit = max_spending_limit
                 responsible_gambling.daily_spendings = 0
                 responsible_gambling.is_max_spending_limit_set_by_admin = False
@@ -1017,7 +1017,7 @@ class SetPlayerBlackoutView(APIViewContext):
                             responsible_gambling.is_blackout = True
                             responsible_gambling.blackout_expire_hours = blackout_expire_time
                             responsible_gambling.save()
-                        
+
                             return Response(
                                 {"message": "Player blackout successfully updated"},
                                 status.HTTP_200_OK,
@@ -1075,7 +1075,7 @@ class PromotionCmsView(APIView):
         cms_obj = CmsPromotionDetails.objects.order_by('-id')
         serializer = self.serializer_class(cms_obj, many=True)
         return Response({"data": serializer.data}, status.HTTP_200_OK)
-    
+
 
 class CmsPromotionsView(APIView):
     # permission_classes = (IsAuthenticated,)
@@ -1090,7 +1090,7 @@ class CmsPromotionsView(APIView):
             start_date__lte=now,
             end_date__gte=now
         ).order_by('-start_date')
-        
+
         # Apply type filter
         promo_type = request.GET.get('type', 'toaster')
         if promo_type in ['toaster', 'page_blocker']:
@@ -1211,11 +1211,11 @@ class ValidateSignUpPromoCode(APIView):
                 },
                 status=status.HTTP_200_OK,
             )
-        
+
         user = request.user if request.user.is_authenticated else None
-        
+
         is_valid, msg = promo_handler.verify_code(user=user, promo_code=promo_code)
-        
+
         status_text = "Success" if is_valid else "Failed"
         http_status = status.HTTP_200_OK if is_valid else status.HTTP_400_BAD_REQUEST
         message = "Promo-code applied successfully" if is_valid else msg
@@ -1251,15 +1251,15 @@ class ValidatePromoCode(APIView):
                 },
                 status=status.HTTP_200_OK,
             )
-        
+
         user = request.user if request.user.is_authenticated else None
-        
+
         is_valid, msg = promo_handler.verify_code(
             user=user,
             bonus_type=promo_type,
             promo_code=promo_code,
         )
-        
+
         status_text = "Success" if is_valid else "Failed"
         http_status = status.HTTP_200_OK if is_valid else status.HTTP_400_BAD_REQUEST
         message = "Promo-code is valid" if is_valid else msg
@@ -1369,7 +1369,7 @@ class FooterDeatilsView(APIView):
                 category.append(obj.category.id)
                 response.append({'name':obj.category.name,'category_slug':obj.category.slug, 'page':[{'title':obj.pages.title, 'page_img':obj.pages.page.url if obj.pages.page else None,
             'page_content':obj.pages.page_content, 'pages_slug':obj.pages.slug, 'is_form':obj.pages.is_form,'form_name':obj.pages.form_name,
-            
+
             'is_redirect':obj.pages.is_redirect, 'redirect_url':obj.pages.redirect_url, 'is_page': obj.pages.is_page}]})
         return Response({"data": response}, status.HTTP_200_OK)
 
@@ -1407,7 +1407,7 @@ class PagesDeatilsView(APIView):
         all_media = page.media.all()
         for page_media in all_media:
             urls.append(f"{settings.BE_DOMAIN}{page_media.media.url}")
-            
+
         return urls
 
 
@@ -1415,7 +1415,7 @@ class PagesDeatilsView(APIView):
 class SetPlayerBettingLimitView(APIView):
     permission_classes = (AllowAny,)
     http_method_names = ["post"]
-    
+
     def post(self, request):
         amount = request.data.get("amount")
         player_id = request.data.get("player_id")
@@ -1442,7 +1442,7 @@ class SetPlayerBettingLimitView(APIView):
 class Notification(APIView):
     authentication_classes = []
     permission_classes = [AllowAny]
-    
+
     def post(self, request):
         title = request.data.get("title", None)
         message = request.data.get("content", None)
@@ -1473,7 +1473,7 @@ class Notification(APIView):
             },
             status.HTTP_200_OK,
         )
-    
+
 
 class GetSlug(APIView):
     # permission_classes = (IsPlayer,)
@@ -1481,12 +1481,12 @@ class GetSlug(APIView):
 
     def get(self, request):
         slugs=[]
-        
+
         slugs.append(CmsPages.objects.filter(hidden=False).all().values("slug"))
-       
+
         return Response({"response": slugs}, status.HTTP_200_OK)
-    
-    
+
+
 
 class PlayerEmailOTPsender(APIView):
     http_method_names = ["post"]
@@ -1532,13 +1532,13 @@ class PlayerEmailOTPsender(APIView):
                 return Response({"error": "Email not provided", "status": status.HTTP_404_NOT_FOUND},status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({"error": str(e), "status": status.HTTP_400_BAD_REQUEST},status.HTTP_400_BAD_REQUEST)
-        
+
 
 class ForgotPassword(APIView):
     http_method_names = ["post"]
     def post(self, request):
         try:
-        
+
             password = request.data.get("password")
             username = request.data.get("username")
             player = Users.objects.filter(username__iexact=username).first()
@@ -1550,14 +1550,14 @@ class ForgotPassword(APIView):
                    return Response({"error": "Please enter valid OTP", "status": status.HTTP_400_BAD_REQUEST},status.HTTP_400_BAD_REQUEST)
             else:
                    return Response({"error": "Please enter valid OTP", "status": status.HTTP_400_BAD_REQUEST},status.HTTP_400_BAD_REQUEST)
-            
+
             player.password = make_password(password)
             player.save()
             return Response({"message": "Password Changed Successfully", "status": status.HTTP_200_OK}, status.HTTP_200_OK)
         except Exception as e:
             print(e)
             return Response({"message": "Internal Error", "status": status.HTTP_500_INTERNAL_SERVER_ERROR}, status.HTTP_500_INTERNAL_SERVER_ERROR)
-           
+
 class AdminAdsPublicDetailsView(APIView):
     permission_classes = [AllowAny]
     http_method_names = ["post", ]
@@ -1596,7 +1596,7 @@ class ComingSoonPagesDeatilsView(APIView):
         if admin_obj.coming_soon_scheduled and admin_obj.coming_soon_scheduled < timezone.now():
             admin_obj.is_coming_soon_enabled = False
             admin_obj.save()
-            
+
         return Response({
             "datetime": admin_obj.coming_soon_scheduled, 
             "bonus": admin_obj.coming_soon_bonus, 
@@ -1604,7 +1604,7 @@ class ComingSoonPagesDeatilsView(APIView):
             "is_maintenance_mode_enabled": admin_obj.is_maintenance_mode_enabled,
             "maintenance_mode_message": admin_obj.maintenance_mode_message,
         }, status.HTTP_200_OK)
-    
+
 
 class AffiiateRequestView(APIView):
     permission_classes = (IsPlayer,)
@@ -1625,8 +1625,8 @@ class AffiiateRequestView(APIView):
 
         except:
             return Response({"message": "Something Went Wrong"}, status.HTTP_500_INTERNAL_SERVER_ERROR)
-        
-        
+
+
 class QueueView(APIView):
     permission_classes = (IsPlayer,)
     http_method_names = ["post"]
@@ -1638,18 +1638,18 @@ class QueueView(APIView):
                 active_staff=Staff.objects.filter(agent=user.agent,is_staff_active=True).count()
                 if active_staff == 0:
                     return Response({"message": "No active Staff For User"}, 400)
-                    
+
                 player = Queue.objects.filter(user=user).first()
                 if player:
                     position =  Queue.objects.filter(is_active=True,user__agent=user.agent,pick_by = None).count()
                     position_cou =  Queue.objects.filter(is_active=True,user__agent=user.agent,pick_by__isnull =False).count()
                     if position_cou >= 1:
                         position = position + 1
-                    
+
                     return Response({"position": position}, status.HTTP_200_OK)
                 else:
                     return Response({"message": "Player Entry not found in queue"}, 400)
-                    
+
             if data.get('operation') == 'change_status':
                 is_active = data.get('is_active')
                 player_entry = Queue.objects.filter(user=user).first()
@@ -1692,7 +1692,7 @@ class QueueView(APIView):
 
         except:
             return Response({"message": "Something Went Wrong"}, status.HTTP_500_INTERNAL_SERVER_ERROR)        
-        
+
     def save_chathistory(self,chatroom):
         try:
             chatmessages = ChatMessage.objects.filter(room=chatroom).order_by('created')
@@ -1712,7 +1712,7 @@ class QueueView(APIView):
                         staff = user
                     else:
                         player = user
-                                        
+
             message_json = json.dumps(message_list)
             message_json =  json.loads(message_json)
             if chatmessages.count() > 0:
@@ -1725,7 +1725,7 @@ class QueueView(APIView):
             print("Error in saving chathistory",e)
             return False
 
-        
+
 class SignUpOTP(APIView):
     http_method_names = ["post"]
     def post(self, request):
@@ -1738,16 +1738,16 @@ class SignUpOTP(APIView):
             # phone_number = request.data.get("phone_number")
             #
             # check_phone = True
-            
+
             first_name = request.data.get('first_name')
             if not first_name or first_name == '' or first_name == ' ':
                 return Response({'message' : 'first name must not be null.'}, status.HTTP_400_BAD_REQUEST)
-            
+
             last_name = request.data.get('last_name')
             if not last_name or last_name == '' or last_name == ' ':
                 return Response({'message' : 'last name must not be null.'}, status.HTTP_400_BAD_REQUEST)
             names = [first_name, last_name]
-            
+
             if not city:
                 return Response({"message": "City name must not be null"}, status.HTTP_400_BAD_REQUEST)
             if not email:
@@ -1760,7 +1760,7 @@ class SignUpOTP(APIView):
                 return Response({"message" : "You must accept the TYC, tyc != 1"},status=status.HTTP_400_BAD_REQUEST)
             if str(request.data.get('confirm_age')) != "1":
                 return Response({"message" : "You must confirm you are 18+, confirm_age != 1"},status=status.HTTP_400_BAD_REQUEST)
-            
+
             # check age
             # dob = request.data.get('dob')
             # if dob is None:
@@ -1783,13 +1783,13 @@ class SignUpOTP(APIView):
             else:
                 return Response({"message" : "code_cca2 has not been provided"},status=status.HTTP_400_BAD_REQUEST)
 
-        
+
             # TODO: ADD THE DIVING NAME PART
-            
+
             pattern = re.compile("[A-Za-z0-9]*$")
             if not pattern.fullmatch(username):
                 return Response({"message": "Username must be alphanumeric"}, status.HTTP_400_BAD_REQUEST)
-            
+
             if Users.objects.filter(email=email).exists(): 
                 return Response({"error": "Email already exists", "status": status.HTTP_400_BAD_REQUEST},status.HTTP_400_BAD_REQUEST)
             if Users.objects.filter(username__iexact=username).exists():
@@ -1799,22 +1799,22 @@ class SignUpOTP(APIView):
             #         return Response({"error": "Phone number already exists", "status": status.HTTP_400_BAD_REQUEST},status.HTTP_400_BAD_REQUEST)
             if len(username)<4:
                 return Response({"error": "Username must be atleast 4 characters long", "status": status.HTTP_400_BAD_REQUEST},status.HTTP_400_BAD_REQUEST)
-            
-            
+
+
             ip = AcuityTecAPI.get_ip_from_request(request=request)
-            
-            
+
+
             # TODO: REMOVE THIS ON PROD
             ts = 1749793047.0 # Unix timestamp
             dt = datetime.fromtimestamp(ts, tz=timezone.utc) 
             if timezone.now() - dt < timedelta(days=1):
                 ip = request.data.get('ip', ip)
-            
+
             result = AcuityTecAPI.is_geo_verified(first_name=names[0], last_name=names[1], user_name=username, email=email, city=city, id='AREA51-NEW-user', cca2=cca2, ip=ip)
-            
+
             if result['status'] == -1:
                 return Response({"error": result['message'], "status": status.HTTP_400_BAD_REQUEST},status.HTTP_400_BAD_REQUEST)
-            
+
             generated_otp = create_otp()
             print(generated_otp)
             context = {
@@ -1846,7 +1846,7 @@ class SignUpOTP(APIView):
             return Response({"message": "Email sent successfully", "status": status.HTTP_200_OK}, status.HTTP_200_OK)
         except Exception as e:
             return Response({"message": "Something Went Wrong"}, status.HTTP_500_INTERNAL_SERVER_ERROR)
-        
+
 class TipView(APIView):
     permission_classes = (IsPlayer,)
     http_method_names = ["post"]
@@ -1910,7 +1910,7 @@ class TipView(APIView):
         except Exception as e:
             print(e)
             return Response({"message": "Something Went Wrong"}, status.HTTP_500_INTERNAL_SERVER_ERROR)
-       
+
 
 class CsrQueryView(APIView):
     permission_classes = (IsPlayer,)
@@ -1931,7 +1931,7 @@ class CsrQueryView(APIView):
 
         except:
             return Response({"message": "Something Went Wrong"}, status.HTTP_500_INTERNAL_SERVER_ERROR)
-    
+
     def get(self, request):
         try:
             user = Users.objects.filter(id=request.user.id).first()
@@ -1940,11 +1940,11 @@ class CsrQueryView(APIView):
 
         except:
             return Response({"message": "Something Went Wrong"}, status.HTTP_500_INTERNAL_SERVER_ERROR)
-        
+
 class RecentMessagesView(APIView):
     permission_classes = (IsPlayer,)
     http_method_names = ["get"]
-    
+
     def get(self, request):
         try:
             user = Users.objects.filter(id=request.user.id).first()
@@ -1957,8 +1957,8 @@ class RecentMessagesView(APIView):
 
         except:
             return Response({"message": "Something Went Wrong"}, status.HTTP_500_INTERNAL_SERVER_ERROR)
-        
-        
+
+
 class RestrictedLoginView(APIView):
     permission_classes = (IsPlayer,)
     http_method_names = ["post"]
@@ -2159,7 +2159,7 @@ class OffmarketTransaction(APIView):
                                 "created__lte"
                             ] = to_date - timedelta(minutes=(timezone_offset * 60))
                         withdraw_transaction_filter_dict["created__lte"] = transaction_filter_dict["created__lte"]
-           
+
                 offmarket_transactions = OffMarketTransactions.objects.filter(**transaction_filter_dict).order_by("-created")
                 withdraw_transactions = OffmarketWithdrawalRequests.objects.filter(**withdraw_transaction_filter_dict).order_by("-created")
                 combined_transactions = list(sorted(
@@ -2183,7 +2183,7 @@ class OffmarketTransaction(APIView):
             print(f"error in fetching data {e}.")
             response = {"msg": "Some Internal error.", "status_code": status.HTTP_500_INTERNAL_SERVER_ERROR}
             return Response(response)
-        
+
 
 class CountriesView(APIView):
 
@@ -2201,7 +2201,7 @@ class CountriesView(APIView):
 
         return Response({ "countries": serializer.data, "status_code": status.HTTP_200_OK}, status=status.HTTP_200_OK)
 
-        
+
 class OffMarketWithdrawView(APIView):
     permission_classes = (IsPlayer,)
     http_method_names = ["post"]
@@ -2322,7 +2322,7 @@ class SpintheWheelDetailsAPIView(APIView):
         spin_wheel_details = SpintheWheelDetails.objects.all()
         serializer = SpintheWheelDetailsSerializer(spin_wheel_details, many=True)
         return Response(serializer.data)
-    
+
 from apps.bets.utils import validate_date
 class TransactionsAPIView(APIView):
     http_method_name = ["get"]
@@ -2373,12 +2373,12 @@ class TransactionsAPIView(APIView):
         del transaction_filter_dict["journal_entry"]
         transaction_filter_dict["bonus__gt"] = 0
         offmarket_queryset = OffMarketTransactions.objects.filter(**transaction_filter_dict).order_by("-created")
-        
+
         if bonus_type and bonus_type != "all":
             transaction_queryset = transaction_queryset.filter(bonus_type=bonus_type)
             if bonus_type != "offmarket_bonus":
                 offmarket_queryset = []
-            
+
 
         transactions = list(chain(transaction_queryset, offmarket_queryset))
         transactions = sorted(transactions, key=attrgetter('created'), reverse=True)
@@ -2391,7 +2391,7 @@ class TransactionsAPIView(APIView):
             return Response({"msg": "Something went Wrong", "status_code": status.HTTP_400_BAD_REQUEST})
         serializer =  TransactionsSerializer(result_page, many=True)
         return paginator.get_paginated_response(serializer.data)
-        
+
 
 class CashAppDetailsApi(APIView):
     http_method_names = ["get","post","put","delete"]
@@ -2417,7 +2417,7 @@ class CashAppDetailsApi(APIView):
             return Response({"message": "CA Id already exists."}, status.HTTP_400_BAD_REQUEST)
         CashAppDeatils.objects.create(name=name,user = self.request.user,status = CashAppDeatils.StatusType.pending,is_active=True)
         return Response({"message": "CA ID of user created successfully."}, status.HTTP_200_OK)
-    
+
     def put(self, request, **kwargs):
         ca_id = self.request.data.get("ca_id", None)
         name = self.request.data.get("name", None)
@@ -2430,7 +2430,7 @@ class CashAppDetailsApi(APIView):
             return Response({"message": "It cannot update because the CA ID has already been approved."}, status.HTTP_400_BAD_REQUEST)
         CashAppDeatils.objects.filter(id = ca_id).update(name=name,user = self.request.user,status = CashAppDeatils.StatusType.pending,is_active=True)
         return Response({"message": "CA Id of user Updated Successfully."}, status.HTTP_200_OK)
-    
+
     def delete(self, request, **kwargs):
         ca_id = self.request.GET.get("ca_id", None)
         cas_qs = CashAppDeatils.objects.filter(id = ca_id,is_active=True).first()
@@ -2438,7 +2438,7 @@ class CashAppDetailsApi(APIView):
             return Response({"message": "CA Id Doesn't exist."}, status.HTTP_400_BAD_REQUEST)
         CashAppDeatils.objects.filter(id = ca_id).update(is_active = False)
         return Response({"message": "CA Id Deleted Successfully."}, status.HTTP_200_OK)
-        
+
 class CashappQrListView(APIView):
     permission_classes = [IsPlayer,]
     http_method_names = ["get", ]
@@ -2459,7 +2459,7 @@ class CashappQrListView(APIView):
             return Response(
                     {"message": _("Something went wrong.")}, status.HTTP_400_BAD_REQUEST
                 )
-            
+
 
 class ChatSupportView(APIView):
     permission_classes = (IsPlayer,)
@@ -2472,17 +2472,17 @@ class ChatSupportView(APIView):
 
             if request_type == "recent_messages":
                 message_before = request.GET.get('message_before', None)
-                
+
                 messages = ChatMessage.objects.filter(
                     ~Q(type__in=[ChatMessage.MessageType.join, ChatMessage.MessageType.offmarket_signup], sender__role="player"),
                     room__player=self.request.user,
                     sent_time__gte=timezone.now()-timedelta(hours=72),
-                    
+
                 ).exclude(type = "join",sender__role = 'player').order_by("-created")
                 messages = messages.exclude(type = 'offmarket_signup')
                 if message_before:
                     messages = messages.filter(id__lt=message_before).order_by("-sent_time")
-                
+
                 paginator = self.pagination_class()
                 result_page = paginator.paginate_queryset(messages, request)
                 serializer =  MessageSerializer(result_page, many=True)
@@ -2559,14 +2559,14 @@ class SetlanguageView(APIView):
 class BonusDetailView(APIView):
     http_method_names = ["get"]
     permission_classes = [AllowAny,]
-    
+
     def get(self, request):
         try:
             bonus_type = self.request.GET.get("bonus_type")
-            
+
             if bonus_type not in list(CmsBonusDetail.BonusType.labels.keys()):
                 return Response({"message": "Invalid bonus_type"}, status.HTTP_200_OK)
-            
+
             bonus_detail = CmsBonusDetail.objects.filter(bonus_type=bonus_type).values(
                 "bonus_type",
                 "promo_code",
@@ -2584,7 +2584,7 @@ class BonusDetailView(APIView):
 class FortunePandasAPIView(APIView):
     http_method_names = ["get", "post"]
     pagination_class = CustomPagination
-    
+
     def get(self, request, *args, **kwargs):
         try:
             game_name=self.request.GET.get("name")
@@ -2603,7 +2603,7 @@ class FortunePandasAPIView(APIView):
                     games = games.filter(game_category__iexact=game_category)
                 if game_name:
                     games = games.filter(game_name__icontains=game_name)
-                
+
             paginator = self.pagination_class()
             result_page = paginator.paginate_queryset(games, self.request)
             serializer =  serializer_class(result_page, many=True)
@@ -2614,8 +2614,8 @@ class FortunePandasAPIView(APIView):
             print("Error in Fortunepandas API", e)
             print(traceback.format_exc())
             return Response({"message": f"Internal Server Error"}, 500)
-        
-    
+
+
     def post(self, request, *args, **kwargs):
         try:
             request_type = self.request.GET.get("request_type")
@@ -2623,7 +2623,7 @@ class FortunePandasAPIView(APIView):
             game_id = self.request.data.get("game_id")
             current_password = self.request.data.get("current_password")
             new_password = self.request.data.get("new_password")
-            
+
             if not self.request.user.is_authenticated:
                 return Response({"message": "Please login before performing this request"}, status=401)
             elif request_type not in ["start_game", "recharge", "redeem", "get_balance"]:
@@ -2639,12 +2639,12 @@ class FortunePandasAPIView(APIView):
                 return Response({"message": "Insufficient balance"}, status=400)
             elif request_type == "change_password" and (not current_password or not new_password):
                 return Response({"message": "Please provide current and new password"}, status=400)
-            
+
             if not self.request.user.is_registered_in_fortune_pandas:
                 response = self.call_api_with_retries("register_user")
                 if response.get("message") != True:
                     return Response(response, status=400)
-            
+
             if request_type == "start_game":
                 return self.call_api_with_retries("start_game", game_id)
             elif request_type == "recharge":
@@ -2659,7 +2659,7 @@ class FortunePandasAPIView(APIView):
             print("Error in Fortunepandas API", e)
             print(traceback.format_exc())
             return Response({"message": f"Internal Server Error"}, 500)
-        
+
 
     def call_api_with_retries(self, api_method, *args, **kwargs):
         MAX_RETRIES = 3
@@ -2679,7 +2679,7 @@ class FortunePandasAPIView(APIView):
 
 class FortunePandasCategoryAPIView(APIView):
     http_method_names = ["get",]
-    
+
     def get(self, request, *args, **kwargs):
         try:
             if self.request.user.is_authenticated:
@@ -2694,4 +2694,3 @@ class FortunePandasCategoryAPIView(APIView):
             print("Error in Fortunepandas Category API", e)
             print(traceback.format_exc())
             return Response({"message": "Internal Server Error"}, 500)
-        
