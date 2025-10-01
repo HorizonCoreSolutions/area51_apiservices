@@ -9094,12 +9094,14 @@ class EditOffMarketGameView(CheckRolesMixin, TemplateView, views.JSONResponseMix
         form = OffMarketGameForm(instance=game_obj)
 
 
-        return render(request, template_name=self.template_name,
-                      context={
-                               "form": form,
-                               "game" : game_obj
-                               }
-                      )
+        return render(
+            request,
+            template_name=self.template_name,
+            context={
+                "form": form,
+                "game" : game_obj
+            }
+        )
 
     def post(self, request, *args, **kwargs):
         try:
@@ -9111,6 +9113,7 @@ class EditOffMarketGameView(CheckRolesMixin, TemplateView, views.JSONResponseMix
             game_id = request.GET.get('game_id', None)
             coming_soon = True if request.POST.get('coming_soon', None) == 'on' else False 
             game_status = True if request.POST.get('game_status', None) == 'on' else False
+            is_api_prefix = True if request.POST.get('is_api_prefix', None) == 'on' else False
             download_url = request.POST.get('download_url', None)
             game_user = request.POST.get('game_user', None)
             game_pass = request.POST.get('game_pass', None)
@@ -9147,6 +9150,7 @@ class EditOffMarketGameView(CheckRolesMixin, TemplateView, views.JSONResponseMix
             game_obj.coming_soon = coming_soon
             game_obj.game_status = game_status
             game_obj.download_url = download_url
+            game_obj.is_api_prefix = is_api_prefix
             game_obj.game_user = game_user
             game_obj.game_pass = game_pass
             game_obj.save()

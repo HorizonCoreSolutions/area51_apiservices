@@ -758,23 +758,37 @@ class StaffModelForm(ModelForm):
 class OffMarketGameForm(ModelForm):   
     class Meta:
         model = OffMarketGames
-        fields = ['title', 'url','code','bonus_percentage','game_status','coming_soon','download_url','game_user','game_pass']
+        fields = ['title', 'url','code','bonus_percentage', 'is_api_prefix','game_status','coming_soon','download_url','game_user','game_pass']
         widgets = {
-            'url': forms.FileInput(attrs={'class': 'form-control','onchange': 'read_game_url(this)','required':'true' ,'id':'id_game','accept':'image/png,image/jpeg,image/jpg'}),
+            'url': forms.FileInput(
+                attrs={
+                    'class': 'form-control',
+                    'onchange': 'read_game_url(this)',
+                    'required':'true',
+                    'id':'id_game',
+                    'accept':'image/png,image/jpeg,image/jpg' }),
             'title' : forms.TextInput(
-                attrs={'class': 'form-control'
-                       ,'required':'true',
-                       'placeholder':'Enter Game Name',
-                       'id':'banner_title',
-                       'onkeypress':'validate_title()',
-                        "onpaste":"return false",
-                        "ondrag":"return false",
-                        "ondrop":"return false"}),
+                attrs={
+                    'class': 'form-control',
+                    'required':'true',
+                    'placeholder':'Enter Game Name',
+                    'id':'banner_title',
+                    'onkeypress':'validate_title()',
+                    "onpaste":"return false",
+                    "ondrag":"return false",
+                    "ondrop":"return false" }),
             'code' : forms.TextInput(attrs={'class': 'form-control','placeholder':'Enter Game Initial','required':'true','id':'game_code'}),
             'bonus_percentage': forms.NumberInput(attrs={'class': 'form-control','required':'true','id':'bonus_percentage','placeholder':'Enter Bonus Percentage','onkeypress':'validate_bonus_percentage(this)', "onpaste":"return false"}),
             'game_status': forms.CheckboxInput(attrs={'class': 'form-check-input','required':'true','id':'game_status'}),
+            'is_api_prefix': forms.CheckboxInput(attrs={'class': 'form-check-input','required':'true','id':'is_api_prefix'}),
             'coming_soon': forms.CheckboxInput(attrs={'class': 'form-check-input','id':'coming_soon','required':'true'}),
-            'download_url': forms.TextInput(attrs={'class': 'form-control','required':'true','placeholder':'Enter Download URL','id':'download_url','onchange':'validate_download_url()'}),
+            'download_url': forms.TextInput(
+                attrs={
+                    'class': 'form-control',
+                    'required':'true',
+                    'placeholder':'Enter Download URL',
+                    'id':'download_url',
+                    'onchange':'validate_download_url()' }),
             'game_user' : forms.TextInput(attrs={'class': 'form-control','placeholder':'Enter Game Login ID','required':'true','id':'game_user','maxlength':'10','autofill':False,'autocomplete': 'new-password'}),
             'game_pass' : forms.TextInput(attrs={'class': 'form-control','placeholder':'Enter Game Password','required':'true','id':'game_pass','maxlength':'10','autofill':False,'autocomplete': 'new-password'}),
         }
