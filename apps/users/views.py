@@ -1216,8 +1216,9 @@ class ValidateSignUpPromoCode(APIView):
             )
 
         user = request.user if request.user.is_authenticated else None
+        ip = get_user_ip_from_request(request=request)
 
-        is_valid, msg = promo_handler.verify_code(user=user, promo_code=promo_code)
+        is_valid, msg = promo_handler.verify_code(ip=ip, user=user, promo_code=promo_code)
 
         status_text = "Success" if is_valid else "Failed"
         http_status = status.HTTP_200_OK if is_valid else status.HTTP_400_BAD_REQUEST
@@ -1256,8 +1257,10 @@ class ValidatePromoCode(APIView):
             )
 
         user = request.user if request.user.is_authenticated else None
+        ip = get_user_ip_from_request(request=request)
 
         is_valid, msg = promo_handler.verify_code(
+            ip=ip,
             user=user,
             bonus_type=promo_type,
             promo_code=promo_code,

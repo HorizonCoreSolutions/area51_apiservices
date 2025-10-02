@@ -1,6 +1,7 @@
 import time
 import uuid
 from django.conf import settings
+from django.utils import timezone
 from redis import Redis, ConnectionPool
 
 pool = ConnectionPool(
@@ -41,6 +42,22 @@ class RateLimiter:
             return 0
         end
         """)
+            
+    def is_key_locked(self, key: str) -> int:
+        now = int(timezone.now().timestamp())
+        raw = self.redis.get(f"lock:{key}")
+        if raw is None:
+            return 0  # no lock
+        try:
+            expiry = int(raw) # type: ignore
+        except (ValueError, TypeError):
+            return 0
+        remaining = expiry - now
+        return remaining if remaining > 0 else 0
+
+    def lock_key(self, key: str, timeout: int = 3600) -> bool:
+        expiry = int(timezone.now().timestamp()) + timeout
+        return bool(self.redis.set(f"lock:{key}", expiry, ex=timeout, nx=True))
 
     def allow(self,
               key: str,

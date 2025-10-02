@@ -3,6 +3,7 @@ from django.conf import settings
 from django.db import transaction
 from django.utils import timezone
 from datetime import datetime, date
+from apps.core.concurrency import limiter
 from apps.bets.models import Transactions
 from django.db.models import Count, Q, Sum
 from typing import Optional, Tuple, Literal
@@ -16,6 +17,7 @@ ErrorMessage = Literal[
     "Promo-code Expired",
     "Invalid deposit amount.",
     "Promo-code use limit exceeded",
+    "Too many tries. All promo codes will be disables 60 minuts.",
     "OK",
 ]
 
@@ -75,6 +77,27 @@ def _is_promo_valid(
     return True
 
 
+def _is_user_promo_banned(
+    user: Optional[Users],
+    ip: Optional[str]
+) -> bool:
+    if user is None and ip is None:
+        return False
+    key = f"prmcd:uid:{user.id}" if user else f"prmcd:ip:{ip}"
+
+    if limiter.is_key_locked(key=key):
+        return True
+
+    is_allowed = limiter.allow(
+        window=3600,
+        key=key,
+        limit=5
+    )
+    if not is_allowed:
+        limiter.lock_key(key=key)
+    return is_allowed
+
+
 def _check_usage_limits(
     promo_obj: PromoCodes,
     user: Optional[Users],
@@ -132,9 +155,9 @@ def redeam_code(
     if not promo_obj:
         return False, "Invalid promocode"
 
-    now = timezone.now().date()
-    if not _is_promo_valid(promo_obj, now):
-        return False, "Promo-code Expired"
+    # now = timezone.now().date()
+    # if not _is_promo_valid(promo_obj, now):
+    #    return False, "Promo-code Expired"
 
     with transaction.atomic():
         user = Users.objects.select_for_update().get(id=user.id)
@@ -233,6 +256,7 @@ def claim_code(
 
 def verify_code(
     promo_code: str,
+    ip: Optional[str] = None,
     user: Optional[Users] = None,
     bypass_limit_check: bool = False,
     bonus_type: Optional[Literal["bet", "deposit", "welcome"]] = None,
@@ -242,6 +266,9 @@ def verify_code(
         return False, "Invalid promocode"
 
     now = datetime.now()
+    if (user or ip) and not _is_user_promo_banned(user, ip):
+        return False, "Too many tries. All promo codes will be disables 60 minuts."
+    
     if not _is_promo_valid(promo_obj, now):
         return False, "Promo-code Expired"
 
