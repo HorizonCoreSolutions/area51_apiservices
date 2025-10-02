@@ -17,7 +17,8 @@ ErrorMessage = Literal[
     "Promo-code Expired",
     "Invalid deposit amount.",
     "Promo-code use limit exceeded",
-    "Too many tries. All promo codes will be disables 60 minuts.",
+    "Too many attempts. All promo codes"
+    " will be disables 60 minuts.",
     "OK",
 ]
 
@@ -266,13 +267,14 @@ def verify_code(
         return False, "Invalid promocode"
 
     now = datetime.now()
-    if (user or ip) and not _is_user_promo_banned(user, ip):
-        return False, "Too many tries. All promo codes will be disables 60 minuts."
+    if not bypass_limit_check:
+        if (user or ip) and not _is_user_promo_banned(user, ip):
+            return False, "Too many attempts. All promo codes will be disables 60 minuts."
     
     if not _is_promo_valid(promo_obj, now):
         return False, "Promo-code Expired"
 
-    if bypass_limit_check:
+    if not bypass_limit_check:
         valid, msg = _check_usage_limits(promo_obj, user)
         if not valid:
             return False, msg
