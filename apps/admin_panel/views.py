@@ -64,6 +64,7 @@ from apps.admin_panel.forms import (AdminModelForm, AgentModelForm,
                                     SettingsLimitsForm,FooterCategoryForm, CMSPagesForm, SocialLinkForm, EditSocialLinkForm,DetailSocialLinkForm, UserGamesForm
                                     )
 from apps.casino.tasks import task_update_offmarket_transaction
+from apps.casino.clients import RefujiClient
 from apps.payments.models import (AlchemypayOrder, MnetTransaction, NowPaymentsTransactions,
     WithdrawalCurrency, WithdrawalRequests)
 from apps.users.forms import PageBlockerCmsPromotionsForm, ToasterCmsPromotionsForm
@@ -5186,6 +5187,9 @@ class EditCrmTemplateAjax(CheckRolesMixin, TemplateView, views.JSONResponseMixin
                 return self.render_json_response({"status": "error", "message": "You cannot select a date and time in the past!"})
 
             crm_obj = CrmDetails.objects.filter(id=template_id).first()
+            if not crm_obj:
+                return self.render_json_response({"status": "error", "message": "Something Went Wrong"})
+                
             if emails:
                 crm_obj.emails = emails
             else:
@@ -8647,23 +8651,21 @@ class ChatRoomView(CheckRolesMixin, TemplateView, views.JSONResponseMixin, views
                 player_username = self.request.POST.get('user')
                 player_id = int(player_username.replace("P", "").replace("Chat", ""))
 
+                success, message = RefujiClient.create_user(
+                    player_id=player_id,
+                    game_code=game_code,
+                    username=username,
+                )
 
-                game = OffMarketGames.objects.filter(code=game_code).first()
-                if len(username)<5:
-                    return self.render_json_response({"status": "Failed", "message": _("Username Must be greater than 5 characters")})
-                if not game:
-                    return self.render_json_response({"status": "Failed", "message": _("Game Does Not Exist")})
-                if UserGames.objects.filter(game=game,username=username).exists():
-                    return self.render_json_response({"status": "Failed", "message": _("Username Already Exists")})
-                player = Users.objects.filter(id=player_id).first()
-                if UserGames.objects.filter(game=game,user=player).exists():
-                    return self.render_json_response({"status": "Failed", "message": _("User Alredy have Account For this Game")})
-                user = UserGames()
-                user.game = game
-                user.username =  username
-                user.user = player
-                user.save()
-                return self.render_json_response({"status": "success", "message": _("Account Created Successfully")},status=status.HTTP_200_OK)
+                if not success:
+                    return self.render_json_response(
+                        {"status": "Failed", "message": _(message)}
+                    )
+
+                return self.render_json_response(
+                    {"status": "success", "message": _("Account Created Successfully")},
+                    status=status.HTTP_200_OK,
+                )
 
             elif operation == 'reconnect':
                 return self.render_json_response({"status": "Success"}, 200)
@@ -9044,22 +9046,25 @@ class CreateOffMarketGameView(CheckRolesMixin, TemplateView, View):
                     format = 'JPEG' if format.lower() == 'jpg' else format.upper()
 
                     game_img.save(game_img_io, format=format,optimize=True)
-                    game_img_io_inmemory = InMemoryUploadedFile(game_img_io,
-                                                                    'FileField',
-                                                                     filename,
-                                                                     format,
-                                                                     sys.getsizeof(game_img_io), None)
+                    game_img_io_inmemory = InMemoryUploadedFile(
+                        game_img_io,
+                        'FileField',
+                        filename,
+                        format,
+                        sys.getsizeof(game_img_io),
+                        None
+                    )
                     game_obj = OffMarketGames(
-                                               url=game_img_io_inmemory,
-                                               title=form.cleaned_data['title'],
-                                               coming_soon= form.cleaned_data['coming_soon'],
-                                               game_status =  form.cleaned_data['game_status'],
-                                               code = form.cleaned_data['code'],
-                                               bonus_percentage = form.cleaned_data['bonus_percentage'],
-                                               download_url = form.cleaned_data['download_url'],
-                                               game_user = form.cleaned_data['game_user'],
-                                               game_pass = form.cleaned_data['game_pass']
-                                               )
+                        url=game_img_io_inmemory,
+                        title=form.cleaned_data['title'],
+                        coming_soon= form.cleaned_data['coming_soon'],
+                        game_status =  form.cleaned_data['game_status'],
+                        code = form.cleaned_data['code'],
+                        bonus_percentage = form.cleaned_data['bonus_percentage'],
+                        download_url = form.cleaned_data['download_url'],
+                        game_user = form.cleaned_data['game_user'],
+                        game_pass = form.cleaned_data['game_pass']
+                    )
                     game_obj.save()
                     messages.success(request, "Game successfully Added")
                     return redirect('admin-panel:offmarket-games')
@@ -9560,44 +9565,23 @@ class EditOffmarketTransactionGame(APIView):
     http_method_names = ["post"]
     def post(self, request):
         try:
-            secret_key = settings.OFF_MARKET_SECRETKEY
-            off_market_api_url = settings.OFFMARKET_API_URL
-            user_status = request.POST.get("user_status",None)
-            type = request.POST.get("type",None)
-            if type != 'Pending':
-                if user_status == 'Failed':
-                    user_status='Completed'
-                else:
-                    user_status='Failed'
-            else:
-                user_status =user_status
-
+            if not request.user.is_authenticated:
+                return Response({"message" : "please log in"})
+            
             transaction_id = request.POST.get("transaction_id",None)
-            user = Users.objects.filter(id=request.user.id).first()
-            transaction=OffMarketTransactions.objects.filter(id=transaction_id).first()
-            deposit_id=transaction.txn_id
-            request_payload = {
-                "deposit_id": deposit_id,
-                "status": user_status,
-                "secret_key": secret_key,
-            }
+            user_status = request.POST.get("user_status",None)
+            tnx_type = request.POST.get("type",None)
+            
+            success, error = RefujiClient.edit_transaction(
+                transaction_id=transaction_id,
+                user_status=user_status,
+                txn_type=tnx_type,
+                user = request.user
+            )
+            
+            return Response({ "message": "Request Submitted Successfully" if success else error}, 
+                            status.HTTP_200_OK if success else 400)
 
-            headers = {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-            }
-
-            response = requests.put(off_market_api_url + 'update', params=request_payload, headers=headers)
-            print(response.status_code == status.HTTP_201_CREATED)
-            if response.status_code == status.HTTP_200_OK:
-                transaction.status=user_status   
-                transaction.save() 
-                if user_status=='Failed':
-                    off_market_refund_transactions(transaction.id)
-
-                return Response({"message": "Request Submitted Successfully"}, status.HTTP_200_OK)
-            else:
-                return Response({"message": "Request Not Processed"}, status.HTTP_400_BAD_REQUEST)
         except:
             return Response({"message": "Something Went Wrong"}, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -9606,31 +9590,12 @@ class DeleteOffmarketTransaction(APIView):
     http_method_names = ["post"]
 
     def post(self, request):
-        try:
-            secret_key = settings.OFF_MARKET_SECRETKEY
-            off_market_api_url = settings.OFFMARKET_API_URL
-            transaction_id = request.POST.get("transaction_id",None)
-            transaction=OffMarketTransactions.objects.filter(id=transaction_id).first()
-            deposit_id=transaction.txn_id
-            request_payload = {
-                "deposit_id": deposit_id,
-                "secret_key": secret_key,
-            }
-            headers = {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-            }
-            response = requests.delete(off_market_api_url + 'delete', params=request_payload, headers=headers)
-            if response.status_code == status.HTTP_200_OK:
-                transaction.id=transaction_id
-                transaction.delete()
-            return Response({"message": "User Deleted Successfully"}, status=status.HTTP_200_OK)
-
-        except Users.DoesNotExist:
-            return Response({"message": "User not found"}, status=status.HTTP_404_NOT_FOUND)
-
-        except:
-            return Response({"message": "Something Went Wrong"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        transaction_id = request.POST.get("transaction_id",None)
+        success, error = RefujiClient.delete_transaction(transaction_id=transaction_id)
+        return Response(
+            {"message" : "Transaction deleted." if success else error},
+            200 if success else 400
+        )
 
 class AlchemyPayReportView(CheckRolesMixin, ListView):
     template_name = "report/alchemypay_report.html"
@@ -10516,68 +10481,23 @@ class OffMarketCreditAjaxView(CheckRolesMixin, views.JSONResponseMixin, views.Aj
                 return self.render_json_response({"status":"Failed","message": "Payment ID Already Exists"}, 400)
 
             amount = Decimal(amount)
-            secret_key = settings.OFF_MARKET_SECRETKEY
-            off_market_api_url = settings.OFFMARKET_API_URL
-            game_id = int(request.POST["game_id"])
-            game = OffMarketGames.objects.filter(id = game_id).first()
-            game_code = game.code
-            user_game = UserGames.objects.filter(game=game,user=user).first()
-            a_username = encrypt(user.username)
-            game_user = encrypt(game.game_user)
-            game_pass = encrypt(game.game_pass)
-            # instead of following random payment_id, taking input from user for payment id
-            # deposit_id = ('#'+user.username + str(random.randint(1000000, 9999999))).upper()
-            bonus_amount = Decimal(game.bonus_percentage/100)*Decimal(amount)
-            total_amount = bonus_amount + amount
-            request_payload = {
-                "deposit_id": deposit_id,
-                "gaming_site": game_code,
-                "amount": amount,
-                "bonus": bonus_amount,
-                "secret_key": secret_key,
-                "game_user": game_user,
-                "game_pass": game_pass,
-                "customer_username": user_game.username,
-                "area51_username" : a_username,
-            }
 
-            headers = {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-            }
-            response = requests.post(off_market_api_url + 'add_credit', json=request_payload, headers=headers)
-            if response.status_code == status.HTTP_201_CREATED:
-                game = OffMarketGames.objects.filter(code=game_code).first()
-                user.balance = user.balance - Decimal(amount) 
-                user.save()
-                deposit=OffMarketTransactions()
-                deposit.user = user
-                deposit.amount = total_amount
-                deposit.status = 'Pending'
-                deposit.txn_id = deposit_id
-                deposit.game_name = game_code
-                deposit.journal_entry = 'credit'
-                deposit.transaction_type = 'DEPOSIT'
-                deposit.description = f'deposit {amount} by {user.username} in game {game_code}'
-                deposit.game_name_full = game.title
-                deposit.bonus = bonus_amount
-                deposit.save()
+            success, error = RefujiClient.deposit(
+                user=user,
+                amount=amount,
+                game_code=game_code,
+                promo_code=None,
+                force_update=True
+            )
 
-                complete_request_payload = {
-                    "deposit_id": deposit_id,
-                    "status": "Completed",
-                    "secret_key": secret_key,
-                }
-                response = requests.put(off_market_api_url + 'update', params=complete_request_payload, headers=headers)
-                if response.status_code == status.HTTP_200_OK:
-                    deposit.status="Completed"
-                    deposit.save()
+            message = "Request Submitted Successfully" if success else error
 
-                task_update_offmarket_transaction.apply_async(args=[deposit.id], countdown=19)
-
-                return self.render_json_response({"message": "Request Submitted Successfully"}, 200)
-            else:
-                return self.render_json_response({"status":"Failed","message": "Request Not Processed"}, 400)
+            return self.render_json_response({
+                    "status" : "Success" if success else "Failed",
+                    "message": message
+                },
+                ( 200 if success else 400)
+            )
         except Exception as e:
             print(e)
             return self.render_json_response({"status":"Failed","message": "Something Went Wrong"}, 500)

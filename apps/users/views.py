@@ -1,22 +1,23 @@
-from decimal import Decimal
-import json
 import re
 import sys
-from threading import Thread
-from compat import render_to_string
+import json
 import redis
 import random
 import string
+import requests
 import traceback
+from decimal import Decimal
+from threading import Thread
+from compat import render_to_string
 
 from datetime import datetime,timedelta
 from django.utils import timezone
 
-import requests
 from apps.users import promo_handler
 from apps.core.concurrency import limiter
 from pyhanko_certvalidator import ValidationError
 
+from apps.casino.clients import RefujiClient
 from apps.acuitytec.acuitytec import AcuityTecAPI
 from apps.acuitytec.tasks import register_or_update_user
 from apps.admin_panel.tasks import newuser_email, queries_email
@@ -115,7 +116,7 @@ TWILIO_AUTH_TOKEN = settings.TWILIO_AUTH_TOKEN
 TWILIO_VERIFY_SERVICE_SID = settings.TWILIO_VERIFY_SERVICE_SID
 from django.contrib.postgres.fields import JSONField
 from django.db.models import OuterRef, Subquery
-from typing import Optional, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 class PlayerViewSet(viewsets.ModelViewSet):
     queryset = Users.objects.filter(role="player").order_by("-id")
@@ -775,6 +776,8 @@ class OTPActionsView(APIView):
                     user_obj = Users.objects.filter(username__iexact=data.get("username"),
                                                     country_code=data.get("country_code"),
                                                     phone_number=data.get("phone_number")).first()
+                    if not user_obj:
+                        return Response({"message": "Invalid OTP"}, status.HTTP_400_BAD_REQUEST)
                     user_obj.password = make_password(data.get("new_password"))
                     user_obj.save()
 
@@ -1321,23 +1324,29 @@ class GetFooterLinks(APIView):
         category = []
         response = {}
         for page in FooterPages.objects.all().order_by('category__position'):
+            if not page.pages:
+                continue
             if page.category.id in category:
-                response[page.category.slug].append({"title": page.pages.title,
-                                                     "slug": page.pages.slug,
-                                                     "is_form": page.pages.is_form,
-                                                     "form_name": page.pages.form_name,
-                                                     "is_redirect": page.pages.is_redirect,
-                                                     "redirect_url": page.pages.redirect_url, 
-                                                     'is_page': page.pages.is_page})
+                response[page.category.slug].append({
+                    "title": page.pages.title,
+                    "slug": page.pages.slug,
+                    "is_form": page.pages.is_form,
+                    "form_name": page.pages.form_name,
+                    "is_redirect": page.pages.is_redirect,
+                    "redirect_url": page.pages.redirect_url, 
+                    'is_page': page.pages.is_page
+                })
             else:
                 category.append(page.category.id)
-                response[page.category.slug] = [{"title": page.pages.title,
-                                                 "slug": page.pages.slug,
-                                                 "is_form": page.pages.is_form,
-                                                 "form_name": page.pages.form_name,
-                                                 "is_redirect": page.pages.is_redirect,
-                                                 "redirect_url": page.pages.redirect_url, 
-                                                 'is_page': page.pages.is_page}]
+                response[page.category.slug] = [{
+                    "title": page.pages.title,
+                    "slug": page.pages.slug,
+                    "is_form": page.pages.is_form,
+                    "form_name": page.pages.form_name,
+                    "is_redirect": page.pages.is_redirect,
+                    "redirect_url": page.pages.redirect_url, 
+                    'is_page': page.pages.is_page
+                }]
         for key, value in response.items():
             items = {}
             category = FooterCategory.objects.filter(slug=key).first()
@@ -1361,16 +1370,37 @@ class FooterDeatilsView(APIView):
         elif request.GET.get('page_name'):
             footer_page = footer_page.filter(pages__slug=request.GET.get('page_name'))
         for obj in footer_page:
+            if not obj.pages or not obj.category:
+                continue
             if obj.category.id in category:
-                response[0]["page"].append({'title':obj.pages.title, 'page_img':obj.pages.page.url if obj.pages.page else None,
-                'page_content':obj.pages.page_content, 'slug':obj.pages.slug, 'is_form':obj.pages.is_form,'form_name':obj.pages.form_name,
-                'is_redirect':obj.pages.is_redirect, 'redirect_url':obj.pages.redirect_url, 'is_page': obj.pages.is_page})
+                response[0]["page"].append({
+                    'title': obj.pages.title,
+                    'page_img': obj.pages.page.url if obj.pages.page else None,
+                    'page_content': obj.pages.page_content,
+                    'slug': obj.pages.slug,
+                    'is_form':obj.pages.is_form,
+                    'form_name':obj.pages.form_name,
+                    'is_redirect':obj.pages.is_redirect,
+                    'redirect_url':obj.pages.redirect_url,
+                    'is_page': obj.pages.is_page
+                })
             else:
                 category.append(obj.category.id)
-                response.append({'name':obj.category.name,'category_slug':obj.category.slug, 'page':[{'title':obj.pages.title, 'page_img':obj.pages.page.url if obj.pages.page else None,
-            'page_content':obj.pages.page_content, 'pages_slug':obj.pages.slug, 'is_form':obj.pages.is_form,'form_name':obj.pages.form_name,
-
-            'is_redirect':obj.pages.is_redirect, 'redirect_url':obj.pages.redirect_url, 'is_page': obj.pages.is_page}]})
+                response.append({
+                    'name':obj.category.name,
+                    'category_slug':obj.category.slug,
+                    'page':[{
+                        'title':obj.pages.title,
+                        'page_img':obj.pages.page.url if obj.pages.page else None,
+                        'page_content':obj.pages.page_content,
+                        'pages_slug':obj.pages.slug,
+                        'is_form':obj.pages.is_form,
+                        'form_name':obj.pages.form_name,
+                        'is_redirect':obj.pages.is_redirect,
+                        'redirect_url':obj.pages.redirect_url,
+                        'is_page': obj.pages.is_page
+                    }]
+                })
         return Response({"data": response}, status.HTTP_200_OK)
 
 
@@ -1379,27 +1409,28 @@ class PagesDeatilsView(APIView):
     http_method_names = ["get", ]
 
     def get(self, request):
-        pages = []
+        pages = None
         response = []
         if request.GET.get('page_name'):
             pages = CmsPages.objects.filter(slug=request.GET.get('page_name')).first()
         if pages:
-            response = {'title': pages.title,
-                        'page_img': pages.page.url if pages.page else None,
-                        'page_content': pages.get_page_content(),
-                        'pages_slug': pages.slug,
-                        'is_form': pages.is_form,
-                        'form_name': pages.form_name,
-                        'is_redirect': pages.is_redirect,
-                        'redirect_url': pages.redirect_url,
-                        'is_page': pages.is_page,
-                        'more_info':pages.more_info,
-                        'meta_description':pages.meta_description,
-                        'json_metadata':pages.json_metadata,
-                        'media_preview_type':pages.preview_type,
-                        'media': self.get_media(pages),
+            response = {
+                'title': pages.title,
+                'page_img': pages.page.url if pages.page else None,
+                'page_content': pages.get_page_content(),
+                'pages_slug': pages.slug,
+                'is_form': pages.is_form,
+                'form_name': pages.form_name,
+                'is_redirect': pages.is_redirect,
+                'redirect_url': pages.redirect_url,
+                'is_page': pages.is_page,
+                'more_info':pages.more_info,
+                'meta_description':pages.meta_description,
+                'json_metadata':pages.json_metadata,
+                'media_preview_type':pages.preview_type,
+                'media': self.get_media(pages),
+            }
 
-                        }
         return Response({"data": response}, status.HTTP_200_OK)
 
     def get_media(self, page):
@@ -1593,6 +1624,12 @@ class ComingSoonPagesDeatilsView(APIView):
 
     def get(self, request):
         admin_obj = Admin.objects.filter().first()
+        if not admin_obj:
+            return Response(
+                {"message": "No page detail exist."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+            
         if admin_obj.coming_soon_scheduled and admin_obj.coming_soon_scheduled < timezone.now():
             admin_obj.is_coming_soon_enabled = False
             admin_obj.save()
@@ -1683,8 +1720,8 @@ class QueueView(APIView):
                 queue.pick_by = None
                 queue.save()
             player = Queue.objects.filter(user=user).first()
-            position =  Queue.objects.filter(is_active=True,user__agent=user.agent,pick_by =None).count()
-            position_cou =  Queue.objects.filter(is_active=True,user__agent=user.agent,pick_by__isnull =False).count()
+            position = Queue.objects.filter(is_active=True,user__agent=user.agent,pick_by =None).count()
+            position_cou = Queue.objects.filter(is_active=True,user__agent=user.agent,pick_by__isnull =False).count()
             if position_cou >= 1:
                 position = position + 1
 
@@ -1855,6 +1892,9 @@ class TipView(APIView):
         try:
             data = request.data
             user =  Users.objects.filter(id=request.user.id).first()
+            if user is None:
+                return Response({"message": "Something Went Wrong"}, status.HTTP_500_INTERNAL_SERVER_ERROR)
+
             chathistory_obj = ChatHistory()
             is_comment = data.get('is_comment',None)
             is_tip = data.get('is_tip',None)
@@ -1862,8 +1902,10 @@ class TipView(APIView):
             tip_amount = data.get('tip',0.00)
             room_name = data.get('room_name',None)
             staff = Users.objects.filter(id = data.get('staff')).first()
+
             chathistory_obj.player = user
             chathistory_obj.staff = staff
+
             if is_tip:
                 if Decimal(data.get('tip')) > user.balance:
                     return Response({"message": "low balance"}, status.HTTP_400_BAD_REQUEST)
@@ -1920,13 +1962,15 @@ class CsrQueryView(APIView):
             data = request.data
             user = Users.objects.filter(id=request.user.id).first()
             query = CsrQueries()
-            query.user = user
-            query.is_active = True
             query.subject = request.data.get('subject')
             query.text = request.data.get('text')
+            query.is_active = True
+            query.user = user
             query.save()
-            Thread(target=queries_email,
-                        args=(query.id,)).start()
+            Thread(
+                target=queries_email,
+                args=(query.id,)
+            ).start()
             return Response({"message": "request added successfully"}, status.HTTP_200_OK)
 
         except:
@@ -1966,6 +2010,8 @@ class RestrictedLoginView(APIView):
         try:
             data = request.data
             user = Users.objects.filter(id=request.user.id).first()
+            if not user:
+                return Response({"message": "Something Went Wrong"}, status.HTTP_500_INTERNAL_SERVER_ERROR)
             operation = request.data.get('operation')
             if operation == 'logout':
                 user.last_activity_time = timezone.now()
@@ -1985,117 +2031,37 @@ class OffMarketDepositView(APIView):
     permission_classes = (IsPlayer,)
     http_method_names = ["post"]
 
-    @transaction.atomic
     def post(self, request):
+        is_allowed = limiter.allow(
+            key=f"ofm:{request.user.id}:deposit",
+            sliding=True,
+            window=90,
+            limit=3,)
+
+        if not is_allowed:
+            return Response({"message": ("Deposit too frequent. "
+                                            "Try again in a minute.")},
+                            status.HTTP_429_TOO_MANY_REQUESTS)
+
+        user = request.user
+        if user is None:
+            return Response({"message": "You should not see this"}, status.HTTP_400_BAD_REQUEST)
+
         try:
-            is_allowed = limiter.allow(
-                key=f"ofm:{request.user.id}:deposit",
-                sliding=True,
-                window=90,
-                limit=3,)
-
-            if not is_allowed:
-                return Response({"message": ("Deposit too frequent. "
-                                             "Try again in a minute.")},
-                                status.HTTP_429_TOO_MANY_REQUESTS)
-
-            user = Users.objects.select_for_update().filter(id=request.user.id).first()
-            if user is None:
-                return Response({"message": "You should not see this"}, status.HTTP_400_BAD_REQUEST)
-
             promo_code = request.data.get('promo_code')
-            amount = request.data.get('amount')
-
-            if user.balance < Decimal(amount):
-                    return Response({"message": "Insufficient Funds"}, status.HTTP_400_BAD_REQUEST)
-
-            amount = Decimal(amount)
-
-            secret_key = settings.OFF_MARKET_SECRETKEY
-            off_market_api_url = settings.OFFMARKET_API_URL
-
             game_code = request.data.get('game_code')
-            game = OffMarketGames.objects.filter(code=game_code).first()
-            user_game = UserGames.objects.filter(game=game,user=user).first()
-            a_username = encrypt(user.username)
-            game_user = encrypt(game.game_user)
-            game_pass = encrypt(game.game_pass)
-            deposit_id = ('#'+user.username + str(random.randint(1000000, 9999999))).upper()
-            bonus_amount = Decimal(game.bonus_percentage/100)*Decimal(amount)
-            total_amount = bonus_amount + amount
-            print('deposit_id', deposit_id)
-
-            request_payload = {
-                "deposit_id": deposit_id,
-                "gaming_site": game_code,
-                "amount": amount,
-                "bonus": bonus_amount,
-                "secret_key": secret_key,
-                "game_user": game_user,
-                "game_pass": game_pass,
-                "customer_username": user_game.username,
-                "area51_username" : a_username,
-            }
-
-            messages = ['Promo Code Is Invalid',
-                        'Promo Code Expired',
-                        'Promo Code Already Claimed']
-
-            if promo_code is not None:
-                print("promo_code --here--")
-                print('promo_code', promo_code)
-                request_payload = {
-                    **request_payload,
-                    "promo_code" : promo_code,
-                    "username" : encrypt("a51" + user.username)
-                    # Usuario de area51
-                }
-
-            headers = {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-            }
-
-            response = requests.post(
-                url=off_market_api_url + 'add_credit',
-                json=request_payload, headers=headers,
-                timeout=30)
-
-            # TODO: remove this testing
-            print("off-market-response")
-            print("Status:", response.status_code)
-            print("Headers:", response.headers)
-            print("Body:", response.text)
-            print("locate_me_faster: " + response.text)
-
-            if response.status_code == status.HTTP_201_CREATED:
-                game = OffMarketGames.objects.filter(code=game_code).first()
-                user.balance = user.balance - Decimal(amount) 
-                user.save()
-                deposit=OffMarketTransactions()
-                deposit.user = user
-                deposit.amount = total_amount
-                deposit.status = 'Pending'
-                deposit.txn_id = deposit_id
-                deposit.game_name = game_code
-                deposit.journal_entry = 'credit'
-                deposit.transaction_type = 'DEPOSIT'
-                deposit.description = f'deposit {amount} by {user.username} in game {game_code}'
-                deposit.game_name_full = game.title
-                deposit.bonus = bonus_amount
-                deposit.save()
-                task_update_offmarket_transaction.apply_async(args=[deposit.id], countdown=19)
-                return Response({"message": "Request Submitted Successfully"}, status.HTTP_200_OK)
-            try:
-                message = response.json().get("message")
-                if message in messages:
-                    return Response({"message": message}, status.HTTP_400_BAD_REQUEST)
-            except ValueError:
-                return Response({"message": "Request Not Processed"}, status.HTTP_400_BAD_REQUEST)
-            return Response({"message": "Request Not Processed"}, status.HTTP_400_BAD_REQUEST)
+            amount = Decimal(request.data.get('amount'))
         except Exception as e:
-            print(e)
-            return Response({"message": "Something Went Wrong"}, status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({"message" : "invalid amount"}, status=status.HTTP_400_BAD_REQUEST)
+
+        if user.balance < amount:
+                return Response({"message": "Insufficient Funds"}, status.HTTP_400_BAD_REQUEST)
+        
+        success, error = RefujiClient.deposit(user, amount, game_code=game_code, promo_code=promo_code)
+        code = status.HTTP_200_OK if success else status.HTTP_400_BAD_REQUEST
+        message = "Request Submitted Successfully" if success else error
+
+        return Response({"message": message}, status=code)
 
 
 class OffmarketTransaction(APIView):
@@ -2107,78 +2073,84 @@ class OffmarketTransaction(APIView):
         from apps.bets.utils import validate_date
         try:
             player = Users.objects.filter(id=request.user.id).first()
-            if player:
-                transaction_filter_dict = {"user": player}
-                withdraw_transaction_filter_dict = {"user": player, "status__in":["pending", "rejected","cancelled"]}
-                from_date = self.request.query_params.get("from_date", None)
-                to_date = self.request.query_params.get("to_date", None)
-                activity_type = self.request.query_params.get("activity_type", None)
-                search = self.request.query_params.get("search", None)
-                if activity_type:
-                    transaction_filter_dict["transaction_type"] = activity_type.upper()
-                    if activity_type.lower() != "withdraw":
-                        withdraw_transaction_filter_dict["status__in"] = ""
-                if search:
-                    transaction_filter_dict["game_name_full__icontains"] = search
-                    offmarket_games_code = list((OffMarketGames.objects.filter(title__icontains=search).values_list("code", flat=True)))
-                    withdraw_transaction_filter_dict["code__in"] = offmarket_games_code
-                timezone_offset = self.request.query_params.get("timezone_offset", None)
-                if from_date and validate_date(from_date):
-                    from_date = datetime.strptime(
-                        from_date + " 00:00:00", "%Y-%m-%d %H:%M:%S"
-                    )
-                    if timezone_offset:
-                        timezone_offset = float(timezone_offset)
-                        if timezone_offset < 0:
-                            transaction_filter_dict[
-                                "created__gte"
-                            ] = from_date + timedelta(
-                                minutes=(-(timezone_offset) * 60)
-                            )
-                        else:
-                            transaction_filter_dict[
-                                "created__gte"
-                            ] = from_date - timedelta(minutes=(timezone_offset * 60))
-                        withdraw_transaction_filter_dict["created__gte"] = transaction_filter_dict["created__gte"]
-                    else:
-                        transaction_filter_dict["created__date__gte"] = from_date
-                        withdraw_transaction_filter_dict["created__date__gte"] = from_date
-
-                if to_date and validate_date(to_date):
-                    to_date = datetime.strptime(
-                        to_date + " 23:59:59", "%Y-%m-%d %H:%M:%S"
-                    )
-                    if timezone_offset:
-                        timezone_offset = float(timezone_offset)
-                        if timezone_offset < 0:
-                            transaction_filter_dict[
-                                "created__lte"
-                            ] = to_date + timedelta(minutes=(-(timezone_offset) * 60))
-                        else:
-                            transaction_filter_dict[
-                                "created__lte"
-                            ] = to_date - timedelta(minutes=(timezone_offset * 60))
-                        withdraw_transaction_filter_dict["created__lte"] = transaction_filter_dict["created__lte"]
-
-                offmarket_transactions = OffMarketTransactions.objects.filter(**transaction_filter_dict).order_by("-created")
-                withdraw_transactions = OffmarketWithdrawalRequests.objects.filter(**withdraw_transaction_filter_dict).order_by("-created")
-                combined_transactions = list(sorted(
-                    chain(offmarket_transactions, withdraw_transactions),
-                    key=lambda objects: objects.created,
-                    reverse=True
-                ))
-
-                paginator = self.pagination_class()
-                try:
-                    result_page = paginator.paginate_queryset(combined_transactions, request)
-                except Exception as e:
-                    print(e)
-                    return Response({"msg": "Something went Wrong", "status_code": status.HTTP_400_BAD_REQUEST})
-                serializer =  OffmarketTransactionsSerializer(result_page, many=True)
-                return paginator.get_paginated_response(serializer.data)
-
-            else:
+            if not player:
                 return Response({"msg": "user not found", "status_code":status.HTTP_404_NOT_FOUND})
+            request_params = self.request.query_params  # type: ignore
+
+            transaction_filter_dict: Dict[str, Any] = {"user": player}
+            withdraw_transaction_filter_dict = {
+                "user": player,
+                "status__in": ["pending", "rejected","cancelled"]
+            }
+
+            from_date = request_params.get("from_date", None)
+            to_date = request_params.get("to_date", None)
+            activity_type = request_params.get("activity_type", None)
+            search = request_params.get("search", None)
+
+            if activity_type:
+                transaction_filter_dict["transaction_type"] = activity_type.upper()
+                if activity_type.lower() != "withdraw":
+                    withdraw_transaction_filter_dict["status__in"] = ""
+            if search:
+                transaction_filter_dict["game_name_full__icontains"] = search
+                offmarket_games_code = list((OffMarketGames.objects.filter(title__icontains=search).values_list("code", flat=True)))
+                withdraw_transaction_filter_dict["code__in"] = offmarket_games_code
+            timezone_offset = request_params.get("timezone_offset", None)
+            if from_date and validate_date(from_date):
+                from_date = datetime.strptime(
+                    from_date + " 00:00:00", "%Y-%m-%d %H:%M:%S"
+                )
+                if timezone_offset:
+                    timezone_offset = float(timezone_offset)
+                    if timezone_offset < 0:
+                        transaction_filter_dict[
+                            "created__gte"
+                        ] = from_date + timedelta(
+                            minutes=(-(timezone_offset) * 60)
+                        )
+                    else:
+                        transaction_filter_dict[
+                            "created__gte"
+                        ] = from_date - timedelta(minutes=(timezone_offset * 60))
+                    withdraw_transaction_filter_dict["created__gte"] = transaction_filter_dict["created__gte"]
+                else:
+                    transaction_filter_dict["created__date__gte"] = from_date
+                    withdraw_transaction_filter_dict["created__date__gte"] = from_date
+
+            if to_date and validate_date(to_date):
+                to_date = datetime.strptime(
+                    to_date + " 23:59:59", "%Y-%m-%d %H:%M:%S"
+                )
+                if timezone_offset:
+                    timezone_offset = float(timezone_offset)
+                    if timezone_offset < 0:
+                        transaction_filter_dict[
+                            "created__lte"
+                        ] = to_date + timedelta(minutes=(-(timezone_offset) * 60))
+                    else:
+                        transaction_filter_dict[
+                            "created__lte"
+                        ] = to_date - timedelta(minutes=(timezone_offset * 60))
+                    withdraw_transaction_filter_dict["created__lte"] = transaction_filter_dict["created__lte"]
+
+            offmarket_transactions = OffMarketTransactions.objects.filter(**transaction_filter_dict).order_by("-created")
+            withdraw_transactions = OffmarketWithdrawalRequests.objects.filter(**withdraw_transaction_filter_dict).order_by("-created")
+            combined_transactions = list(sorted(
+                chain(offmarket_transactions, withdraw_transactions),
+                key=lambda objects: objects.created,
+                reverse=True
+            ))
+
+            paginator = self.pagination_class()
+            try:
+                result_page = paginator.paginate_queryset(combined_transactions, request)
+            except Exception as e:
+                print(e)
+                return Response({"msg": "Something went Wrong", "status_code": status.HTTP_400_BAD_REQUEST})
+            serializer =  OffmarketTransactionsSerializer(result_page, many=True)
+            return paginator.get_paginated_response(serializer.data)
+
         except Exception as e:
             print(f"error in fetching data {e}.")
             response = {"msg": "Some Internal error.", "status_code": status.HTTP_500_INTERNAL_SERVER_ERROR}
@@ -2330,10 +2302,11 @@ class TransactionsAPIView(APIView):
     pagination_class = CustomPagination
 
     def get(self, request, **kwargs):
-        from_date = self.request.query_params.get("from_date", None)
-        to_date = self.request.query_params.get("to_date", None)
-        timezone_offset = self.request.query_params.get("timezone_offset", None)
-        bonus_type = self.request.query_params.get("type", None)
+        request_params = self.request.query_params  # type: ignore
+        from_date = request_params.get("from_date", None)
+        to_date = request_params.get("to_date", None)
+        timezone_offset = request_params.get("timezone_offset", None)
+        bonus_type = request_params.get("type", None)
         transaction_filter_dict = {"user":self.request.user, "journal_entry": "bonus"}
         if from_date and validate_date(from_date):
             from_date = datetime.strptime(
