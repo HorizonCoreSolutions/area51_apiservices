@@ -307,7 +307,7 @@ class Casino25GameListSerializer(serializers.ModelSerializer):
         if instance.section_id == "OneGameHub":
             return instance.game_image
         elif instance.section_id == "CPgames":
-            return f"{settings.FE_DOMAIN}static/cpgames_icons/{instance.game_id[2:]}.png"
+            return f"{settings.CP_GAMES_IMAGE_URL}{instance.game_id[2:]}.png"
         return f"{settings.CASINO_25_IMAGE_URL}/{instance.game_id}.jpg"
     
 
@@ -343,7 +343,7 @@ class Casino25CasinoManagementSerializer(serializers.ModelSerializer):
         if instance.game.section_id == "OneGameHub":
             return instance.game.game_image
         if instance.game.section_id == "CPgames":
-            return f"{settings.FE_DOMAIN}static/cpgames_icons/{instance.game.game_id[2:]}.png"
+            return f"{settings.CP_GAMES_IMAGE_URL}{instance.game.game_id[2:]}.png"
         return f"{settings.CASINO_25_IMAGE_URL}/{instance.game.game_id}.jpg"
 
 
@@ -371,7 +371,7 @@ class FavouriteCasinoGameListSerializer(serializers.ModelSerializer):
         if instance.section_id == "OneGameHub":
             return instance.game_image
         elif instance.section_id == "CPgames":
-            return f"{settings.FE_DOMAIN}static/cpgames_icons/{instance.game_id[2:]}.png"
+            return f"{settings.CP_GAMES_IMAGE_URL}{instance.game_id[2:]}.png"
         return f"{settings.CASINO_25_IMAGE_URL}/{instance.game_id}.jpg"
     
 
@@ -394,7 +394,7 @@ class FavouriteGameListSerializer(serializers.ModelSerializer):
             if obj.game.section_id == "OneGameHub":
                 return obj.game.game_image
             elif obj.game.section_id == "CPgames":
-                return f"{settings.FE_DOMAIN}static/cpgames_icon/{obj.game.game_id[2:]}.png"
+                return f"{settings.CP_GAMES_IMAGE_URL}{obj.game.game_id[2:]}.png"
             return f"{settings.CASINO_25_IMAGE_URL}/{obj.game.game_id}.jpg"
     
     def get_game_type(self, obj):
