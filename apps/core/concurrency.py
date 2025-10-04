@@ -44,6 +44,11 @@ class RateLimiter:
         """)
             
     def is_key_locked(self, key: str) -> int:
+        """
+        returns 0 when key is not locked any other way
+        the return will mean the amount of seconds the
+        user has to wait before using any promo code.
+        """
         now = int(timezone.now().timestamp())
         raw = self.redis.get(f"lock:{key}")
         if raw is None:

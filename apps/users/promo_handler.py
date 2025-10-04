@@ -6,7 +6,7 @@ from datetime import datetime, date
 from apps.core.concurrency import limiter
 from apps.bets.models import Transactions
 from django.db.models import Count, Q, Sum
-from typing import Optional, Tuple, Literal
+from typing import Optional, Tuple, Literal, Union
 from apps.bets.utils import generate_reference
 from apps.users.models import PromoCodes, PromoCodesLogs, Users
 from apps.users.utils import send_player_balance_update_notification
@@ -81,13 +81,19 @@ def _is_promo_valid(
 def _is_user_promo_banned(
     user: Optional[Users],
     ip: Optional[str]
-) -> bool:
+) -> Optional[int]:
+    """
+    Returns the amount of seconds a user is banned
+    from promo codes is return is None user is not
+    banned.
+    """
     if user is None and ip is None:
-        return False
+        return True
     key = f"prmcd:uid:{user.id}" if user else f"prmcd:ip:{ip}"
 
-    if limiter.is_key_locked(key=key):
-        return True
+    time_left = limiter.is_key_locked(key=key)
+    if time_left > 0:
+        return time_left
 
     is_allowed = limiter.allow(
         window=3600,
@@ -96,7 +102,7 @@ def _is_user_promo_banned(
     )
     if not is_allowed:
         limiter.lock_key(key=key)
-    return is_allowed
+    return None if is_allowed else 3600
 
 
 def _check_usage_limits(
@@ -261,15 +267,21 @@ def verify_code(
     user: Optional[Users] = None,
     bypass_limit_check: bool = False,
     bonus_type: Optional[Literal["bet", "deposit", "welcome"]] = None,
-) -> Tuple[bool, Optional[ErrorMessage]]:
+) -> Tuple[bool, Optional[str]]:
     promo_obj = _get_promo(promo_code, bonus_type)
     if not promo_obj:
         return False, "Invalid promocode"
 
     now = datetime.now()
     if not bypass_limit_check:
-        if (user or ip) and not _is_user_promo_banned(user, ip):
-            return False, "Too many attempts. All promo codes will be disables 60 minuts."
+        if (user or ip):
+            time = _is_user_promo_banned(user, ip)
+            if time is not None:
+                s = time
+                ftime = f"{s//3600}h "*(s>=3600) + f"{(s%3600)//60}m "*(s>=60) + f"{s%60}s"
+                return False, ("Too many attempts. "
+                               "All promo codes are"
+                               f" disabled for {ftime}.")
     
     if not _is_promo_valid(promo_obj, now):
         return False, "Promo-code Expired"
