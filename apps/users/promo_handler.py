@@ -268,10 +268,6 @@ def verify_code(
     bypass_limit_check: bool = False,
     bonus_type: Optional[Literal["bet", "deposit", "welcome"]] = None,
 ) -> Tuple[bool, Optional[str]]:
-    promo_obj = _get_promo(promo_code, bonus_type)
-    if not promo_obj:
-        return False, "Invalid promocode"
-
     now = datetime.now()
     if not bypass_limit_check:
         if (user or ip):
@@ -282,7 +278,12 @@ def verify_code(
                 return False, ("Too many attempts. "
                                "All promo codes are"
                                f" disabled for {ftime}.")
-    
+
+    promo_obj = _get_promo(promo_code, bonus_type)
+
+    if not promo_obj:
+        return False, "Invalid promocode"
+
     if not _is_promo_valid(promo_obj, now):
         return False, "Promo-code Expired"
 
