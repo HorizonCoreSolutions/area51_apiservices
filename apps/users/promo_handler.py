@@ -240,14 +240,21 @@ def redeam_code(
 
 def claim_code(
     user: Users,
-    promo_code:str
+    promo_code: str,
+    bonus_type: Optional[str]
 ) -> bool:
+    bonus_type = bonus_type or "welcome"
+    if bonus_type not in {"welcome", "deposit"}:
+        return False
+
     now = timezone.now()
     promo = PromoCodes.objects.filter(
+        bonus__bonus_type=bonus_type,
         start_date__lte=now,
         end_date__gt=now,
         promo_code=promo_code,
-        is_expired=False).first()
+        is_expired=False
+    ).first()
 
     if not promo:
         return False
@@ -282,6 +289,15 @@ def check_validation_code(
         log=OPEN_CODE,
     ).first()
     return promo_log
+
+
+def rollback_validation_code(
+    promo_log: PromoCodesLogs,
+    remove_history: bool
+) -> bool:
+    if remove_history:
+        promo_log.delete()
+    return True
 
 
 def verify_code(

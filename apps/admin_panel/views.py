@@ -3470,7 +3470,7 @@ class DetailBonusView(CheckRolesMixin, ListView):
         promo = PromoCodes.objects.filter(
             dealer=user,
             promo_code=promo_code,
-            bonus__bonus_type="welcome_bonus",
+            bonus__bonus_type__in={"welcome_bonus", "deposit_bonus"},
         ).first()
 
         if not promo:
