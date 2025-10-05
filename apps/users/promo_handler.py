@@ -321,8 +321,8 @@ def materialize(
     t = Transactions.objects.create(
         user=promo_log.user,
         amount=bonus,
-        gold_bonus=g_bns,
         status="charged",
+        bonus_amount=g_bns,
         journal_entry="bonus",
         new_balance=user.balance,
         previous_balance=user.balance - bonus,

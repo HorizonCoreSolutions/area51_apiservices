@@ -110,4 +110,3 @@ class ChartStats(AbstractBaseModel):
     per_sports_bet_count = JSONField(default=None, null=True, blank=False)
     per_sports_profit = JSONField(default=None, null=True, blank=False)
     per_sports_winning = JSONField(default=None, null=True, blank=False)
-    
