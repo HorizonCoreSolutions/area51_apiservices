@@ -296,6 +296,8 @@ def materialize(
     amount: Decimal,
     user: Users
 ):
+    if promo_log.transaction:
+        return
     pm: PromoCodes = promo_log.promocode  # type: ignore
     dm = pm.bonus_distribution_method
 
