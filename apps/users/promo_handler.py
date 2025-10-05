@@ -2,15 +2,18 @@ from decimal import Decimal
 from django.conf import settings
 from django.db import transaction
 from django.utils import timezone
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from apps.core.concurrency import limiter
 from apps.bets.models import Transactions
 from django.db.models import Count, Q, Sum
-from typing import Optional, Tuple, Literal, Union
+from typing import Optional, Tuple, Literal
 from apps.bets.utils import generate_reference
 from apps.users.models import PromoCodes, PromoCodesLogs, Users
 from apps.users.utils import send_player_balance_update_notification
 
+
+OPEN_CODE = "validated_code"
+TAKEN_CODE = "taken_code"
 
 ErrorMessage = Literal[
     "Invalid promocode",
@@ -22,6 +25,7 @@ ErrorMessage = Literal[
     "OK",
 ]
 
+
 def _ensure_date(dt):
     if isinstance(dt, datetime):
         return dt.date()   # convert datetime → date
@@ -29,6 +33,7 @@ def _ensure_date(dt):
         return dt         # already date
     else:
         raise TypeError(f"Unexpected type: {type(dt)}")
+
 
 def _get_promo(
     promo_code: str, bonus_type: Optional[str]
@@ -110,10 +115,10 @@ def _check_usage_limits(
     user: Optional[Users],
     amount_dep: Optional[Decimal] = None,
 ) -> Tuple[bool, Optional[Literal["Promo-code use limit exceeded"]]]:
+    """Check global and per-user usage limits."""
     def mark_expired():
         promo_obj.is_expired = True
         promo_obj.save()
-    """Check global and per-user usage limits."""
     qs = PromoCodesLogs.objects.filter(promocode=promo_obj, transfer__isnull=False)
 
     agg_kwargs = {
@@ -256,9 +261,27 @@ def claim_code(
         transfer=None,
         promocode=promo,
         transfer_gold=None,
-        log=f"Promo-code: {promo_code} claimed for player: {user.username}",
+        log=OPEN_CODE,
     )
+
     return True
+
+
+def check_validation_code(
+    user: Users,
+    promo_code:str
+) -> Optional[PromoCodesLogs]:
+    now = timezone.now()
+
+    promo_log = PromoCodesLogs.objects.filter(
+        date__gte=now - timedelta(minutes=10),
+        user=user,
+        transfer=None,
+        transfer_gold=None,
+        promocode__promo_code=promo_code,
+        log=OPEN_CODE,
+    ).first()
+    return promo_log
 
 
 def verify_code(

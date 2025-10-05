@@ -1253,7 +1253,7 @@ class ValidatePromoCode(APIView):
                         "status": "Failed",
                     }
                 },
-                status=status.HTTP_200_OK,
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         user = request.user if request.user.is_authenticated else None
@@ -1268,6 +1268,10 @@ class ValidatePromoCode(APIView):
 
         status_text = "Success" if is_valid else "Failed"
         http_status = status.HTTP_200_OK if is_valid else status.HTTP_400_BAD_REQUEST
+
+        if user and is_valid:
+            promo_handler.claim_code(user, promo_code)
+
         message = "Promo-code is valid" if is_valid else msg
 
         return Response(

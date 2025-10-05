@@ -748,10 +748,11 @@ Signup Bonus
         $("#edit-signup-page input[name='signup-promo-code']").val(promo_code).prop('readonly', true);
         $("#edit-signup-page input[name='max-bonus-limit']").val(max_bonus_limit).prop('readonly', false);
 
-        $("#edit-signup-page input[name='instant-bonus-amount']").val(percentage).prop('readonly', false);
-        $("#edit-signup-page input[name='instant-gold-amount']").val(gold_percentage).prop('readonly', false);
-        $("#edit-signup-page input[name='welcome-gold-percentage']").val(instant_gold_amount).prop('readonly', false);
-        $("#edit-signup-page input[name='welcome-bonus-percentage']").val(instant_bonus_amount).prop('readonly', false);
+        $("#edit-signup-page input[name='instant-bonus-amount']").val(instant_bonus_amount).prop('readonly', false);
+        $("#edit-signup-page input[name='instant-gold-amount']").val(instant_gold_amount).prop('readonly', false);
+
+        $("#edit-signup-page input[name='welcome-gold-percentage']").val(gold_percentage).prop('readonly', false);
+        $("#edit-signup-page input[name='welcome-bonus-percentage']").val(percentage).prop('readonly', false);
         
         $("#edit-signup-page input[name='signup-promo-code-usage-limit']").val(use_limit).prop('readonly', false);
         $("#edit-signup-page input[name='signup-promo-code-user-limit']").val(user_limit).prop('readonly', false);

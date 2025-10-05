@@ -3939,16 +3939,18 @@ class BonusPercentageView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxRe
             bonus_obj.bonus_type = bonus_type
 
         if bonus_type == "deposit_bonus":
-            bonus_obj.deposit_bonus_limit = usage_limit
-            bonus_obj.deposit_bonus_per_day_limit = deposit_per_day_usage_limit if deposit_per_day_usage_limit !='' else 1
-            bonus_obj.percentage = percentage
-        elif bonus_type == "welcome_bonus":
+            # bonus_obj.deposit_bonus_limit = usage_limit
+            # bonus_obj.deposit_bonus_per_day_limit = deposit_per_day_usage_limit if deposit_per_day_usage_limit !='' else 1
+            # bonus_obj.percentage = percentage
             pass
+        elif bonus_type == "welcome_bonus":
             # bonus_obj.welcome_bonus_limit = usage_limit
+            pass
         elif bonus_type == "bet_bonus":
-            bonus_obj.bet_bonus_per_day_limit = bet_bonus_per_day_limit if bet_bonus_per_day_limit !='' else 1
-            bonus_obj.percentage = percentage
-            bonus_obj.bet_bonus_limit = usage_limit
+            # bonus_obj.bet_bonus_per_day_limit = bet_bonus_per_day_limit if bet_bonus_per_day_limit !='' else 1
+            # bonus_obj.percentage = percentage
+            # bonus_obj.bet_bonus_limit = usage_limit
+            pass
 
         bonus_obj.save()
 
@@ -5738,31 +5740,14 @@ class DepositBonusView(CheckRolesMixin, ListView):
     template_name = "admin/bonuses/deposit_bonus.html"
     model = PromoCodes
     queryset = PromoCodes.objects.filter(bonus__bonus_type="deposit_bonus").order_by("-created").all()
-    context_object_name = "promo_codes"
+    context_object_name = "bonuses"
     allowed_roles = ("admin")
     date_format = "%d/%m/%Y"
-
-
-    # def handle_no_permission(self):
-    #     return HttpResponseRedirect(settings.LOGIN_URL)
 
     def get_queryset(self):
         queryset = super().get_queryset()
         return queryset
 
-    # def get_context_data(self, **kwargs):
-    #     context = super().get_context_data(**kwargs)
-    #     try:
-    #         bonus_obj = self.queryset.get(dealer=self.request.user.id, bonus_type="deposit_bonus")
-
-    #         context["deposit_bonus"] = bonus_obj.percentage
-    #         context["deposit_bonus_limit"] = bonus_obj.deposit_bonus_limit
-    #         context["deposit_bonus_per_day_limit"] = bonus_obj.deposit_bonus_per_day_limit
-
-    #     except BonusPercentage.DoesNotExist:
-    #         context["deposit_bonus"] = 0
-
-    #     return context
 
 class ReferAFriendBonusPermission(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseMixin, View):
     allowed_roles = ("superadmin", "admin", "dealer")
