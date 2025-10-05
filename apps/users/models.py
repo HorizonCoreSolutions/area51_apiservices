@@ -17,6 +17,7 @@ from decimal import Decimal
 from django.conf import settings
 from djchoices import ChoiceItem, DjangoChoices
 from django.urls import reverse
+from apps.bets.models import Transactions
 from apps.core.models import AbstractBaseModel
 from django.contrib.auth.models import PermissionsMixin
 import requests
@@ -785,6 +786,15 @@ class PromoCodesLogs(AbstractBaseModel):
     )
     log = models.CharField(max_length=2048, null=False, blank=False, editable=False)
     user = models.ForeignKey(Users, on_delete=models.CASCADE, default=None, null=True)
+
+    transaction = models.OneToOneField(
+        Transactions,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        default=None,
+        related_name="promo_log"
+    )
 
 
 class AdminBanner(AbstractBaseModel):

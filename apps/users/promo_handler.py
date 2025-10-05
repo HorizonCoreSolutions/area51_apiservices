@@ -2,11 +2,11 @@ from decimal import Decimal
 from django.conf import settings
 from django.db import transaction
 from django.utils import timezone
-from datetime import datetime, date, timedelta
 from apps.core.concurrency import limiter
 from apps.bets.models import Transactions
 from django.db.models import Count, Q, Sum
 from typing import Optional, Tuple, Literal
+from datetime import datetime, date, timedelta
 from apps.bets.utils import generate_reference
 from apps.users.models import PromoCodes, PromoCodesLogs, Users
 from apps.users.utils import send_player_balance_update_notification
@@ -289,6 +289,48 @@ def check_validation_code(
         log=OPEN_CODE,
     ).first()
     return promo_log
+
+
+def materialize(
+    promo_log: PromoCodesLogs,
+    amount: Decimal,
+    user: Users
+):
+    pm: PromoCodes = promo_log.promocode  # type: ignore
+    dm = pm.bonus_distribution_method
+
+    if dm == "deposit":
+        bonus = Decimal(pm.bonus_percentage) * amount / 100  # type: ignore
+        g_bns = Decimal(pm.gold_percentage) * amount * settings.BONUS_MULTIPLIER / 100  # type: ignore
+        pass
+    elif dm == "mixture":
+        bonus = Decimal(pm.bonus_percentage) * amount / 100  # type: ignore
+        g_bns = pm.gold_bonus
+    elif dm == "instant":
+        bonus = pm.bonus
+        g_bns = pm.gold_bonus
+    else:
+        return
+
+    user.balance += bonus  # type: ignore
+    user.bonus_balance += g_bns  # type: ignore
+    user.save()
+
+    t = Transactions.objects.create(
+        user=promo_log.user,
+        amount=bonus,
+        gold_bonus=g_bns,
+        status="charged",
+        journal_entry="bonus",
+        new_balance=user.balance,
+        previous_balance=user.balance - bonus,
+        bonus_type=pm.bonus.bonus_type,  # type: ignore
+        description="Bonus for user",
+        reference=generate_reference(user)
+    )
+
+    promo_log.transaction = t
+    promo_log.save()
 
 
 def rollback_validation_code(

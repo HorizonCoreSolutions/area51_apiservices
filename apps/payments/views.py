@@ -1541,7 +1541,15 @@ class GetCoinFlowLink(APIView):
         res = cf.register_user_attested(user=user)
         # if res.error:
         #     return Response(data={"message" : "Please compleate any other verification step left."}, status=status.HTTP_400_BAD_REQUEST)
-        link = cf.create_checkout_link(user=user, amount_cents=cents)
+        promo_code = request.data.get("promo_code")
+        promo_code = str(promo_code) if promo_code else None
+
+        link = cf.create_checkout_link(
+            user=user,
+            amount_cents=cents,
+            promo_code=promo_code
+        )
+
         if link.error:
             return Response(data={'message': link.error}, status=status.HTTP_400_BAD_REQUEST)
         
