@@ -249,7 +249,7 @@ def claim_code(
 
     now = timezone.now()
     promo = PromoCodes.objects.filter(
-        bonus__bonus_type=bonus_type,
+        bonus__bonus_type=f"{bonus_type}_bonus",
         start_date__lte=now,
         end_date__gte=now,
         promo_code=promo_code,
