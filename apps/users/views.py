@@ -1269,14 +1269,16 @@ class ValidatePromoCode(APIView):
         status_text = "Success" if is_valid else "Failed"
         http_status = status.HTTP_200_OK if is_valid else status.HTTP_400_BAD_REQUEST
 
+        result = False
         if user and is_valid and promo_type == "deposit":
-            promo_handler.claim_code(
+            result = promo_handler.claim_code(
                 user=user,
                 bonus_type=promo_type,
                 promo_code=promo_code,
             )
 
-        message = "Promo-code is valid" if is_valid else msg
+        message = "Promo-code is valid" if is_valid or msg is None else msg
+        message += ("." if result else "")
 
         return Response(
             {"data": {"message": message, "status": status_text}},
