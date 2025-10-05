@@ -251,7 +251,7 @@ def claim_code(
     promo = PromoCodes.objects.filter(
         bonus__bonus_type=bonus_type,
         start_date__lte=now,
-        end_date__gt=now,
+        end_date__gte=now,
         promo_code=promo_code,
         is_expired=False
     ).first()
