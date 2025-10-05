@@ -281,7 +281,7 @@ def check_validation_code(
     now = timezone.now()
 
     promo_log = PromoCodesLogs.objects.filter(
-        date__gte=now - timedelta(minutes=10),
+        created__gte=now - timedelta(minutes=10),
         user=user,
         transfer=None,
         transfer_gold=None,

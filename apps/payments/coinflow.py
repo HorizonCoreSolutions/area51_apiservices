@@ -716,10 +716,14 @@ class CoinFlowClient:
                 if v is None:
                     return BasicReturn(success=False, error=f"Please fill in your {k} to proceed.")
 
-            promo_log = promo_handler.check_validation_code(
-                user=user,
-                promo_code=promo_code
-            ) if promo_code else None
+            promo_log = None
+
+            if promo_code:
+                logger.debug(f"Promo code: {promo_code} has been used for user {user.username}")
+                promo_log = promo_handler.check_validation_code(
+                    user=user,
+                    promo_code=promo_code
+                )
 
             # Construct checkout payload
             payload = {
