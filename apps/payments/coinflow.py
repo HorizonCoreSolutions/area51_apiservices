@@ -448,7 +448,8 @@ class CoinFlowClient:
             "physicalAddress": user.complete_address,
             "city": user.city,
             "state": user.state,
-            "ssn": ("0000" + str(user.document_number if user.document_number else user.id))[-4:],
+            # "ssn": ("0000" + str(user.document_number if user.document_number else user.id))[-4:],
+            "ssn": ("0000" + (''.join(c for c in str(user.document_number) if c.isdigit()) if user.document_number else str(user.id)))[-4:],
             "dob": formatted_date_str,
             "country": user.country_obj.code_cca2 if user.country_obj else 'US',
             "zip": str(user.zip_code)

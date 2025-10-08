@@ -176,6 +176,8 @@ class CallbackAcuitytecView(APIView):
             
             if document_number:
                 user.document_number = document_number
+            else:
+                logger.warning(f"User {user.id}-{user.username}, has not updated their document.")
             
             if country:
                 qs = Country.objects.filter(code_cca2=country).first()
