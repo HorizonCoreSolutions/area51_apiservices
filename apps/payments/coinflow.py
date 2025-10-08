@@ -378,10 +378,10 @@ class CoinFlowClient:
                     error='No valid document files found. If you have completed all verification please contact us.'
                 )
 
-            logger.info(f'Generated files: {pformat(files)}\nFor user: {user.id}')
+            logger.info(f'Generated files: {pformat(files)}\nFor user: {user.id}-{user.username}')
 
             # Log the registration attempt
-            logger.info(f"Attempting document registration for user {user.id} with document type {doc_type}")
+            logger.info(f"Attempting document registration for user {user.id}-{user.username} with document type {doc_type}")
 
             # Make API request
             headers = self._build_headers(
@@ -404,7 +404,7 @@ class CoinFlowClient:
             except json.JSONDecodeError:
                 response_data = {"message": "Registration successful"}
 
-            logger.info(f"User {user.id} document registration completed successfully")
+            logger.info(f"User {user.id}-{user.username} document registration completed successfully")
             return BasicReturn(
                 success=True, 
                 data=response_data,
@@ -420,10 +420,10 @@ class CoinFlowClient:
                     message="Document registration completed successfully"
                 )
 
-            logger.error(f"CoinFlow API error during document registration for user {user.id}: {e}")
+            logger.error(f"CoinFlow API error during document registration for user {user.id}-{user.username}: {e}")
             return BasicReturn(success=False, error=str(e))
         except Exception as e:
-            logger.error(f"Unexpected error during document registration for user {user.id}: {e}")
+            logger.error(f"Unexpected error during document registration for user {user.id}-{user.username}: {e}")
             return BasicReturn(
                 success=False, 
                 error='An unexpected error occurred during registration. Please try again.'
@@ -498,7 +498,8 @@ class CoinFlowClient:
                 return BasicReturn(success=False, error="This service is down, please try again later.")
 
         if res.status_code != 200:
-            logger.warning("User attested endpoint did not recived expected info.")
+            logger.warning(f"User attested endpoint did not recived expected info. for user {user.id}-{user.username}.")
+            print(res.text)
             return BasicReturn(success=False, error="This service is down, please try again later.")
         else:
             user.coinflow_state = str(CoinflowAuthState.verified)
@@ -544,7 +545,7 @@ class CoinFlowClient:
         }
 
         try:
-            logger.info(f"User {user.username}-{user.id}: Started KYC Coinflow")
+            logger.info(f"User {user.id}-{user.username}: Started KYC Coinflow")
             res = requests.post(
                 url=self.endpoints.register_user,
                 json=payload,
@@ -552,7 +553,7 @@ class CoinFlowClient:
             )
             if not res.status_code in {200, 451}:
                 logger.debug(res.text)
-                logger.warning(f"User {user.username}-{user.id}: KYC endpoint is not receiving the status spected. Status: {res.status_code}")
+                logger.warning(f"User {user.id}-{user.username}: KYC endpoint is not receiving the status spected. Status: {res.status_code}")
                 return BasicReturn(success=False, error="This service is down.")
 
             data = res.json()
@@ -568,10 +569,10 @@ class CoinFlowClient:
             user.save()
             return BasicReturn(success=True, data=res_data)
         except json.JSONDecodeError:
-            logger.critical(f'Registration of user {user.username}-{user.id}: had an error loading the json on endpoint: {self.endpoints.register_user}')
+            logger.critical(f'Registration of user {user.id}-{user.username}: had an error loading the json on endpoint: {self.endpoints.register_user}')
             return BasicReturn(success=False, error="Coinflow service is not loading the json")
         except Exception as e:
-            logger.critical(f"User {user.username}-{user.id}: Error while user KYC: {e}")
+            logger.critical(f"User {user.id}-{user.username}: Error while user KYC: {e}")
             return BasicReturn(success=False, error="This service is down.")
 
     def create_customer(self, user: Users, ip: str) -> BasicReturn:
@@ -738,7 +739,7 @@ class CoinFlowClient:
             }
 
             # Log the checkout attempt
-            logger.info(f"Creating checkout link for user {user.id}, amount: {amount_cents} cents")
+            logger.info(f"Creating checkout link for user {user.id}-{user.username}, amount: {amount_cents} cents")
 
             # Make API request
             headers = self._build_headers(
@@ -780,7 +781,7 @@ class CoinFlowClient:
                 status=CoinFlowTransaction.StatusType.requested
             )
 
-            logger.info(f"Checkout link created successfully for user {user.id}")
+            logger.info(f"Checkout link created successfully for user {user.id}-{user.username}")
             token = encrypt_combined(transaction.id, transaction_id) # type: ignore
 
             return BasicReturn(
@@ -790,10 +791,10 @@ class CoinFlowClient:
             )
 
         except CoinFlowAPIError as e:
-            logger.error(f"CoinFlow API error during checkout link creation for user {user.id}: {e}")
+            logger.error(f"CoinFlow API error during checkout link creation for user {user.id}-{user.username}: {e}")
             return BasicReturn(success=False, error="An unexpected error occurred during checkout link creation.")
         except Exception as e:
-            logger.error(f"Unexpected error during checkout link creation for user {user.id}: {e}")
+            logger.error(f"Unexpected error during checkout link creation for user {user.id}-{user.username}: {e}")
             return BasicReturn(
                 success=False,
                 error='An unexpected error occurred during checkout link creation. Please try again.'
@@ -1167,7 +1168,7 @@ class CoinFlowClient:
 
             user.save()
             transaction.save()
-            logger.info(f'Successfully processed payment for user {user.id}, amount: ${transaction.amount}, new balance: ${new_balance}')
+            logger.info(f'Successfully processed payment for user {user.id}-{user.username}, amount: ${transaction.amount}, new balance: ${new_balance}')
             return BasicReturn(success=True, message=f'Payment processed successfully. New balance: ${new_balance}')
 
         elif eventType in {"Card Payment Declined", "Card Payment Suspected Fraud", "ACH Failed", "ACH Returned", "PIX Failed"}:
@@ -1217,7 +1218,7 @@ class CoinFlowClient:
             # Only proceed if user has sufficient balance
             if user.balance < transaction.amount:
                 user.balance = 0
-                logger.warning(f'Insufficient balance for chargeback - User {user.id}, required: ${transaction.amount}, available: ${user.balance}. ONLY available mony has been taken please contact the user')
+                logger.warning(f'Insufficient balance for chargeback - User {user.id}-{user.username}, required: ${transaction.amount}, available: ${user.balance}. ONLY available mony has been taken please contact the user')
 
                 chargeback_transaction = CoinFlowTransaction.objects.create(
                     user=user,
@@ -1229,7 +1230,7 @@ class CoinFlowClient:
                     post_balance=user.balance,
                     status=CoinFlowTransaction.StatusType.chargeback_opened,
                     transaction_type=CoinFlowTransaction.TransactionType.withdraw,
-                    error_description=f"Insufficient balance for chargeback - User {user.id}, required: ${transaction.amount}, available: ${pre_balance}, Left to remove: ${transaction.amount - pre_balance}",
+                    error_description=f"Insufficient balance for chargeback - User {user.id}-{user.username}, required: ${transaction.amount}, available: ${pre_balance}, Left to remove: ${transaction.amount - pre_balance}",
                 )
                 transaction.status = 'chargeback_disputed'
                 user.save()
@@ -1256,7 +1257,7 @@ class CoinFlowClient:
             user.save()
             transaction.save()
 
-            logger.warning(f'Chargeback opened for user {user.id}, amount: ${transaction.amount}')
+            logger.warning(f'Chargeback opened for user {user.id}-{user.username}, amount: ${transaction.amount}')
             return BasicReturn(success=True, message='Chargeback processed - funds deducted')
 
         elif eventType == "Card Payment Chargeback Lost":
@@ -1266,7 +1267,7 @@ class CoinFlowClient:
                 transaction.status = CoinFlowTransaction.StatusType.chargeback_lost
                 transaction.save()
 
-            logger.warning(f'Chargeback lost for user {user.id}, transaction: {tid}')
+            logger.warning(f'Chargeback lost for user {user.id}-{user.username}, transaction: {tid}')
             return BasicReturn(success=True, message='Chargeback lost - funds remain deducted')
 
         elif eventType == "Card Payment Chargeback Won":
@@ -1287,7 +1288,7 @@ class CoinFlowClient:
             user.save()
             transaction.save()
 
-            logger.info(f'Chargeback won for user {user.id}, amount restored: ${abs(transaction.amount)}')
+            logger.info(f'Chargeback won for user {user.id}-{user.username}, amount restored: ${abs(transaction.amount)}')
             return BasicReturn(success=True, message='Chargeback won - funds restored')
 
         elif eventType == "Refund":
@@ -1330,7 +1331,7 @@ class CoinFlowClient:
             transaction.status = CoinFlowTransaction.StatusType.refunded
             transaction.save()
 
-            logger.info(f'Refund processed for user {user.id}, amount: ${transaction.amount}')
+            logger.info(f'Refund processed for user {user.id}-{user.username}, amount: ${transaction.amount}')
             return BasicReturn(success=True, message='Refund processed successfully')
 
         elif eventType in {"ACH Initiated", "ACH Batched"}:
@@ -1341,7 +1342,7 @@ class CoinFlowClient:
                 transaction.status = CoinFlowTransaction.StatusType.processing
                 transaction.save()
 
-            logger.info(f'ACH payment initiated for user {user.id}, transaction: {tid}')
+            logger.info(f'ACH payment initiated for user {user.id}-{user.username}, transaction: {tid}')
             return BasicReturn(success=True, message='ACH payment initiated')
 
         elif eventType == "Payment Pending Review":
@@ -1353,7 +1354,7 @@ class CoinFlowClient:
             transaction.external_id = external_id
             transaction.confimation_needed = True
             transaction.save()
-            logger.info(f'Payment pending review for user {user.id}, transaction: {tid}')
+            logger.info(f'Payment pending review for user {user.id}-{user.username}, transaction: {tid}')
             return BasicReturn(success=True, message='Payment is pending review')
 
         elif eventType in ["PIX Expiration", "Payment Expiration"]:
@@ -1367,7 +1368,7 @@ class CoinFlowClient:
                 transaction.post_balance = user.balance
                 transaction.save()
 
-            logger.info(f'Payment expired for user {user.id}, transaction: {tid}')
+            logger.info(f'Payment expired for user {user.id}-{user.username}, transaction: {tid}')
             return BasicReturn(success=True, message='Payment expiration processed')
 
         else:
