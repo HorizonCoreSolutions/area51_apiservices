@@ -1046,7 +1046,7 @@ class CasinoHeaderCategoryAPIView(APIView):
 
     def get(self, request):
         try:
-            categories = CasinoHeaderCategory.objects.filter(position__lte=4, is_active=True).order_by("position")
+            categories = CasinoHeaderCategory.objects.filter(is_active=True).order_by("position")
             serializer = self.serializer_class(categories, many=True)
             return Response(serializer.data)
         except Exception as e:
