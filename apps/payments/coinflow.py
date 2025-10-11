@@ -719,11 +719,10 @@ class CoinFlowClient:
             promo_log = None
 
             if promo_code:
+                promo_log = promo_handler.claim_code(user=user, promo_code=promo_code, bonus_type="deposit")
+                if not promo_log:
+                    return BasicReturn(success=False, error=f"This message should not be shown, please contact us.")
                 logger.debug(f"Promo code: {promo_code} has been used for user {user.username}")
-                promo_log = promo_handler.check_validation_code(
-                    user=user,
-                    promo_code=promo_code
-                )
 
             # Construct checkout payload
             payload = {

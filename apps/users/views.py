@@ -449,7 +449,7 @@ class SignUpView(APIViewContext):
                     )  # type: ignore
 
             if player.applied_promo_code:
-                promo_handler.redeam_code(
+                promo_handler.redeem_code(
                     user=player,
                     amount_dep=None,
                     bonus_type='welcome',
@@ -1241,6 +1241,13 @@ class ValidatePromoCode(APIView):
 
         promo_code = request.data.get("promo_code", None)
         promo_type = request.data.get("promo_type", "deposit")
+        
+        amount = request.data.get("amount")
+        
+        if amount and amount.isdigit():
+            amount = Decimal(amount)
+        else:
+            amount = None
 
         if promo_type not in {'welcome', 'deposit'}:
             promo_type = "deposit"
@@ -1259,27 +1266,42 @@ class ValidatePromoCode(APIView):
         user = request.user if request.user.is_authenticated else None
         ip = get_user_ip_from_request(request=request)
 
-        is_valid, msg = promo_handler.verify_code(
+        pm, msg = promo_handler.verify_code(
             ip=ip,
             user=user,
             bonus_type=promo_type,
             promo_code=promo_code,
         )
 
-        status_text = "Success" if is_valid else "Failed"
-        http_status = status.HTTP_200_OK if is_valid else status.HTTP_400_BAD_REQUEST
+        status_text = "Success" if pm else "Failed"
+        http_status = status.HTTP_200_OK if pm else status.HTTP_400_BAD_REQUEST
+        extra_data = {}
 
-        if user and is_valid and promo_type == "deposit":
-            promo_handler.claim_code(
-                user=user,
-                bonus_type=promo_type,
-                promo_code=promo_code,
-            )
+        if pm and amount and promo_type == "deposit":
+            dm = pm.bonus_distribution_method
+            bonus = 0
+            g_bns = 0
+            if dm == "deposit":
+                bonus = Decimal(pm.bonus_percentage) * amount / 100  # type: ignore
+                g_bns = Decimal(pm.gold_percentage) * amount * settings.BONUS_MULTIPLIER / 100  # type: ignore
+            elif dm == "mixture":
+                bonus = Decimal(pm.bonus_percentage) * amount / 100  # type: ignore
+                g_bns = pm.gold_bonus
+            elif dm == "instant":
+                bonus = pm.bonus
+                g_bns = pm.gold_bonus
 
-        message = "Promo-code is valid" if is_valid else msg
+            extra_data = {
+                "amount": amount,
+                "gold": amount * settings.BONUS_MULTIPLIER,
+                "promo_amount": bonus,
+                "promo_gold": g_bns,
+            }
+
+        message = "Promo-code is valid" if pm else msg
 
         return Response(
-            {"data": {"message": message, "status": status_text}},
+            {"data": {"message": message, "status": status_text, **extra_data}},
             status=http_status,
         )
 
