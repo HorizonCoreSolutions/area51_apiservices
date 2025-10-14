@@ -1072,10 +1072,9 @@ class CoinFlowClient:
                 "creditCardFees": round(entry["creditCardFees"]["cents"] / 100, 2),
                 "chargebackProtectionFees": round(entry["chargebackProtectionFees"]["cents"] / 100, 2),
                 "gasFees": round(entry["gasFees"]["cents"] / 100, 2),
-                "total": round(entry["total"]["cents"] / 100, 2)
+                "total": round(entry["total"]["cents"] / 100, 2),
+                'bonus': round(entry["total"]["cents"] * (settings.BONUS_MULTIPLIER) / 100, 2)
             }
-
-            totals['bonus'] = round(entry["total"]["cents"] * (settings.BONUS_MULTIPLIER) / 100, 2)
 
         return BasicReturn(success=True, data=totals)
 
