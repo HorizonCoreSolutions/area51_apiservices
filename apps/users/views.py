@@ -1242,7 +1242,7 @@ class ValidatePromoCode(APIView):
         promo_code = request.data.get("promo_code", None)
         promo_type = request.data.get("promo_type", "deposit")
         
-        amount = request.data.get("amount")
+        amount = str(request.data.get("amount", ""))
         
         if amount and amount.isdigit():
             amount = Decimal(amount)
@@ -1279,23 +1279,23 @@ class ValidatePromoCode(APIView):
 
         if pm and amount and promo_type == "deposit":
             dm = pm.bonus_distribution_method
-            bonus = 0
-            g_bns = 0
+            bonus = Decimal("0.0")
+            g_bns = Decimal("0.0")
             if dm == "deposit":
-                bonus = Decimal(pm.bonus_percentage) * amount / 100  # type: ignore
-                g_bns = Decimal(pm.gold_percentage) * amount * settings.BONUS_MULTIPLIER / 100  # type: ignore
+                bonus = (Decimal(pm.bonus_percentage or 0) * amount) / 100  # type: ignore
+                g_bns = (Decimal(pm.gold_percentage or 0) * amount * Decimal(settings.BONUS_MULTIPLIER)) / 100  # type: ignore
             elif dm == "mixture":
-                bonus = Decimal(pm.bonus_percentage) * amount / 100  # type: ignore
+                bonus = Decimal(pm.bonus_percentage or 0) * amount / 100  # type: ignore
                 g_bns = pm.gold_bonus
             elif dm == "instant":
-                bonus = pm.bonus
+                bonus = Decimal(pm.bonus or 0)
                 g_bns = pm.gold_bonus
 
             extra_data = {
                 "amount": amount,
                 "gold": amount * settings.BONUS_MULTIPLIER,
-                "promo_amount": bonus,
-                "promo_gold": g_bns,
+                "promo_amount": round(bonus),
+                "promo_gold": round(g_bns),
             }
 
         message = "Promo-code is valid" if pm else msg
