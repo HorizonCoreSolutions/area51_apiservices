@@ -783,9 +783,10 @@ class CoinFlowClient:
                     success=False,
                     error='Checkout URL not found in API response.'
                 )
-
-            promo_log.log = promo_handler.TAKEN_CODE
-            promo_log.save()
+                
+            if promo_log:
+                promo_log.log = promo_handler.TAKEN_CODE
+                promo_log.save()
 
             transaction = CoinFlowTransaction.objects.create(
                 user=user,
