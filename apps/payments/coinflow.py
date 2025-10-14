@@ -1075,7 +1075,7 @@ class CoinFlowClient:
                 "total": round(entry["total"]["cents"] / 100, 2)
             }
 
-            totals['bonus'] = cents * (settings.BONUS_MULTIPLIER / 100)
+            totals['bonus'] = round(entry["total"]["cents"] * (settings.BONUS_MULTIPLIER) / 100, 2)
 
         return BasicReturn(success=True, data=totals)
 
