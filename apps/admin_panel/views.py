@@ -10469,8 +10469,8 @@ class OffMarketCreditAjaxView(CheckRolesMixin, views.JSONResponseMixin, views.Aj
 
             success, error = RefujiClient.deposit(
                 user=user,
-                amount=amount,
                 game_code=game_code,
+                amount=amount,
                 promo_code=None,
                 force_update=True
             )
