@@ -315,23 +315,25 @@ def materialize(
 ):
     if promo_log.transaction:
         return
-    pm: PromoCodes = promo_log.promocode  # type: ignore
+    pm = promo_log.promocode
+    if pm is None:
+        return
     dm = pm.bonus_distribution_method
 
     if dm == "deposit":
-        bonus = Decimal(pm.bonus_percentage) * amount / 100  # type: ignore
-        g_bns = Decimal(pm.gold_percentage) * amount * settings.BONUS_MULTIPLIER / 100  # type: ignore
+        bonus = Decimal(pm.bonus_percentage or 0) * amount / 100
+        g_bns = Decimal(pm.gold_percentage or 0) * amount * settings.BONUS_MULTIPLIER / 100
     elif dm == "mixture":
-        bonus = Decimal(pm.bonus_percentage) * amount / 100  # type: ignore
-        g_bns = pm.gold_bonus
+        bonus = Decimal(pm.bonus_percentage or 0) * amount / 100
+        g_bns = Decimal(pm.gold_bonus or 0)
     elif dm == "instant":
-        bonus = pm.bonus
-        g_bns = pm.gold_bonus
+        bonus = Decimal(pm.bonus or 0)
+        g_bns = Decimal(pm.gold_bonus or 0)
     else:
         return
 
-    user.balance += bonus  # type: ignore
-    user.bonus_balance += g_bns  # type: ignore
+    user.balance += bonus
+    user.bonus_balance += g_bns
     user.save()
 
     t = Transactions.objects.create(
