@@ -427,7 +427,12 @@ CP_GAMES_APP_ID_GC = get_env_var("CP_GAMES_APP_ID_GC")
 CP_GAMES_SECRET_GC = get_env_var("CP_GAMES_SECRET_GC")
 CP_GAMES_APP_ID_SC = get_env_var("CP_GAMES_APP_ID_SC")
 CP_GAMES_SECRET_SC = get_env_var("CP_GAMES_SECRET_SC")
+CP_GAMES_IMAGE_URL = f"{FE_DOMAIN}static/cpgames_icons/"
 
+ONE_GAME_HUB_ID = get_env_var("ONE_GAME_HUB_ID")
+ONE_GAME_HUB_URL = get_env_var("ONE_GAME_HUB_URL")
+ONE_GAME_HUB_SALT = get_env_var("ONE_GAME_HUB_SALT")
+ONE_GAME_HUB_RPC_SECRET = get_env_var("ONE_GAME_HUB_RPC_SECRET")
 
 TINYMCE_DEFAULT_CONFIG = {
     "height": "550px",

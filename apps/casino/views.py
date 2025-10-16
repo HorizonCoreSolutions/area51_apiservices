@@ -1,7 +1,7 @@
 import pytz
 from dateutil.parser import parse
 import json
-from typing import cast
+from typing import Callable, Dict
 from decimal import Decimal
 from rest_framework.permissions import IsAuthenticated
 import traceback
@@ -29,8 +29,9 @@ from apps.core.pagination import PageNumberPagination
 from apps.core.permissions import *
 from apps.users.models import (FortunePandasGameList, FortunePandasGameManagement, OffMarketGames,
     Player, UserGames, Users)
-from apps.casino.casino25 import Casino25
 from apps.casino.cpgames import CPgames
+from apps.casino.casino25 import Casino25
+from apps.casino.onegamehub import OneGameHub
 from apps.bets.models import CHARGED, DEBIT, Transactions
 from apps.bets.utils import generate_reference
 from .serializers import (Casino25CasinoManagementSerializer,
@@ -46,6 +47,7 @@ from .utils import (ValidateRequest,
                     ErrorResponseMsg,
                     return_possible_game_error,
                     GSoftUtils)
+from apps.core.utils.network import get_user_ip_from_request, save_request
 from .gsoft import GsoftCasino
 
 
@@ -431,7 +433,7 @@ class GsoftCasinoView(APIView):
                 return JsonResponse(gsoft_caino.error_messages.get("parameter_required"), status=status.HTTP_400_BAD_REQUEST)            
             else:
                 return JsonResponse({"success" : False, "message" : "Please provide valid request method name"}, status=status.HTTP_400_BAD_REQUEST)
-            
+
             # status_code = status.HTTP_200_OK if success else status.HTTP_400_BAD_REQUEST
             status_code = status.HTTP_200_OK
             return JsonResponse(response, status=status_code)
@@ -467,10 +469,10 @@ class GetCasinoGameList(APIView):
         common_queryset = category_querysets.popitem()[1]
         for category_queryset in category_querysets.values():
             common_queryset = common_queryset.union(category_queryset)
-        
+
         response = GameListSerializer(common_queryset, many=True, context={'user': request.user})
         return Response({'data': response.data, 'page': page})
-            
+
 
 class GetCasinoGameListAdmin(APIView):
     http_method_name = ["get"]
@@ -495,7 +497,7 @@ class GetCasinoGameListAdmin(APIView):
             common_queryset = common_queryset.union(category_queryset)
 
         response = CasinoManagementSerializer(common_queryset, many=True, context={'user': request.user})
-        
+
         return Response({'data': response.data, 'page': page})
 class UpdatePlayersFavCasinoGames(APIView):
     """to add/delete fav casino games for each user(FE)."""
@@ -508,7 +510,7 @@ class UpdatePlayersFavCasinoGames(APIView):
             request_type = self.request.data.get("request")
             game_provider = self.request.data.get("game_provider")
             game_id = self.request.data.get("game_id")
-            
+
             player, created = PlayerFavouriteCasinoGames.objects.get_or_create(
                 user_id=request.user.id,
                 defaults={
@@ -516,14 +518,14 @@ class UpdatePlayersFavCasinoGames(APIView):
                     "fortunepandas_game_list": [],
                 },
             )
-            
+
             if game_provider == "fortunepanda":
                 is_game_exists = FortunePandasGameManagement.objects.filter(game__game_id=game_id).exists()
                 gamelist = player.fortunepandas_game_list
             else:
                 is_game_exists = CasinoGameList.objects.filter(game_id=game_id).exists()
                 gamelist = player.game_list
-                
+
             if not is_game_exists:
                 return Response({"msg": "Game do not exists", "status_code": status.HTTP_400_BAD_REQUEST})
             elif request_type == "add":
@@ -546,7 +548,7 @@ class UpdatePlayersFavCasinoGames(APIView):
             response = {"msg": "Some Internal error.", "status_code": status.HTTP_500_INTERNAL_SERVER_ERROR}
             return Response(response)
         return Response({"msg": "Invalid request", "status_code":status.HTTP_404_NOT_FOUND})
-    
+
 
 class GetPlayersFavCasinoGames(APIView):
     """to get list of fav casino games for each user(FE)."""
@@ -580,8 +582,8 @@ class GetPlayersFavCasinoGames(APIView):
             print(f"Erro in getting fav games {e}.")
             response = {"msg": "Some Internal error.", "status_code": status.HTTP_500_INTERNAL_SERVER_ERROR}
             return Response(response)
-        
-        
+
+
 class GetNewCasinoGameList(ListAPIView):
     '''accounts/(not-defined)'''
     permission_classes = (IsFavCasinoEnabled,)
@@ -590,12 +592,12 @@ class GetNewCasinoGameList(ListAPIView):
     pagination_class = PageNumberPagination
     http_method_name = ["get"]
     serializer_class = GameListSerializer
-    
+
     def get_queryset(self):
         category = self.request.GET.get("category", None)
         vendor = self.request.GET.get("vendor", None)
         search = self.request.GET.get("search", None)
-        
+
 
         if category:
             self.queryset = self.queryset.filter(game_category=category)
@@ -607,7 +609,7 @@ class GetNewCasinoGameList(ListAPIView):
             self.queryset = self.queryset.filter(game_name__icontains=search)
 
         return self.queryset
-    
+
     def get_serializer_context(self):
         context = super().get_serializer_context()
         user = self.request.user
@@ -615,7 +617,7 @@ class GetNewCasinoGameList(ListAPIView):
 
         return context
 
-    
+
 class GetCasinoCategoryGameListAdmin(ListAPIView):
 
     # permission_classes = (IsFavCasinoEnabled,)
@@ -624,12 +626,12 @@ class GetCasinoCategoryGameListAdmin(ListAPIView):
     pagination_class = PageNumberPagination
     http_method_name = ["get"]
     serializer_class = CasinoManagementSerializer
-    
+
     def get_queryset(self):
         category = self.request.GET.get("category", None)
         vendor = self.request.GET.get("vendor", None)
         search = self.request.GET.get("search", None)
-       
+
 
         if category:
             self.queryset = self.queryset.filter(admin=self.request.user.admin,game__game_category=category,enabled=True,game_enabled=True)
@@ -643,7 +645,7 @@ class GetCasinoCategoryGameListAdmin(ListAPIView):
 
 
         return self.queryset
-    
+
     def get_serializer_context(self):
         context = super().get_serializer_context()
         user = self.request.user
@@ -671,7 +673,7 @@ class GameSearchView(APIView):
         response =  CasinoManagementSerializer(queryset,many=True,context={
                 'user': request.user })
         return Response(response.data)
-    
+
 class SearchView(APIView):
     serializer_class = GameListSerializer
 
@@ -690,14 +692,14 @@ class SearchView(APIView):
         response =  GameListSerializer(queryset,many=True,context={
                 'user': request.user })
         return Response(response.data)
-    
+
 class UploadGsoftGames(APIView):
     http_method_names = ["post"]
     def post(self, request):
         try:
             game_id = request.data.get('game_id')
             game_name = request.data.get('game_name')
-            
+
             CasinoGameList.objects.create(
                game_id=game_id,
                game_name=game_name,
@@ -712,16 +714,16 @@ class UploadGsoftGames(APIView):
               game_enabled = True,
               game = CasinoGameList.objects.filter(game_id=game_id,game_name=game_name).first()
             )
-            
+
             return Response({"msg":"success","status_code":status.HTTP_200_OK})
-            
+
         except Exception as e:
             print(e)
 
 class GetCasinoProviders(APIView):
     """accounts/get-casino-vendor/"""
     http_method_name = ["get"]
-    
+
 
     def get(self, request, **kwargs):
         device_type = self.request.GET.get("device", "desktop")
@@ -731,6 +733,7 @@ class GetCasinoProviders(APIView):
             casino_management__enabled=True,
             casino_management__game_enabled=True
         ).distinct()
+
         if device_type == "desktop":
             casino_games =  casino_games.filter(is_desktop_supported=True)
         else:
@@ -742,7 +745,7 @@ class GetCasinoProviders(APIView):
 
         if not 'img_urls' in self.request.GET:
             return Response(casino_providers, status=status.HTTP_200_OK)
-        
+
         res_providers = Providers.objects.filter(name__in=casino_providers)
         serializer = ProviderSerializer(res_providers, many=True)
         serialized_data = serializer.data
@@ -761,7 +764,7 @@ class GetCasinoProviders(APIView):
                 "providers" : serialized_data
             }, status=status.HTTP_200_OK
         )
-    
+
 
 class GetCasinoProviderGameList(APIView):
     http_method_name = ["get"]
@@ -771,11 +774,11 @@ class GetCasinoProviderGameList(APIView):
         from .serializers import GameListSerializer
         vendor = request.query_params.get("vendor")
         casino_games = CasinoGameList.objects.filter(vendor_name=vendor)
-        
+
         response =  GameListSerializer(casino_games,many=True,context={
                 'user': request.user })
         return Response(response.data)
-    
+
 class GetCasinoProviderGameListAdmin(APIView):
     http_method_name = ["get"]
     permission_classes = (IsFavCasinoEnabled,)
@@ -784,18 +787,18 @@ class GetCasinoProviderGameListAdmin(APIView):
         from .serializers import GameListSerializer
         vendor = request.query_params.get("vendor")
         casino_games = CasinoManagement.objects.filter(admin=request.user.admin,game__vendor_name=vendor)
-        
+
         response =  CasinoManagementSerializer(casino_games,many=True,context={
                 'user': request.user })
         return Response(response.data)
 
 class GetCasinoCategory(APIView):
     http_method_name = ["get"]
-   
+
 
     def get(self, request, **kwargs):
         device_type = self.request.GET.get("device", "desktop")
-        
+
         casino_games = CasinoGameList.objects.all()
         if device_type == "desktop":
             casino_games =  casino_games.filter(is_desktop_supported=True)
@@ -810,7 +813,7 @@ class GetCasinoCategory(APIView):
         if CasinoManagement.objects.filter(is_top_pick=True).count() > 1:
         #     casino_categories.insert(0, "Top Picks")
             casino_categories.insert(0, "Top Picks")
-        
+
         return Response(casino_categories)
 
 
@@ -826,12 +829,12 @@ class GetOffMarketGamesView(APIView):
         self.queryset = OffMarketGames.objects.filter(game_status=True)
         if search:
             self.queryset = OffMarketGames.objects.filter(title__icontains=search)
-      
+
         if len(self.queryset)<1:
             self.queryset = []
         response =  OffMarketGamesSerializer(self.queryset,many=True)
         return Response(response.data)
-    
+
 class GetPlayerOffMarketGamesView(APIView):
     permission_classes = (IsPlayer,)
     serializer_class = OffMarketGamesSerializer
@@ -843,12 +846,12 @@ class GetPlayerOffMarketGamesView(APIView):
         self.queryset = OffMarketGames.objects.filter(game_status=True,id__in=game_ids)
         if search:
             self.queryset = OffMarketGames.objects.filter(title__icontains=search)
-      
+
         if len(self.queryset)<1:
             self.queryset = []
         response =  OffMarketGamesSerializer(self.queryset,many=True)
         return Response(response.data)
-    
+
 
 class Casino25APIView(APIView):
     http_method_name =["post"]
@@ -877,7 +880,16 @@ class Casino25APIView(APIView):
 
             casino = Casino25(user=self.request.user, tournament_id=tournament_id, user_tournament=user_tournament, debug=True, request_data=request.data)
             if request_type == "startgame":
-                if CasinoGameList.objects.filter(game_id=game_id, vendor_name="CPgames").exists():
+                provider = CasinoGameList.objects.filter(game_id=game_id).values_list("section_id",flat=True)
+                if not provider:
+                    pass
+                elif provider[0] == "OneGameHub":
+                    cp = OneGameHub()
+                    success, response = cp.start_game(
+                        request_param=request.data,
+                        ip=get_user_ip_from_request(request=self.request)
+                    )
+                elif provider[0] == "CPgames":
                     cp = CPgames()
                     success, response = cp.start_game(request.data)
                 else:
@@ -934,7 +946,7 @@ class Casino25CallBackAPIView(APIView):
 
             else:
                 return JsonResponse({"success" : False, "message" : "Please provide valid request method name"}, status=status.HTTP_400_BAD_REQUEST)
-            
+
             status_code = status.HTTP_200_OK if success else status.HTTP_400_BAD_REQUEST
             # status_code = status.HTTP_200_OK
             return JsonResponse(response, status=status_code)
@@ -951,7 +963,7 @@ class Casino25GameList(ListAPIView):
     pagination_class = PageNumberPagination
     http_method_name = ["get"]
     serializer_class = Casino25GameListSerializer
-    
+
     def get_queryset(self):
         category = self.request.GET.get("category", None)
         provider = self.request.GET.get("provider", None)
@@ -976,8 +988,8 @@ class Casino25GameList(ListAPIView):
         if search:
             self.queryset = self.queryset.filter(game_name__icontains=search)
         return self.queryset
-    
-    
+
+
     def get_serializer_context(self):
         context = super().get_serializer_context()
         user = self.request.user
@@ -985,7 +997,7 @@ class Casino25GameList(ListAPIView):
 
         return context
 
-    
+
 class Casino25GameListAdmin(ListAPIView):
     # permission_classes = (IsFavCasinoEnabled, IsPlayer)
     queryset = CasinoManagement.objects.filter(game__created__lte=timezone.now()-timedelta(hours=48), enabled=True, game_enabled=True).order_by("-created")
@@ -993,7 +1005,7 @@ class Casino25GameListAdmin(ListAPIView):
     pagination_class = PageNumberPagination
     http_method_name = ["get"]
     serializer_class = Casino25CasinoManagementSerializer
-    
+
     def get_queryset(self):
         category = self.request.GET.get("category", None)
         provider = self.request.GET.get("provider", None)
@@ -1004,7 +1016,7 @@ class Casino25GameListAdmin(ListAPIView):
             self.queryset = self.queryset.filter(game__is_desktop_supported=True)
         else:
             self.queryset = self.queryset.filter(game__is_mobile_supported=True)
-       
+
 
         if category and category.lower() == "top picks":
             self.queryset = self.queryset.filter(admin=self.request.user.admin, is_top_pick=True)
@@ -1018,7 +1030,7 @@ class Casino25GameListAdmin(ListAPIView):
             self.queryset = self.queryset.filter(admin=self.request.user.admin,game__game_name__icontains=search)
 
         return self.queryset
-    
+
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
@@ -1031,10 +1043,10 @@ class Casino25GameListAdmin(ListAPIView):
 class CasinoHeaderCategoryAPIView(APIView):
     http_method_name = ["get"]
     serializer_class = CasinoHeaderCategorySerializer
-    
+
     def get(self, request):
         try:
-            categories = CasinoHeaderCategory.objects.filter(position__lte=4, is_active=True).order_by("position")
+            categories = CasinoHeaderCategory.objects.filter(is_active=True).order_by("position")
             serializer = self.serializer_class(categories, many=True)
             return Response(serializer.data)
         except Exception as e:
@@ -1048,11 +1060,11 @@ class TournamentListApiView(ListAPIView):
     pagination_class = PageNumberPagination
     http_method_name = ["get"]
     serializer_class = TournamentListSerializer
-    
+
     def get_queryset(self):
         tournament_name = self.request.GET.get("tournament_name", None)
         is_registered = self.request.GET.get("is_registered", None)
-        
+
         self.queryset = self.queryset.filter(end_date__gte=timezone.now())
         if tournament_name:
             self.queryset = self.queryset.filter(name__istartswith=tournament_name)
@@ -1061,7 +1073,7 @@ class TournamentListApiView(ListAPIView):
             self.queryset = self.queryset.filter(id__in=user_registered_tournament)
 
         return self.queryset
-    
+
 
 class TournamentDetailApiView(APIView):
     # permission_classes = [IsPlayer]
@@ -1087,12 +1099,12 @@ class TournamentOptApiView(APIView):
             is_rebuy = self.request.data.get("is_rebuy", False)
             user = self.request.user
             tournament = Tournament.objects.filter(id=tournament_id).first()
-            
+
             if not tournament:
                 return Response({"message":"Tournament with given ID not found"},404)
             elif not tournament.is_active:
                 return Response({"message":"Tournament is not active"},400)
-            
+
             total_registered_user = UserTournament.objects.filter(tournament=tournament).count()
             registered_tournament = UserTournament.objects.filter(tournament=tournament, user=self.request.user).first()
 
@@ -1116,7 +1128,7 @@ class TournamentOptApiView(APIView):
                     return Response({"message":"You are already registered in tournament"},400)
                 elif timezone.now() > tournament.registration_end_date:
                     return Response({"message":"Registrations are closed for the tournament."},400)
-            
+
             with transaction.atomic():
                 if not is_rebuy:
                     UserTournament.objects.create(
@@ -1125,7 +1137,7 @@ class TournamentOptApiView(APIView):
                         remaining_rebuy_limit = tournament.rebuy_limit,
                         points = tournament.initial_credit,
                     )
-                    
+
                     amount = tournament.entry_fees
                     description = f'Tournament registration by {user.username} - {tournament.id} : {tournament.name}'
                     message = "Tournament registration successful"
@@ -1139,11 +1151,11 @@ class TournamentOptApiView(APIView):
                     message = "Rebuy successful"
                 else:
                     return Response({"message": "Invalid request"}, 400)
-                
+
                 previous_balance = user.balance
                 user.balance -= amount
                 user.save()
-                
+
                 Transactions.objects.create(
                     user = user,
                     amount = amount,
@@ -1176,14 +1188,14 @@ class TournamentTransactionListApiView(ListAPIView):
     pagination_class = PageNumberPagination
     http_method_name = ["get"]
     serializer_class = TournamentTransactionListSerializer
-    
+
     def get_queryset(self):
         transaction_type = self.request.GET.get("type")
         queryset = self.queryset.filter(user=self.request.user)
         if transaction_type:
             queryset = queryset.filter(type__iexact=transaction_type)
         return queryset
-    
+
 
 class UserTournamentHistoryListApiView(ListAPIView):
     permission_classes = [IsPlayer]
@@ -1191,16 +1203,16 @@ class UserTournamentHistoryListApiView(ListAPIView):
     pagination_class = PageNumberPagination
     http_method_name = ["get"]
     serializer_class = UserTournamentHistoryListSerializer
-    
+
     def get_queryset(self):
         tournament_name = self.request.GET.get("tournament_name")
-        
+
         queryset = self.queryset.filter(user=self.request.user, tournament__end_date__lte=timezone.now())
         if tournament_name:
             queryset = queryset.filter(tournament__name__istartswith=tournament_name)
 
         return queryset
-    
+
 
 class ScoreboardApiView(APIView):
     # permission_classes = [IsPlayer]
@@ -1210,7 +1222,7 @@ class ScoreboardApiView(APIView):
             tournament = Tournament.objects.filter(id=pk).first()
             if not tournament:
                 return Response({"message": "Invalid Tournament ID"}, 400)
-            
+
             user_tournaments = list(tournament.usertournament_set.annotate(
                 rank=Window(expression=RowNumber(),order_by=[F('win_points').desc(),"last_win_at"])
             ).values(
@@ -1231,7 +1243,7 @@ class Casino25CategoryWiseGameList(ListAPIView):
     pagination_class = PageNumberPagination
     http_method_name = ["get"]
     serializer_class = Casino25CategoryWiseGameListSerializer
-    
+
     def get_queryset(self):
         device_type = self.request.GET.get("device", "desktop")
 
@@ -1244,7 +1256,7 @@ class Casino25CategoryWiseGameList(ListAPIView):
         casino_categories = list(casino_games.values("game_category").annotate(
             num_games=Count("game_category")
         ).filter(num_games__gt=0).order_by("-num_games").values_list("game_category", flat=True))
-        
+
         # if self.request.user.is_authenticated and CasinoManagement.objects.filter(is_top_pick=True).count() > 1:\
         if CasinoManagement.objects.filter(is_top_pick=True).count() > 1:
         #     casino_categories.insert(0, "Top Picks")
@@ -1252,12 +1264,12 @@ class Casino25CategoryWiseGameList(ListAPIView):
             # casino_categories[0] = top_picks.values_list(flat=True)
 
         return casino_categories
-    
+
     def list(self, request, *args, **kwargs):
         serializer = self.get_serializer(self.get_queryset(), many=True)
         result = {data.get("category"):data.get("games") for data in serializer.data}
         return Response(result)
-        
+
     def get_serializer_context(self):
         device_type = self.request.GET.get("device", "desktop")
         context = super().get_serializer_context()
@@ -1265,19 +1277,19 @@ class Casino25CategoryWiseGameList(ListAPIView):
         context.update({"user": user, "device_type":device_type})
 
         return context
-    
-    
+
+
 class Casino25ProviderWiseGameList(ListAPIView):
     permission_classes = (IsFavCasinoEnabled,)
     paginate_by = 20
     pagination_class = PageNumberPagination
     http_method_name = ["get"]
     serializer_class = Casino25ProviderWiseGameListSerializer
-    
+
     def get_queryset(self):
         device_type = self.request.GET.get("device", "desktop")
         # Todo: REMOVE WHEN MORE PROVIDERS ARE SETUP
-        casino_games = CasinoGameList.objects.filter(vendor_name="CPgames")
+        casino_games = CasinoGameList.objects.filter(section_id__in=["CPgames", "OneGameHub"])
         if device_type == "desktop":
             casino_games =  casino_games.filter(is_desktop_supported=True)
         else:
@@ -1286,14 +1298,14 @@ class Casino25ProviderWiseGameList(ListAPIView):
         casino_providers = casino_games.values("vendor_name").annotate(
             num_games=Count("vendor_name")
         ).filter(num_games__gt=0).order_by("-num_games").values_list("vendor_name", flat=True)
-        
+
         return casino_providers
-    
+
     def list(self, request, *args, **kwargs):
         serializer = self.get_serializer(self.get_queryset(), many=True)
         result = {data.get("provider"):data.get("games") for data in serializer.data if len(data.get("games"))>0}
         return Response(result)
-        
+
     def get_serializer_context(self):
         device_type = self.request.GET.get("device", "desktop")
         context = super().get_serializer_context()
@@ -1301,7 +1313,7 @@ class Casino25ProviderWiseGameList(ListAPIView):
         context.update({"user": user, "device_type":device_type})
 
         return context
-    
+
 
 # CPgames_views.py
 # NOTE: Guide 3.1 Query Player Balance
@@ -1311,13 +1323,11 @@ class CPGamesQueryBalanceApiView(APIView):
     def post(self, request) -> Response:
         data = request.data.copy()
         cp = CPgames()
-        cp.save_request(request)
         if not cp.verify_request(request=data):
             print("CPgames: query balance #Signature error#")
             # Signature error 1111
             response_data = cp.parse_to_message(1111)
 
-            cp.save_request(request=response_data, is_response=True)
             return Response(data=response_data, status=status.HTTP_200_OK)
 
         try:
@@ -1325,58 +1335,73 @@ class CPGamesQueryBalanceApiView(APIView):
             sub_uid = message.get("sub_uid") 
             app_id = str(request.data.get('appid', ''))
             response_data = cp.get_user_balance(sub_uid, app_id=app_id)
-            cp.save_request(request=response_data, is_response=True)
             return Response(data=response_data, status=status.HTTP_200_OK)
         except Exception as e:
             print(e)
             # Parameter error: 1110
             data = cp.parse_to_message(1110)
-            cp.save_request(request=data, is_response=True)
             return Response(data=data, status=status.HTTP_200_OK)
-
 
 
 class CPGamesPlacingSettingBetsApiView(APIView):
     @transaction.atomic
     def post(self, request) -> Response:
         cp = CPgames()
-        cp.save_request(request)
-        data, status = cp.transfer_in_out(data=request.data)
-        cp.save_request(request=data, is_response=True)
-        return Response(data=data, status=status)
+        data, local_status = cp.transfer_in_out(data=request.data)
+        return Response(data=data, status=local_status)
+
 
 class CPGamesCancelInOutApiView(APIView):
     @transaction.atomic
     def post(self, request) -> Response:
         cp = CPgames()
-        cp.save_request(request)
-        data, status = cp.cancel_in_out(data=request.data)
-        cp.save_request(request=data, is_response=True)
-        return Response(data=data, status=status)
+        data, local_status = cp.cancel_in_out(data=request.data)
+        return Response(data=data, status=local_status)
+
 
 class CPGamesBetApiView(APIView):
     @transaction.atomic
     def post(self, request) -> Response:
         cp = CPgames()
-        cp.save_request(request)
-        data, status = cp.place_bet(data=request.data)
-        cp.save_request(request=data, is_response=True)
-        return Response(data=data, status=status)
+        data, local_status = cp.place_bet(data=request.data)
+        return Response(data=data, status=local_status)
+
 
 class CPGamesCancelBetApiView(APIView):
     @transaction.atomic
     def post(self, request) -> Response:
         cp = CPgames()
-        cp.save_request(request)
-        data, status = cp.cancel_bet(data=request.data)
-        cp.save_request(request=data, is_response=True)
-        return Response(data=data, status=status)
+        data, local_status = cp.cancel_bet(data=request.data)
+        return Response(data=data, status=local_status)
+
 
 class CPGamesSettleBetApiView(APIView):
     @transaction.atomic
     def post(self, request) -> Response:
         cp = CPgames()
-        cp.save_request(request)
-        data, status = cp.settle(data=request.data)
-        cp.save_request(request=data, is_response=True)
-        return Response(data=data, status=status)
+        data, local_status = cp.settle(data=request.data)
+        return Response(data=data, status=local_status)
+
+
+class OneGameHubApiView(APIView):
+    def post(self, request) -> Response:
+        save_request(service="OneGameHub", request=request)
+
+        params = request.GET.dict()
+        save_request(service="OneGameHub", request=params, is_response=True)
+
+        ogh = OneGameHub()
+        ogh_func: Dict[str, Callable] = {
+            "cancel": ogh.cancel_bet,
+            "win": ogh.win,
+            "bet": ogh.place_bet,
+            "balance": ogh.get_balance
+        }
+
+        run = ogh_func.get(params.get("action", ""),
+                           lambda data: (ogh.parse_to_message("ERR001"), 401))
+
+        data, local_status = run(params)
+        save_request(service="OneGameHub", request=data, is_response=True)
+
+        return Response(data=data, status=local_status)

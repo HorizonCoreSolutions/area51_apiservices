@@ -378,16 +378,22 @@ function banner_click(){
                         <form action="" method="post" enctype="multipart/form-data">
                           {% csrf_token %}
                           <div class="row mb-3 pb-2">
-        <div class="col-md-6">
+        <div class="col-md-4">
             <div class="form-check form-switch">
                 <input type="checkbox" class="form-check-input" id="{{ form.game_status.id_for_label }}" name="{{ form.game_status.name }}" {% if form.game_status.value %}checked{% endif %}>
                 <label class="form-check-label" for="{{ form.game_status.id_for_label }}">Game Status</label>
             </div>
         </div>
-        <div class="col-md-6">
+        <div class="col-md-4">
             <div class="form-check form-switch">
                 <input type="checkbox" class="form-check-input" id="{{ form.coming_soon.id_for_label }}" name="{{ form.coming_soon.name }}" {% if form.coming_soon.value %}checked{% endif %}>
                 <label class="form-check-label" for="{{ form.coming_soon.id_for_label }}">Coming Soon</label>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-check form-switch">
+                <input type="checkbox" class="form-check-input" id="{{ form.is_api_prefix.id_for_label }}" name="{{ form.is_api_prefix.name }}" {% if form.is_api_prefix.value %}checked{% endif %}>
+                <label class="form-check-label" for="{{ form.is_api_prefix.id_for_label }}">V2 api</label>
             </div>
         </div>
     </div>

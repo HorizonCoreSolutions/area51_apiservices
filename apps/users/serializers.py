@@ -451,7 +451,9 @@ class SignUpSerializer(serializers.ModelSerializer):
         
         if data.get("applied_promo_code"):
             is_valid, msg = promo_handler.verify_code(
-                data.get("applied_promo_code"), bypass_limit_check=True)
+                promo_code=data.get("applied_promo_code"),
+                bypass_limit_check=True
+            )
             if not is_valid:
                 raise serializers.ValidationError(msg)
         

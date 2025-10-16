@@ -100,5 +100,5 @@ class Command(BaseCommand):
             )
             if created:
                 cateogry = CasinoHeaderCategory.objects.filter(~Q(position=None)).order_by("position").last()
-                obj.position = cateogry.position + 1 if cateogry else 1
+                obj.position = (cateogry.position or 0) + 1 if cateogry else 1
                 obj.save()

@@ -1541,7 +1541,15 @@ class GetCoinFlowLink(APIView):
         res = cf.register_user_attested(user=user)
         # if res.error:
         #     return Response(data={"message" : "Please compleate any other verification step left."}, status=status.HTTP_400_BAD_REQUEST)
-        link = cf.create_checkout_link(user=user, amount_cents=cents)
+        promo_code = request.data.get("promo_code")
+        promo_code = str(promo_code) if promo_code else None
+
+        link = cf.create_checkout_link(
+            user=user,
+            amount_cents=cents,
+            promo_code=promo_code
+        )
+
         if link.error:
             return Response(data={'message': link.error}, status=status.HTTP_400_BAD_REQUEST)
         
@@ -1555,11 +1563,11 @@ class GetCoinFlowLink(APIView):
 
 class WebhookView(APIView):
     def post(self, request):
-        save_request('spy', request)
         
         cf = CoinFlowClient()
         data = cf.handle_webhook(request.data, request.headers.get('Authorization'))
         if data.error:
+            save_request('spy', request)
             save_request('spy', {'data' : data.error, 'Authorization' : request.headers.get('Authorization', 'None')}, is_response=True)
         
         return Response(data={'message' : 'OK'}, status=status.HTTP_200_OK)
@@ -1572,15 +1580,16 @@ class TestCoinflow(APIView):
     so this can be use by my coworkers to at least in teory play the game
     '''
     def post(self, request):
-        save_request('coinflow_testing', request)
         
         cf = CoinFlowClient()
         data = cf.register_user_with_document(user=request.user)
         if data.error:
+            save_request('coinflow_testing', request)
             save_request('coinflow_testing', {'data' : data.error}, is_response=True)
         
         data = cf.register_user_attested(user=request.user, ssn=f'{request.user.id}3245'[:4])
         if data.error:
+            save_request('coinflow_testing', request)
             save_request('conflow_testing', {'data' : data.error}, is_response=True)
             
         return Response(data={'message' : 'OK'}, status=status.HTTP_200_OK)
@@ -1647,11 +1656,14 @@ class CoinflowWithdraws(APIView):
             sliding=True
             )
         if not is_allowed:
-            return Response({"message" : "Please try again later."}, status=status.HTTP_429_TOO_MANY_REQUESTS)
+            return Response(
+                {"message" : "Please try again later."},
+                status=status.HTTP_429_TOO_MANY_REQUESTS
+            )
 
         card = request.data.get('cardId')
         bank = request.data.get('bankId')
-        
+        venmo = request.data.get('venmoId')
         
         cents = request.data.get('cents')
         if cents is None:
@@ -1663,18 +1675,29 @@ class CoinflowWithdraws(APIView):
         
         cents = int(cents)
         if cents < 500 or cents > 50000:
-            return Response(data={'message' : '@cents min depossit of 500 cents. Max depossit is 50000 cents'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        
-        if card is None and bank is None:
-            return Response(data={'message' : 'Please use @cardId or @bankId'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        if card and bank:
-            return Response(data={'message' : 'Please only use @cardId or @bankId'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        prefix = 'card:' if card else 'bank:'
-        token = card if card else bank
-        data = redis_client.get(prefix+token)
+            return Response(
+                data={'message' : '@cents min depossit of 500 cents. Max depossit is 50000 cents'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        pairs = []
+        if card:  pairs.append(("card", card))
+        if bank:  pairs.append(("bank", bank))
+        if venmo: pairs.append(("venmo", venmo))
+
+        if not pairs:
+            return Response(
+                data={'message' : 'Please use @cardId, @bankId or @venmoId'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if len(pairs) > 1:
+            return Response(
+                data={'message' : 'Please only use @cardId, @bankId or @venmoId'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        data = redis_client.get(":".join(pairs[0]))
         
         if not data:
             return Response(data={'message' : 'Please use and available card, For security reasons once started a transaction this id only last 30 min'}, status=status.HTTP_400_BAD_REQUEST)
@@ -1689,7 +1712,7 @@ class CoinflowWithdraws(APIView):
         if registration_result.error:
             return Response(data={'message' : registration_result.error}, status=status.HTTP_400_BAD_REQUEST)  
         ip = get_user_ip_from_request(request)
-        result = cf.create_transaction_withdraw(user, data, prefix, cents, ip)
+        result = cf.create_transaction_withdraw(user, data, pairs[0][0], cents, ip)
         
         if result.data:
             return Response(data=result.data, status=result.data.get("status"))
@@ -1827,7 +1850,8 @@ class WithdrawInfoView(APIView):
 
         # 1. Get today at midnight (timezone-aware)
         # Get timezone-aware "today at midnight"
-        start_of_day = timezone.now().replace(
+        now = timezone.now()
+        start_of_day = now.replace(
                 hour=0,
                 minute=0,
                 second=0,
@@ -1835,6 +1859,8 @@ class WithdrawInfoView(APIView):
 
         # Shift forward by N hours (e.g. day starts at 5 AM)
         shifted_start = start_of_day + timedelta(hours=DAY_SHIFT_HOURS)
+        if now < shifted_start:
+            shifted_start -= timedelta(days=1)
 
         qs = CoinFlowTransaction.objects.filter(
             user=request.user,

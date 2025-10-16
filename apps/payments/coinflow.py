@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from django.utils import timezone
 from datetime import datetime, timedelta, time
 from apps.core.utils.encryption import decrypt_combined, encrypt_combined
+from apps.users import promo_handler
 from apps.users.utils import redis_client
 from typing import Callable, Dict, Optional
 from apps.core.custom_types import BasicReturn
@@ -654,14 +655,17 @@ class CoinFlowClient:
     def build_payout_headers(self) -> dict:
         return self._build_headers()
 
-    def create_checkout_link(self, 
-                           user: Users,
-                           amount_cents: int,
-                           threeds_preference: str = 'Frictionless',
-                           item_class: str = 'gameOfSkill',
-                           item_id: Optional[str] = None,
-                           item_name: str = 'Sweeptokens',
-                           is_preset_amount: bool = False) -> BasicReturn:
+    def create_checkout_link(
+        self,
+        user: Users,
+        amount_cents: int,
+        item_id: Optional[str] = None,
+        is_preset_amount: bool = False,
+        item_name: str = 'Sweeptokens',
+        item_class: str = 'gameOfSkill',
+        promo_code: Optional[str] = None,
+        threeds_preference: str = 'Frictionless',
+    ) -> BasicReturn:
         """
         Create a checkout link for user payment processing.
 
@@ -681,6 +685,8 @@ class CoinFlowClient:
             item_id: Unique item identifier (optional, auto-generated if not provided)
             item_name: Item name for display (default: 'Sweeptokens')
             webhook_url: Webhook URL for callbacks (optional)
+            promo_code: Promo code user might use,
+                        this must be validated previusly (optional)
             is_preset_amount: Whether the amount is preset (default: False)
 
         Returns:
@@ -716,6 +722,14 @@ class CoinFlowClient:
             for k, v in user_data.items():
                 if v is None:
                     return BasicReturn(success=False, error=f"Please fill in your {k} to proceed.")
+
+            promo_log = None
+
+            if promo_code:
+                promo_log = promo_handler.claim_code(user=user, promo_code=promo_code, bonus_type="deposit")
+                if not promo_log:
+                    return BasicReturn(success=False, error=f"This message should not be shown, please contact us.")
+                logger.debug(f"Promo code: {promo_code} has been used for user {user.username}")
 
             # Construct checkout payload
             payload = {
@@ -776,15 +790,21 @@ class CoinFlowClient:
                     success=False,
                     error='Checkout URL not found in API response.'
                 )
+                
+            if promo_log:
+                promo_log.log = promo_handler.TAKEN_CODE
+                promo_log.save()
 
             transaction = CoinFlowTransaction.objects.create(
                 user=user,
                 amount=Decimal(amount_cents) / 100,
                 currency='USD',
+                promo_log=promo_log,
                 transaction_id=transaction_id,
                 transaction_type=CoinFlowTransaction.TransactionType.deposit,
                 account_type=CoinFlowTransaction.AccountType.card,
-                status=CoinFlowTransaction.StatusType.requested
+                status=CoinFlowTransaction.StatusType.requested,
+
             )
 
             logger.info(f"Checkout link created successfully for user {user.id}-{user.username}")
@@ -855,7 +875,7 @@ class CoinFlowClient:
     def create_transaction_withdraw(self,
                                     user: Users,
                                     data: dict,
-                                    type: str,
+                                    withdraw_type: str,
                                     cents: int,
                                     ip: str) -> BasicReturn:
 
@@ -915,7 +935,7 @@ class CoinFlowClient:
 
         payload = {
             "amount": { "cents": cents },
-            "speed": "card" if type.startswith("card") else "same_day",
+            "speed": "same_day" if withdraw_type == "bank" else withdraw_type,
             "account": data.get("token"),
             "userId": self._generate_user_id(user),
             "waitForConfirmation": True,
@@ -985,6 +1005,13 @@ class CoinFlowClient:
             logger.warning(f"data \n{data}")
             return BasicReturn(success=False, error="This service is down, please try again later. If the problem persist contact support.")
 
+        act = CoinFlowTransaction.AccountType
+        map_type = {
+            "card": act.card,
+            "bank": act.bank,
+            "venmo": act.venmo
+        }
+
         CoinFlowTransaction.objects.create(
             user=user,
             amount=(Decimal(cents) / 100),
@@ -996,7 +1023,7 @@ class CoinFlowClient:
             post_balance=new_balance,
             ip_address=ip,
             signature=signature,
-            account_type= CoinFlowTransaction.AccountType.card if type.startswith("card") else CoinFlowTransaction.AccountType.bank
+            account_type=map_type[withdraw_type]
         )
         logger.info(f"User {user.id}-{user.username} succesfully created a ${round(Decimal(cents) / 100, 2)} withdraw")
         return BasicReturn(success=True, data={})
@@ -1053,10 +1080,9 @@ class CoinFlowClient:
                 "creditCardFees": round(entry["creditCardFees"]["cents"] / 100, 2),
                 "chargebackProtectionFees": round(entry["chargebackProtectionFees"]["cents"] / 100, 2),
                 "gasFees": round(entry["gasFees"]["cents"] / 100, 2),
-                "total": round(entry["total"]["cents"] / 100, 2)
+                "total": round(entry["total"]["cents"] / 100, 2),
+                'bonus': round(entry["total"]["cents"] * (settings.BONUS_MULTIPLIER) / 100, 2)
             }
-
-            totals['bonus'] = cents * (settings.BONUS_MULTIPLIER / 100)
 
         return BasicReturn(success=True, data=totals)
 
@@ -1076,7 +1102,8 @@ class CoinFlowClient:
 
         result = {
             "cards": [],
-            "bankAccounts": []
+            "bankAccounts": [],
+            "venmo": []
         }
 
         # Process cards
@@ -1102,6 +1129,15 @@ class CoinFlowClient:
                 "rtpEligible": bank.get("rtpEligible")
             })
 
+        venmo: Optional[Dict] = withdrawer.get('venmo')
+
+        if venmo:
+            venmo_id = str(uuid4())
+            redis_client.setex(f"venmo:{venmo_id}", TTL_SECONDS, json.dumps(venmo))
+            result['venmo'].append({
+                "venmoId": venmo_id,
+                "alias": venmo.get("alias")
+            })
 
         return BasicReturn(success=True, data=result)
 
@@ -1121,13 +1157,25 @@ class CoinFlowClient:
 
         tid = l_data.get('webhookInfo', {}).get('transaction_id')
         external_id = l_data.get('id', '')
-        if tid is None:
-            logger.critical('The webhook is not retorning the transacction id, no webhook handling can be done')
-            return BasicReturn(success=False, error='transacction if is not returned on the webhook')
 
-        transaction_qs = CoinFlowTransaction.objects.filter(transaction_id=tid).order_by('-created')
+        if tid is None:
+            logger.critical('The webhook is not retorning the '
+                            'transacction id, no webhook handling '
+                            'can be done')
+            return BasicReturn(
+                success=False,
+                error='transacction if is not returned on the webhook'
+            )
+
+        transaction_qs = CoinFlowTransaction.objects.filter(
+            transaction_id=tid
+        ).order_by('-created')
+
         if not transaction_qs.exists():
-            return BasicReturn(success=False, error='transacction was not registered')
+            return BasicReturn(
+                success=False,
+                error='transacction was not registered'
+            )
 
         money = l_data.get('total', {}).get('cents')
         subtotal = l_data.get('subtotal', {}).get('cents')
@@ -1169,10 +1217,17 @@ class CoinFlowClient:
             transaction.pre_balance=old_balance
             transaction.post_balance = new_balance
             transaction.is_deleted = False
-
             user.balance = new_balance
 
             user.save()
+
+            if transaction.promo_log:
+                promo_handler.materialize(
+                    promo_log=transaction.promo_log,
+                    amount=transaction.amount,
+                    user=user,
+                )
+
             transaction.save()
             logger.info(f'Successfully processed payment for user {user.id}-{user.username}, amount: ${transaction.amount}, new balance: ${new_balance}')
             return BasicReturn(success=True, message=f'Payment processed successfully. New balance: ${new_balance}')

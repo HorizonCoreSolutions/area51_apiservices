@@ -324,6 +324,7 @@ urlpatterns = [
     url(r"^edit-bonuses/", EditBonusView.as_view(), name="edit-bonuses"),
     url(r"^enable-losing-bonus-permissions/", LosingBonusPermissionView.as_view(), name="enable-losing-bonus-permissions"),
     url(r"deposit-permissions/", DepositPermission.as_view(), name="deposit-permissions"),
+    url(r'^deposit-bonus/(?P<promo_code>[-\w]+)/$', DetailBonusView.as_view(), name='detail-promocode-deposit'),
     url(r"^deposit-bonus/", DepositBonusView.as_view(), name="deposit-bonus"),
     url(r"^enable-referral-bonus-permissions/", ReferAFriendBonusPermission.as_view(), name="enable-referral-bonus-permissions"),
     url(r"^promotion-page/", PromotionPageView.as_view(), name="promotion-page"),

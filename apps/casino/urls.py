@@ -1,6 +1,8 @@
 from django.conf.urls import url
 from django.urls import include, path
 
+from apps.core.views import SpyView
+
 from .views import (Casino25APIView, Casino25CallBackAPIView, Casino25GameList,
     Casino25GameListAdmin, CasinoHeaderCategoryAPIView, GameSearchView, GetBalance, GetCasinoCategory,
     GetCasinoCategoryGameListAdmin, GetCasinoGameList, GetCasinoGameListAdmin,
@@ -10,7 +12,8 @@ from .views import (Casino25APIView, Casino25CallBackAPIView, Casino25GameList,
     TournamentListApiView, TournamentOptApiView, TournamentTransactionListApiView,
     UpdatePlayersFavCasinoGames, UploadGsoftGames, UserTournamentHistoryListApiView,
     VerifySessions, Casino25CategoryWiseGameList, Casino25ProviderWiseGameList,
-    CPGamesQueryBalanceApiView, CPGamesPlacingSettingBetsApiView, CPGamesCancelInOutApiView, CPGamesBetApiView, CPGamesCancelBetApiView, CPGamesSettleBetApiView)
+    CPGamesQueryBalanceApiView, CPGamesPlacingSettingBetsApiView, CPGamesCancelInOutApiView,
+    CPGamesBetApiView, CPGamesCancelBetApiView, CPGamesSettleBetApiView, OneGameHubApiView)
 
 app_name = "Casino"
 
@@ -57,6 +60,6 @@ urlpatterns = [
     url(r"tournament-scoreboard/(?P<pk>\d+)?/$", ScoreboardApiView.as_view(), name="tournament-scoreboard"),
     
     path("cpgames-callback/balance/", include(cpgames_urls)),
+    url(r"onegamehub/callback$", OneGameHubApiView.as_view(), name="ogh_callback"),
 
 ]
-

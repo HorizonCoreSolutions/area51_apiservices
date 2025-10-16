@@ -66,7 +66,7 @@ def check_otp(otp):
 
 refuj_key = settings.ENCRYPTION_KEY
 
-def encrypt(data: dict) -> str:
+def encrypt(data) -> str:
     global refuj_key
     data_json_64 = base64.b64encode(json.dumps(data).encode('ascii'))
     try:
@@ -84,25 +84,25 @@ def encrypt(data: dict) -> str:
     
 @transaction.atomic
 def refund_transactions(id):
-            try:  
-                transaction = OffMarketTransactions.objects.filter(id=id).first()
-                user=transaction.user
-                game = OffMarketGames.objects.filter(title=transaction.game_name_full).first()
-                try:
-                    OffMarketTransactions.objects.update_or_create(
-                                user = user,
-                                amount = transaction.amount-transaction.bonus,
-                                game_name = transaction.game_name,
-                                status = 'Completed',
-                                transaction_type = "REFUND",
-                                journal_entry = 'debit',
-                                description = f'refund for Failed deposit amount {transaction.amount}',
-                                game_name_full = game.title
-                                ) 
-                except Exception as e:
-                    print(e)
-            except Exception as e:
-                print(e)
+    try:
+        transaction = OffMarketTransactions.objects.filter(id=id).first()
+        user=transaction.user
+        game = OffMarketGames.objects.filter(title=transaction.game_name_full).first()
+        try:
+            OffMarketTransactions.objects.update_or_create(
+                user = user,
+                amount = transaction.amount-transaction.bonus,
+                game_name = transaction.game_name,
+                status = 'Completed',
+                transaction_type = "REFUND",
+                journal_entry = 'debit',
+                description = f'refund for Failed deposit amount {transaction.amount}',
+                game_name_full = game.title
+            )
+        except Exception as e:
+            print(e)
+    except Exception as e:
+        print(e)
 
 
 def send_message_to_chatlist(user, message, chat_room=None):

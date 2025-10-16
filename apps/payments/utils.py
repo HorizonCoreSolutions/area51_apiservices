@@ -302,14 +302,14 @@ def checkbonus(payment_id, payment_through="nowpayment"):
             not isinstance(payment, MnetTransaction)
             and payment.applied_promo_code
         ):
-            promo_handler.redeam_code(
+            promo_handler.redeem_code(
                 user=player,
                 amount_dep=delta,
                 promo_code=payment.applied_promo_code,
                 bonus_type="deposit")     
 
         if player.applied_promo_code:
-            promo_handler.redeam_code(
+            promo_handler.redeem_code(
                 user=player,
                 amount_dep=None,
                 bonus_type="welcome",

@@ -111,13 +111,11 @@ class GetVerificationLinkView(APIView):
 class CallbackAcuitytecView(APIView):
 
     def post(self, request):
-        AcuityTecAPI.save_request(request=request)
         
         reference_id = str(request.data.get('reference_id', '')).strip()
         
         if reference_id is None:
             data = {"message": "The reference is not valid", "reallity": {"message": "status updated", "status": 1}, "status": -1}
-            AcuityTecAPI.save_request(request=data, is_response=True)
             return Response({"message": "status updated", "status": 1}, status.HTTP_200_OK)
         
         qs = VerificationItem.objects.filter(
@@ -127,13 +125,11 @@ class CallbackAcuitytecView(APIView):
         )
         if not qs.exists():
             data = {"message": "Verification Item does not exist", "reallity": {"message": "status updated", "status": 1}, "status": -1}
-            AcuityTecAPI.save_request(request=data, is_response=True)
             return Response({"message": "status updated", "status": 1}, status.HTTP_200_OK)
         
         vi = qs.first()
         if vi is None:
             data = {"message": "VI existed but qs.first() is None", "reallity": {"message": "status updated", "status": 1}, "status": -1}
-            AcuityTecAPI.save_request(request=data, is_response=True)
             return Response({"message": "status updated", "status": 1}, status.HTTP_200_OK)
         
         try:
@@ -196,7 +192,6 @@ class CallbackAcuitytecView(APIView):
         
         if newer_exists and result in ["verification.declined", 'request.timeout']:
             data = {"message": "has been declined or time out and a newer request has been made", "reallity": {"message": "status updated", "status": 1}, "status": -1}
-            AcuityTecAPI.save_request(request=data, is_response=True)
             return Response({"message": "status updated", "status": 1}, status=status.HTTP_200_OK)
         
         if result == "verification.declined":
@@ -209,7 +204,6 @@ class CallbackAcuitytecView(APIView):
         
         user.save()
         data = {"message": "status updated", "status": 1}
-        AcuityTecAPI.save_request(request=data, is_response=True)
         return Response({"message": "status updated", "status": 1}, status=status.HTTP_200_OK)
     
     

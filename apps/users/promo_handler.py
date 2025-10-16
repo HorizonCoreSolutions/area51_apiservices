@@ -1,23 +1,29 @@
 from decimal import Decimal
+from functools import wraps
 from django.conf import settings
 from django.db import transaction
 from django.utils import timezone
-from datetime import datetime, date
+from apps.core.concurrency import limiter
 from apps.bets.models import Transactions
 from django.db.models import Count, Q, Sum
-from typing import Optional, Tuple, Literal
+from datetime import datetime, date, timedelta
 from apps.bets.utils import generate_reference
+from typing import Optional, Tuple, Literal,Callable, TYPE_CHECKING
 from apps.users.models import PromoCodes, PromoCodesLogs, Users
 from apps.users.utils import send_player_balance_update_notification
 
+OPEN_CODE = "validated_code"
+TAKEN_CODE = "taken_code"
 
 ErrorMessage = Literal[
     "Invalid promocode",
     "Promo-code Expired",
     "Invalid deposit amount.",
     "Promo-code use limit exceeded",
+    "Too many attempts. All promo codes are disabled.",
     "OK",
 ]
+
 
 def _ensure_date(dt):
     if isinstance(dt, datetime):
@@ -26,6 +32,7 @@ def _ensure_date(dt):
         return dt         # already date
     else:
         raise TypeError(f"Unexpected type: {type(dt)}")
+
 
 def _get_promo(
     promo_code: str, bonus_type: Optional[str]
@@ -75,46 +82,93 @@ def _is_promo_valid(
     return True
 
 
+def _generate_key(
+    user: Optional[Users],
+    ip: Optional[str]
+) -> str:
+    """Generate limiter key using user.id if available, otherwise ip."""
+    if user is not None:
+        return "prmcd:uid:{}".format(user.id)
+    if ip is not None:
+        return "prmcd:ip:{}".format(ip)
+    return "prmcd:unknown"
+
+
+def _check_key_locked(
+    key: str
+) -> int:
+    """Return seconds left if locked, 0 if not locked. Wrap limiter API."""
+    return limiter.is_key_locked(key=key)
+
+
+def _is_user_promo_banned(
+    user: Optional[Users],
+    ip: Optional[str]
+) -> Optional[int]:
+    """
+    Returns the amount of seconds a user is banned
+    from promo codes is return is None user is not
+    banned.
+    """
+    if user is None and ip is None:
+        return None
+
+    key = _generate_key(user=user, ip=ip)
+    time_left = _check_key_locked(key=key)
+    if time_left > 0:
+        return time_left
+
+    is_allowed = limiter.allow(
+        window=3600,
+        key=key,
+        limit=5
+    )
+    if not is_allowed:
+        limiter.lock_key(key=key)
+        return 3600
+    return None
+
+
 def _check_usage_limits(
     promo_obj: PromoCodes,
     user: Optional[Users],
     amount_dep: Optional[Decimal] = None,
 ) -> Tuple[bool, Optional[Literal["Promo-code use limit exceeded"]]]:
+    """Check global and per-user usage limits."""
     def mark_expired():
         promo_obj.is_expired = True
         promo_obj.save()
-    """Check global and per-user usage limits."""
     qs = PromoCodesLogs.objects.filter(promocode=promo_obj, transfer__isnull=False)
 
     agg_kwargs = {
         "total": Count("id"),
-        "amount_redeamed": Sum("transfer", filter=Q(transfer__isnull=False)),
+        "amount_redeemed": Sum("transfer", filter=Q(transfer__isnull=False)),
     }
     if user:
         agg_kwargs["user_count"] = Count("id", filter=Q(user=user))
 
     counts = qs.aggregate(**agg_kwargs)
 
-    if user and counts.get("user_count", 0) >= promo_obj.limit_per_user:
+    if user and promo_obj.limit_per_user and counts.get("user_count", 0) >= promo_obj.limit_per_user:
         mark_expired()
         return False, "Promo-code use limit exceeded"
 
-    if counts.get("total", 0) >= promo_obj.usage_limit:
+    if promo_obj.usage_limit and counts.get("total", 0) >= promo_obj.usage_limit:
         mark_expired()
         return False, "Promo-code use limit exceeded"
     
-    amount_redeamed = counts.get("amount_redeamed") or Decimal("0")
+    amount_redeemed = counts.get("amount_redeemed") or Decimal("0")
 
-    if amount_redeamed >= promo_obj.max_bonus_limit:
+    if promo_obj.max_bonus_limit and amount_redeemed >= promo_obj.max_bonus_limit:
         mark_expired()
         return False, "Promo-code use limit exceeded"
 
     if promo_obj.bonus_distribution_method == promo_obj.BonusDistributionMethod.instant:
-        if amount_redeamed + promo_obj.instant_bonus_amount > promo_obj.max_bonus_limit:
+        if amount_redeemed + promo_obj.instant_bonus_amount > promo_obj.max_bonus_limit:
             mark_expired()
             return False, "Promo-code use limit exceeded"
     elif amount_dep:
-        total = amount_redeamed + amount_dep * Decimal(promo_obj.bonus_percentage or 0)
+        total = amount_redeemed + amount_dep * Decimal(promo_obj.bonus_percentage or 0)
         if (total > promo_obj.max_bonus_limit):
             mark_expired()
             return False, "Promo-code use limit exceeded"
@@ -122,7 +176,7 @@ def _check_usage_limits(
     return True, None
 
 
-def redeam_code(
+def redeem_code(
     user: Users,
     promo_code: str,
     amount_dep: Optional[Decimal],
@@ -132,9 +186,9 @@ def redeam_code(
     if not promo_obj:
         return False, "Invalid promocode"
 
-    now = timezone.now().date()
-    if not _is_promo_valid(promo_obj, now):
-        return False, "Promo-code Expired"
+    # now = timezone.now().date()
+    # if not _is_promo_valid(promo_obj, now):
+    #    return False, "Promo-code Expired"
 
     with transaction.atomic():
         user = Users.objects.select_for_update().get(id=user.id)
@@ -151,13 +205,12 @@ def redeam_code(
         ):
             return False, "Invalid deposit amount."
 
-        if not amount_dep:
-            amount_dep = Decimal(0)
+        amount_dep = Decimal(amount_dep) if amount_dep else Decimal(0)
 
         pre_balance = user.balance
 
-        amount = 0
-        bonus_amount = 0
+        amount = Decimal("0")
+        bonus_amount = Decimal("0")
 
         if promo_obj.bonus_distribution_method == method.instant:
             bonus_amount = promo_obj.gold_bonus
@@ -205,49 +258,180 @@ def redeam_code(
 
 def claim_code(
     user: Users,
-    promo_code:str
-) -> bool:
+    promo_code: str,
+    bonus_type: str = "welcome"
+) -> Optional[PromoCodesLogs]:
+    if bonus_type not in {"welcome", "deposit"}:
+        return None
+
     now = timezone.now()
     promo = PromoCodes.objects.filter(
+        bonus__bonus_type=f"{bonus_type}_bonus",
         start_date__lte=now,
-        end_date__gt=now,
+        end_date__gte=now,
         promo_code=promo_code,
-        is_expired=False).first()
+        is_expired=False
+    ).first()
 
     if not promo:
-        return False
+        return None
 
     # If want to remove the None
     # please remember to change all the current Nones to 0
 
-    PromoCodesLogs.objects.create(
+    a = PromoCodesLogs.objects.create(
         date=now,
         user=user,
         transfer=None,
         promocode=promo,
         transfer_gold=None,
-        log=f"Promo-code: {promo_code} claimed for player: {user.username}",
+        log=OPEN_CODE,
     )
+
+    return a
+
+
+def check_validation_code(
+    user: Users,
+    promo_code:str
+) -> Optional[PromoCodesLogs]:
+    now = timezone.now()
+
+    promo_log = PromoCodesLogs.objects.filter(
+        created__gte=now - timedelta(minutes=10),
+        user=user,
+        transfer=None,
+        transfer_gold=None,
+        promocode__promo_code=promo_code,
+        log=OPEN_CODE,
+    ).first()
+    return promo_log
+
+
+def materialize(
+    promo_log: PromoCodesLogs,
+    amount: Decimal,
+    user: Users
+):
+    if promo_log.transaction:
+        return
+    pm = promo_log.promocode
+    if pm is None:
+        return
+    dm = pm.bonus_distribution_method
+
+    if dm == "deposit":
+        bonus = Decimal(pm.bonus_percentage or 0) * amount / 100
+        g_bns = Decimal(pm.gold_percentage or 0) * amount * settings.BONUS_MULTIPLIER / 100
+    elif dm == "mixture":
+        bonus = Decimal(pm.bonus_percentage or 0) * amount / 100
+        g_bns = Decimal(pm.gold_bonus or 0)
+    elif dm == "instant":
+        bonus = Decimal(pm.bonus or 0)
+        g_bns = Decimal(pm.gold_bonus or 0)
+    else:
+        return
+
+    user.balance += bonus
+    user.bonus_balance += g_bns
+    user.save()
+
+    t = Transactions.objects.create(
+        user=promo_log.user,
+        amount=bonus,
+        status="charged",
+        bonus_amount=g_bns,
+        journal_entry="bonus",
+        new_balance=user.balance,
+        previous_balance=user.balance - bonus,
+        bonus_type=pm.bonus.bonus_type,  # type: ignore
+        description="Bonus for user",
+        reference=generate_reference(user)
+    )
+
+    promo_log.transaction = t  # type: ignore
+    promo_log.save()
+
+
+def rollback_validation_code(
+    promo_log: PromoCodesLogs,
+    remove_history: bool
+) -> bool:
+    if remove_history:
+        promo_log.delete()
     return True
 
 
+def _format_time(s: int) -> str:
+    h, m = divmod(s, 3600)
+    m, s = divmod(m, 60)
+    parts = []
+    if h: parts.append(f"{h}h")
+    if m: parts.append(f"{m}m")
+    if s or not parts: parts.append(f"{s}s")
+    return " ".join(parts)
+
+
+def rate_limit_code(func: Callable) -> Callable:
+    @wraps(func)
+    def wrap(**kwargs) -> Tuple[Optional[PromoCodes], Optional[str]]:
+        blc: bool = kwargs.get("bypass_limit_check", False)
+        user: Optional[Users] = kwargs.get("user")
+        ip: Optional[str] = kwargs.get("ip")
+
+        should_limit = not blc and (user or ip)
+
+        if should_limit:
+            time_left = _check_key_locked(
+                key=_generate_key(user=user, ip=ip)
+            )
+            if time_left > 0:
+                ftime = _format_time(s=time_left)
+                return None, ("Too many attempts. "
+                            "All promo codes are"
+                            f" disabled for {ftime}.")
+
+        res = func(**kwargs)
+
+        if not should_limit or res[0] is not None:
+            return res
+
+        time = _is_user_promo_banned(user, ip)
+
+        if time is None:
+            return res
+
+        ftime = _format_time(s=time)
+        return None, ("Too many attempts. "
+                    "All promo codes are"
+                    f" disabled for {ftime}.")
+    return wrap
+
+
 def verify_code(
+    *,
     promo_code: str,
+    ip: Optional[str] = None,
     user: Optional[Users] = None,
     bypass_limit_check: bool = False,
     bonus_type: Optional[Literal["bet", "deposit", "welcome"]] = None,
-) -> Tuple[bool, Optional[ErrorMessage]]:
-    promo_obj = _get_promo(promo_code, bonus_type)
-    if not promo_obj:
-        return False, "Invalid promocode"
-
+) -> Tuple[Optional[PromoCodes], Optional[str]]:
     now = datetime.now()
-    if not _is_promo_valid(promo_obj, now):
-        return False, "Promo-code Expired"
+    promo_obj = _get_promo(promo_code, bonus_type)
 
-    if bypass_limit_check:
+    if not promo_obj:
+        return None, "Invalid promocode"
+
+    if not _is_promo_valid(promo_obj, now):
+        return None, "Promo-code Expired"
+
+    if not bypass_limit_check:
         valid, msg = _check_usage_limits(promo_obj, user)
         if not valid:
-            return False, msg
+            return None, msg
 
-    return True, "OK"
+    return promo_obj, "OK"
+
+
+if not TYPE_CHECKING:
+    verify_code = rate_limit_code(verify_code)

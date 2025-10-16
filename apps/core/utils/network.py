@@ -15,15 +15,15 @@ def save_request(service:str, request, is_response=False):
 
     with open(file, 'a') as f:
         f.write(entry)
-        
+
 def get_user_ip_from_request(request) -> str:
     x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
 
     if x_forwarded_for:
         ip = x_forwarded_for.split(',')[0].strip()  # client’s real IP
-        data = x_forwarded_for
+        # data = [x_forwarded_for]
     else:
         ip = request.META.get('REMOTE_ADDR')
-        data = [ip]
-    ip = data[0]
+        # data = [ip]
+    # ip = data[0]
     return ip
