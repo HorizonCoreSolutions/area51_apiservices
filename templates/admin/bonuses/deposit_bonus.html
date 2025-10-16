@@ -838,6 +838,22 @@ Deposit Bonus
           });
         }
       },
+      error: function (xhr) {
+        try {
+          const data = JSON.parse(xhr.responseText);
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: data.message || 'Unknown error occurred',
+          });
+        } catch {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Server error or invalid response',
+          });
+        }
+      }
     });
   });
 

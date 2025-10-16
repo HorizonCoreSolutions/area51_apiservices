@@ -3892,8 +3892,17 @@ class BonusPercentageView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxRe
                 raise ValueError
         except ValueError:
             return self.render_json_response({"status": "error", "message": _(f"Instant values are not valid.")},400)
-
-
+        
+        
+        if bonus_type is None:
+            return self.render_json_response({"status": "error", "message": "Bonus Type must be set"}, 400)
+        
+        if bonus_type == "deposit_bonus":
+            if bonus_percentage > 0:
+                return self.render_json_response({"status": "error", "message": "SC is disabled, please set it to 0"} , 400)
+        if bonus_type == "bet_bonus":
+            if instant_bonus_amount > 0:
+                return self.render_json_response({"status": "error", "message": "SC is disabled, please set it to 0"} , 400)
 
         try:
             user_limit = int(self.request.POST.get("user_limit", 1))
@@ -4085,6 +4094,14 @@ class EditBonusView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponse
 
         if end_date:
             end_date = timezone.datetime.strptime(end_date, self.date_format).date()
+        
+        try:
+            if bonus_percentage and Decimal(bonus_percentage) > 0:
+                return self.render_json_response({"status": "error", "message": "SC area disabled please set it to set 0 to continue"}, 400)
+            if instant_bonus_amount and Decimal(instant_bonus_amount) > 0:
+                return self.render_json_response({"status": "error", "message": "SC area disabled please set it to set 0 to continue"}, 400)
+        except Exception:
+            return self.render_json_response({"status": "error", "message": "Please insert valid values"}, 400)
 
         try:
             promo_obj = PromoCodes.objects.get(id=bonus_id)
