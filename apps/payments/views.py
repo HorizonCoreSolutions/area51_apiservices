@@ -1652,7 +1652,7 @@ class CoinflowWithdraws(APIView):
         is_allowed = limiter.allow(
             key=f"user:{request.user.id}:ac:link_endpoint",
             limit=1,  # 3 request / (window)
-            window=5 * 60 * 60,  # 5 minutos
+            window=5 * 60 * 60,  # 5 horas
             sliding=True
             )
         if not is_allowed:
