@@ -1652,12 +1652,12 @@ class CoinflowWithdraws(APIView):
         is_allowed = limiter.allow(
             key=f"user:{request.user.id}:ac:link_endpoint",
             limit=1,  # 3 request / (window)
-            window=120,  # 5 seconds
+            window=5 * 60 * 60,  # 5 minutos
             sliding=True
             )
         if not is_allowed:
             return Response(
-                {"message" : "Please try again later."},
+                {"message" : "Please try again in a few hours."},
                 status=status.HTTP_429_TOO_MANY_REQUESTS
             )
 
