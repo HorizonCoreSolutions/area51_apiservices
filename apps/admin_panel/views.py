@@ -766,7 +766,7 @@ class UpdatePlayer(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseM
     # def handle_no_permission(self):
     #     return HttpResponseRedirect(settings.LOGIN_URL)
 
-def post_ajax(self, request, *args, **kwargs):
+    def post_ajax(self, request, *args, **kwargs):
         user_name = request.POST.get("username", "")
         password = request.POST.get("password", "")
         confirm_password = request.POST.get("confirm_password", "")
