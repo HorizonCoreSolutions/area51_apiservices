@@ -165,6 +165,7 @@ class CoinFlowTransaction(AbstractBaseModel):
         card = ChoiceItem("card", _("Card"))
         bank = ChoiceItem("bank", _("Bank"))
         venmo = ChoiceItem("venmo", "Venmo")
+        paypal = ChoiceItem("paypal", "Paypal")
         
     class StatusType(DjangoChoices):
         # Common statuses

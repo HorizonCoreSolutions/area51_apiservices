@@ -1587,7 +1587,7 @@ class TestCoinflow(APIView):
             save_request('coinflow_testing', request)
             save_request('coinflow_testing', {'data' : data.error}, is_response=True)
         
-        data = cf.register_user_attested(user=request.user, ssn=f'{request.user.id}3245'[:4])
+        data = cf.register_user_attested(user=request.user)
         if data.error:
             save_request('coinflow_testing', request)
             save_request('conflow_testing', {'data' : data.error}, is_response=True)
@@ -1664,6 +1664,7 @@ class CoinflowWithdraws(APIView):
         card = request.data.get('cardId')
         bank = request.data.get('bankId')
         venmo = request.data.get('venmoId')
+        paypal = request.data.get('paypalId')
         
         cents = request.data.get('cents')
         if cents is None:
@@ -1684,16 +1685,17 @@ class CoinflowWithdraws(APIView):
         if card:  pairs.append(("card", card))
         if bank:  pairs.append(("bank", bank))
         if venmo: pairs.append(("venmo", venmo))
+        if paypal: pairs.append(("paypal", paypal))
 
         if not pairs:
             return Response(
-                data={'message' : 'Please use @cardId, @bankId or @venmoId'},
+                data={'message' : 'Please use @cardId, @bankId, @venmoId or @paypalId'},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
         if len(pairs) > 1:
             return Response(
-                data={'message' : 'Please only use @cardId, @bankId or @venmoId'},
+                data={'message' : 'Please only use @cardId, @bankId, @venmoId or @paypalId'},
                 status=status.HTTP_400_BAD_REQUEST
             )
 

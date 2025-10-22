@@ -921,12 +921,13 @@ class CoinFlowClient:
 
 
         user = Users.objects.select_for_update().get(id=user.id)
-        logger.debug(f"User: {user.id}-{user.username} initiated a transaction for ${round(cents/100, 2)}")
         if (user.balance * 100) < cents:
             logger.info(f"User: {user.id}-{user.username} has balance: {user.balance} tried to remove {round(cents/100, 2)}")
             return BasicReturn(
                 success=False,
                 error="You have insufficient funds for this transaction.")
+
+        logger.debug(f"User: {user.id}-{user.username} initiated a transaction for ${round(cents/100, 2)}")
 
         idpk = str(uuid4())
         actual_balance = user.balance
@@ -1009,7 +1010,8 @@ class CoinFlowClient:
         map_type = {
             "card": act.card,
             "bank": act.bank,
-            "venmo": act.venmo
+            "venmo": act.venmo,
+            "paypal": act.paypal
         }
 
         CoinFlowTransaction.objects.create(
@@ -1103,7 +1105,8 @@ class CoinFlowClient:
         result = {
             "cards": [],
             "bankAccounts": [],
-            "venmo": []
+            "venmo": [],
+            "paypal": []
         }
 
         # Process cards
@@ -1137,6 +1140,16 @@ class CoinFlowClient:
             result['venmo'].append({
                 "venmoId": venmo_id,
                 "alias": venmo.get("alias")
+            })
+
+        paypal: Optional[Dict] = withdrawer.get('paypal')
+
+        if paypal:
+            paypal_id = str(uuid4())
+            redis_client.setex(f"paypal:{paypal_id}", TTL_SECONDS, json.dumps(paypal))
+            result['paypal'].append({
+                "paypalId": paypal_id,
+                "alias": paypal.get("alias")
             })
 
         return BasicReturn(success=True, data=result)
