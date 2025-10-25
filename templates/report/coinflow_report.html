@@ -319,6 +319,16 @@ CoinFlow Report
       }).then((r) => {
         if (!r.isConfirmed) return;
 
+        // Show loading state
+        Swal.fire({
+          title: 'Processing...',
+          text: 'Please wait while we update the request.',
+          allowOutsideClick: false,
+          didOpen: () => {
+            Swal.showLoading();
+          },
+        });
+
         fetch("{% url 'pix_payment_apis:coinflow-process' %}", {
           method: "POST",
           headers: {
@@ -333,12 +343,20 @@ CoinFlow Report
           .then((res) => res.json().then((data) => ({ ok: res.ok, data })))
           .then(({ ok, data }) => {
             if (ok) {
-              Swal.fire("Success", `Request ${result}d successfully.`, "success");
+              Swal.fire("Success", `Request ${result}d successfully.`, "success").then(() => {
+                location.reload(); // reload after clicking OK
+              });
             } else {
-              Swal.fire("Error", data.error || "Something went wrong.", "error");
+              Swal.fire("Error", data.error || "Something went wrong.", "error").then(() => {
+                location.reload(); // reload even if error (optional)
+              });
             }
           })
-          .catch(() => Swal.fire("Error", "Network error or server unavailable.", "error"));
+          .catch(() => {
+            Swal.fire("Error", "Network error or server unavailable.", "error").then(() => {
+              location.reload();
+            });
+          });
       });
     }
     function validateDateRange(input){
