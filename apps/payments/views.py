@@ -1722,7 +1722,7 @@ class CoinflowWithdraws(APIView):
         if result.error:
             return Response(data={"message" : result.error}, status=status.HTTP_400_BAD_REQUEST)
         
-        return Response(data={"message" : "The withdraw was succesfully created"}, status=status.HTTP_200_OK)
+        return Response(data={"message" : "The request for a withdraw has ben created."}, status=status.HTTP_200_OK)
     
 class CoinflowRegisterUserView(APIView):
     permission_class = [IsPlayer]

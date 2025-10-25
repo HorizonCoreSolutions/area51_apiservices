@@ -944,6 +944,8 @@ class CoinFlowClient:
         actual_balance = user.balance
         new_balance    = actual_balance - (Decimal(cents) / 100)
         user.balance = new_balance
+        
+        user.save()
 
         act = CoinFlowTransaction.AccountType
         map_type = {
