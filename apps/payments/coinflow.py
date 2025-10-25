@@ -12,7 +12,7 @@ from datetime import datetime, timedelta, time
 from apps.core.utils.encryption import decrypt_combined, encrypt_combined
 from apps.users import promo_handler
 from apps.users.utils import redis_client
-from typing import Callable, Dict, Optional
+from typing import Callable, Dict, Optional, Tuple
 from apps.core.custom_types import BasicReturn
 from apps.core.file_logger import SimpleLogger
 from apps.acuitytec.acuitytec import AcuityTecAPI
@@ -878,7 +878,10 @@ class CoinFlowClient:
                                     withdraw_type: str,
                                     cents: int,
                                     ip: str) -> BasicReturn:
-
+        """
+        This function only generate the users petition for a
+        transaction does not compleate the full transaction to coinflow
+        """
         # Only generate one per day:
 
         WITHDRAW_STATUS = [
@@ -887,23 +890,31 @@ class CoinFlowClient:
             CoinFlowTransaction.StatusType.pending,
             # CoinFlowTransaction.StatusType.failed,
         ]
+        
+        WITHDRAW_TYPES = [
+            CoinFlowTransaction.TransactionType.withdraw,
+            CoinFlowTransaction.TransactionType.withdraw_request
+        ]
 
         DAY_SHIFT_HOURS = 5
 
         # 1. Get today at midnight (timezone-aware)
         # Get timezone-aware "today at midnight"
         start_of_day = timezone.now().replace(
-                hour=0,
-                minute=0,
-                second=0,
-                microsecond=0)
+            hour=0,
+            minute=0,
+            second=0,
+            microsecond=0
+        )
 
         # Shift forward by N hours (e.g. day starts at 5 AM)
         shifted_start = start_of_day + timedelta(hours=DAY_SHIFT_HOURS)
+        if shifted_start > timezone.now():
+            shifted_start -= timedelta(days=1)
 
         qs = CoinFlowTransaction.objects.filter(
-            user=user,
-            transaction_type=CoinFlowTransaction.TransactionType.withdraw,
+            user_id=user.id,
+            transaction_type__in=WITHDRAW_TYPES,
             status__in=WITHDRAW_STATUS,
             created__gte=shifted_start,
             is_deleted=False
@@ -934,10 +945,53 @@ class CoinFlowClient:
         new_balance    = actual_balance - (Decimal(cents) / 100)
         user.balance = new_balance
 
+        act = CoinFlowTransaction.AccountType
+        map_type = {
+            "card": act.card,
+            "bank": act.bank,
+            "venmo": act.venmo,
+            "paypal": act.paypal
+        }
+
+        CoinFlowTransaction.objects.create(
+            user=user,
+            amount=(Decimal(cents) / 100),
+            currency='USD',
+            transaction_id=idpk,
+            transaction_type=CoinFlowTransaction.TransactionType.withdraw_request,
+            status=CoinFlowTransaction.StatusType.requested,
+            pre_balance=actual_balance,
+            post_balance=new_balance,
+            ip_address=ip,
+            signature=None,
+            account_type=map_type[withdraw_type]
+        )
+        logger.info(f"User {user.id}-{user.username} succesfully created a ${round(Decimal(cents) / 100, 2)} withdraw")
+        return BasicReturn(success=True, data={})
+
+    def process_transaction_withdraw(self, cft: CoinFlowTransaction) -> BasicReturn:
+        user = cft.user
+        if (cft.transaction_type != CoinFlowTransaction.TransactionType.withdraw_request
+            or cft.status != CoinFlowTransaction.StatusType.requested):
+            return BasicReturn(
+                success=False,
+                error="This transaction has already been processed."
+            )
+            
+        if user is None:
+            return BasicReturn(
+                success=False,
+                error="User is not declared for this transaction."
+            )
+        idpk = cft.transaction_id
+        token = cft.account
+        withdraw_type = cft.account_type
+        cents = int(cft.amount * 100)
+        
         payload = {
             "amount": { "cents": cents },
-            "speed": "same_day" if withdraw_type == "bank" else withdraw_type,
-            "account": data.get("token"),
+            "speed": "same_day" if withdraw_type == CoinFlowTransaction.AccountType.bank else withdraw_type,
+            "account": token,
             "userId": self._generate_user_id(user),
             "waitForConfirmation": True,
             "idempotencyKey": idpk
@@ -1006,30 +1060,38 @@ class CoinFlowClient:
             logger.warning(f"data \n{data}")
             return BasicReturn(success=False, error="This service is down, please try again later. If the problem persist contact support.")
 
-        act = CoinFlowTransaction.AccountType
-        map_type = {
-            "card": act.card,
-            "bank": act.bank,
-            "venmo": act.venmo,
-            "paypal": act.paypal
-        }
-
-        CoinFlowTransaction.objects.create(
-            user=user,
-            amount=(Decimal(cents) / 100),
-            currency='USD',
-            transaction_id=str(uuid4()),
-            transaction_type=CoinFlowTransaction.TransactionType.withdraw,
-            status=CoinFlowTransaction.StatusType.requested,
-            pre_balance=actual_balance,
-            post_balance=new_balance,
-            ip_address=ip,
-            signature=signature,
-            account_type=map_type[withdraw_type]
-        )
-        logger.info(f"User {user.id}-{user.username} succesfully created a ${round(Decimal(cents) / 100, 2)} withdraw")
+        cft.transaction_type = str(CoinFlowTransaction.TransactionType.withdraw)
+        cft.signature = signature
+        cft.save()
+        
         return BasicReturn(success=True, data={})
 
+    @transaction.atomic
+    def reject_transaction_withdraw(self, cft: CoinFlowTransaction) -> BasicReturn:
+        user = cft.user
+        if (cft.transaction_type != CoinFlowTransaction.TransactionType.withdraw_request
+            or cft.status != CoinFlowTransaction.StatusType.requested):
+            return BasicReturn(
+                success=False,
+                error="This transaction has already been processed."
+            )
+            
+        if user is None:
+            return BasicReturn(
+                success=False,
+                error="User is not declared for this transaction."
+            )
+        
+        user = Users.objects.select_for_update().get(id=user.id)
+
+        cft.status = CoinFlowTransaction.StatusType.cancelled
+        cft.save()
+        
+        user.balance += cft.amount
+        user.save()
+
+        return BasicReturn(success=True, data={})
+        
     def cancel_delete_unused_transaction(self, user: Users, token: str) -> None:
         data = decrypt_combined(token)
         if data is None:

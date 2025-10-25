@@ -30,7 +30,7 @@ from apps.bets.models import PENDING, WITHDRAW, Transactions, DEPOSIT
 from apps.bets.utils import generate_reference, validate_date
 from apps.casino.utils import ErrorResponseMsg
 from apps.core.pagination import PageNumberPagination
-from apps.core.permissions import IsAgent, IsPlayer
+from apps.core.permissions import IsAdmin, IsAgent, IsPlayer
 from apps.core.rest_any_permissions import AnyPermissions
 from apps.core.utils.network import get_user_ip_from_request, save_request
 from apps.payments.coinflow import CoinFlowClient
@@ -1750,7 +1750,35 @@ class CoinflowRegisterUserView(APIView):
             return Response(data=data.data, status=status.HTTP_206_PARTIAL_CONTENT)
         
         return Response(data=data.data, status=status.HTTP_201_CREATED)
-    
+
+class CoinFlowProcessView(APIView):
+    permission_classes = (IsAdmin,)
+    def post(self, request, *args, **kwargs):
+        
+        cid = request.data.get("coinflow_id", None)
+        if not cid:
+            return Response(data={"error": "There is no coinflow id"}, status=status.HTTP_400_BAD_REQUEST)
+        resolve = request.data.get("resolve", None)
+        if not resolve or resolve not in {"approve", "cancel"}:
+            return Response(data={"error": "There is no coinflow id"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        cft = CoinFlowTransaction.objects.filter(id=cid).first()
+        if cft is None:
+            return Response(data={"error": "Given id does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        cf = CoinFlowClient()
+        
+        data = None
+        
+        if resolve == "approve":
+            data = cf.process_transaction_withdraw(cft)
+        else:
+            data = cf.reject_transaction_withdraw(cft)
+        
+        if not data.success:
+            return Response(data={"error": data.error}, status=status.HTTP_400_BAD_REQUEST)
+        
+        return Response(data={}, status=status.HTTP_201_CREATED)
 
 class CoinflowTransactionView(APIView):
     http_method_name = ["get"]

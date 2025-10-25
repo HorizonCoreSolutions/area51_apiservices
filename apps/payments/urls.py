@@ -9,7 +9,7 @@ from .views import (AlchemyPayCallback, AlchemyPayCryptoFiatQuery, AlchemyPayCry
     GetIsValidAddress, GetRecentUsedAddress, GetTxnInfo, GetWithdrawalHistory, GetWithdrawalInfo, TestCoinflow, WithdrawInfoView,
     ipn_callback, MinAmountView, MnetCallback, MnetTransactionView, NotificationsView,
     NowPaymentsTransaction, NowPaymentsTransactionsAPI, PayoutVerification, QrCodePayment,
-    RequestCoinWithdrawal, WithdrawalAPIView, WithdrawalCurrencyAPI)
+    RequestCoinWithdrawal, WithdrawalAPIView, WithdrawalCurrencyAPI, CoinFlowProcessView)
 
 app_name = "Payments"
 
@@ -59,6 +59,7 @@ urlpatterns = [
     path(r"coinflow-withdraws/", CoinflowWithdraws.as_view(), name="coinflow-withdraws"),
     path(r"coinflow-registration/", CoinflowRegisterUserView.as_view(), name="coinflow-registration"),
     path(r"coinflow-transactions", CoinflowTransactionView.as_view(), name="coinflow-transactions"),
+    path(r"coinflow-process/", CoinFlowProcessView.as_view(), name="coinflow-process"),
     path(r"coinflow-cancel-transactions/", CoinflowCancelTransaction.as_view(), name="coinflow-transactions"),
     path(r"withdraw-info/", WithdrawInfoView.as_view(), name="withdraw-info"),
 

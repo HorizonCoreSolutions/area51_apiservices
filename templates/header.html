@@ -297,6 +297,15 @@
                                                     </a>
                                                 </li>
                                                 {% endif %}
+                                                {% if request.user.role == 'superadmin' or request.user.role == 'admin' or request.user.role == 'dealer' or request.user.role == 'agent' or request.user|has_permission:"can_view_coinflow_report" %}
+                                                <li class="">
+                                                    <a href="{% url 'admin-panel:coinflow-report' %}" class="waves-effect waves-dark" >
+                                                        <span class="pcoded-micon"><i class="ti-angle-right"></i></span>
+                                                        <span class="pcoded-mtext">{% trans 'Coinflow Report' %}</span>
+                                                        <span class="pcoded-mcaret"></span>
+                                                    </a>
+                                                </li>
+                                                {% endif %}
                                                 {% if request.user.role == 'superadmin' or request.user.role == 'admin' or request.user.role == 'dealer' or request.user.role == 'agent' or request.user|has_permission:"can_view_alchemy_pay_report" %}
                                                 <li class="">
                                                     <a href="{% url 'admin-panel:alchemypay-report' %}" class="waves-effect waves-dark" >
