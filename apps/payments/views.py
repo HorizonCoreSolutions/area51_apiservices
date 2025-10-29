@@ -1649,15 +1649,20 @@ class CoinflowBanks(APIView):
 class CoinflowWithdraws(APIView):
     permission_class = [IsPlayer]
     def post(self, request):
-        kc = f"user:{request.user.id}:ac:link_endpoint"
+        kc = f"user:{request.user.id}:cf:withdraw"
         is_allowed = limiter.allow(
             key=kc,
             limit=3,  # 3 request / (window)
-            window=3600,  # 5 horas
+            window=3600,  # 1 horas
             sliding=True
             )
         if not is_allowed:
-            tl = limiter.time_left(key=kc)
+            tl = limiter.time_left(
+                key=kc,
+                limit=3,  # 3 request / (window)
+                window=3600,  # 1 horas
+                sliding=True
+            )
             data = promo_handler._format_time(s=tl)
             return Response(
                 {"message" : f"Please try again in {data}."},
@@ -1871,8 +1876,13 @@ class WithdrawInfoView(APIView):
     permission_classes = (IsPlayer,)
 
     def get(self, request) -> Response:
-        kc = f"user:{request.user.id}:ac:link_endpoint"
-        tl = limiter.time_left(key=kc)
+        kc = f"user:{request.user.id}:cf:withdraw"
+        tl = limiter.time_left(
+            key=kc,
+            limit=3,  # 3 request / (window)
+            window=3600,  # 1 horas
+            sliding=True
+        )
         if tl > 0:
             return Response({
                 "withdrawalAvailable": False,

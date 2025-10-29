@@ -1,4 +1,5 @@
 import time
+from typing import Any
 import uuid
 from django.conf import settings
 from django.utils import timezone
@@ -76,15 +77,30 @@ class RateLimiter:
             result = self.fixed_script(keys=[key], args=[window, limit])
         return bool(result)
 
-    def time_left(self, key: str) -> int:
+    def time_left(self, key: str, limit: int, window: int, sliding: bool = False) -> int:
         """
-        Returns how many seconds are left until the rate limit resets.
-        For both fixed and sliding windows.
+        Returns how many seconds are left until the rate limit resets,
+        but only if the limit has actually been reached.
         """
-        ttl: Optional[int] = self.redis.ttl(key)  # type: ignore
-        # -2 = key does not exist, -1 = key exists but has no TTL
+        ttl: Optional[int] = self.redis.ttl(key) #  type: ignore
         if ttl is None or ttl < 0:
             return 0
+
+        if sliding:
+            # For sliding window, check number of entries in ZSET
+            count: int = self.redis.zcard(key) #  type: ignore
+            if count < limit:
+                return 0  # under limit, so no enforced wait
+        else:
+            # For fixed window, use the counter value
+            current: Any = self.redis.get(key)
+            try:
+                count = int(current or 0)
+            except ValueError:
+                count = 0
+            if count < limit:
+                return 0
+
         return ttl
 
 # TODO:
