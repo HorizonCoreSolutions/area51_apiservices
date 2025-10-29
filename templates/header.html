@@ -559,6 +559,9 @@
                                         </li>
                                     </ul>
 
+                                {% endif %}
+
+                                {% if request.user.role == "admin" or request.user.role == "agent" or request.user.role == "superadmin" %}
                                     <ul class="pcoded-item pcoded-left-item " style="padding-bottom: 0.1em;">
                                         <li class="">
                                             <a href="{% url 'admin-panel:pending-withdrawals' %}" class="waves-effect waves-dark">
@@ -571,6 +574,9 @@
                                             </a>
                                         </li>
                                     </ul>
+                                {% endif %}
+
+                                {% if request.user.role == "admin" %}
                                     <ul class="pcoded-item pcoded-left-item " style="padding-bottom: 0.1em;">
                                         <li class="">
                                             <a href="{% url 'admin-panel:withdrawal-currencies-list' %}" class="waves-effect waves-dark">
