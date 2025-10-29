@@ -7768,6 +7768,9 @@ class PendingWithdrawalsview(CheckRolesMixin, views.JSONResponseMixin, ListView)
         context["username"] = self.request.GET.get("username", "")
         context["from"] = self.request.GET.get("from", first_day_of_month)
         context["to"] = self.request.GET.get("to", timezone.now().strftime(self.date_format))
+        
+        context["casinobetslipreport"] = context["PendingWithdrawals"]  # alias for template
+        context["selected_players"] = self.request.GET.getlist("players", [])
 
         return context
 
