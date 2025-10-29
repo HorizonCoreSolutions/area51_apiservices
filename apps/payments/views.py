@@ -1948,11 +1948,11 @@ class WithdrawInfoView(APIView):
             or not should_request):
             next_available = shifted_start + timedelta(hours=24)
             remaining = next_available - timezone.now()
-            total_second = max(tl, remaining.total_seconds())
+            total_seconds = max(tl, max(0, remaining.total_seconds()))
         
             return Response({
                 "withdrawalAvailable": False,
-                "time": total_second
+                "time": total_seconds
                 },
                 status=status.HTTP_200_OK,
             )
