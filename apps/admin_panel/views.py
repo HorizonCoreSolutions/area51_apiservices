@@ -7714,11 +7714,15 @@ class BetBonusView(CheckRolesMixin, ListView):
 class PendingWithdrawalsview(CheckRolesMixin, views.JSONResponseMixin, ListView):
     template_name = "admin/pendingwithdrawals.html"
     allowed_roles = ("admin")
-    context_object_name = "PendingWithdrawals"
+
+    context_object_name = "casinobetslipreport"
+    paginate_by = 20
+
     model = CoinFlowTransaction
     queryset = CoinFlowTransaction.objects.filter(
         transaction_type= CoinFlowTransaction.TransactionType.withdraw_request,
     ).order_by("-modified").all()
+
     date_format = "%d/%m/%Y"
 
 
@@ -7769,7 +7773,6 @@ class PendingWithdrawalsview(CheckRolesMixin, views.JSONResponseMixin, ListView)
         context["from"] = self.request.GET.get("from", first_day_of_month)
         context["to"] = self.request.GET.get("to", timezone.now().strftime(self.date_format))
         
-        context["casinobetslipreport"] = context["PendingWithdrawals"]  # alias for template
         context["selected_players"] = self.request.GET.getlist("players", [])
 
         return context
