@@ -7711,18 +7711,17 @@ class BetBonusView(CheckRolesMixin, ListView):
 
         return context
 
-class PendingWithdrawalsview(CheckRolesMixin, views.JSONResponseMixin, ListView):
+class PendingWithdrawalsview(CheckRolesMixin, ListView):
     template_name = "admin/pendingwithdrawals.html"
-    allowed_roles = ("admin")
-
-    context_object_name = "casinobetslipreport"
-    paginate_by = 20
 
     model = CoinFlowTransaction
     queryset = CoinFlowTransaction.objects.filter(
         transaction_type= CoinFlowTransaction.TransactionType.withdraw_request,
     ).order_by("-modified").all()
 
+    context_object_name = "casinobetslipreport"
+    paginate_by = 20
+    allowed_roles = ("admin")
     date_format = "%d/%m/%Y"
 
 
@@ -7735,31 +7734,33 @@ class PendingWithdrawalsview(CheckRolesMixin, views.JSONResponseMixin, ListView)
         queryset = super().get_queryset()
         user = Users.objects.get(username=self.request.user)
 
-        if(self.request.GET.getlist("players", None)):
+        try:
+            if(self.request.GET.getlist("players", None)):
+                queryset = queryset.filter(user__id__in=self.request.GET.getlist("players"))
 
-            queryset = queryset.filter(user__id__in=self.request.GET.getlist("players"))
+            # if self.request.GET.get("status") and self.request.GET.get("status") != "all":
+            #     queryset = queryset.filter(status=self.request.GET.get("status"))
+
+            # if self.request.GET.get("type"):
+            #     queryset = queryset.filter(type = self.request.GET.get("type"))
 
 
-        if self.request.GET.get("status") and self.request.GET.get("status") != "all":
-            queryset = queryset.filter(status=self.request.GET.get("status"))
+            if self.request.GET.get("from"):
+                start_date = datetime.strptime(self.request.GET.get("from"), self.date_format).strftime("%Y-%m-%d")
+                queryset = queryset.filter(created__gte=start_date)
+            else:
+                # by default show results from first day of month
+                current_date = timezone.now()
+                first_day_of_month = current_date.replace(day=1, hour=0, minute=0)
+                queryset = queryset.filter(created__gte=first_day_of_month)
 
-        if self.request.GET.get("type"):
-            queryset = queryset.filter(type = self.request.GET.get("type"))
+            if self.request.GET.get("to"):
+                end_date = datetime.strptime(self.request.GET.get("to"), self.date_format).strftime("%Y-%m-%d")
+                queryset = queryset.filter(created__date__lte=end_date)
+            return queryset
+        except Exception as e:
+            return queryset
 
-
-        if self.request.GET.get("from"):
-            start_date = datetime.strptime(self.request.GET.get("from"), self.date_format).strftime("%Y-%m-%d")
-            queryset = queryset.filter(created__gte=start_date)
-        else:
-            # by default show results from first day of month
-            current_date = timezone.now()
-            first_day_of_month = current_date.replace(day=1, hour=0, minute=0)
-            queryset = queryset.filter(created__gte=first_day_of_month)
-
-        if self.request.GET.get("to"):
-            end_date = datetime.strptime(self.request.GET.get("to"), self.date_format).strftime("%Y-%m-%d")
-            queryset = queryset.filter(created__date__lte=end_date)
-        return queryset
 
     def get_context_data(self, **kwargs):
         # by default show results from first day of month
@@ -7773,6 +7774,8 @@ class PendingWithdrawalsview(CheckRolesMixin, views.JSONResponseMixin, ListView)
         context["from"] = self.request.GET.get("from", first_day_of_month)
         context["to"] = self.request.GET.get("to", timezone.now().strftime(self.date_format))
         
+        context["payment_status"] = self.request.GET.get("payment_status", None)
+        context["transaction_type"] = self.request.GET.get("transaction_type", None)
         context["selected_players"] = self.request.GET.getlist("players", [])
 
         return context
