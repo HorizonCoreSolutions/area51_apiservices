@@ -7721,7 +7721,7 @@ class PendingWithdrawalsview(CheckRolesMixin, ListView):
 
     context_object_name = "casinobetslipreport"
     paginate_by = 20
-    allowed_roles = ("admin")
+    allowed_roles = ["admin", "agent"]
     date_format = "%d/%m/%Y"
 
 

@@ -30,7 +30,7 @@ from apps.bets.models import PENDING, WITHDRAW, Transactions, DEPOSIT
 from apps.bets.utils import generate_reference, validate_date
 from apps.casino.utils import ErrorResponseMsg
 from apps.core.pagination import PageNumberPagination
-from apps.core.permissions import IsAdmin, IsAgent, IsPlayer
+from apps.core.permissions import IsAdmin, IsAgent, IsBackOffice, IsPlayer
 from apps.core.rest_any_permissions import AnyPermissions
 from apps.core.utils.network import get_user_ip_from_request, save_request
 from apps.payments.coinflow import CoinFlowClient
@@ -1752,7 +1752,8 @@ class CoinflowRegisterUserView(APIView):
         return Response(data=data.data, status=status.HTTP_201_CREATED)
 
 class CoinFlowProcessView(APIView):
-    permission_classes = (IsAdmin,)
+    permission_classes = (IsBackOffice,)
+    # any_permission_classes = [IsAdmin, IsAgent]
     def post(self, request, *args, **kwargs):
         
         cid = request.data.get("coinflow_id", None)
