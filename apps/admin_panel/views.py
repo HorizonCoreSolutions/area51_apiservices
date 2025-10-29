@@ -7967,7 +7967,7 @@ class CoinFlowReportView(CheckRolesMixin, ListView):
 
     context_object_name = "casinobetslipreport"
     paginate_by = 20
-    allowed_roles = ("admin", "superadmin")
+    allowed_roles = ("agent", "admin", "superadmin")
     date_format = "%d/%m/%Y"
 
     def get_queryset(self):
