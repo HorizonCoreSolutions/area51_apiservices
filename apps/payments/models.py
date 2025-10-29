@@ -160,11 +160,13 @@ class CoinFlowTransaction(AbstractBaseModel):
     class TransactionType(DjangoChoices):
         deposit = ChoiceItem("deposit", _("Deposit"))
         withdraw = ChoiceItem("withdraw", _("Withdraw"))
+        withdraw_request = ChoiceItem("withdraw_request", _("Withdraw Request"))
         
     class AccountType(DjangoChoices):
         card = ChoiceItem("card", _("Card"))
         bank = ChoiceItem("bank", _("Bank"))
         venmo = ChoiceItem("venmo", "Venmo")
+        paypal = ChoiceItem("paypal", "Paypal")
         
     class StatusType(DjangoChoices):
         # Common statuses
@@ -208,7 +210,9 @@ class CoinFlowTransaction(AbstractBaseModel):
     
     transaction_type = models.CharField(max_length=50,choices=TransactionType)
     status = models.CharField(max_length=50,choices=StatusType, default=StatusType.pending)
+
     account_type = models.CharField(max_length=20, choices=AccountType,null=True,blank=True)
+    account = models.CharField(max_length=255, default=None, null=True, blank=True)
 
     applied_promo_code = models.CharField(_("Applied Promo Code"), max_length=50, null=True, blank=True, default=None)
     promo_log = models.OneToOneField(

@@ -103,6 +103,19 @@ class IsSuperAdmin(BasePermission):
         )
 
 
+class IsBackOffice(BasePermission):
+    """
+    Checking if user has permission of super admin
+    """
+
+    def has_permission(self, request, view):
+        return (
+            view.request.user.is_authenticated
+            and request.user.role in {"admin", "agent", "superadmin"}
+            and not request.user.is_deleted
+        )
+
+
 class IsCasinoEnabled(BasePermission):
     """
     Checking if casino is enabled for dealer and his players

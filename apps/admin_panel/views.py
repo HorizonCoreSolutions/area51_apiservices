@@ -65,7 +65,7 @@ from apps.admin_panel.forms import (AdminModelForm, AgentModelForm,
                                     )
 from apps.casino.tasks import task_update_offmarket_transaction
 from apps.casino.clients import RefujiClient
-from apps.payments.models import (AlchemypayOrder, MnetTransaction, NowPaymentsTransactions,
+from apps.payments.models import (AlchemypayOrder, CoinFlowTransaction, MnetTransaction, NowPaymentsTransactions,
     WithdrawalCurrency, WithdrawalRequests)
 from apps.users.forms import PageBlockerCmsPromotionsForm, ToasterCmsPromotionsForm
 from apps.users.models import FooterPages, MAX_SPEND_AMOUNT, Permission, ResponsibleGambling, BONUS_EVENTS
@@ -7711,12 +7711,17 @@ class BetBonusView(CheckRolesMixin, ListView):
 
         return context
 
-class PendingWithdrawalsview(CheckRolesMixin, views.JSONResponseMixin, ListView):
+class PendingWithdrawalsview(CheckRolesMixin, ListView):
     template_name = "admin/pendingwithdrawals.html"
-    allowed_roles = ("admin")
-    context_object_name = "PendingWithdrawals"
-    model = WithdrawalRequests
-    queryset = WithdrawalRequests.objects.order_by("-modified").all()
+
+    model = CoinFlowTransaction
+    queryset = CoinFlowTransaction.objects.filter(
+        transaction_type= CoinFlowTransaction.TransactionType.withdraw_request,
+    ).order_by("-modified").all()
+
+    context_object_name = "casinobetslipreport"
+    paginate_by = 20
+    allowed_roles = ["admin", "agent"]
     date_format = "%d/%m/%Y"
 
 
@@ -7729,31 +7734,33 @@ class PendingWithdrawalsview(CheckRolesMixin, views.JSONResponseMixin, ListView)
         queryset = super().get_queryset()
         user = Users.objects.get(username=self.request.user)
 
-        if(self.request.GET.getlist("players", None)):
+        try:
+            if(self.request.GET.getlist("players", None)):
+                queryset = queryset.filter(user__id__in=self.request.GET.getlist("players"))
 
-            queryset = queryset.filter(user__id__in=self.request.GET.getlist("players"))
+            # if self.request.GET.get("status") and self.request.GET.get("status") != "all":
+            #     queryset = queryset.filter(status=self.request.GET.get("status"))
+
+            # if self.request.GET.get("type"):
+            #     queryset = queryset.filter(type = self.request.GET.get("type"))
 
 
-        if self.request.GET.get("status") and self.request.GET.get("status") != "all":
-            queryset = queryset.filter(status=self.request.GET.get("status"))
+            if self.request.GET.get("from"):
+                start_date = datetime.strptime(self.request.GET.get("from"), self.date_format).strftime("%Y-%m-%d")
+                queryset = queryset.filter(created__gte=start_date)
+            else:
+                # by default show results from first day of month
+                current_date = timezone.now()
+                first_day_of_month = current_date.replace(day=1, hour=0, minute=0)
+                queryset = queryset.filter(created__gte=first_day_of_month)
 
-        if self.request.GET.get("type"):
-            queryset = queryset.filter(type = self.request.GET.get("type"))
+            if self.request.GET.get("to"):
+                end_date = datetime.strptime(self.request.GET.get("to"), self.date_format).strftime("%Y-%m-%d")
+                queryset = queryset.filter(created__date__lte=end_date)
+            return queryset
+        except Exception as e:
+            return queryset
 
-
-        if self.request.GET.get("from"):
-            start_date = datetime.strptime(self.request.GET.get("from"), self.date_format).strftime("%Y-%m-%d")
-            queryset = queryset.filter(created__gte=start_date)
-        else:
-            # by default show results from first day of month
-            current_date = timezone.now()
-            first_day_of_month = current_date.replace(day=1, hour=0, minute=0)
-            queryset = queryset.filter(created__gte=first_day_of_month)
-
-        if self.request.GET.get("to"):
-            end_date = datetime.strptime(self.request.GET.get("to"), self.date_format).strftime("%Y-%m-%d")
-            queryset = queryset.filter(created__date__lte=end_date)
-        return queryset
 
     def get_context_data(self, **kwargs):
         # by default show results from first day of month
@@ -7766,6 +7773,10 @@ class PendingWithdrawalsview(CheckRolesMixin, views.JSONResponseMixin, ListView)
         context["username"] = self.request.GET.get("username", "")
         context["from"] = self.request.GET.get("from", first_day_of_month)
         context["to"] = self.request.GET.get("to", timezone.now().strftime(self.date_format))
+        
+        context["payment_status"] = self.request.GET.get("payment_status", None)
+        context["transaction_type"] = self.request.GET.get("transaction_type", None)
+        context["selected_players"] = self.request.GET.getlist("players", [])
 
         return context
 
@@ -7925,6 +7936,70 @@ class NowPaymentsReportView(CheckRolesMixin, ListView):
 
             if self.request.GET.get("payment_status"):
                 queryset = queryset.filter(payment_status=self.request.GET.get("payment_status"))
+
+            if self.request.GET.get("transaction_type"):
+                queryset = queryset.filter(transaction_type=self.request.GET.get("transaction_type"))
+
+
+        except Exception as e:
+            return queryset
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        # by default show results from first day of month
+        current_date = timezone.now()
+        first_day_of_month = current_date.replace(day=1, hour=0, minute=0).strftime(self.date_format)
+
+        context = super().get_context_data(**kwargs)
+        context["from"] = self.request.GET.get("from", first_day_of_month)
+        context["to"] = self.request.GET.get("to", timezone.now().strftime(self.date_format))
+        context["payment_status"] = self.request.GET.get("payment_status", None)
+        context["transaction_type"] = self.request.GET.get("transaction_type", None)
+
+        return context
+
+class CoinFlowReportView(CheckRolesMixin, ListView):
+    template_name = "report/coinflow_report.html"
+    model = CoinFlowTransaction
+    queryset = CoinFlowTransaction.objects.exclude(
+        transaction_type=CoinFlowTransaction.TransactionType.withdraw_request,
+    ).order_by("-created").all()
+
+    context_object_name = "casinobetslipreport"
+    paginate_by = 20
+    allowed_roles = ("admin", "superadmin")
+    date_format = "%d/%m/%Y"
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        try:
+            if self.request.GET.getlist("players", None):
+                queryset = self.queryset.filter(user__in = self.request.GET.getlist("players"))
+
+            if self.request.GET.get("from"):
+                # start_date = datetime.datetime.strptime(self.request.GET.get("from"), self.date_format).strftime("%d-%m-%Y")
+                start_date = datetime.strptime(self.request.GET.get("from"), self.date_format).strftime("%Y-%m-%d")
+                queryset = queryset.filter(created__gte=start_date)
+            else:
+                # by default show results from first day of month
+                current_date = timezone.now()
+                first_day_of_month = current_date.replace(day=1, hour=0, minute=0)
+                queryset = queryset.filter(created__gte=first_day_of_month)
+
+            if self.request.GET.get("to"):
+                end_date = datetime.strptime(self.request.GET.get("to"), self.date_format).strftime("%Y-%m-%d")
+                queryset = queryset.filter(created__date__lte=end_date)
+
+            if self.request.GET.getlist("dealers"):
+                dealers = self.request.GET.getlist("dealers")
+                queryset = queryset.filter(user__dealer__in=dealers)
+
+            if self.request.GET.getlist("agents"):
+                agents = self.request.GET.getlist("agents")
+                queryset = queryset.filter(user__agent__in=agents)
+
+            if self.request.GET.get("payment_status"):
+                queryset = queryset.filter(status=self.request.GET.get("payment_status"))
 
             if self.request.GET.get("transaction_type"):
                 queryset = queryset.filter(transaction_type=self.request.GET.get("transaction_type"))

@@ -17,20 +17,21 @@ from django.conf import settings
 from django.db import transaction
 from django.shortcuts import redirect
 from django.utils import timezone
-from django_coinpayments.models import Payment
 from rest_framework import status
-from rest_framework.response import Response
-from rest_framework.views import APIView
 from rest_framework import viewsets
 from apps.users import promo_handler
+from django.db.models import Q, Count
+from rest_framework.views import APIView
 from apps.users.utils import redis_client
 from apps.core.concurrency import limiter
+from rest_framework.response import Response
+from django_coinpayments.models import Payment
 from apps.admin_panel.tasks import ipn_status_transaction_mail
 from apps.bets.models import PENDING, WITHDRAW, Transactions, DEPOSIT
 from apps.bets.utils import generate_reference, validate_date
 from apps.casino.utils import ErrorResponseMsg
 from apps.core.pagination import PageNumberPagination
-from apps.core.permissions import IsAgent, IsPlayer
+from apps.core.permissions import IsAdmin, IsAgent, IsBackOffice, IsPlayer
 from apps.core.rest_any_permissions import AnyPermissions
 from apps.core.utils.network import get_user_ip_from_request, save_request
 from apps.payments.coinflow import CoinFlowClient
@@ -1587,7 +1588,7 @@ class TestCoinflow(APIView):
             save_request('coinflow_testing', request)
             save_request('coinflow_testing', {'data' : data.error}, is_response=True)
         
-        data = cf.register_user_attested(user=request.user, ssn=f'{request.user.id}3245'[:4])
+        data = cf.register_user_attested(user=request.user)
         if data.error:
             save_request('coinflow_testing', request)
             save_request('conflow_testing', {'data' : data.error}, is_response=True)
@@ -1648,22 +1649,30 @@ class CoinflowBanks(APIView):
 class CoinflowWithdraws(APIView):
     permission_class = [IsPlayer]
     def post(self, request):
-
+        kc = f"user:{request.user.id}:cf:withdraw"
         is_allowed = limiter.allow(
-            key=f"user:{request.user.id}:ac:link_endpoint",
-            limit=1,  # 3 request / (window)
-            window=5 * 60 * 60,  # 5 horas
+            key=kc,
+            limit=3,  # 3 request / (window)
+            window=3600,  # 1 horas
             sliding=True
             )
         if not is_allowed:
+            tl = limiter.time_left(
+                key=kc,
+                limit=3,  # 3 request / (window)
+                window=3600,  # 1 horas
+                sliding=True
+            )
+            data = promo_handler._format_time(s=tl)
             return Response(
-                {"message" : "Please try again in a few hours."},
+                {"message" : f"Please try again in {data}."},
                 status=status.HTTP_429_TOO_MANY_REQUESTS
             )
 
         card = request.data.get('cardId')
         bank = request.data.get('bankId')
         venmo = request.data.get('venmoId')
+        paypal = request.data.get('paypalId')
         
         cents = request.data.get('cents')
         if cents is None:
@@ -1684,16 +1693,17 @@ class CoinflowWithdraws(APIView):
         if card:  pairs.append(("card", card))
         if bank:  pairs.append(("bank", bank))
         if venmo: pairs.append(("venmo", venmo))
+        if paypal: pairs.append(("paypal", paypal))
 
         if not pairs:
             return Response(
-                data={'message' : 'Please use @cardId, @bankId or @venmoId'},
+                data={'message' : 'Please use @cardId, @bankId, @venmoId or @paypalId'},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
         if len(pairs) > 1:
             return Response(
-                data={'message' : 'Please only use @cardId, @bankId or @venmoId'},
+                data={'message' : 'Please only use @cardId, @bankId, @venmoId or @paypalId'},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -1720,7 +1730,7 @@ class CoinflowWithdraws(APIView):
         if result.error:
             return Response(data={"message" : result.error}, status=status.HTTP_400_BAD_REQUEST)
         
-        return Response(data={"message" : "The withdraw was succesfully created"}, status=status.HTTP_200_OK)
+        return Response(data={"message" : "The request for a withdraw has ben created."}, status=status.HTTP_200_OK)
     
 class CoinflowRegisterUserView(APIView):
     permission_class = [IsPlayer]
@@ -1748,7 +1758,36 @@ class CoinflowRegisterUserView(APIView):
             return Response(data=data.data, status=status.HTTP_206_PARTIAL_CONTENT)
         
         return Response(data=data.data, status=status.HTTP_201_CREATED)
-    
+
+class CoinFlowProcessView(APIView):
+    permission_classes = (IsBackOffice,)
+    # any_permission_classes = [IsAdmin, IsAgent]
+    def post(self, request, *args, **kwargs):
+        
+        cid = request.data.get("coinflow_id", None)
+        if not cid:
+            return Response(data={"error": "There is no coinflow id"}, status=status.HTTP_400_BAD_REQUEST)
+        resolve = request.data.get("resolve", None)
+        if not resolve or resolve not in {"approve", "cancel"}:
+            return Response(data={"error": "There is no coinflow id"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        cft = CoinFlowTransaction.objects.filter(id=cid).first()
+        if cft is None:
+            return Response(data={"error": "Given id does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        cf = CoinFlowClient()
+        
+        data = None
+        
+        if resolve == "approve":
+            data = cf.process_transaction_withdraw(cft)
+        else:
+            data = cf.reject_transaction_withdraw(cft)
+        
+        if not data.success:
+            return Response(data={"error": data.error}, status=status.HTTP_400_BAD_REQUEST)
+        
+        return Response(data={}, status=status.HTTP_201_CREATED)
 
 class CoinflowTransactionView(APIView):
     http_method_name = ["get"]
@@ -1837,46 +1876,92 @@ class WithdrawInfoView(APIView):
     permission_classes = (IsPlayer,)
 
     def get(self, request) -> Response:
+        kc = f"user:{request.user.id}:cf:withdraw"
+        tl = limiter.time_left(
+            key=kc,
+            limit=3,  # 3 request / (window)
+            window=3600,  # 1 horas
+            sliding=True
+        )
         # Only generate one per day:
 
         WITHDRAW_STATUS = [
             CoinFlowTransaction.StatusType.requested,
             CoinFlowTransaction.StatusType.paid_out,
             CoinFlowTransaction.StatusType.pending,
+            CoinFlowTransaction.StatusType.cancelled
             # CoinFlowTransaction.StatusType.failed,
+        ]
+        
+        WITHDRAW_TYPES = [
+            CoinFlowTransaction.TransactionType.withdraw,
+            CoinFlowTransaction.TransactionType.withdraw_request
         ]
 
         DAY_SHIFT_HOURS = 5
 
         # 1. Get today at midnight (timezone-aware)
         # Get timezone-aware "today at midnight"
-        now = timezone.now()
-        start_of_day = now.replace(
-                hour=0,
-                minute=0,
-                second=0,
-                microsecond=0)
+        start_of_day = timezone.now().replace(
+            hour=0,
+            minute=0,
+            second=0,
+            microsecond=0
+        )
 
         # Shift forward by N hours (e.g. day starts at 5 AM)
         shifted_start = start_of_day + timedelta(hours=DAY_SHIFT_HOURS)
-        if now < shifted_start:
+        if shifted_start > timezone.now():
             shifted_start -= timedelta(days=1)
 
         qs = CoinFlowTransaction.objects.filter(
-            user=request.user,
-            transaction_type=CoinFlowTransaction.TransactionType.withdraw,
+            user_id=request.user.id,
+            transaction_type__in=WITHDRAW_TYPES,
             status__in=WITHDRAW_STATUS,
             created__gte=shifted_start,
             is_deleted=False
-        ).first()
+        )
 
-        if qs:
+        counts = qs.aggregate(
+            total=Count("id"),
+            requested=Count("id", filter=Q(
+                transaction_type=CoinFlowTransaction.TransactionType.withdraw_request,
+                status=CoinFlowTransaction.StatusType.requested
+            )),
+            cancelled=Count("id", filter=Q(
+                transaction_type=CoinFlowTransaction.TransactionType.withdraw_request,
+                status=CoinFlowTransaction.StatusType.cancelled
+            ))
+        )
+
+        # total = proccesed + requested + failed_request
+        total = counts.get("total") or 0
+        # total - (requested + failed_request)
+        requested = counts.get("requested") or 0
+        cancelled = counts.get("cancelled") or 0
+        
+        had_procesed = total - (requested + cancelled) >= 1
+        has_requested = requested >= 1
+        should_request = cancelled + requested <= 2
+
+        if ((had_procesed or has_requested)
+            or not should_request):
             next_available = shifted_start + timedelta(hours=24)
             remaining = next_available - timezone.now()
+            total_seconds = max(tl, max(0, remaining.total_seconds()))
+        
             return Response({
                 "withdrawalAvailable": False,
-                "time": remaining.total_seconds()
+                "time": total_seconds
                 },
                 status=status.HTTP_200_OK,
             )
+        if tl > 0:
+            return Response({
+                "withdrawalAvailable": False,
+                "time": tl
+                },
+                status=status.HTTP_200_OK,
+            )
+
         return Response({"withdrawalAvailable": True, "time": 0})

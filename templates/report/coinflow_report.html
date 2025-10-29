@@ -4,9 +4,8 @@
 {% load i18n %}
 {% load math %}
 {% load date_utils %}
-
 {% block title %}
-Withdrawal Requests
+CoinFlow Report
 {% endblock title %}
 
 {% block content %}
@@ -56,7 +55,7 @@ Withdrawal Requests
           <div class="col-xs-12 col-lg-12">
             <div class="page-content" >
               <div class="main-heading-wrap">
-                <h5>{% trans "Withdrawal Request" %}</h5>
+                <h6>{% trans "NowPayment Report" %}</h6>
               </div>
               <div class="container-fluid" >
                 {% include "includes/messages.html" %}
@@ -64,7 +63,7 @@ Withdrawal Requests
                   <div class="p-0">
                     <form method="get">
                       <div class="row flex-sm-nowrap flex-wrap mb-3">
-                        <div class="col-md-12 min-w-210 pt-2px">
+                        <div class="col-md-4 min-w-210 pt-2px">
                           <div class="rs-select2--light rs-select2--md">
                             <select id="input-search" name="players" class="js-example-basic-multiple tokenize-open">
                               {% if selected_players %}
@@ -78,7 +77,6 @@ Withdrawal Requests
                           </div>
                         </div>
                         <!--Dealer select -->
-                        {% comment %}
                         <div class="col-md-4"> 
                           <div class="form-group mt-n20px">
                             <span class="text-important" >{% trans "Payment Status" %}</span>
@@ -118,7 +116,6 @@ Withdrawal Requests
                             <div class="dropDownSelect2" ></div>
                           </div>  
                         </div>
-                        {% endcomment %}
                         <!-- Search -->                        
                       </div>
                       
@@ -193,13 +190,13 @@ Withdrawal Requests
                       </div>
                       {% endcomment %}
                       <div class="row" >
-                        {% comment %} {% if request.user.role == 'superadmin' %}
+                        {% if request.user.role == 'superadmin' %}
                         <div class="input-group-btn mb-2 ml-3 position-relative" >
                           <button class="btn btn-primary" id="button-report-download">
                             {% trans "Download" %}
                           </button>
                         </div>
-                        {% endif %} {% endcomment %}
+                        {% endif %}
                         <div class="input-group-btn mb-2 ml-3 position-relative">
                           <button class="btn btn-primary" id="button-search">
                             {% trans "Search" %}
@@ -214,33 +211,23 @@ Withdrawal Requests
                   <table class="table table-data2 transactions-table  position-relativtable-bordered" width="100%" id="reporttable">
                     <thead class="thead-dark">
                       <tr>
-                        <th>{% trans "User" %}</th>
-                        <th>{% trans "Amount(USD)" %} </th>
                         <th>{% trans "Payment Id" %} </th>
                         <th>{% trans "Created At" %} </th>
                         {% comment %} <th>{% trans "Time" %}</th> {% endcomment %}
+                        <th>{% trans "User" %}</th>
                         {% comment %} <th>{% trans "Player" %} </th> {% endcomment %}
                         {% comment %} <th>{% trans "Create Date" %}</th> {% endcomment %}
                         <th class="hidedata">{% trans "Event Id" %} </th>
                         <th class="hidedata">{% trans "Fixture Id" %} </th>
-                        {% comment %} <th>{% trans "Currency" %} </th>
-                        <th>{% trans "Transaction Type" %}</th> {% endcomment %}
-                        <th>{% trans "Action" %} </th>
+                        <th>{% trans "Amount(USD)" %} </th>
+                        {% comment %} <th>{% trans "Currency" %} </th> {% endcomment %}
+                        <th>{% trans "Transaction Type" %}</th>
+                        <th>{% trans "Payment Status" %} </th>
                       </tr>
                     </thead>
                     <tbody class="bg-light">
                       {% for sport in casinobetslipreport %}
                       <tr class="tr-collapse table-row tr-player">
-                        <td>
-                          <span>
-                            {{ sport.user }}
-                          </span>
-                        </td>
-                        <td>
-                          <span>
-                            {{ sport.amount }}
-                          </span>
-                        </td>
                         <td>
                           <span>
                             {% if sport.external_id %}
@@ -265,16 +252,26 @@ Withdrawal Requests
                             {{ sport.created|local_date:request.session.user_timezone|date:"d-m-y H:i" }}
                           </span>
                         </td>
-                        {% comment %} <td>
+                        <td>
                           <span>
-                            USD
+                            {{ sport.user }}
                           </span>
                         </td>
                         <td>
                           <span>
-                            {{ sport.transaction_type }}
+                            {{ sport.amount }}
+                          </span>
+                        </td>
+                        {% comment %} <td>
+                          <span>
+                            USD
                           </span>
                         </td> {% endcomment %}
+                        <td>
+                          <span>
+                            {{ sport.transaction_type }}
+                          </span>
+                        </td>
                         <td>
                           {% if sport.transaction_type == "withdraw_request" and sport.status == "requested" %}
                           <div class="dropdown" >
@@ -570,6 +567,36 @@ Withdrawal Requests
       responsive: true,
       searching: false,
       order: [],
+      dom: 'Bfrtip',
+      buttons: [
+        {
+          extend: 'copy',
+          filename: 'CoinFlowReport',
+          className: 'dwnldbgcolor'
+        },
+        {
+          extend: 'csv',
+          filename: 'CoinFlowReport',
+          className: 'dwnldbgcolor'
+        },
+        {
+          extend: 'excel',
+          filename: 'CoinFlowReport',
+          className: 'dwnldbgcolor'
+        },
+        {
+          extend: 'pdf',
+          filename: 'CoinFlowReport',
+          orientation: 'landscape',
+          className: 'dwnldbgcolor'
+        },
+        {
+          extend: 'print',
+          filename: 'CoinFlowReport',
+          orientation: 'landscape',
+          className: 'dwnldbgcolor'
+        }
+      ],
       initComplete: function () {
         $(this.api().buttons().container()).addClass('mb-2');
       }
