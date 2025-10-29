@@ -7715,8 +7715,10 @@ class PendingWithdrawalsview(CheckRolesMixin, views.JSONResponseMixin, ListView)
     template_name = "admin/pendingwithdrawals.html"
     allowed_roles = ("admin")
     context_object_name = "PendingWithdrawals"
-    model = WithdrawalRequests
-    queryset = WithdrawalRequests.objects.order_by("-modified").all()
+    model = CoinFlowTransaction
+    queryset = CoinFlowTransaction.objects.filter(
+        transaction_type= CoinFlowTransaction.TransactionType.withdraw_request,
+    ).order_by("-modified").all()
     date_format = "%d/%m/%Y"
 
 
@@ -7950,7 +7952,9 @@ class NowPaymentsReportView(CheckRolesMixin, ListView):
 class CoinFlowReportView(CheckRolesMixin, ListView):
     template_name = "report/coinflow_report.html"
     model = CoinFlowTransaction
-    queryset = CoinFlowTransaction.objects.order_by("-created").all()
+    queryset = CoinFlowTransaction.objects.exclude(
+        transaction_type=CoinFlowTransaction.TransactionType.withdraw_request,
+    ).order_by("-created").all()
 
     context_object_name = "casinobetslipreport"
     paginate_by = 20
