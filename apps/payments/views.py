@@ -1883,13 +1883,6 @@ class WithdrawInfoView(APIView):
             window=3600,  # 1 horas
             sliding=True
         )
-        if tl > 0:
-            return Response({
-                "withdrawalAvailable": False,
-                "time": tl
-                },
-                status=status.HTTP_200_OK,
-            )
         # Only generate one per day:
 
         WITHDRAW_STATUS = [
@@ -1955,9 +1948,18 @@ class WithdrawInfoView(APIView):
             or not should_request):
             next_available = shifted_start + timedelta(hours=24)
             remaining = next_available - timezone.now()
+            total_second = max(tl, remaining.total_seconds())
+        
             return Response({
                 "withdrawalAvailable": False,
-                "time": remaining.total_seconds()
+                "time": total_second
+                },
+                status=status.HTTP_200_OK,
+            )
+        if tl > 0:
+            return Response({
+                "withdrawalAvailable": False,
+                "time": tl
                 },
                 status=status.HTTP_200_OK,
             )
