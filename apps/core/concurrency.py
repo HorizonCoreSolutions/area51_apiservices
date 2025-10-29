@@ -76,6 +76,16 @@ class RateLimiter:
             result = self.fixed_script(keys=[key], args=[window, limit])
         return bool(result)
 
+    def time_left(self, key: str) -> int:
+        """
+        Returns how many seconds are left until the rate limit resets.
+        For both fixed and sliding windows.
+        """
+        ttl: Optional[int] = self.redis.ttl(key)  # type: ignore
+        # -2 = key does not exist, -1 = key exists but has no TTL
+        if ttl is None or ttl < 0:
+            return 0
+        return ttl
 
 # TODO:
 # Configurable retry interval

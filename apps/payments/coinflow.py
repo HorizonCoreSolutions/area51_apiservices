@@ -8,6 +8,7 @@ from django.conf import settings
 from django.db import transaction
 from dataclasses import dataclass
 from django.utils import timezone
+from django.db.models import Q, Count
 from datetime import datetime, timedelta, time
 from apps.core.utils.encryption import decrypt_combined, encrypt_combined
 from apps.users import promo_handler
@@ -888,6 +889,7 @@ class CoinFlowClient:
             CoinFlowTransaction.StatusType.requested,
             CoinFlowTransaction.StatusType.paid_out,
             CoinFlowTransaction.StatusType.pending,
+            CoinFlowTransaction.StatusType.cancelled
             # CoinFlowTransaction.StatusType.failed,
         ]
         
@@ -918,14 +920,47 @@ class CoinFlowClient:
             status__in=WITHDRAW_STATUS,
             created__gte=shifted_start,
             is_deleted=False
-        ).exists()
+        )
 
-        if qs:
+        counts = qs.aggregate(
+            total=Count("id"),
+            requested=Count("id", filter=Q(
+                transaction_type=CoinFlowTransaction.TransactionType.withdraw_request,
+                status=CoinFlowTransaction.StatusType.requested
+            )),
+            cancelled=Count("id", filter=Q(
+                transaction_type=CoinFlowTransaction.TransactionType.withdraw_request,
+                status=CoinFlowTransaction.StatusType.cancelled
+            ))
+        )
+
+        # total = proccesed + requested + failed_request
+        total = counts.get("total") or 0
+        # total - (requested + failed_request)
+        requested = counts.get("requested") or 0
+        cancelled = counts.get("cancelled") or 0
+        
+        had_procesed = total - (requested + cancelled) >= 1
+        has_requested = requested >= 1
+        should_request = cancelled + requested <= 2
+
+
+        if had_procesed or has_requested:
             logger.info(f"User: {user.id}-{user.username} tried more than one transaction")
             return BasicReturn(
                 success=False,
                 data={
-                    'message' : 'Only one transaction per day',
+                    'message' : 'Only one transaction per day, please try again tomorrow.',
+                    'status' : 429
+                }
+            )
+        
+        if not should_request:
+            logger.info(f"User: {user.id}-{user.username} tried more than one transaction")
+            return BasicReturn(
+                success=False,
+                data={
+                    'message' : 'You can only request 2 transactions per day, please try again tomorrow.',
                     'status' : 429
                 }
             )

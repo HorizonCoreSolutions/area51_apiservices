@@ -327,7 +327,7 @@ def materialize(
         bonus = Decimal(pm.bonus_percentage or 0) * amount / 100
         g_bns = Decimal(pm.gold_bonus or 0)
     elif dm == "instant":
-        bonus = Decimal(pm.bonus or 0)
+        bonus = Decimal(pm.bonus or 0)  # type: ignore
         g_bns = Decimal(pm.gold_bonus or 0)
     else:
         return

@@ -1648,16 +1648,18 @@ class CoinflowBanks(APIView):
 class CoinflowWithdraws(APIView):
     permission_class = [IsPlayer]
     def post(self, request):
-
+        kc = f"user:{request.user.id}:ac:link_endpoint"
         is_allowed = limiter.allow(
-            key=f"user:{request.user.id}:ac:link_endpoint",
-            limit=1,  # 3 request / (window)
-            window=5 * 60 * 60,  # 5 horas
+            key=kc,
+            limit=3,  # 3 request / (window)
+            window=3600,  # 5 horas
             sliding=True
             )
         if not is_allowed:
+            tl = limiter.time_left(key=kc)
+            data = promo_handler._format_time(s=tl)
             return Response(
-                {"message" : "Please try again in a few hours."},
+                {"message" : f"Please try again in {data}."},
                 status=status.HTTP_429_TOO_MANY_REQUESTS
             )
 
