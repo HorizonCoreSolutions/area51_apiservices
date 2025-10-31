@@ -38,7 +38,7 @@ class Command(BaseCommand):
     }
 
     ALLOWED_PROVIDERS = {
-        '18Peaches',
+        '18Peaches (Sweepstakes)',
         '1Spin4Win',
         '7777 Gaming',
         'BGaming',
