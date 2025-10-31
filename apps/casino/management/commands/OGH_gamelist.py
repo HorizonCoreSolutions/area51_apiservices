@@ -45,6 +45,7 @@ class Command(BaseCommand):
         'BoldPlay',
         'Chilli Games Sweepstakes',
         'CT Interactive',
+        'Grazgame',
         'Espresso',
         'EURASIAN Gaming',
         'Fa Chai Gaming',
