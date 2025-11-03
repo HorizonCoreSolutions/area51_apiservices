@@ -78,7 +78,7 @@ class Command(BaseCommand):
 
             previews_ids = list(
                 CasinoGameList.objects
-                .filter(section_id="CPgames", vendor_name="CPgames", provider="CPgames")
+                .filter(section_id="CPgames", vendor_name="CPgames")
                 .values_list("game_id", flat=True)
             )
             
@@ -105,7 +105,6 @@ class Command(BaseCommand):
                     "game_name": game.get("name_en"),
                     "section_id": "CPgames",
                     "vendor_name": "CPgames",
-                    "provider": "CPgames",
                     "game_category": game_cat,
                     "is_mobile_supported": True,
                     "is_desktop_supported": True,
