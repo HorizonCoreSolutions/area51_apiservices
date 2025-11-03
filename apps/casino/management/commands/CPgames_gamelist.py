@@ -1,7 +1,8 @@
+import sys
 from django.db.models import Q
 from datetime import timedelta
 from django.utils import timezone
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 
 from apps.casino.cpgames import CPgames
 from apps.users.models import Users
@@ -14,6 +15,9 @@ from apps.casino.models import (
 
 class Command(BaseCommand):
     help = 'Get Casino25 game list'
+
+    def add_arguments(self, parser):
+        parser.add_argument('--no-ask', action='store_true', help='Bypass interactive restriction')
 
     cp = CPgames()
     games = cp.get_games()
@@ -44,7 +48,10 @@ class Command(BaseCommand):
         "2_1700071"
     ]
 
-    def handle(self, *args, **kwargs):
+    def handle(self, *args, **options):
+        ask = not bool(options['no-ask'])
+        if not sys.stdin.isatty() and ask:
+            raise CommandError("Interactive terminal required (use --no-ask to override).")
         if not self.games:
             print("No games where given by the api")
             return
@@ -56,10 +63,30 @@ class Command(BaseCommand):
             game_id = game.get("game_id", "lobby")
             if game_id.lower() == "lobby":
                 continue
-            casino_game_ids.append(game_id)
-            game_cat = self.change_to_stable.get(game.get("type", "SLOTS"), "Slots")
-            print(f"Game saved: {game.get('name_en')}\nType: {game_cat}\nID: {game_id}")
 
+            previews_ids = list(
+                CasinoGameList.objects
+                .filter(section_id="CPgames", vendor_name="CPgames", provider="CPgames")
+                .values_list("game_id", flat=True)
+            )
+            
+            game_cat = self.change_to_stable.get(game.get("type", "SLOTS"), "Slots")
+            answer = None
+            if ask and not game_id in previews_ids:
+                print(f"New Game Detected:\n{game.get('name_en')}\nType: {game_cat}\nID: {game_id}")
+                while True:
+                    answer = str(input("Want to add this game? (yes or no)")).lower()
+                    if answer in {"yes", "no"}:
+                        break
+                    
+            answer = (answer == "yes") or not ask
+            
+            if not answer:
+                print("Game has not been added.")
+                continue
+            print("Game has been added.")
+
+            casino_game_ids.append(game_id)
             obj, created = CasinoGameList.objects.update_or_create(
                 game_id=game_id,
                 defaults={
