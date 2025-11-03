@@ -14,13 +14,18 @@ from apps.casino.models import (
 
 
 class Command(BaseCommand):
-    help = 'Get Casino25 game list'
+    help = 'Get CPgames game list'
 
     def add_arguments(self, parser):
-        parser.add_argument('--no-ask', action='store_true', help='Bypass interactive restriction')
+        parser.add_argument(
+            "--no-ask",
+            action="store_true",
+            dest="no_ask",
+            help="Bypass interactive restriction",
+        )
 
     cp = CPgames()
-    games = cp.get_games()
+    games = None
     # name_en
     # game_id
     # type
@@ -49,9 +54,16 @@ class Command(BaseCommand):
     ]
 
     def handle(self, *args, **options):
-        ask = not bool(options['no-ask'])
+        
+        ask = not options.get("no_ask", False)
+
+        # Check interactive requirement
         if not sys.stdin.isatty() and ask:
             raise CommandError("Interactive terminal required (use --no-ask to override).")
+        
+        print("Fetching games")
+        self.games = self.cp.get_games()
+
         if not self.games:
             print("No games where given by the api")
             return
