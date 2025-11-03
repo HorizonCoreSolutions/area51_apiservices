@@ -90,13 +90,17 @@ class Command(BaseCommand):
                     answer = str(input("Want to add this game? (yes or no)")).lower()
                     if answer in {"yes", "no"}:
                         break
+                
                     
-            answer = (answer == "yes") or not ask
+            answer = (answer == "yes") or not ask or game_id in previews_ids
             
             if not answer:
                 print("Game has not been added.")
                 continue
-            print("Game has been added.")
+            if not game_id in previews_ids:
+                print("Game has been added.")
+            else:
+                print(f"Game {game.get('name_en')} is updating")
 
             casino_game_ids.append(game_id)
             obj, created = CasinoGameList.objects.update_or_create(
@@ -112,7 +116,7 @@ class Command(BaseCommand):
                 }
             )
             if created:
-                obj.created = timezone.now() - timedelta(days=4)
+                obj.created = timezone.now() - timedelta(days=7)
             self.update_or_create_casino_management(obj)
             obj.save()
             self.update_or_create_casino_categories()
