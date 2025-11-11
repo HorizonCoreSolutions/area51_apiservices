@@ -28,7 +28,7 @@ from rest_framework import serializers
 from rest_framework_jwt.serializers import JSONWebTokenSerializer
 from rest_framework_jwt.settings import api_settings
 from apps.bets.models import Transactions
-from cryptography.fernet import Fernet
+from cryptography.fernet import Fernet, InvalidToken
 import base64
 from apps.core.exceptions import DeactivatedUserException, NotActiveUserException
 from apps.users.models import (AdminBanner, CashAppDeatils, ChatMessage, CmsPromotionDetails,
@@ -483,19 +483,26 @@ class SignUpSerializer(serializers.ModelSerializer):
             agent_obj = Users.objects.filter(role="agent").first()
             dealer_obj = Users.objects.filter(role="dealer").first()
         affiliated_by=None
-        if validated_data.get("affiliate_code"):
-                key = str(settings.SECRET_KEY)[0:32]
-                fernet_key = base64.urlsafe_b64encode(key.encode())
-                fernet_obj = Fernet(fernet_key)
-                user_id = fernet_obj.decrypt(bytes(validated_data.get("affiliate_code"), 'utf-8'))
-                affiliated_by = Users.objects.filter(pk=user_id.decode()).first()
-                print(affiliated_by.username)
         affiliate_code = validated_data.pop('affiliate_code', None)
+        if affiliate_code:
+            key = str(settings.SECRET_KEY)[0:32]
+            fernet_key = base64.urlsafe_b64encode(key.encode())
+            fernet_obj = Fernet(fernet_key)
+            # Fix incorrect padding if stripped by URL or frontend
+            if len(affiliate_code) % 4:
+                affiliate_code += "=" * (-len(affiliate_code) % 4)
+
+            try:
+                user_id = fernet_obj.decrypt(affiliate_code.encode()).decode()
+                affiliated_by = Users.objects.filter(pk=user_id).first()
+            except (InvalidToken, ValueError, TypeError) as e:
+                affiliated_by = None
         default_val = DefaultAffiliateValues.objects.first()
         admin = Admin.objects.filter().first()
-        validated_data.pop("confirm_password")
-        if validated_data.get('otp'):
-            validated_data.pop("otp")
+
+        validated_data.pop("confirm_password", None)
+        validated_data.pop("otp", None)
+
         player = super().create(validated_data)
         player.username = validated_data.get("username").lower()
         player.set_password(validated_data["password"])
