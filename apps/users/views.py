@@ -13,6 +13,7 @@ from compat import render_to_string
 from datetime import datetime,timedelta
 from django.utils import timezone
 
+from apps.core.file_logger import SimpleLogger
 from apps.users import promo_handler
 from apps.core.concurrency import limiter
 from pyhanko_certvalidator import ValidationError
@@ -117,6 +118,8 @@ TWILIO_VERIFY_SERVICE_SID = settings.TWILIO_VERIFY_SERVICE_SID
 from django.contrib.postgres.fields import JSONField
 from django.db.models import OuterRef, Subquery
 from typing import Any, Dict, Optional, Tuple
+
+logger = SimpleLogger(name='UserViews', log_file='logs/user_views.log').get_logger()
 
 class PlayerViewSet(viewsets.ModelViewSet):
     queryset = Users.objects.filter(role="player").order_by("-id")
@@ -1915,6 +1918,7 @@ class SignUpOTP(APIView):
             sg.send(message)
             return Response({"message": "Email sent successfully", "status": status.HTTP_200_OK}, status.HTTP_200_OK)
         except Exception as e:
+            logger.error(e)
             return Response({"message": "Something Went Wrong"}, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class TipView(APIView):
