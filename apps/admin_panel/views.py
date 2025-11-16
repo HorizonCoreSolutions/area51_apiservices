@@ -4099,13 +4099,13 @@ class EditBonusView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponse
         if end_date:
             end_date = timezone.datetime.strptime(end_date, self.date_format).date()
         
-        try:
-            if bonus_percentage and Decimal(bonus_percentage) > 0:
-                return self.render_json_response({"status": "error", "message": "SC area disabled please set it to set 0 to continue"}, 400)
-            if instant_bonus_amount and Decimal(instant_bonus_amount) > 0:
-                return self.render_json_response({"status": "error", "message": "SC area disabled please set it to set 0 to continue"}, 400)
-        except Exception:
-            return self.render_json_response({"status": "error", "message": "Please insert valid values"}, 400)
+        # try:
+        #     if bonus_percentage and Decimal(bonus_percentage) > 0:
+        #         return self.render_json_response({"status": "error", "message": "SC are disabled please set it to set 0 to continue"}, 400)
+        #     if instant_bonus_amount and Decimal(instant_bonus_amount) > 0:
+        #         return self.render_json_response({"status": "error", "message": "SC are disabled please set it to set 0 to continue"}, 400)
+        # except Exception:
+        #     return self.render_json_response({"status": "error", "message": "Please insert valid values"}, 400)
 
         try:
             promo_obj = PromoCodes.objects.get(id=bonus_id)
