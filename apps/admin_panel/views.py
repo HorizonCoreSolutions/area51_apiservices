@@ -4078,7 +4078,9 @@ class EditBonusView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponse
 
         promo_code = request.POST.get("losing_promo_code")
         bonus_percentage = request.POST.get("losing_bonus_percentage")
+        bonus_percentage = None if bonus_percentage in ("None", "", None) else bonus_percentage
         gold_percentage = request.POST.get("losing_gold_percentage")
+        gold_percentage = None if gold_percentage in ("None", "", None) else gold_percentage
         
         start_date = request.POST.get("losing_start_time")
         end_date = request.POST.get("losing_end_time")
@@ -4087,7 +4089,9 @@ class EditBonusView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponse
         user_limit = request.POST.get("promoUserLimit")
         max_bonus_limit = request.POST.get("max_bonus_limit")
         instant_gold_amount = request.POST.get("instant_gold_amount", "")
+        instant_gold_amount = str(0 if instant_gold_amount in ("None", "", None) else instant_gold_amount)
         instant_bonus_amount = request.POST.get("instant_bonus_amount", "")
+        instant_bonus_amount = str(0 if instant_bonus_amount in ("None", "", None) else instant_bonus_amount)
 
         if start_date:
             start_date = timezone.datetime.strptime(start_date, self.date_format).date()
@@ -4107,8 +4111,8 @@ class EditBonusView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponse
             promo_obj = PromoCodes.objects.get(id=bonus_id)
             promo_obj.usage_limit = promoUsageLimit
             promo_obj.limit_per_user = user_limit
-            promo_obj.bonus_percentage = bonus_percentage if bonus_percentage not in ["None", None, ""] else 0
-            promo_obj.gold_percentage = gold_percentage if gold_percentage not in ["None", None, ""] else 0
+            promo_obj.bonus_percentage = bonus_percentage or 0
+            promo_obj.gold_percentage = gold_percentage or 0
             promo_obj.end_date = end_date
             promo_obj.start_date = start_date
             promo_obj.max_bonus_limit = max_bonus_limit
