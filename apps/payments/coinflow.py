@@ -9,7 +9,9 @@ from django.db import transaction
 from dataclasses import dataclass
 from django.utils import timezone
 from django.db.models import Q, Count
+from apps.core.utils import time as time_utils
 from datetime import datetime, timedelta, time
+from apps.payments import repository as payments_repository
 from apps.core.utils.encryption import decrypt_combined, encrypt_combined
 from apps.users import promo_handler
 from apps.users.utils import redis_client
@@ -885,88 +887,20 @@ class CoinFlowClient:
         """
         # Only generate one per day:
 
-        WITHDRAW_STATUS = [
-            CoinFlowTransaction.StatusType.requested,
-            CoinFlowTransaction.StatusType.paid_out,
-            CoinFlowTransaction.StatusType.pending,
-            CoinFlowTransaction.StatusType.cancelled
-            # CoinFlowTransaction.StatusType.failed,
-        ]
-        
-        WITHDRAW_TYPES = [
-            CoinFlowTransaction.TransactionType.withdraw,
-            CoinFlowTransaction.TransactionType.withdraw_request
-        ]
-
-        DAY_SHIFT_HOURS = 5
-
-        # 1. Get today at midnight (timezone-aware)
-        # Get timezone-aware "today at midnight"
-        start_of_day = timezone.now().replace(
-            hour=0,
-            minute=0,
-            second=0,
-            microsecond=0
-        )
-
-        # Shift forward by N hours (e.g. day starts at 5 AM)
-        shifted_start = start_of_day + timedelta(hours=DAY_SHIFT_HOURS)
-        if shifted_start > timezone.now():
-            shifted_start -= timedelta(days=1)
-
-        qs = CoinFlowTransaction.objects.filter(
-            user_id=user.id,
-            transaction_type__in=WITHDRAW_TYPES,
-            status__in=WITHDRAW_STATUS,
-            created__gte=shifted_start,
-            is_deleted=False
-        )
-
-        counts = qs.aggregate(
-            total=Count("id"),
-            requested=Count("id", filter=Q(
-                transaction_type=CoinFlowTransaction.TransactionType.withdraw_request,
-                status=CoinFlowTransaction.StatusType.requested
-            )),
-            cancelled=Count("id", filter=Q(
-                transaction_type=CoinFlowTransaction.TransactionType.withdraw_request,
-                status=CoinFlowTransaction.StatusType.cancelled
-            ))
-        )
-
-        # total = proccesed + requested + failed_request
-        total = counts.get("total") or 0
-        # total - (requested + failed_request)
-        requested = counts.get("requested") or 0
-        cancelled = counts.get("cancelled") or 0
-        
-        had_procesed = total - (requested + cancelled) >= 1
-        has_requested = requested >= 1
-        should_request = cancelled + requested <= 2
-
-
-        if had_procesed or has_requested:
-            logger.info(f"User: {user.id}-{user.username} tried more than one transaction")
-            return BasicReturn(
-                success=False,
-                data={
-                    'message' : 'Only one transaction per day, please try again tomorrow.',
-                    'status' : 429
-                }
-            )
-        
-        if not should_request:
-            logger.info(f"User: {user.id}-{user.username} tried more than one transaction")
-            return BasicReturn(
-                success=False,
-                data={
-                    'message' : 'You can only request 2 transactions per day, please try again tomorrow.',
-                    'status' : 429
-                }
-            )
-
-
         user = Users.objects.select_for_update().get(id=user.id)
+        remaning_data = payments_repository.remaning_cooldown(user=user)
+
+        if not remaning_data.get("withdrawalAvailable"):
+            ts = int(remaning_data.get("time") or 0)
+            logger.info(f"User: {user.id}-{user.username} tried more than one transaction")
+            return BasicReturn(
+                success=False,
+                data={
+                    'message' : f'You have reach your limit, please try again in {time_utils.format_time(s=ts)}.',
+                    'status' : 429
+                }
+            )
+
         if (user.balance * 100) < cents:
             logger.info(f"User: {user.id}-{user.username} has balance: {user.balance} tried to remove {round(cents/100, 2)}")
             return BasicReturn(

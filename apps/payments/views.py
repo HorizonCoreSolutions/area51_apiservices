@@ -20,12 +20,12 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework import viewsets
 from apps.users import promo_handler
-from django.db.models import Q, Count
 from rest_framework.views import APIView
 from apps.users.utils import redis_client
 from apps.core.concurrency import limiter
 from rest_framework.response import Response
 from django_coinpayments.models import Payment
+from apps.payments import repository as payments_repository
 from apps.admin_panel.tasks import ipn_status_transaction_mail
 from apps.bets.models import PENDING, WITHDRAW, Transactions, DEPOSIT
 from apps.bets.utils import generate_reference, validate_date
@@ -1883,79 +1883,11 @@ class WithdrawInfoView(APIView):
             window=3600,  # 1 horas
             sliding=True
         )
-        # Only generate one per day:
-
-        WITHDRAW_STATUS = [
-            CoinFlowTransaction.StatusType.requested,
-            CoinFlowTransaction.StatusType.paid_out,
-            CoinFlowTransaction.StatusType.pending,
-            CoinFlowTransaction.StatusType.cancelled
-            # CoinFlowTransaction.StatusType.failed,
-        ]
+        data = payments_repository.remaning_cooldown(user=request.user)
         
-        WITHDRAW_TYPES = [
-            CoinFlowTransaction.TransactionType.withdraw,
-            CoinFlowTransaction.TransactionType.withdraw_request
-        ]
-
-        DAY_SHIFT_HOURS = 5
-
-        # 1. Get today at midnight (timezone-aware)
-        # Get timezone-aware "today at midnight"
-        start_of_day = timezone.now().replace(
-            hour=0,
-            minute=0,
-            second=0,
-            microsecond=0
-        )
-
-        # Shift forward by N hours (e.g. day starts at 5 AM)
-        shifted_start = start_of_day + timedelta(hours=DAY_SHIFT_HOURS)
-        if shifted_start > timezone.now():
-            shifted_start -= timedelta(days=1)
-
-        qs = CoinFlowTransaction.objects.filter(
-            user_id=request.user.id,
-            transaction_type__in=WITHDRAW_TYPES,
-            status__in=WITHDRAW_STATUS,
-            created__gte=shifted_start,
-            is_deleted=False
-        )
-
-        counts = qs.aggregate(
-            total=Count("id"),
-            requested=Count("id", filter=Q(
-                transaction_type=CoinFlowTransaction.TransactionType.withdraw_request,
-                status=CoinFlowTransaction.StatusType.requested
-            )),
-            cancelled=Count("id", filter=Q(
-                transaction_type=CoinFlowTransaction.TransactionType.withdraw_request,
-                status=CoinFlowTransaction.StatusType.cancelled
-            ))
-        )
-
-        # total = proccesed + requested + failed_request
-        total = counts.get("total") or 0
-        # total - (requested + failed_request)
-        requested = counts.get("requested") or 0
-        cancelled = counts.get("cancelled") or 0
+        ts = int(data.get("time") or 0)
+        tl = max(ts, tl)
         
-        had_procesed = total - (requested + cancelled) >= 1
-        has_requested = requested >= 1
-        should_request = cancelled + requested <= 2
-
-        if ((had_procesed or has_requested)
-            or not should_request):
-            next_available = shifted_start + timedelta(hours=24)
-            remaining = next_available - timezone.now()
-            total_seconds = max(tl, max(0, remaining.total_seconds()))
-        
-            return Response({
-                "withdrawalAvailable": False,
-                "time": total_seconds
-                },
-                status=status.HTTP_200_OK,
-            )
         if tl > 0:
             return Response({
                 "withdrawalAvailable": False,
