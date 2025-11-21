@@ -112,8 +112,8 @@ class PlayerSerializer(serializers.Serializer):
     is_max_spending_limit_set_by_admin = serializers.SerializerMethodField()
     affiliate_link = serializers.CharField(max_length=250)
     is_active = serializers.BooleanField(default=False)
-    phone_verified = serializers.IntegerField()
-    document_verified = serializers.IntegerField()
+    phone_verified = serializers.IntegerField(read_only=True)
+    document_verified = serializers.IntegerField(read_only=True)
     is_verified = serializers.SerializerMethodField()
     no_of_deposit_counts = serializers.IntegerField()
     is_bonus_on_all_deposits = serializers.BooleanField(default=False)
@@ -132,6 +132,8 @@ class PlayerSerializer(serializers.Serializer):
     mnet_url = serializers.SerializerMethodField()
     coinflow_state = serializers.SerializerMethodField()
     country = serializers.SerializerMethodField()
+    weekly_dl = serializers.DecimalField(decimal_places=2, max_digits=15, read_only=True)
+    daily_dl = serializers.DecimalField(decimal_places=2, max_digits=15, read_only=True)
 
 
     @staticmethod
