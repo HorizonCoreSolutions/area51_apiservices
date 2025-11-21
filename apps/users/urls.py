@@ -1,7 +1,7 @@
 from django.conf.urls import url
 from apps.users.views import (AboutCmsView, AddSpinWheelView, AdminAdsPublicDetailsView,
                               AdminPublicDetailsView, AffiiateRequestView, AffiliatedPlayers, BonusDetailView,
-                              CashAppDetailsApi, CashappQrListView, CashbackView, ChangePassword, ChatSupportView,
+                              CashAppDetailsApi, CashappQrListView, CashbackView, ChageDepositLimit, ChangePassword, ChatSupportView,
                               CmsFAQView, CmsPrivacyPolicyView, CmsPromotionsView, ComingSoonPagesDeatilsView, ContactUsView,
                               CookiePolicyView,
                               CsrQueryView, FooterDeatilsView, ForgotPassword, FortunePandasAPIView,
@@ -84,5 +84,6 @@ urlpatterns = [
     # url(r"^fortunepandas/?", FortunePandasAPIView.as_view(), name="fortunepandas"),
 
     url(r'^countries/?', CountriesView.as_view(), name='countries'),
+    url(r'^deposit-limits/?', ChageDepositLimit.as_view(), name="change-deposit-limits")
 
 ]

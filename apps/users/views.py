@@ -2710,3 +2710,44 @@ class FortunePandasCategoryAPIView(APIView):
             print("Error in Fortunepandas Category API", e)
             print(traceback.format_exc())
             return Response({"message": "Internal Server Error"}, 500)
+
+
+class ChageDepositLimit(APIView):
+    http_method_names = ["post"]
+    
+    @transaction.atomic
+    def post(self, request):
+        extra = request.user.role in ("agent", "admin", "superadmin")
+
+        # Target user
+        user_id = (request.data.get("user_id", None) or request.user.id) if extra else request.user.id
+        if extra and not user_id:
+            return Response({"message": "user_id required."}, status=400)
+
+        weekly = request.data.get("weekly_dl")
+        daily = request.data.get("daily_dl")
+        
+        try:
+            weekly = Decimal(weekly) if weekly else None
+            daily = Decimal(daily) if daily else None
+        except ValueError:
+            return Response({"message": "Limits should be numbers"}, status=400)
+
+        # Normal users must provide both values
+        if not extra and (weekly is None or daily is None):
+            return Response({"message": "Weekly and daily limits should be set."}, status=400)
+
+        try:
+            user = Users.objects.only("weekly_dl", "daily_dl").get(id=user_id)
+        except Users.DoesNotExist:
+            return Response({"message": "User does not exist."}, status=400)
+
+        # Normal users cannot overwrite existing limits
+        if not extra and (user.weekly_dl is not None or user.daily_dl is not None):
+            return Response({"message": "Limits already set."}, status=400)
+
+        user.weekly_dl = weekly
+        user.daily_dl = daily
+        user.save(update_fields=["weekly_dl", "daily_dl"])
+
+        return Response({"message": "OK"})
