@@ -95,7 +95,7 @@ def deposit(
 
     if response.status_code != 201:
         try:
-            message = response.json().get("message")
+            message = response.json().get("message", "Request Not Processed.")
             return False, message
         except ValueError:
             return False, "Request Not Processed"
