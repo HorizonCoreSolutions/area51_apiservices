@@ -231,3 +231,9 @@ class CoinFlowTransaction(AbstractBaseModel):
     
     error_code = models.CharField(max_length=20,null=True,blank=True)
     error_description = models.CharField(max_length=500,null=True,blank=True)
+
+
+class Bundle(AbstractBaseModel):
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    extra = models.DecimalField(max_digits=10, decimal_places=2)
+    bonus = models.DecimalField(max_digits=10, decimal_places=2)
