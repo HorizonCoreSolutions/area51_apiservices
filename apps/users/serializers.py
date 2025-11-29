@@ -21,6 +21,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.db.models import Q
 
+from apps.bets.services.wagering import get_wagering_balance
 from apps.users import promo_handler
 from api_services.settings.base import DOMAIN_URL
 from apps.admin_panel.utils import create_casino_account_id
@@ -134,6 +135,7 @@ class PlayerSerializer(serializers.Serializer):
     country = serializers.SerializerMethodField()
     weekly_dl = serializers.DecimalField(decimal_places=2, max_digits=15, read_only=True)
     daily_dl = serializers.DecimalField(decimal_places=2, max_digits=15, read_only=True)
+    playable = serializers.SerializerMethodField()
 
 
     @staticmethod
@@ -144,8 +146,10 @@ class PlayerSerializer(serializers.Serializer):
             'VRFD' : 2
         }
         return trans_layer[obj.coinflow_state]
-
-
+    
+    def get_playable(self, obj):
+        return get_wagering_balance(obj)
+    
     def get_country(self, obj):
         lang = self.context.get("lang_code", "en")
         if obj.country_obj:

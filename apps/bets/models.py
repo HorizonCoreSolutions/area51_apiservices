@@ -113,7 +113,7 @@ class ChartStats(AbstractBaseModel):
     per_sports_winning = JSONField(default=None, null=True, blank=False)
 
 
-class WagerinRequirement(AbstractBaseModel):
+class WageringRequirement(AbstractBaseModel):
     """_summary_
 
     Args:
@@ -140,72 +140,3 @@ class WagerinRequirement(AbstractBaseModel):
     result = models.DecimalField(max_digits=10, decimal_places=2, null=True, default=None)
     active = models.BooleanField(default=True, db_index=True)
     betable = models.BooleanField(default=True, db_index=True)
-    
-    def bet(self, amount: Decimal) -> Tuple[Decimal, Decimal, Decimal]:
-        """Es una funcion para hacer que apostar sea más fácil y no tener que hacerlo en otro lado
-
-        Args:
-            amount (Decimal): cantidad que el usuario va a apostar
-
-        Returns:
-            Tuple[Decimal, Decimal, Decimal]: 
-            - Reminent amount of money to be
-            - Amount of money to be return to the main balance
-            - Amount bet on this WR
-        """
-        give = Decimal('0')
-        if not self.betable:
-            return amount, give, give
-        rest = min(self.balance, amount, self.limit - self.balance)
-        self.balance = round(self.balance - rest, 2)
-        self.played += rest
-
-        if self.played >= self.limit:
-            self.result = self.balance
-            give = self.balance
-            self.balance = Decimal('0.00')
-            self.active = False
-        
-        elif self.balance <= 0:
-            self.result = Decimal('0.00')
-            self.active = False
-
-        self.save()
-        return amount - rest, give, rest
-
-
-    def pay(self, amount: Decimal) -> Tuple[Decimal]:
-        """Function to return (precalculated) amount of money
-
-        Args:
-            amount (Decimal): Amount to be pay for the user
-
-        Returns:
-            Tuple[Decimal]: Amount of money to be return to the main balance
-        """
-        
-        give = Decimal('0.00')
-        if not self.betable:
-            return give,
-        
-        if not self.active:
-            if self.played >= self.limit:
-                # If limit has been pass money should be given to main balance
-                return (give, )
-
-            # The WR should be re activated
-            # Here the amount should be 0
-            if (self.result or 0) > 0:
-                print('daat')
-            self.active = True
-            self.balance = amount
-            self.result = None
-        else:
-            self.balance += amount
-        
-        self.save()
-        return (give,)
-
-
-    def retrieve(self):
-        return
