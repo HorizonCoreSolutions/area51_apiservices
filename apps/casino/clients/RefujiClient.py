@@ -95,12 +95,10 @@ def deposit(
 
     if response.status_code != 201:
         try:
-            message = response.json().get("message")
-            if message in messages:
-                return False, message
+            message = response.json().get("message", "Request Not Processed.")
+            return False, message
         except ValueError:
             return False, "Request Not Processed"
-        return False, "Request Not Processed"
     
     user.balance = user.balance - Decimal(amount) 
     user.save()
