@@ -2593,7 +2593,7 @@ function deletegame(game_id, player_id){
                 let daily  = readValue(wrap.find(".dl-daily").val());
 
                 $.ajax({
-                    url: "{% url 'admin-panel:change-deposit-limits' %}",
+                    url: "{% url 'users-api:change-deposit-limits' %}",
                     type: "POST",
                     headers: { "X-CSRFToken": csrf() },
                     data: {
@@ -2623,7 +2623,7 @@ function deletegame(game_id, player_id){
                 let pk = $(this).data("player-id");
 
                 $.ajax({
-                    url: "{% url 'admin-panel:change-deposit-limits' %}",
+                    url: "{% url 'users-api:change-deposit-limits' %}",
                     type: "POST",
                     headers: { "X-CSRFToken": csrf() },
                     data: {
