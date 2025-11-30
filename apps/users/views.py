@@ -2745,6 +2745,10 @@ class ChageDepositLimit(APIView):
         # Normal users cannot overwrite existing limits
         if not extra and (user.weekly_dl is not None or user.daily_dl is not None):
             return Response({"message": "Limits already set."}, status=400)
+        
+        if weekly is None or daily is None:
+            weekly = None
+            daily = None
 
         user.weekly_dl = weekly
         user.daily_dl = daily
