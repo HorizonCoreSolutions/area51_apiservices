@@ -126,7 +126,8 @@ class WageringRequirement(AbstractBaseModel):
        - on each bet the value of the bet should be added to played
     3) once the user has played more than the limit the balance should be given to the user
     """
-    user = models.ForeignKey(Users, on_delete=models.CASCADE, null=True, blank=True)
+    user = models.ForeignKey(Users, on_delete=models.CASCADE)
+    accreditable = models.ForeignKey(Users, on_delete=models.CASCADE, null=True, default=None)
 
     # the amount the user has deposited
     amount = models.DecimalField(max_digits=10, decimal_places=2)
@@ -134,9 +135,9 @@ class WageringRequirement(AbstractBaseModel):
     # the amount of bonus it has (like if player 5 and amount 5, here should be 5)
     balance = models.DecimalField(max_digits=10, decimal_places=2)
     # The amount the user has played
-    played = models.DecimalField(max_digits=10, decimal_places=2)
+    played = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
     limit = models.DecimalField(max_digits=10, decimal_places=2)
 
     result = models.DecimalField(max_digits=10, decimal_places=2, null=True, default=None)
     active = models.BooleanField(default=True, db_index=True)
-    betable = models.BooleanField(default=True, db_index=True)
+    betable = models.BooleanField(db_index=True)
