@@ -1,16 +1,24 @@
 import pytz
-from typing import Optional
 from decimal import Decimal
 from django.utils import timezone
+from typing import Optional, Tuple
 from apps.users.models import Users
 from datetime import datetime, timedelta
-from django.db.models import Q, Sum, Count, Max
+from django.db.models import Q, Sum, Count, Max, Min
 from apps.payments.models import CoinFlowTransaction
 
 # Define the target timezone once
 CT = pytz.timezone("America/Chicago")
 
-def amount_deposited(user: Users) -> dict:
+def amount_deposited(user: Users) -> Tuple[Decimal, Decimal, datetime]:
+    """This returnse the amount a user has deposited
+
+    Args:
+        user (Users): The user you want to retrieve the info from.
+
+    Returns:
+        Tuple[Decimal, Decimal, datetime]: daily, weekly, date_of_first_deposit_on_range
+    """
     now_ct = timezone.now().astimezone(CT)
     day_start_ct = now_ct.replace(hour=0, minute=0, second=0, microsecond=0)
 
@@ -27,16 +35,15 @@ def amount_deposited(user: Users) -> dict:
     ).aggregate(
         weekly_deposit=Sum("amount"),
         daily_deposit=Sum("amount", filter=Q(created__gte=day_start_utc)),
+        date=Min("created")
     )
 
     # 4. Process Results
-    weekly = data["weekly_deposit"] or Decimal("0.00")
-    daily = data["daily_deposit"] or Decimal("0.00")
+    weekly = Decimal(data["weekly_deposit"] or "0.00")
+    daily = Decimal(data["daily_deposit"] or "0.00")
 
-    return {
-        "weekly": weekly,
-        "daily": daily,
-    }
+    return daily, weekly, (data.get("date") or now_ct)
+
 
 
 def remaning_cooldown(user: Users) -> dict:

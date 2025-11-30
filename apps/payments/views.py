@@ -19,6 +19,7 @@ from django.shortcuts import redirect
 from django.utils import timezone
 from rest_framework import status
 from rest_framework import viewsets
+from apps.payments.service import can_deposit_limits
 from apps.users import promo_handler
 from rest_framework.views import APIView
 from apps.users.utils import redis_client
@@ -1540,6 +1541,11 @@ class GetCoinFlowLink(APIView):
             return Response(data={'message': 'Cents must be higher than 500 and lower than 500000.'}, status=status.HTTP_400_BAD_REQUEST)
 
         res = cf.register_user_attested(user=user)
+        
+        can, msg = can_deposit_limits(user=user, amount= Decimal(cents/100))
+        if not can:
+            return Response(data={'message': msg}, status=status.HTTP_400_BAD_REQUEST)
+        
         # if res.error:
         #     return Response(data={"message" : "Please compleate any other verification step left."}, status=status.HTTP_400_BAD_REQUEST)
         promo_code = request.data.get("promo_code")
