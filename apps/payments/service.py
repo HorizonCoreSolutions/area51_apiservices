@@ -14,9 +14,6 @@ def can_deposit_limits(
 
     if user.weekly_dl is None or user.daily_dl is None:
         return False, "Set your deposit limits first."
-
-    if amount > user.weekly_dl or amount > user.daily_dl:
-        return False, "Amount is above your limits."
     
     daily, weekly, first = amount_deposited(user=user)
     first = first.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -24,7 +21,10 @@ def can_deposit_limits(
 
     mx_week = round(user.weekly_dl - weekly, 2)
     mx_day  = round(user.daily_dl - daily, 2)
-    mx_depo = min(mx_week, mx_day) 
+    mx_depo = min(mx_week, mx_day)
+
+    if amount > user.weekly_dl or amount > user.daily_dl:
+        return False, f"Amount is above your limits. You can deposit up to {mx_depo} SC"
 
     # weekly
     if weekly + amount > user.weekly_dl:
