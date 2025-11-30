@@ -896,6 +896,44 @@ Players
                                                                         </div>
                                                                         <h5 class="text-center mt-2 mb-1" style="color:gray">{% trans "Player" %}: {{ player.username }}</h5>
                                                                         <hr>
+                                                                        <div class="row form-group" id="dl-wrapper-{{ player.pk }}">
+                                                                            <div class="col-8">1
+                                                                                <label class="form-control-label mb-0 fs-16">{% trans "Deposit Limits" %}</label>
+
+                                                                                <div class="mt-2">
+                                                                                    <label class="mb-1 fs-14">{% trans "Weekly" %}</label>
+                                                                                    <input type="number"
+                                                                                        step="0.01"
+                                                                                        class="form-control form-control-sm dl-weekly"
+                                                                                        data-player-id="{{ player.pk }}"
+                                                                                        placeholder="{% trans 'None' %}"
+                                                                                        value="{{ player.weekly_dl|default:'' }}">
+                                                                                </div>
+
+                                                                                <div class="mt-2">
+                                                                                    <label class="mb-1 fs-14">{% trans "Daily" %}</label>
+                                                                                    <input type="number"
+                                                                                        step="0.01"
+                                                                                        class="form-control form-control-sm dl-daily"
+                                                                                        data-player-id="{{ player.pk }}"
+                                                                                        placeholder="{% trans 'None' %}"
+                                                                                        value="{{ player.daily_dl|default:'' }}">
+                                                                                </div>
+                                                                            </div>
+
+                                                                            <div class="col-4 d-flex flex-column align-items-end justify-content-between">
+                                                                                <button class="btn btn-sm btn-success dl-save mt-1"
+                                                                                        data-player-id="{{ player.pk }}">
+                                                                                    {% trans "Save" %}
+                                                                                </button>
+
+                                                                                <button class="btn btn-sm btn-warning dl-reset mt-2"
+                                                                                        data-player-id="{{ player.pk }}">
+                                                                                    {% trans "Reset" %}
+                                                                                </button>
+                                                                            </div>
+                                                                        </div>
+
                                                                         <div class="row form-group ">
                                                                             <div class="col-8">
                                                                                 <label class="form-control-label mb-0 fs-16">{% trans "Ability to play" %}</label>
@@ -1138,60 +1176,59 @@ Players
     </div>
 </div>
 
-    {% include "./create_player.html" %}
-    {% include "./update_player.html" %}
-    {% include "../../includes/transactions.html" %}
-    </div>
-    <div id="pop-loader"></div>
-    <script type="text/javascript">
-        const isGreaterThanZero = value => value >= 0;
-            var spinner = $('#pop-loader');
-            $('#mobile-collapse').click(function () { 
-                
-                $("#nw1").toggleClass('left-spacer');
-    
-                console.log("hey");
-                
-            });
+{% include "./create_player.html" %}
+{% include "./update_player.html" %}
+{% include "../../includes/transactions.html" %}
+</div>
+<div id="pop-loader"></div>
+<script type="text/javascript">
+    const isGreaterThanZero = value => value >= 0;
+        var spinner = $('#pop-loader');
+        $('#mobile-collapse').click(function () { 
             
+            $("#nw1").toggleClass('left-spacer');
 
-            $('#exampleModal').on('show.bs.modal', function (event) {
-            var button = $(event.relatedTarget);
-            var playerId = button.data('player-id');
+            console.log("hey");
             
-            // Update the hidden input value in the modal form
-            $('#modalPlayerId').val(playerId);
         });
+        
 
-        $('#exampleModal2').on('show.bs.modal', function (event) {
-            var button = $(event.relatedTarget);
-            var playerId = button.data('player-id');
-            var username = button.data('username')
-            var game = button.data('game')
-            var usergame_id = button.data('id')
-            var game_id = button.data('game-id')
-            var code = button.data('code')
+        $('#exampleModal').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget);
+        var playerId = button.data('player-id');
+        
+        // Update the hidden input value in the modal form
+        $('#modalPlayerId').val(playerId);
+    });
 
-            console.log("----username---", username, game, usergame_id, game_id, code)
+    $('#exampleModal2').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget);
+        var playerId = button.data('player-id');
+        var username = button.data('username')
+        var game = button.data('game')
+        var usergame_id = button.data('id')
+        var game_id = button.data('game-id')
+        var code = button.data('code')
 
-            var gameValue = game+"-"+code
+        console.log("----username---", username, game, usergame_id, game_id, code)
 
-            // Enable and populate the select field
-            $('#id_game_edit').empty().append($('<option>', {
-                value: game_id,
-                text: gameValue,
-                selected: true
-            })).prop('disabled', true);
-            
-            // Update the hidden input value in the modal form
-            $('#modalPlayerId2').val(playerId);
-            $('#id_username_edit').val(username);
-            {% comment %} $('#id_game_edit').val(game); {% endcomment %}
-            $('#usergame_id').val(usergame_id);
-            $('#id_game_edit2').val(game_id);
-        });
-          
-            
+        var gameValue = game+"-"+code
+
+        // Enable and populate the select field
+        $('#id_game_edit').empty().append($('<option>', {
+            value: game_id,
+            text: gameValue,
+            selected: true
+        })).prop('disabled', true);
+        
+        // Update the hidden input value in the modal form
+        $('#modalPlayerId2').val(playerId);
+        $('#id_username_edit').val(username);
+        {% comment %} $('#id_game_edit').val(game); {% endcomment %}
+        $('#usergame_id').val(usergame_id);
+        $('#id_game_edit2').val(game_id);
+    });
+
     function validateDateRange(input){
         
         var from_date = $("#search-date-created-from").val();
@@ -1248,248 +1285,245 @@ Players
     }       
        
 
-            function isNumberKey(evt){
-                var charCode = (evt.which) ? evt.which : event.keyCode
-                if (charCode > 31 && (charCode < 48 || charCode > 57))
-                    return false;
-                return true;
-            }
+    function isNumberKey(evt){
+        var charCode = (evt.which) ? evt.which : event.keyCode
+        if (charCode > 31 && (charCode < 48 || charCode > 57))
+            return false;
+        return true;
+    }
 
-            function payment_delay(){
+    function payment_delay(){
 
-                var row_id = event.target.id.split("-").pop();
-                var input_id = "#transaction-input-" + row_id;
-                var amount = $(input_id).val();
-                var player_id = "#player-id-" + row_id;
-                
+        var row_id = event.target.id.split("-").pop();
+        var input_id = "#transaction-input-" + row_id;
+        var amount = $(input_id).val();
+        var player_id = "#player-id-" + row_id;
+
+        $.ajax({
+            type: "POST",
+            url: "{% url 'admin-panel:payment-delay-ajax' %}",
+            dataType: "json",
+            data: {
+                player_id: $(player_id).val(),
+            },
+            success: function (data) {
+                if(data['status'] == 'wait'){
             
-            
-                    $.ajax({
-                    type: "POST",
-                    url: "{% url 'admin-panel:payment-delay-ajax' %}",
-                    dataType: "json",
-                    data: {
-                        player_id: $(player_id).val(),
-                    },
-                    success: function (data) {
-                        if(data['status'] == 'wait'){
-                    
-                            Swal.fire({
-                            icon: 'info',
-                            title: 'Withdraw not available ',
-                            text: data['message']
+                    Swal.fire({
+                    icon: 'info',
+                    title: 'Withdraw not available ',
+                    text: data['message']
+                        });
+                    return false; 
+                } else{
+                    if(amount == '' || isNaN(amount)){
+                        Swal.fire({
+                            title: 'Oops...',
+                            text: "Please type in an amount!!",
+                            icon: 'error',
+                        });
+                        return false;
+                    }
+
+                    if(amount <= 0 ){
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Oops...',
+                            text: "Amount must be greater than zero!!"
+                        });
+                        return false;
+                    }
+        
+                    var player_id = "#player-id-" + row_id;
+                    var balance_id = "#player-balance-" + row_id;
+                    var bonus_balance_id = "#player-bonus-balance-" + row_id;
+
+                    var type, confirmationPopupText;
+
+        
+                    type = "decrease",
+                    confirmationPopupText = '<span class="swal-custom-text text-c-red">Subtract ' + amount + ' </span';
+        
+
+                    Swal.fire({
+                        html:
+                            '<div class="swal-custom-content">' + 
+                            '<p class="swal-custom-icon"><i class="cp-icon">&#xe815;</i></p>' +
+                            '<h3 class="swal-custom-title">{% trans "Are you sure" %} ?</h3>' +
+                            confirmationPopupText + 
+                            '</div>',
+                        customClass: {
+                            actions: 'swal-custom-actions',
+                            confirmButton: 'swal-custom-btn swal-custom-confirm-btn',
+                            cancelButton: 'swal-custom-btn swal-custom-cancel-btn',
+                        },
+                        showCancelButton: true,
+                        confirmButtonText: '{% trans "Yes" %}',
+                        cancelButtonText: '{% trans "No" %}'
+                        }).then((result) => {
+                            if (result.value) {
+                                $.ajax({
+                                    url: "{% url 'admin-panel:credit-ajax' %}",
+                                    type: "POST",
+                                    dataType: "json",
+                                    data: {
+                                        value: amount,
+                                        player_id: $(player_id).val(),
+                                        type: type
+                                    },
+                                    success: function (data) {
+                                        if(data.status === 'Wait'){
+                                            Swal.fire({
+                                                title: 'Withdraw not available',
+                                                text: data.message,
+                                                icon: 'info',
+                                            });
+                                            return false;
+                                        }
+
+                                        if(data.status === 'not_verified'){
+                                            Swal.fire({
+                                                title: 'Verification Needed',
+                                                text: data.message,
+                                                icon: 'info',
+                                            });
+                                            return false;
+                                        }
+                                        
+                                        if(data.status === 'Failed'){
+                                            Swal.fire({
+                                                title: 'Oops...',
+                                                text: data.message,
+                                                icon: 'error',
+                                            });
+                                            return false;
+                                        }else{
+                                            $(balance_id).text(data['player_bal']);
+                                            $(bonus_balance_id).text(data['player_bonus_bal']);
+
+                                            $("#user-balance").text(data['agent_bal']);
+                                        }
+                                        $(".balance-options input[type=radio]:checked").prop("checked", false);
+                                        $(".user-credit-wrap .transaction-input").val('');
+                                    }
                                 });
-                            return false; 
+                            } else if (result.dismiss === "cancel") {
+                                // show message ?
                             }
-                        else{
-
-                            if(amount == '' || isNaN(amount)){
-                    
-                    Swal.fire({
-                        title: 'Oops...',
-                        text: "Please type in an amount!!",
-                        icon: 'error',
-                    });
-                    return false;
-                }
-
-                if(amount <= 0 ){
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Oops...',
-                        text: "Amount must be greater than zero!!"
-                    });
-                    return false;
-                }
-                
-                var player_id = "#player-id-" + row_id;
-                var balance_id = "#player-balance-" + row_id;
-                var bonus_balance_id = "#player-bonus-balance-" + row_id;
-
-                var type, confirmationPopupText;
-
-               
-                    type = "decrease",
-                    confirmationPopupText = '<span class="swal-custom-text text-c-red">Subtract ' + amount + ' </span';
-                
-
-                Swal.fire({
-                    html:
-                        '<div class="swal-custom-content">' + 
-                        '<p class="swal-custom-icon"><i class="cp-icon">&#xe815;</i></p>' +
-                        '<h3 class="swal-custom-title">{% trans "Are you sure" %} ?</h3>' +
-                        confirmationPopupText + 
-                        '</div>',
-                    customClass: {
-                        actions: 'swal-custom-actions',
-                        confirmButton: 'swal-custom-btn swal-custom-confirm-btn',
-                        cancelButton: 'swal-custom-btn swal-custom-cancel-btn',
-                    },
-                    showCancelButton: true,
-                    confirmButtonText: '{% trans "Yes" %}',
-                    cancelButtonText: '{% trans "No" %}'
-                    }).then((result) => {
-                        if (result.value) {
-                            $.ajax({
-                                url: "{% url 'admin-panel:credit-ajax' %}",
-                                type: "POST",
-                                dataType: "json",
-                                data: {
-                                    value: amount,
-                                    player_id: $(player_id).val(),
-                                    type: type
-                                },
-                                success: function (data) {
-                                    if(data.status === 'Wait'){
-                                        Swal.fire({
-                                            title: 'Withdraw not available',
-                                            text: data.message,
-                                            icon: 'info',
-                                        });
-                                        return false;
-                                    }
-
-                                    if(data.status === 'not_verified'){
-                                        Swal.fire({
-                                            title: 'Verification Needed',
-                                            text: data.message,
-                                            icon: 'info',
-                                        });
-                                        return false;
-                                    }
-                                    
-                                    if(data.status === 'Failed'){
-                                        Swal.fire({
-                                            title: 'Oops...',
-                                            text: data.message,
-                                            icon: 'error',
-                                        });
-                                        return false;
-                                    }else{
-                                        $(balance_id).text(data['player_bal']);
-                                        $(bonus_balance_id).text(data['player_bonus_bal']);
-
-                                        $("#user-balance").text(data['agent_bal']);
-                                    }
-                                    $(".balance-options input[type=radio]:checked").prop("checked", false);
-                                    $(".user-credit-wrap .transaction-input").val('');
-                                }
-                            });
-                        } else if (result.dismiss === "cancel") {
-                            // show message ?
                         }
-                })}}});
-
-                
-            }   
-            
-            function credit_adjust() {
-                var row_id = event.target.id.split("-").pop();
-                var input_id = "#transaction-input-" + row_id;
-                var amount = $(input_id).val();
-                var player_id = "#player-id-" + row_id;
-                
-            
-                if(amount == '' || isNaN(amount)){
-            
-                    Swal.fire({
-                        title: 'Oops...',
-                        text: "Please type in an amount!!",
-                        icon: 'error',
-                    });
-                    return false;
+                    )
                 }
+            }
+        });
+    }   
+            
+    function credit_adjust() {
+        var row_id = event.target.id.split("-").pop();
+        var input_id = "#transaction-input-" + row_id;
+        var amount = $(input_id).val();
+        var player_id = "#player-id-" + row_id;
+        
+    
+        if(amount == '' || isNaN(amount)){
+    
+            Swal.fire({
+                title: 'Oops...',
+                text: "Please type in an amount!!",
+                icon: 'error',
+            });
+            return false;
+        }
 
-                if(amount <= 0 ){
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Oops...',
-                        text: "Amount must be greater than zero!!"
-                    });
-                    return false;
-                }
-                
-                var player_id = "#player-id-" + row_id;
-                var balance_id = "#player-balance-" + row_id;
-                var bonus_balance_id = "#player-bonus-balance-" + row_id;
+        if(amount <= 0 ){
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: "Amount must be greater than zero!!"
+            });
+            return false;
+        }
+        
+        var player_id = "#player-id-" + row_id;
+        var balance_id = "#player-balance-" + row_id;
+        var bonus_balance_id = "#player-bonus-balance-" + row_id;
 
-                var type, confirmationPopupText;
+        var type, confirmationPopupText;
 
-                if (event.target.id.includes("increase")) {
-                    type = "increase";
-                    confirmationPopupText = '<span class="swal-custom-text text-c-green">Add ' + amount + ' </span>';
-                } else {
-                    type = "decrease",
-                    confirmationPopupText = '<span class="swal-custom-text text-c-red">Subtract ' + amount + ' </span';
-                }
+        if (event.target.id.includes("increase")) {
+            type = "increase";
+            confirmationPopupText = '<span class="swal-custom-text text-c-green">Add ' + amount + ' </span>';
+        } else {
+            type = "decrease",
+            confirmationPopupText = '<span class="swal-custom-text text-c-red">Subtract ' + amount + ' </span';
+        }
 
-                Swal.fire({
-                    html:
-                        '<div class="swal-custom-content">' + 
-                        '<p class="swal-custom-icon"><i class="cp-icon">&#xe815;</i></p>' +
-                        '<h3 class="swal-custom-title">{% trans "Are you sure" %} ?</h3>' +
-                        confirmationPopupText + 
-                        '</div>',
-                    customClass: {
-                        actions: 'swal-custom-actions',
-                        confirmButton: 'swal-custom-btn swal-custom-confirm-btn',
-                        cancelButton: 'swal-custom-btn swal-custom-cancel-btn',
-                    },
-                    showCancelButton: true,
-                    confirmButtonText: '{% trans "Yes" %}',
-                    cancelButtonText: '{% trans "No" %}'
-                    }).then((result) => {
-                        if (result.value) {
-                            $.ajax({
-                                url: "{% url 'admin-panel:credit-ajax' %}",
-                                type: "POST",
-                                dataType: "json",
-                                data: {
-                                    value: amount,
-                                    player_id: $(player_id).val(),
-                                    type: type
-                                },
-                                success: function (data) {
-                                    if(data.status === 'Wait'){
-                                        Swal.fire({
-                                            title: 'Withdraw not available',
-                                            text: data.message,
-                                            icon: 'info',
-                                        });
-                                        return false;
-                                    }
-                                    
-                                    if(data.status === 'not_verified'){
-                                        Swal.fire({
-                                            title: 'Verification Needed',
-                                            text: data.message,
-                                            icon: 'info',
-                                        });
-                                        return false;
-                                    }
-                                    
-                                    if(data.status === 'Failed'){
-                                        Swal.fire({
-                                            title: 'Oops...',
-                                            text: data.message,
-                                            icon: 'error',
-                                        });
-                                        return false;
-                                    }else{
-                                        $(balance_id).text(data['player_bal']);
-                                        $(bonus_balance_id).text(data['player_bonus_bal']);
+        Swal.fire({
+            html:
+                '<div class="swal-custom-content">' + 
+                '<p class="swal-custom-icon"><i class="cp-icon">&#xe815;</i></p>' +
+                '<h3 class="swal-custom-title">{% trans "Are you sure" %} ?</h3>' +
+                confirmationPopupText + 
+                '</div>',
+            customClass: {
+                actions: 'swal-custom-actions',
+                confirmButton: 'swal-custom-btn swal-custom-confirm-btn',
+                cancelButton: 'swal-custom-btn swal-custom-cancel-btn',
+            },
+            showCancelButton: true,
+            confirmButtonText: '{% trans "Yes" %}',
+            cancelButtonText: '{% trans "No" %}'
+            }).then((result) => {
+                if (result.value) {
+                    $.ajax({
+                        url: "{% url 'admin-panel:credit-ajax' %}",
+                        type: "POST",
+                        dataType: "json",
+                        data: {
+                            value: amount,
+                            player_id: $(player_id).val(),
+                            type: type
+                        },
+                        success: function (data) {
+                            if(data.status === 'Wait'){
+                                Swal.fire({
+                                    title: 'Withdraw not available',
+                                    text: data.message,
+                                    icon: 'info',
+                                });
+                                return false;
+                            }
+                            
+                            if(data.status === 'not_verified'){
+                                Swal.fire({
+                                    title: 'Verification Needed',
+                                    text: data.message,
+                                    icon: 'info',
+                                });
+                                return false;
+                            }
+                            
+                            if(data.status === 'Failed'){
+                                Swal.fire({
+                                    title: 'Oops...',
+                                    text: data.message,
+                                    icon: 'error',
+                                });
+                                return false;
+                            }else{
+                                $(balance_id).text(data['player_bal']);
+                                $(bonus_balance_id).text(data['player_bonus_bal']);
 
-                                        $("#user-balance").text(data['agent_bal']);
-                                    }
-                                    $(".balance-options input[type=radio]:checked").prop("checked", false);
-                                    $(".user-credit-wrap .transaction-input").val('');
-                                }
-                            });
-                        } else if (result.dismiss === "cancel") {
-                            // show message ?
+                                $("#user-balance").text(data['agent_bal']);
+                            }
+                            $(".balance-options input[type=radio]:checked").prop("checked", false);
+                            $(".user-credit-wrap .transaction-input").val('');
                         }
-                })
-            };
+                    });
+                } else if (result.dismiss === "cancel") {
+                    // show message ?
+                }
+        })
+    };
 
             function credit_adjust_offmarket() {
                 var row_id = event.target.id.split("-").pop();
@@ -2524,9 +2558,9 @@ function deletegame(game_id, player_id){
       }
         }
         function view_password(){
-        const passwordInput = document.querySelector('#edit-player-form #id_password');
+            const passwordInput = document.querySelector('#edit-player-form #id_password');
 
-        const toggleButton = document.getElementById('password-toggle');
+            const toggleButton = document.getElementById('password-toggle');
 
             if (passwordInput.type === 'password') {
                 passwordInput.type = 'text';
@@ -2538,10 +2572,84 @@ function deletegame(game_id, player_id){
                 toggleButton.querySelector('i').classList.add('fa-eye');
                
             }
+        }
 
-    
-      
-           }
+
+        $(function () {
+            function csrf() {
+                return $("input[name='csrfmiddlewaretoken']").val();
+            }
+
+            function readValue(v) {
+                return v === "" ? "" : v;
+            }
+
+            // ---------------- SAVE ----------------
+            $(".dl-save").on("click", function () {
+                let pk   = $(this).data("player-id");
+                let wrap = $("#dl-wrapper-" + pk);
+
+                let weekly = readValue(wrap.find(".dl-weekly").val());
+                let daily  = readValue(wrap.find(".dl-daily").val());
+
+                $.ajax({
+                    url: "{% url 'change-deposit-limits' %}",
+                    type: "POST",
+                    headers: { "X-CSRFToken": csrf() },
+                    data: {
+                        user_id: pk,
+                        weekly_dl: weekly,
+                        daily_dl: daily
+                    },
+                    success: function () {
+                        Swal.fire({
+                            title: 'Success',
+                            text: 'Deposit limits saved.',
+                            icon: 'success',
+                        }).then(() => window.location.reload());
+                    },
+                    error: function (data) {
+                        Swal.fire({
+                            title: 'Error',
+                            text: data['responseJSON']?.['message'] || 'Something went wrong.',
+                            icon: 'error',
+                        }).then(() => window.location.reload());
+                    }
+                });
+            });
+
+            // ---------------- RESET ----------------
+            $(".dl-reset").on("click", function () {
+                let pk = $(this).data("player-id");
+
+                $.ajax({
+                    url: "{% url 'admin-panel:change-deposit-limits' %}",
+                    type: "POST",
+                    headers: { "X-CSRFToken": csrf() },
+                    data: {
+                        user_id: pk,
+                        weekly_dl: "",
+                        daily_dl: ""
+                    },
+                    success: function () {
+                        Swal.fire({
+                            title: 'Success',
+                            text: 'Deposit limits reset.',
+                            icon: 'success',
+                        }).then(() => window.location.reload());
+                    },
+                    error: function (data) {
+                        Swal.fire({
+                            title: 'Error',
+                            text: data['responseJSON']?.['message'] || 'Something went wrong.',
+                            icon: 'error',
+                        }).then(() => window.location.reload());
+                    }
+                });
+            });
+        });
+
+        
         </script>
 
 {% endblock content %}
