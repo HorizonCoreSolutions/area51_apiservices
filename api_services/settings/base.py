@@ -142,7 +142,7 @@ THIRD_PARTY_APPS = [
     'corsheaders',
     'django_filters',
     'django_celery_results',
-    # 'django_prometheus',
+    'django_prometheus',
     'django_crontab',
     'background_task',
     'django_coinpayments',
@@ -165,7 +165,7 @@ PROJECT_APPS = [
 ]
 
 MIDDLEWARE = [
-    # 'django_prometheus.middleware.PrometheusBeforeMiddleware',
+    'django_prometheus.middleware.PrometheusBeforeMiddleware',
     'apps.admin_panel.force_default_language_middleware.ForceDefaultLanguageMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.locale.LocaleMiddleware',
@@ -177,7 +177,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'apps.admin_panel.middleware.UpdateLastActivityMiddleware',
-    # 'django_prometheus.middleware.PrometheusAfterMiddleware',
+    'django_prometheus.middleware.PrometheusAfterMiddleware',
 ]
 
 ROOT_URLCONF = 'api_services.urls'
