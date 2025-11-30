@@ -794,7 +794,7 @@ class PromoCodesLogs(AbstractBaseModel):
     user = models.ForeignKey(Users, on_delete=models.CASCADE, default=None, null=True)
 
     transaction = models.OneToOneField(
-        "bets.Transactions",
+        "apps.bets.Transactions",
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
