@@ -126,8 +126,8 @@ class WageringRequirement(AbstractBaseModel):
        - on each bet the value of the bet should be added to played
     3) once the user has played more than the limit the balance should be given to the user
     """
-    user = models.ForeignKey(Users, on_delete=models.CASCADE)
-    accreditable = models.ForeignKey(Users, on_delete=models.CASCADE, null=True, default=None)
+    user = models.ForeignKey(Users, on_delete=models.CASCADE, related_name="wagering_requirements")
+    accreditable = models.ForeignKey(Users, on_delete=models.CASCADE, null=True, default=None, related_name="accreditable_wagerings")
 
     # the amount the user has deposited
     amount = models.DecimalField(max_digits=10, decimal_places=2)
