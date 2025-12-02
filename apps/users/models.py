@@ -1257,8 +1257,15 @@ class OffmarketWithdrawalRequests(AbstractBaseModel):
     transaction = models.ForeignKey(OffMarketTransactions, on_delete=models.SET_NULL, blank=True, null=True, default=None)
 
 class SpintheWheelDetails(AbstractBaseModel):
+    class Coins(DjangoChoices):
+        sc = ChoiceItem("sc", "SC")
+        gc = ChoiceItem("gc", "GC")
+        mc = ChoiceItem("mc", "MC")
+    
     admin = models.ForeignKey(Users, on_delete=models.CASCADE, default=None, null=True, blank=True)
-    value = models.IntegerField(null=True, blank=True)
+    value = models.IntegerField()
+    odds = models.DecimalField(max_digits=15, decimal_places=2)
+    coin = models.CharField(max_length=50, choices=Coins)
     code = models.CharField(max_length=250, null=True, blank=True, default=None)
 
 

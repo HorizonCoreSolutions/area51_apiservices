@@ -2277,7 +2277,7 @@ class AddSpinWheelView(APIView):
     def post(self, request):
         try:
             # get tz_offset or default to UTC+0:00
-            tz_offset = request.data.get("tz_offset", "").strip()
+            tz_offset = str(request.data.get("tz_offset") or "").strip()
             if tz_offset == "":
                 tz_offset = "UTC+0:00"
             # Transform the offset to a delta time
@@ -2285,13 +2285,13 @@ class AddSpinWheelView(APIView):
             # Catch errors
             if result.get("message"):
                 return Response(result, status=status.HTTP_400_BAD_REQUEST)
-            offset = result.get("offset")
+            offset: timedelta = result.get("offset")  # type: ignore
 
             # Calculates the date of the user
             now = timezone.now()
             users_date = (now + offset).date()
 
-            user=self.request.user
+            user =self.request.user
             data = Transactions.objects.filter(journal_entry="bonus",bonus_type=SPIN_WHEEL, created__date=users_date, user=user).first()
             if data:
                 return Response({"message": "Already given spin bonus"}, status.HTTP_400_BAD_REQUEST)
@@ -2299,6 +2299,8 @@ class AddSpinWheelView(APIView):
             # Get a random SpinWheelDetail
             spin_id = random.choice(SpintheWheelDetails.objects.values_list('pk', flat=True))
             spin_wheel=SpintheWheelDetails.objects.filter(id=spin_id).first()
+            if spin_wheel is None or user is None:
+                return Response({"message": "Please try again."}, status=status.HTTP_400_BAD_REQUEST)
             serializer = SpintheWheelDetailsSerializer(spin_wheel, many=False)
 
             # Updates user balance
