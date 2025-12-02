@@ -18,7 +18,7 @@ def get_price(user: Users) -> SpintheWheelDetails:
     if not spin_wheel_details:
         raise ValueError("No spin wheel details found for this admin")
 
-    odds = [detail.odds for detail in spin_wheel_details]
+    odds = [float(detail.odds) for detail in spin_wheel_details]
     total_odds = sum(odds)
     
     if total_odds <= 0:
