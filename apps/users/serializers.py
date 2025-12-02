@@ -642,7 +642,7 @@ class OffmarketTransactionsSerializer(serializers.Serializer):
 class SpintheWheelDetailsSerializer(serializers.ModelSerializer):
     class Meta:
         model = SpintheWheelDetails
-        fields = ('id', 'admin', 'value', 'code')
+        fields = ('id', 'value', 'code', 'coin')
 
 class TransactionsSerializer(serializers.ModelSerializer):
     bonus_amount = serializers.SerializerMethodField()

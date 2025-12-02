@@ -1,7 +1,7 @@
 from decimal import Decimal
 from datetime import timedelta
-from typing import Optional, Tuple
 from apps.users.models import Users
+from typing import Literal, Optional, Tuple
 from apps.bets.models import WageringRequirement
 from apps.payments.repository import amount_deposited
 
@@ -41,16 +41,27 @@ def can_deposit_limits(
     return True, "OK"
 
 
-def deposit(
+def platform_deposit(
     user: Users,
+    is_bonus: bool,
     amount: Decimal,
-    accreditable: Optional[Users]
+    accreditable: Optional[Users],
+    bonus_type: Literal["SC", "MC"]
 ):
+    if bonus_type == "SC":
+        betable = True
+    elif bonus_type == "MC":
+        betable = False
+    
+    limit = amount
+    if is_bonus or bonus_type == "MC":
+        limit = amount * 20
+    
     WageringRequirement.objects.create(
         user=user,
-        limit=amount,
-        betable=True,
+        limit=limit,
         amount=amount,
-        balnce=amount,
+        balance=amount,
+        betable=betable,
         accreditable=accreditable
     )

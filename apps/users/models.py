@@ -17,6 +17,7 @@ from decimal import Decimal
 from django.conf import settings
 from djchoices import ChoiceItem, DjangoChoices
 from django.urls import reverse
+from apps.core.coins import Coins
 from apps.core.models import AbstractBaseModel
 from django.contrib.auth.models import PermissionsMixin
 import requests
@@ -1257,11 +1258,6 @@ class OffmarketWithdrawalRequests(AbstractBaseModel):
     transaction = models.ForeignKey(OffMarketTransactions, on_delete=models.SET_NULL, blank=True, null=True, default=None)
 
 class SpintheWheelDetails(AbstractBaseModel):
-    class Coins(DjangoChoices):
-        sc = ChoiceItem("sc", "SC")
-        gc = ChoiceItem("gc", "GC")
-        mc = ChoiceItem("mc", "MC")
-    
     admin = models.ForeignKey(Users, on_delete=models.CASCADE, default=None, null=True, blank=True)
     value = models.IntegerField()
     odds = models.DecimalField(max_digits=15, decimal_places=2)
