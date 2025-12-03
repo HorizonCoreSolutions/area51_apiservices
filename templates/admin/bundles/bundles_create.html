@@ -162,59 +162,96 @@ Create Bundle
 
 {% block js %}
 <script>
-$(document).ready(function() {
-    function validatePrice(value) {
-        return /^\d+(\.\d{1,2})?$/.test(value);
-    }
-
-    $('#bundle-form').on('submit', function(e) {
-        e.preventDefault();
-
-        const price = $('#id_price').val();
-        if (!validatePrice(price)) {
-            $('#price-error').show();
-            $('#id_price').addClass('is-invalid');
-            return;
-        }
-
-        $('#price-error').hide();
-        $('#id_price').removeClass('is-invalid');
-
-        const payload = {
-            name: $('#id_name').val(),
-            enabled: $('#id_enabled').is(':checked'),
-            price: $('#id_price').val(),
-            balance: $('#id_balance').val(),
-            playable: $('#id_playable').val(),
-            multiplier: $('#id_multiplier').val(),
-            bonus: $('#id_bonus').val(),
-            miner: $('#id_miner').val()
-        };
-
-        $('#submit-btn').prop('disabled', true);
-
-        $.ajax({
-            url: "{% url 'bundles-rest' %}",
-            method: "POST",
-            contentType: "application/json",
-            data: JSON.stringify(payload),
-            headers: { "X-CSRFToken": $('input[name=csrfmiddlewaretoken]').val() },
-            success: function(response) {
-                $('#error-alert').addClass('d-none');
-                $('#success-alert').removeClass('d-none');
-                $('#bundle-form')[0].reset();
-                $('#submit-btn').prop('disabled', false);
-            },
-            error: function(xhr) {
-                $('#error-alert').removeClass('d-none');
-                $('#error-message').text(
-                    xhr.responseJSON?.detail ||
-                    JSON.stringify(xhr.responseJSON || 'An unknown error occurred.')
-                );
-                $('#submit-btn').prop('disabled', false);
+    $(document).ready(function () {
+        // Utility: CSRF
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== "") {
+                const cookies = document.cookie.split(";");
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + "=")) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
             }
+            return cookieValue;
+        }
+        const csrftoken = getCookie("csrftoken");
+    
+        // Price validation
+        function validatePrice(value) {
+            return /^\d+(\.\d{1,2})?$/.test(value);
+        }
+    
+        // Intercept submit
+        $("#bundle-form").on("submit", function (e) {
+            e.preventDefault(); // completely prevents reload
+    
+            const price = $("#id_price").val();
+            if (!validatePrice(price)) {
+                $("#price-error").show();
+                $("#id_price").addClass("is-invalid");
+                return;
+            }
+    
+            $("#price-error").hide();
+            $("#id_price").removeClass("is-invalid");
+    
+            // Build JSON payload
+            const payload = {
+                name: $("#id_name").val(),
+                enabled: $("#id_enabled").is(":checked"),
+                price: $("#id_price").val(),
+                balance: $("#id_balance").val(),
+                playable: $("#id_playable").val(),
+                multiplier: parseInt($("#id_multiplier").val()),
+                bonus: $("#id_bonus").val(),
+                miner: $("#id_miner").val()
+            };
+    
+            // Disable submit button
+            $("#submit-btn").prop("disabled", true);
+    
+            // Clean log
+            console.clear();
+            console.log(">>> Sending payload to /bundles/");
+            console.log(payload);
+    
+            // Send JSON to REST endpoint
+            fetch("{% url 'bundles-rest' %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrftoken,
+                },
+                body: JSON.stringify(payload),
+            })
+                .then(async (response) => {
+                    const data = await response.json();
+                    console.log(">>> Response status:", response.status);
+                    console.log(">>> Response data:", data);
+    
+                    if (response.ok) {
+                        $("#error-alert").addClass("d-none");
+                        $("#success-alert").removeClass("d-none");
+                        $("#bundle-form")[0].reset();
+                    } else {
+                        $("#success-alert").addClass("d-none");
+                        $("#error-alert").removeClass("d-none");
+                        $("#error-message").text(JSON.stringify(data));
+                    }
+                })
+                .catch((err) => {
+                    console.error(">>> Network error:", err);
+                    $("#error-alert").removeClass("d-none");
+                    $("#error-message").text("An unexpected error occurred.");
+                })
+                .finally(() => {
+                    $("#submit-btn").prop("disabled", false);
+                });
         });
     });
-});
 </script>
 {% endblock js %}
