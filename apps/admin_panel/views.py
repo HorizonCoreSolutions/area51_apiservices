@@ -65,7 +65,7 @@ from apps.admin_panel.forms import (AdminModelForm, AgentModelForm,
                                     )
 from apps.casino.tasks import task_update_offmarket_transaction
 from apps.casino.clients import RefujiClient
-from apps.payments.models import (AlchemypayOrder, CoinFlowTransaction, MnetTransaction, NowPaymentsTransactions,
+from apps.payments.models import (AlchemypayOrder, Bundle, CoinFlowTransaction, MnetTransaction, NowPaymentsTransactions,
     WithdrawalCurrency, WithdrawalRequests)
 from apps.users.forms import PageBlockerCmsPromotionsForm, ToasterCmsPromotionsForm
 from apps.users.models import FooterPages, MAX_SPEND_AMOUNT, Permission, ResponsibleGambling, BONUS_EVENTS
@@ -5797,6 +5797,16 @@ class ReferAFriendBonusPermission(CheckRolesMixin, views.JSONResponseMixin, view
             },
             status=200
         )
+
+class BundlesAdminView(CheckRolesMixin, TemplateView, View):
+    allowed_roles = ("admin", "superadmin")
+    template_name = "admin/bundles/bundles.html"
+
+    def get(self, request):
+        bundles = Bundle.objects.all()
+        return render(request, template_name=self.template_name,
+                      context={"bundles": bundles})
+
 
 class PromotionPageView(CheckRolesMixin, TemplateView, View):
     allowed_roles = ["admin", ]

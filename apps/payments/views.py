@@ -1917,7 +1917,18 @@ class BundleView(APIView):
 
     def post(self, request) -> Response:
         if getattr(request.user, 'role', None) != "admin":
-            return Response({"detail": "Only admins can create or modify bundles."}, status=status.HTTP_403_FORBIDDEN)
+            return Response({"detail": "Only admins can create bundles."}, status=status.HTTP_403_FORBIDDEN)
+
+        data = request.data
+        serializer = BundleSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def put(self, request) -> Response:
+        if getattr(request.user, 'role', None) != "admin":
+            return Response({"detail": "Only admins can modify bundles."}, status=status.HTTP_403_FORBIDDEN)
 
         data = request.data
         serializer = BundleSerializer(data=data)

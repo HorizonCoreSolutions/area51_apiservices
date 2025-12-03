@@ -1,0 +1,35 @@
+{% extends "index.html" %}
+{% load static %}
+{% load i18n %}
+{% load math %}
+{% load date_utils %}
+{% block title %}
+Bundles
+{% endblock title %}
+
+{% block content %}
+<div class="container">
+    <h1>Bundles</h1>
+    <a href="{% url 'admin-panel:bundles-create' %}" class="btn btn-primary">Create Bundle</a>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Index</th>
+                <th>Price</th>
+                <th>Total</th>
+                <th>Bonus</th>
+                <th>Miner</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for bundle in bundles %}
+            <tr>
+                <td>{{ bundle.index }}</td>
+                <td>{{ bundle.price }}</td>
+                <td>{{ bundle.total }}</td>
+                <td>{{ bundle.bonus }}</td>
+                <td>{{ bundle.miner }}</td>
+            </tr>
+        </tbody>
+    </table>
+{% endblock content %}
