@@ -220,7 +220,7 @@ Create Bundle
             console.log(payload);
     
             // Send JSON to REST endpoint
-            fetch("{% url 'bundles-rest' %}", {
+            fetch("{% url 'pix_payment_apis:bundles-rest' %}", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
