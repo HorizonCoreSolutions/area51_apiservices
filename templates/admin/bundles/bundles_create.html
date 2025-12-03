@@ -152,6 +152,15 @@ Create Bundle
         </div>
     </div>
 </div>
+{% endblock content %}
+
+{% block css %}
+{% include "components/css/utils/edit_template.html" %}
+<style>
+</style>
+{% endblock css %}
+
+{% block javascript %}
 <script type="text/javascript">
     $(document).ready(function () {
         console.log(">>> Script loaded for bundle form");
@@ -287,13 +296,4 @@ Create Bundle
         });
     });
 </script>
-{% endblock content %}
-
-{% block css %}
-{% include "components/css/utils/edit_template.html" %}
-<style>
-</style>
-{% endblock css %}
-
-{% block javascript %}
 {% endblock javascript %}
