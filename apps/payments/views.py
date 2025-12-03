@@ -19,6 +19,7 @@ from django.shortcuts import redirect
 from django.utils import timezone
 from rest_framework import status
 from rest_framework import viewsets
+from rest_framework.permissions import IsAuthenticated
 from apps.payments.service import can_deposit_limits
 from apps.users import promo_handler
 from rest_framework.views import APIView
@@ -1904,12 +1905,23 @@ class WithdrawInfoView(APIView):
 
         return Response({"withdrawalAvailable": True, "time": 0})
 
-
 class BundleView(APIView):
-    permission_classes = (IsPlayer,)
+    permission_classes = (IsAuthenticated,)
+
     def get(self, request) -> Response:
         bundles = Bundle.objects.filter(admin=request.user.admin, enabled=True).order_by("index")
         if not bundles.exists():
             return Response([], status=status.HTTP_200_OK)
         serializer = BundleSerializer(bundles, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request) -> Response:
+        if getattr(request.user, 'role', None) != "admin":
+            return Response({"detail": "Only admins can create or modify bundles."}, status=status.HTTP_403_FORBIDDEN)
+
+        data = request.data
+        serializer = BundleSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
