@@ -248,7 +248,7 @@ Create Bundle
                 type: "POST",
                 contentType: "application/json",
                 headers: {
-                    "X-CSRFToken": csrftoken
+                    "X-CSRFToken": "{{ csrf_token }}"
                 },
                 data: JSON.stringify(payload),
                 success: function(data, textStatus, jqXHR) {
