@@ -1909,7 +1909,7 @@ class BundleView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request) -> Response:
-        bundles = Bundle.objects.filter(admin=request.user.admin, enabled=True).order_by("index")
+        bundles = Bundle.objects.filter(admin=request.user.admin, enabled=True).order_by("price")
         if not bundles.exists():
             return Response([], status=status.HTTP_200_OK)
         serializer = BundleSerializer(bundles, many=True)
