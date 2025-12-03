@@ -164,10 +164,35 @@ Create Bundle
 <script>
     $(document).ready(function () {
         console.log(">>> Script loaded for bundle form");
-    
         // Price validation
         function validatePrice(value) {
             return /^\d+(\.\d{1,2})?$/.test(value);
+        }
+
+        // Validate required fields manually
+        function validateForm() {
+            var isValid = true;
+            var requiredFields = [
+                "#id_name",
+                "#id_price",
+                "#id_balance",
+                "#id_playable",
+                "#id_multiplier",
+                "#id_bonus",
+                "#id_miner"
+            ];
+
+            $.each(requiredFields, function(index, field) {
+                var $field = $(field);
+                if (!$field.val() || $field.val().trim() === "") {
+                    $field.addClass("is-invalid");
+                    isValid = false;
+                } else {
+                    $field.removeClass("is-invalid");
+                }
+            });
+
+            return isValid;
         }
     
         // Handle form submission via button click
@@ -175,14 +200,18 @@ Create Bundle
             e.preventDefault();
             e.stopPropagation();
     
+            // Hide previous alerts
+            $("#success-alert").addClass("d-none");
+            $("#error-alert").addClass("d-none");
+
             // Validate all required fields
-            const form = $("#bundle-form")[0];
-            if (!form.checkValidity()) {
-                form.reportValidity();
+            if (!validateForm()) {
+                $("#error-alert").removeClass("d-none");
+                $("#error-message").text("Please fill in all required fields.");
                 return false;
             }
     
-            const price = $("#id_price").val();
+            var price = $("#id_price").val();
             if (!validatePrice(price)) {
                 $("#price-error").show();
                 $("#id_price").addClass("is-invalid");
@@ -193,13 +222,13 @@ Create Bundle
             $("#id_price").removeClass("is-invalid");
     
             // Build JSON payload
-            const payload = {
+            var payload = {
                 name: $("#id_name").val(),
                 enabled: $("#id_enabled").is(":checked"),
                 price: $("#id_price").val(),
                 balance: $("#id_balance").val(),
                 playable: $("#id_playable").val(),
-                multiplier: parseInt($("#id_multiplier").val()),
+                multiplier: parseInt($("#id_multiplier").val(), 10),
                 bonus: $("#id_bonus").val(),
                 miner: $("#id_miner").val()
             };
@@ -212,38 +241,43 @@ Create Bundle
             console.log(">>> Sending payload to /bundles/");
             console.log(payload);
     
-            // Send JSON to REST endpoint
-            fetch("{% url 'pix_payment_apis:bundles-rest' %}", {
-                method: "POST",
+            // Send JSON using jQuery AJAX (compatible with jQuery 3.2.1)
+            $.ajax({
+                url: "{% url 'pix_payment_apis:bundles-rest' %}",
+                type: "POST",
+                contentType: "application/json",
                 headers: {
-                    "Content-Type": "application/json",
                     "X-CSRFToken": "{{ csrf_token }}",
                 },
-                body: JSON.stringify(payload),
-            })
-                .then(async (response) => {
-                    const data = await response.json();
-                    console.log(">>> Response status:", response.status);
+                data: JSON.stringify(payload),
+                success: function(data, textStatus, jqXHR) {
+                    console.log(">>> Response status:", jqXHR.status);
                     console.log(">>> Response data:", data);
-    
-                    if (response.ok) {
-                        $("#error-alert").addClass("d-none");
-                        $("#success-alert").removeClass("d-none");
-                        $("#bundle-form")[0].reset();
-                    } else {
-                        $("#success-alert").addClass("d-none");
-                        $("#error-alert").removeClass("d-none");
-                        $("#error-message").text(JSON.stringify(data));
-                    }
-                })
-                .catch((err) => {
-                    console.error(">>> Network error:", err);
+                    
+                    $("#error-alert").addClass("d-none");
+                    $("#success-alert").removeClass("d-none");
+                    $("#bundle-form")[0].reset();
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    console.log(">>> Response status:", jqXHR.status);
+                    console.log(">>> Response data:", jqXHR.responseText);
+                    
+                    $("#success-alert").addClass("d-none");
                     $("#error-alert").removeClass("d-none");
-                    $("#error-message").text("An unexpected error occurred.");
-                })
-                .finally(() => {
+                    
+                    try {
+                        var errorData = JSON.parse(jqXHR.responseText);
+                        $("#error-message").text(JSON.stringify(errorData));
+                    } catch (e) {
+                        $("#error-message").text(
+                            jqXHR.responseText || "An unexpected error occurred."
+                        );
+                    }
+                },
+                complete: function() {
                     $("#submit-btn").prop("disabled", false);
-                });
+                }
+            });
     
             return false;
         });
@@ -253,6 +287,11 @@ Create Bundle
             e.preventDefault();
             e.stopPropagation();
             return false;
+        });
+
+        // Remove invalid class on input change
+        $("input, select").on("change input", function() {
+            $(this).removeClass("is-invalid");
         });
     });
 </script>
