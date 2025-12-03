@@ -10,7 +10,7 @@ from rest_framework import status
 
 from apps.users import promo_handler
 
-from .models import AlchemypayOrder, CoinFlowTransaction, CoinWithdrawal, MnetTransaction, NowPaymentsTransactions
+from .models import AlchemypayOrder, Bundle, CoinFlowTransaction, CoinWithdrawal, MnetTransaction, NowPaymentsTransactions
 from apps.users.models import Users
 from apps.bets.models import Transactions, DEPOSIT, ROLLBACK, CHARGED, WITHDRAW
 from apps.casino.utils import ErrorResponseMsg
@@ -237,4 +237,9 @@ class CoinflowTransactionsSerializer(serializers.ModelSerializer):
     class Meta:
         model = CoinFlowTransaction
         fields = ("id", "transaction_id", "created", "amount", "transaction_type", "status" )
-    
+
+
+class BundleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Bundle
+        fields = ("code", "price", "total", "bonus", "miner")

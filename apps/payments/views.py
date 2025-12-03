@@ -42,9 +42,9 @@ from django.db.models import OuterRef, Subquery
 
 from apps.users.utils import send_player_balance_update_notification
 from apps.payments.mnet import MnetPayment
-from .models import (AlchemypayOrder, CoinFlowTransaction, CoinWithdrawal, MnetTransaction, NowPaymentsTransactions,
+from .models import (AlchemypayOrder, Bundle, CoinFlowTransaction, CoinWithdrawal, MnetTransaction, NowPaymentsTransactions,
     WithdrawalCurrency, WithdrawalRequests)
-from .serializers import (AlchemypayTransactionsSerializer, CallbackWithdrawalSerializer, CoinflowTransactionsSerializer,
+from .serializers import (AlchemypayTransactionsSerializer, BundleSerializer, CallbackWithdrawalSerializer, CoinflowTransactionsSerializer,
     CreatePaymentQrSerializer, CreatePaymentSerializer, CreateWithdrawalSerializer,
     CreateWithdrawalSerializerCoinpayments, MnetTransactionsSerializer,
     NowPaymentsTransactionsSerializer, RequestCoinWithdrawalSerializer)
@@ -1903,3 +1903,13 @@ class WithdrawInfoView(APIView):
             )
 
         return Response({"withdrawalAvailable": True, "time": 0})
+
+
+class BundleView(APIView):
+    permission_classes = (IsPlayer,)
+    def get(self, request) -> Response:
+        bundles = Bundle.objects.filter(admin=request.user.admin, enabled=True).order_by("index")
+        if not bundles.exists():
+            return Response([], status=status.HTTP_200_OK)
+        serializer = BundleSerializer(bundles, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)

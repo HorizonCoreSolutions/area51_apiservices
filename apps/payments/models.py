@@ -1,10 +1,10 @@
-from django.db import models
+import uuid
 from decimal import Decimal
-from apps.core.models import AbstractBaseModel
-from apps.users.models import PromoCodesLogs, Users
 from django.db import models
-from django.utils.translation import gettext_lazy as _
+from apps.core.models import AbstractBaseModel
 from djchoices import ChoiceItem, DjangoChoices
+from apps.users.models import PromoCodesLogs, Users
+from django.utils.translation import gettext_lazy as _
 # Create your models here.
 
 
@@ -234,8 +234,14 @@ class CoinFlowTransaction(AbstractBaseModel):
 
 
 class Bundle(AbstractBaseModel):
-    price = models.DecimalField(max_digits=10, decimal_places=2)
+    code = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
 
+    admin = models.ForeignKey(Users, on_delete=models.CASCADE, blank=False, null=True)
+
+    index = models.IntegerField(default=0)
+    enabled = models.BooleanField(default=True)
+
+    price = models.DecimalField(max_digits=10, decimal_places=2)
     total = models.DecimalField(max_digits=10, decimal_places=2)
     bonus = models.DecimalField(max_digits=10, decimal_places=2)
     miner = models.DecimalField(max_digits=10, decimal_places=2)
