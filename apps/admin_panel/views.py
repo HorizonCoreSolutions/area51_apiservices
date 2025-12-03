@@ -5808,6 +5808,14 @@ class BundlesAdminView(CheckRolesMixin, TemplateView, View):
                       context={"bundles": bundles})
 
 
+class BundlesAdminCreateView(CheckRolesMixin, TemplateView, View):
+    allowed_roles = ("admin", "superadmin")
+    template_name = "admin/bundles/bundles_create.html"
+
+    def get(self, request):
+        return render(request, template_name=self.template_name)
+
+
 class PromotionPageView(CheckRolesMixin, TemplateView, View):
     allowed_roles = ["admin", ]
     template_name = "admin/cms/page.html"

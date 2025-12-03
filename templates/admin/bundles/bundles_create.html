@@ -1,0 +1,45 @@
+{% extends "index.html" %}
+{% load static %}
+{% load i18n %}
+{% load math %}
+{% load date_utils %}
+{% block title %}
+Bundles
+{% endblock title %}
+
+{% block content %}
+<div class="container page-content pt-4 setting-page">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h1>Bundles</h1>
+                    <a href="{% url 'admin-panel:bundles-create' %}" class="btn btn-primary">Create Bundle</a>
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Price</th>
+                                <th>Deposit</th>
+                                <th>Playable</th>
+                                <th>Bonus</th>
+                                <th>Miner</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for bundle in bundles %}
+                                <tr>
+                                    <td>{{ bundle.price }}</td>
+                                    <td>{{ bundle.balance }} </td>
+                                    <td>{{ bundle.playable }}</td>
+                                    <td>{{ bundle.bonus }}</td>
+                                    <td>{{ bundle.miner }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
