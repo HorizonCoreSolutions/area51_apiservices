@@ -13,16 +13,16 @@ Create Bundle
             <div class="card">
                 <div class="card-body">
                     <h1 class="mb-4">Create Bundle</h1>
-                    <form method="post" action="{% url 'admin-panel:bundles-create' %}">
+                    <form method="post" action="{% url 'admin-panel:bundles-create' %}" id="bundle-form">
                         {% csrf_token %}
 
                         <!-- Name -->
                         <div class="mb-3">
                             <label for="id_name" class="form-label">Bundle Name (Alias)</label>
-                            <input type="text" 
-                                   id="id_name" 
+                            <input type="text"
+                                   id="id_name"
                                    name="name"
-                                   class="form-control" 
+                                   class="form-control"
                                    placeholder="Enter a short name for the bundle"
                                    required>
                         </div>
@@ -42,24 +42,27 @@ Create Bundle
                         <!-- Price -->
                         <div class="mb-3">
                             <label for="id_price" class="form-label">Price (USD)</label>
-                            <input type="number" 
-                                   id="id_price" 
+                            <input type="number"
+                                   id="id_price"
                                    name="price"
-                                   step="0.01" 
-                                   min="0" 
+                                   step="0.01"
+                                   min="0"
                                    class="form-control"
                                    placeholder="e.g. 4.99"
                                    required>
+                            <div id="price-error" class="text-danger mt-1" style="display: none;">
+                                Please enter a valid amount with only 2 decimal places.
+                            </div>
                         </div>
 
                         <!-- Balance -->
                         <div class="mb-3">
                             <label for="id_balance" class="form-label">Balance (Sweep Coins)</label>
-                            <input type="number" 
-                                   id="id_balance" 
+                            <input type="number"
+                                   id="id_balance"
                                    name="balance"
-                                   step="0.01" 
-                                   min="0" 
+                                   step="0.01"
+                                   min="0"
                                    class="form-control"
                                    placeholder="Amount of SC with WR x1"
                                    required>
@@ -71,11 +74,11 @@ Create Bundle
                         <!-- Playable -->
                         <div class="mb-3">
                             <label for="id_playable" class="form-label">Playable Sweep Coins</label>
-                            <input type="number" 
-                                   id="id_playable" 
+                            <input type="number"
+                                   id="id_playable"
                                    name="playable"
-                                   step="0.01" 
-                                   min="0" 
+                                   step="0.01"
+                                   min="0"
                                    class="form-control"
                                    placeholder="Amount of SC playable under WR multiplier"
                                    required>
@@ -84,7 +87,11 @@ Create Bundle
                         <!-- Multiplier -->
                         <div class="mb-3">
                             <label for="id_multiplier" class="form-label">WR Multiplier</label>
-                            <select id="id_multiplier" name="multiplier" class="form-select" required>
+                            <select id="id_multiplier"
+                                    name="multiplier"
+                                    class="form-control select-input font-weight-bold fill"
+                                    required>
+                                <option value="">Select a Multiplier</option>
                                 <option value="10">x10 – Very High Risk</option>
                                 <option value="13">x13 – High Risk</option>
                                 <option value="17">x17 – Medium Risk</option>
@@ -96,11 +103,11 @@ Create Bundle
                         <!-- Bonus -->
                         <div class="mb-3">
                             <label for="id_bonus" class="form-label">Bonus (Gold Coins)</label>
-                            <input type="number" 
-                                   id="id_bonus" 
+                            <input type="number"
+                                   id="id_bonus"
                                    name="bonus"
-                                   step="0.01" 
-                                   min="0" 
+                                   step="0.01"
+                                   min="0"
                                    class="form-control"
                                    placeholder="GC bonus amount"
                                    required>
@@ -109,11 +116,11 @@ Create Bundle
                         <!-- Miner -->
                         <div class="mb-3">
                             <label for="id_miner" class="form-label">Miner (Reactor Coins)</label>
-                            <input type="number" 
-                                   id="id_miner" 
+                            <input type="number"
+                                   id="id_miner"
                                    name="miner"
-                                   step="0.01" 
-                                   min="0" 
+                                   step="0.01"
+                                   min="0"
                                    class="form-control"
                                    placeholder="Deposit WR x20 – Non-playable amount"
                                    required>
@@ -124,10 +131,10 @@ Create Bundle
                         </div>
 
                         <div class="mt-4 d-flex justify-content-between">
-                            <a href="{% url 'admin-panel:bundles-admin' %}" class="btn btn-secondary">
+                            <a href="{% url 'admin-panel:bundles-list' %}" class="btn btn-secondary">
                                 Cancel
                             </a>
-                            <button type="submit" class="btn btn-primary">Save Bundle</button>
+                            <button type="submit" class="btn btn-primary" id="submit-btn">Save Bundle</button>
                         </div>
                     </form>
                 </div>
@@ -138,10 +145,26 @@ Create Bundle
 {% endblock content %}
 
 {% block css %}
+{% include "components/css/utils/edit_template.html" %}
 <style>
-    {% include "components/css/utils/edit_template.html" %}
 </style>
 {% endblock css %}
 
 {% block js %}
+<script>
+$(document).ready(function() {
+    $('#bundle-form').on('submit', function(e) {
+        const price = $('#id_price').val();
+        const validPrice = /^\d+(\.\d{1,2})?$/;
+        if (!validPrice.test(price)) {
+            e.preventDefault();
+            $('#price-error').show();
+            $('#id_price').addClass('is-invalid');
+        } else {
+            $('#price-error').hide();
+            $('#id_price').removeClass('is-invalid');
+        }
+    });
+});
+</script>
 {% endblock js %}
