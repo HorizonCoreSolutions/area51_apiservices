@@ -1,42 +1,135 @@
 {% extends "index.html" %}
 {% load static %}
 {% load i18n %}
-{% load math %}
-{% load date_utils %}
+
 {% block title %}
-Bundles
+Create Bundle
 {% endblock title %}
 
 {% block content %}
 <div class="container page-content pt-4 setting-page">
     <div class="row">
-        <div class="col-12">
+        <div class="col-12 col-md-8 mx-auto">
             <div class="card">
                 <div class="card-body">
-                    <h1>Bundles</h1>
-                    <a href="{% url 'admin-panel:bundles-create' %}" class="btn btn-primary">Create Bundle</a>
-                    <table class="table table-bordered">
-                        <thead>
-                            <tr>
-                                <th>Price</th>
-                                <th>Deposit</th>
-                                <th>Playable</th>
-                                <th>Bonus</th>
-                                <th>Miner</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for bundle in bundles %}
-                                <tr>
-                                    <td>{{ bundle.price }}</td>
-                                    <td>{{ bundle.balance }} </td>
-                                    <td>{{ bundle.playable }}</td>
-                                    <td>{{ bundle.bonus }}</td>
-                                    <td>{{ bundle.miner }}</td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                    <h1 class="mb-4">Create Bundle</h1>
+                    <form method="post" action="{% url 'admin-panel:bundles-create' %}">
+                        {% csrf_token %}
+
+                        <!-- Name -->
+                        <div class="mb-3">
+                            <label for="id_name" class="form-label">Bundle Name (Alias)</label>
+                            <input type="text" 
+                                   id="id_name" 
+                                   name="name"
+                                   class="form-control" 
+                                   placeholder="Enter a short name for the bundle"
+                                   required>
+                        </div>
+
+                        <!-- Enabled -->
+                        <div class="mb-3">
+                            <label class="form-label d-block">Enabled</label>
+                            <label class="toggle">
+                                <input type="checkbox" name="enabled" checked>
+                                <span class="slider"></span>
+                                <span>Active</span>
+                            </label>
+                        </div>
+
+                        <hr>
+
+                        <!-- Price -->
+                        <div class="mb-3">
+                            <label for="id_price" class="form-label">Price (USD)</label>
+                            <input type="number" 
+                                   id="id_price" 
+                                   name="price"
+                                   step="0.01" 
+                                   min="0" 
+                                   class="form-control"
+                                   placeholder="e.g. 4.99"
+                                   required>
+                        </div>
+
+                        <!-- Balance -->
+                        <div class="mb-3">
+                            <label for="id_balance" class="form-label">Balance (Sweep Coins)</label>
+                            <input type="number" 
+                                   id="id_balance" 
+                                   name="balance"
+                                   step="0.01" 
+                                   min="0" 
+                                   class="form-control"
+                                   placeholder="Amount of SC with WR x1"
+                                   required>
+                            <div class="form-text">
+                                This is the SC amount deposited with a wagering requirement (WR) of x1.
+                            </div>
+                        </div>
+
+                        <!-- Playable -->
+                        <div class="mb-3">
+                            <label for="id_playable" class="form-label">Playable Sweep Coins</label>
+                            <input type="number" 
+                                   id="id_playable" 
+                                   name="playable"
+                                   step="0.01" 
+                                   min="0" 
+                                   class="form-control"
+                                   placeholder="Amount of SC playable under WR multiplier"
+                                   required>
+                        </div>
+
+                        <!-- Multiplier -->
+                        <div class="mb-3">
+                            <label for="id_multiplier" class="form-label">WR Multiplier</label>
+                            <select id="id_multiplier" name="multiplier" class="form-select" required>
+                                <option value="10">x10 – Very High Risk</option>
+                                <option value="13">x13 – High Risk</option>
+                                <option value="17">x17 – Medium Risk</option>
+                                <option value="20">x20 – Low Risk</option>
+                                <option value="25">x25 – High Volume</option>
+                            </select>
+                        </div>
+
+                        <!-- Bonus -->
+                        <div class="mb-3">
+                            <label for="id_bonus" class="form-label">Bonus (Gold Coins)</label>
+                            <input type="number" 
+                                   id="id_bonus" 
+                                   name="bonus"
+                                   step="0.01" 
+                                   min="0" 
+                                   class="form-control"
+                                   placeholder="GC bonus amount"
+                                   required>
+                        </div>
+
+                        <!-- Miner -->
+                        <div class="mb-3">
+                            <label for="id_miner" class="form-label">Miner (Reactor Coins)</label>
+                            <input type="number" 
+                                   id="id_miner" 
+                                   name="miner"
+                                   step="0.01" 
+                                   min="0" 
+                                   class="form-control"
+                                   placeholder="Deposit WR x20 – Non-playable amount"
+                                   required>
+                            <div class="form-text">
+                                Reactor Coins — Deposit with WR x20, non-playable.  
+                                <strong>No other values outside this configuration will be given to users.</strong>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 d-flex justify-content-between">
+                            <a href="{% url 'admin-panel:bundles-list' %}" class="btn btn-secondary">
+                                Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">Save Bundle</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
