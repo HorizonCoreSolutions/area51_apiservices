@@ -5803,7 +5803,7 @@ class BundlesAdminView(CheckRolesMixin, TemplateView, View):
     template_name = "admin/bundles/bundles.html"
 
     def get(self, request):
-        bundles = Bundle.objects.all()
+        bundles = Bundle.objects.all().order_by("price")
         return render(request, template_name=self.template_name,
                       context={"bundles": bundles})
 
