@@ -138,7 +138,9 @@ Create Bundle
 {% endblock content %}
 
 {% block css %}
-{% include "components/css/utils/edit_template.html" %}
+<style>
+    {% include "components/css/utils/edit_template.css" %}
+</style>
 {% endblock css %}
 
 {% block js %}
