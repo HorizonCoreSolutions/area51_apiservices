@@ -13,7 +13,15 @@ Create Bundle
             <div class="card">
                 <div class="card-body">
                     <h1 class="mb-4">Create Bundle</h1>
-                    <form method="post" action="{% url 'admin-panel:bundles-create' %}" id="bundle-form">
+
+                    <div class="alert alert-success d-none" id="success-alert">
+                        Bundle created successfully!
+                    </div>
+                    <div class="alert alert-danger d-none" id="error-alert">
+                        <strong>Error:</strong> <span id="error-message"></span>
+                    </div>
+
+                    <form id="bundle-form">
                         {% csrf_token %}
 
                         <!-- Name -->
@@ -31,7 +39,7 @@ Create Bundle
                         <div class="mb-3">
                             <label class="form-label d-block">Enabled</label>
                             <label class="toggle">
-                                <input type="checkbox" name="enabled" checked>
+                                <input type="checkbox" id="id_enabled" name="enabled" checked>
                                 <span class="slider"></span>
                                 <span>Active</span>
                             </label>
@@ -92,11 +100,11 @@ Create Bundle
                                     class="form-control select-input font-weight-bold fill"
                                     required>
                                 <option value="">Select a Multiplier</option>
-                                <option value="10">x10 – Very High Risk</option>
-                                <option value="13">x13 – High Risk</option>
-                                <option value="17">x17 – Medium Risk</option>
-                                <option value="20">x20 – Low Risk</option>
-                                <option value="25">x25 – High Volume</option>
+                                <option value="10">x10 - Very High Risk</option>
+                                <option value="13">x13 - High Risk</option>
+                                <option value="17">x17 - Medium Risk</option>
+                                <option value="20">x20 - Low Risk</option>
+                                <option value="25">x25 - High Volume</option>
                             </select>
                         </div>
 
@@ -122,11 +130,11 @@ Create Bundle
                                    step="0.01"
                                    min="0"
                                    class="form-control"
-                                   placeholder="Deposit WR x20 – Non-playable amount"
+                                   placeholder="Deposit WR x20 - Non-playable amount"
                                    required>
                             <div class="form-text">
                                 Reactor Coins — Deposit with WR x20, non-playable.  
-                                <strong>No other values outside this configuration will be given to users.</strong>
+                                <strong>No other values than those set here will be given to users.</strong>
                             </div>
                         </div>
 
@@ -134,7 +142,9 @@ Create Bundle
                             <a href="{% url 'admin-panel:bundles-list' %}" class="btn btn-secondary">
                                 Cancel
                             </a>
-                            <button type="submit" class="btn btn-primary" id="submit-btn">Save Bundle</button>
+                            <button type="submit" class="btn btn-primary" id="submit-btn">
+                                Save Bundle
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -153,17 +163,57 @@ Create Bundle
 {% block js %}
 <script>
 $(document).ready(function() {
+    function validatePrice(value) {
+        return /^\d+(\.\d{1,2})?$/.test(value);
+    }
+
     $('#bundle-form').on('submit', function(e) {
+        e.preventDefault();
+
         const price = $('#id_price').val();
-        const validPrice = /^\d+(\.\d{1,2})?$/;
-        if (!validPrice.test(price)) {
-            e.preventDefault();
+        if (!validatePrice(price)) {
             $('#price-error').show();
             $('#id_price').addClass('is-invalid');
-        } else {
-            $('#price-error').hide();
-            $('#id_price').removeClass('is-invalid');
+            return;
         }
+
+        $('#price-error').hide();
+        $('#id_price').removeClass('is-invalid');
+
+        const payload = {
+            name: $('#id_name').val(),
+            enabled: $('#id_enabled').is(':checked'),
+            price: $('#id_price').val(),
+            balance: $('#id_balance').val(),
+            playable: $('#id_playable').val(),
+            multiplier: $('#id_multiplier').val(),
+            bonus: $('#id_bonus').val(),
+            miner: $('#id_miner').val()
+        };
+
+        $('#submit-btn').prop('disabled', true);
+
+        $.ajax({
+            url: "{% url 'bundles-rest' %}",
+            method: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(payload),
+            headers: { "X-CSRFToken": $('input[name=csrfmiddlewaretoken]').val() },
+            success: function(response) {
+                $('#error-alert').addClass('d-none');
+                $('#success-alert').removeClass('d-none');
+                $('#bundle-form')[0].reset();
+                $('#submit-btn').prop('disabled', false);
+            },
+            error: function(xhr) {
+                $('#error-alert').removeClass('d-none');
+                $('#error-message').text(
+                    xhr.responseJSON?.detail ||
+                    JSON.stringify(xhr.responseJSON || 'An unknown error occurred.')
+                );
+                $('#submit-btn').prop('disabled', false);
+            }
+        });
     });
 });
 </script>
