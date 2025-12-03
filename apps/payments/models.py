@@ -238,7 +238,7 @@ class Bundle(AbstractBaseModel):
 
     admin = models.ForeignKey(Users, on_delete=models.CASCADE, blank=False, null=True)
 
-    index = models.IntegerField(default=0)
+    name = models.CharField(max_length=255)
     enabled = models.BooleanField(default=True)
 
     price = models.DecimalField(max_digits=10, decimal_places=2)

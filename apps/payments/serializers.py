@@ -250,4 +250,4 @@ class BundleSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Bundle
-        fields = ("code", "price", "total", "bonus", "miner", "enabled", "index")
+        fields = ("code", "price", "total", "bonus", "miner", "enabled")
