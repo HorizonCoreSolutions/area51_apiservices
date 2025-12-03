@@ -240,6 +240,14 @@ class CoinflowTransactionsSerializer(serializers.ModelSerializer):
 
 
 class BundleSerializer(serializers.ModelSerializer):
+
+    total = serializers.SerializerMethodField()
+
+    @staticmethod
+    def get_total(obj):
+        return obj.balance + obj.playable
+
+
     class Meta:
         model = Bundle
         fields = ("code", "price", "total", "bonus", "miner", "enabled", "index")
