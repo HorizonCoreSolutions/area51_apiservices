@@ -23,13 +23,14 @@ Bundles
         </thead>
         <tbody>
             {% for bundle in bundles %}
-            <tr>
-                <td>{{ bundle.index }}</td>
-                <td>{{ bundle.price }}</td>
-                <td>{{ bundle.total }}</td>
-                <td>{{ bundle.bonus }}</td>
-                <td>{{ bundle.miner }}</td>
-            </tr>
+                <tr>
+                    <td>{{ bundle.index }}</td>
+                    <td>{{ bundle.price }}</td>
+                    <td>{{ bundle.total }}</td>
+                    <td>{{ bundle.bonus }}</td>
+                    <td>{{ bundle.miner }}</td>
+                </tr>
+            {% endfor %}
         </tbody>
     </table>
 {% endblock content %}
