@@ -45,7 +45,7 @@ from apps.users.utils import send_player_balance_update_notification
 from apps.payments.mnet import MnetPayment
 from .models import (AlchemypayOrder, Bundle, CoinFlowTransaction, CoinWithdrawal, MnetTransaction, NowPaymentsTransactions,
     WithdrawalCurrency, WithdrawalRequests)
-from .serializers import (AlchemypayTransactionsSerializer, BundleSerializer, CallbackWithdrawalSerializer, CoinflowTransactionsSerializer,
+from .serializers import (AlchemypayTransactionsSerializer, BundleCreateSerializer, BundleSerializer, CallbackWithdrawalSerializer, CoinflowTransactionsSerializer,
     CreatePaymentQrSerializer, CreatePaymentSerializer, CreateWithdrawalSerializer,
     CreateWithdrawalSerializerCoinpayments, MnetTransactionsSerializer,
     NowPaymentsTransactionsSerializer, RequestCoinWithdrawalSerializer)
