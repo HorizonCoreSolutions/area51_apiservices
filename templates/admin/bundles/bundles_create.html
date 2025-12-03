@@ -160,7 +160,7 @@ Create Bundle
 </style>
 {% endblock css %}
 
-{% block js %}
+{% block javascript %}
 <script>
     $(document).ready(function () {
         console.log(">>> Script loaded for bundle form");
@@ -207,18 +207,7 @@ Create Bundle
             // Validate all required fields
             if (!validateForm()) {
                 $("#error-alert").removeClass("d-none");
-                $("#error-message").text("Please fill in all required fields.");
-                return false;
-            }
-    
-            var price = $("#id_price").val();
-            if (!validatePrice(price)) {
-                $("#price-error").show();
-                $("#id_price").addClass("is-invalid");
-                return false;
-            }
-    
-            $("#price-error").hide();
+                $("#errorblockor").hide();
             $("#id_price").removeClass("is-invalid");
     
             // Build JSON payload
@@ -247,7 +236,7 @@ Create Bundle
                 type: "POST",
                 contentType: "application/json",
                 headers: {
-                    "X-CSRFToken": "{{ csrf_token }}",
+                    "X-CSRFToken": csrftoken
                 },
                 data: JSON.stringify(payload),
                 success: function(data, textStatus, jqXHR) {
@@ -295,4 +284,4 @@ Create Bundle
         });
     });
 </script>
-{% endblock js %}
+{% endblock javascript %}
