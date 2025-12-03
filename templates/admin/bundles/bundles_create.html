@@ -142,7 +142,7 @@ Create Bundle
                             <a href="{% url 'admin-panel:bundles-list' %}" class="btn btn-secondary">
                                 Cancel
                             </a>
-                            <button type="submit" class="btn btn-primary" id="submit-btn">
+                            <button type="button" class="btn btn-primary" id="submit-btn">
                                 Save Bundle
                             </button>
                         </div>
@@ -163,37 +163,30 @@ Create Bundle
 {% block js %}
 <script>
     $(document).ready(function () {
-        // Utility: CSRF
-        function getCookie(name) {
-            let cookieValue = null;
-            if (document.cookie && document.cookie !== "") {
-                const cookies = document.cookie.split(";");
-                for (let i = 0; i < cookies.length; i++) {
-                    const cookie = cookies[i].trim();
-                    if (cookie.substring(0, name.length + 1) === (name + "=")) {
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
-                    }
-                }
-            }
-            return cookieValue;
-        }
-        const csrftoken = getCookie("csrftoken");
+        console.log(">>> Script loaded for bundle form");
     
         // Price validation
         function validatePrice(value) {
             return /^\d+(\.\d{1,2})?$/.test(value);
         }
     
-        // Intercept submit
-        $("#bundle-form").on("submit", function (e) {
-            e.preventDefault(); // completely prevents reload
+        // Handle form submission via button click
+        $("#submit-btn").on("click", function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+    
+            // Validate all required fields
+            const form = $("#bundle-form")[0];
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return false;
+            }
     
             const price = $("#id_price").val();
             if (!validatePrice(price)) {
                 $("#price-error").show();
                 $("#id_price").addClass("is-invalid");
-                return;
+                return false;
             }
     
             $("#price-error").hide();
@@ -224,7 +217,7 @@ Create Bundle
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    "X-CSRFToken": csrftoken,
+                    "X-CSRFToken": "{{ csrf_token }}",
                 },
                 body: JSON.stringify(payload),
             })
@@ -251,6 +244,15 @@ Create Bundle
                 .finally(() => {
                     $("#submit-btn").prop("disabled", false);
                 });
+    
+            return false;
+        });
+    
+        // Prevent form submission on Enter key
+        $("#bundle-form").on("submit", function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
         });
     });
 </script>
