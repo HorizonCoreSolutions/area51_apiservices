@@ -152,18 +152,10 @@ Create Bundle
         </div>
     </div>
 </div>
-{% endblock content %}
-
-{% block css %}
-{% include "components/css/utils/edit_template.html" %}
-<style>
-</style>
-{% endblock css %}
-
-{% block javascript %}
 <script>
     $(document).ready(function () {
         console.log(">>> Script loaded for bundle form");
+
         // Price validation
         function validatePrice(value) {
             return /^\d+(\.\d{1,2})?$/.test(value);
@@ -207,7 +199,18 @@ Create Bundle
             // Validate all required fields
             if (!validateForm()) {
                 $("#error-alert").removeClass("d-none");
-                $("#errorblockor").hide();
+                $("#error-message").text("Please fill in all required fields.");
+                return false;
+            }
+    
+            var price = $("#id_price").val();
+            if (!validatePrice(price)) {
+                $("#price-error").show();
+                $("#id_price").addClass("is-invalid");
+                return false;
+            }
+    
+            $("#price-error").hide();
             $("#id_price").removeClass("is-invalid");
     
             // Build JSON payload
@@ -284,4 +287,13 @@ Create Bundle
         });
     });
 </script>
+{% endblock content %}
+
+{% block css %}
+{% include "components/css/utils/edit_template.html" %}
+<style>
+</style>
+{% endblock css %}
+
+{% block javascript %}
 {% endblock javascript %}
