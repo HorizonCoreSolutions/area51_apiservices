@@ -330,6 +330,7 @@ urlpatterns = [
     url(r"^deposit-bonus/", DepositBonusView.as_view(), name="deposit-bonus"),
     url(r"^enable-referral-bonus-permissions/", ReferAFriendBonusPermission.as_view(), name="enable-referral-bonus-permissions"),
     url(r"^bundles/", BundlesAdminView.as_view(), name="bundles-admin"),
+    url(r"^bundles-create/", BundlesAdminView.as_view(), name="bundles-create"),
     url(r"^promotion-page/", PromotionPageView.as_view(), name="promotion-page"),
     url(r"^create-promotion-page/", CreatePromotionPageView.as_view(), name="create-promotion-page"),
     url(r"^delete-promotion-page/", DeletePromotionPage.as_view(), name="delete-promotion-page"),
