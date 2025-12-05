@@ -51,11 +51,11 @@ Bundles
                                         <tr>
                                             <th>{% trans "Name" %}</th>
                                             <th>{% trans "Price" %}</th>
-                                            <th>{% trans "Balance" %}</th>
-                                            <th>{% trans "Playable" %}</th>
-                                            <th>{% trans "Bonus" %}</th>
-                                            <th>{% trans "Miner" %}</th>
+                                            <th>{% trans "Balance" %} (SC) x1</th>
+                                            <th>{% trans "Playable" %} (SC)</th>
                                             <th>{% trans "Multiplier" %}</th>
+                                            <th>{% trans "Bonus" %} (GC)</th>
+                                            <th>{% trans "Miner" %} (RC)</th>
                                             <th>{% trans "Status" %}</th>
                                             <th>{% trans "Action" %}</th>
                                         </tr>
@@ -83,13 +83,13 @@ Bundles
                                                     {{ bundle.playable }}
                                                 </td>
                                                 <td onclick="location.href='{% url 'admin-panel:bundles-edit' bundle.id %}'" style="cursor: pointer;">
+                                                    x{{ bundle.multiplier }}
+                                                </td>
+                                                <td onclick="location.href='{% url 'admin-panel:bundles-edit' bundle.id %}'" style="cursor: pointer;">
                                                     {{ bundle.bonus }}
                                                 </td>
                                                 <td onclick="location.href='{% url 'admin-panel:bundles-edit' bundle.id %}'" style="cursor: pointer;">
                                                     {{ bundle.miner }}
-                                                </td>
-                                                <td onclick="location.href='{% url 'admin-panel:bundles-edit' bundle.id %}'" style="cursor: pointer;">
-                                                    x{{ bundle.multiplier }}
                                                 </td>
                                                 <td>
                                                     {% if bundle.enabled %}
