@@ -12,7 +12,7 @@ Create Bundle
         <div class="col-12 col-md-8 mx-auto">
             <div class="card">
                 <div class="card-body">
-                    <h1 class="mb-4">Create Bundle</h1>
+                    <h1 class="mb-4">{% if bundle %}Edit Bundle{% else %}Create Bundle{% endif %}</h1>
 
                     <div class="alert alert-success d-none" id="success-alert">
                         Bundle created successfully!
@@ -32,6 +32,7 @@ Create Bundle
                                    name="name"
                                    class="form-control"
                                    placeholder="Enter a short name for the bundle"
+                                   value="{{ bundle.name|default:'' }}"
                                    required>
                         </div>
 
@@ -39,7 +40,7 @@ Create Bundle
                         <div class="mb-3">
                             <label class="form-label d-block">Enabled</label>
                             <label class="toggle">
-                                <input type="checkbox" id="id_enabled" name="enabled" checked>
+                                <input type="checkbox" id="id_enabled" name="enabled" {% if not bundle or bundle.enabled %}checked{% endif %}>
                                 <span class="slider"></span>
                                 <span>Active</span>
                             </label>
@@ -57,6 +58,7 @@ Create Bundle
                                    min="0"
                                    class="form-control"
                                    placeholder="e.g. 4.99"
+                                   value="{{ bundle.price|default:'' }}"
                                    required>
                             <div id="price-error" class="text-danger mt-1" style="display: none;">
                                 Please enter a valid amount with only 2 decimal places.
@@ -73,6 +75,7 @@ Create Bundle
                                    min="0"
                                    class="form-control"
                                    placeholder="Amount of SC with WR x1"
+                                   value="{{ bundle.balance|default:'' }}"
                                    required>
                             <div class="form-text">
                                 This is the SC amount deposited with a wagering requirement (WR) of x1.
@@ -89,22 +92,23 @@ Create Bundle
                                    min="0"
                                    class="form-control"
                                    placeholder="Amount of SC playable under WR multiplier"
+                                   value="{{ bundle.playable|default:'' }}"
                                    required>
                         </div>
 
                         <!-- Multiplier -->
                         <div class="mb-3">
                             <label for="id_multiplier" class="form-label">WR Multiplier</label>
-                            <select id="id_multiplier"
+                                <select id="id_multiplier"
                                     name="multiplier"
                                     class="form-control select-input font-weight-bold fill"
                                     required>
                                 <option value="">Select a Multiplier</option>
-                                <option value="10">x10 - Very High Risk</option>
-                                <option value="13">x13 - High Risk</option>
-                                <option value="17">x17 - Medium Risk</option>
-                                <option value="20">x20 - Low Risk</option>
-                                <option value="25">x25 - High Volume</option>
+                                <option value="10" {% if bundle.multiplier == 10 %}selected{% endif %}>x10 - Very High Risk</option>
+                                <option value="13" {% if bundle.multiplier == 13 %}selected{% endif %}>x13 - High Risk</option>
+                                <option value="17" {% if bundle.multiplier == 17 %}selected{% endif %}>x17 - Medium Risk</option>
+                                <option value="20" {% if bundle.multiplier == 20 %}selected{% endif %}>x20 - Low Risk</option>
+                                <option value="25" {% if bundle.multiplier == 25 %}selected{% endif %}>x25 - High Volume</option>
                             </select>
                         </div>
 
@@ -118,6 +122,7 @@ Create Bundle
                                    min="0"
                                    class="form-control"
                                    placeholder="GC bonus amount"
+                                   value="{{ bundle.bonus|default:'' }}"
                                    required>
                         </div>
 
@@ -131,6 +136,7 @@ Create Bundle
                                    min="0"
                                    class="form-control"
                                    placeholder="Deposit WR x20 - Non-playable amount"
+                                   value="{{ bundle.miner|default:'' }}"
                                    required>
                             <div class="form-text">
                                 Reactor Coins — Deposit with WR x20, non-playable.  
@@ -164,6 +170,7 @@ Create Bundle
 <script type="text/javascript">
     $(document).ready(function () {
         console.log(">>> Script loaded for bundle form");
+        var bundleId = "{{ bundle.id|default:'' }}";
 
         // Price validation
         function validatePrice(value) {
@@ -233,6 +240,10 @@ Create Bundle
                 bonus: $("#id_bonus").val(),
                 miner: $("#id_miner").val()
             };
+
+            if (bundleId) {
+                payload.id = bundleId;
+            }
     
             // Disable submit button
             $("#submit-btn").prop("disabled", true);
@@ -245,7 +256,7 @@ Create Bundle
             // Send JSON using jQuery AJAX (compatible with jQuery 3.2.1)
             $.ajax({
                 url: "{% url 'pix_payment_apis:bundles-rest' %}",
-                type: "POST",
+                type: bundleId ? "PUT" : "POST",
                 contentType: "application/json",
                 headers: {
                     "X-CSRFToken": "{{ csrf_token }}"
@@ -257,7 +268,10 @@ Create Bundle
                     
                     $("#error-alert").addClass("d-none");
                     $("#success-alert").removeClass("d-none");
-                    $("#bundle-form")[0].reset();
+                    $("#success-alert").text(bundleId ? "Bundle updated successfully!" : "Bundle created successfully!");
+                    if (!bundleId) {
+                        $("#bundle-form")[0].reset();
+                    }
                 },
                 error: function(jqXHR, textStatus, errorThrown) {
                     console.log(">>> Response status:", jqXHR.status);

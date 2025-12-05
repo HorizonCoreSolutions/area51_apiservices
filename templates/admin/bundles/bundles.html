@@ -27,7 +27,7 @@ Bundles
                         </thead>
                         <tbody>
                             {% for bundle in bundles %}
-                                <tr>
+                                <tr onclick="window.location='{% url 'admin-panel:bundles-edit' bundle.id %}'" style="cursor: pointer;">
                                     <td>{{ bundle.price }}</td>
                                     <td>{{ bundle.balance }} </td>
                                     <td>{{ bundle.playable }}</td>
