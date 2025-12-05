@@ -1937,8 +1937,16 @@ class BundleView(APIView):
             return Response({"detail": "Only admins can modify bundles."}, status=status.HTTP_403_FORBIDDEN)
 
         data = request.data
-        serializer = BundleSerializer(data=data)
+        bundle_id = data.get("id")
+        if not bundle_id:
+             return Response({"detail": "Bundle ID required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        bundle = Bundle.objects.filter(id=bundle_id, admin=request.user.admin).first()
+        if not bundle:
+            return Response({"detail": "Bundle not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = BundleCreateSerializer(bundle, data=data)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

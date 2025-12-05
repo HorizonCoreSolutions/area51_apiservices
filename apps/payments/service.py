@@ -46,8 +46,10 @@ def platform_deposit(
     is_bonus: bool,
     amount: Decimal,
     accreditable: Optional[Users],
-    bonus_type: Literal["SC", "MC"]
+    bonus_type: Literal["SC", "MC"],
+    custom_multiplier: Optional[Decimal] = None,
 ):
+    multiplier = custom_multiplier or Decimal(1)
     if bonus_type == "SC":
         betable = True
     elif bonus_type == "MC":
@@ -56,6 +58,8 @@ def platform_deposit(
     limit = amount
     if is_bonus or bonus_type == "MC":
         limit = amount * 20
+    else:
+        limit = amount * multiplier
     
     WageringRequirement.objects.create(
         user=user,
