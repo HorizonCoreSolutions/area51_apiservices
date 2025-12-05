@@ -5825,6 +5825,31 @@ class BundlesAdminEditView(CheckRolesMixin, TemplateView, View):
         return render(request, template_name=self.template_name, context={"bundle": bundle})
 
 
+class EnableBundleView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseMixin, View):
+    http_method_names = ["post"]
+    allowed_roles = ("admin", "superadmin")
+
+    def post_ajax(self, request, *args, **kwargs):
+        try:
+            bundle_id = self.request.POST.get("bundle_id")
+            bundle = Bundle.objects.filter(id=bundle_id).first()
+            
+            if not bundle:
+                return self.render_json_response({"message": "Bundle not found", "status": "error"})
+
+            bundle.enabled = not bundle.enabled
+            bundle.save()
+
+            status_text = "Active" if bundle.enabled else "Disabled"
+            response = { "message": f"Bundle status changed to {status_text}", "status": "success", "enabled": bundle.enabled }
+
+        except Exception as err:
+            print(err)
+            response = { "message": str(err), "status": "error" }
+
+        return self.render_json_response(response)
+
+
 class PromotionPageView(CheckRolesMixin, TemplateView, View):
     allowed_roles = ["admin", ]
     template_name = "admin/cms/page.html"
