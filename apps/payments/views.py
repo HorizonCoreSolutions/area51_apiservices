@@ -1941,7 +1941,7 @@ class BundleView(APIView):
         if not bundle_id:
              return Response({"detail": "Bundle ID required."}, status=status.HTTP_400_BAD_REQUEST)
 
-        bundle = Bundle.objects.filter(id=bundle_id, admin=request.user.admin).first()
+        bundle = Bundle.objects.filter(id=bundle_id, admin=request.user).first()
         if not bundle:
             return Response({"detail": "Bundle not found."}, status=status.HTTP_404_NOT_FOUND)
 
