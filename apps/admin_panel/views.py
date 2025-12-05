@@ -5827,12 +5827,15 @@ class BundlesAdminEditView(CheckRolesMixin, TemplateView, View):
 
 class EnableBundleView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseMixin, View):
     http_method_names = ["post"]
-    allowed_roles = ("admin", "superadmin")
 
     def post_ajax(self, request, *args, **kwargs):
         try:
+            if request.user.role not in ("admin", "superadmin"):
+                return self.render_json_response({"message": "You are not authorized to enable bundles", "status": "error"})
+            
+            filters = {} if request.user.role == "superadmin" else {"admin": request.user.admin}
             bundle_id = self.request.POST.get("bundle_id")
-            bundle = Bundle.objects.filter(id=bundle_id).first()
+            bundle = Bundle.objects.filter(id=bundle_id, **filters).first()
             
             if not bundle:
                 return self.render_json_response({"message": "Bundle not found", "status": "error"})
