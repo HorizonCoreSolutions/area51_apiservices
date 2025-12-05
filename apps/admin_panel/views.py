@@ -5829,6 +5829,10 @@ class EnableBundleView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxRespo
     http_method_names = ["post"]
     allowed_roles = ("admin", "superadmin")
 
+    @method_decorator(csrf_exempt)
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+
     def post_ajax(self, request, *args, **kwargs):
         try:
             # if request.user.role not in ("admin", "superadmin"):
