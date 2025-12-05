@@ -5838,7 +5838,7 @@ class EnableBundleView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxRespo
             # if request.user.role not in ("admin", "superadmin"):
             #     return self.render_json_response({"message": "You are not authorized to enable bundles", "status": "error"})
             
-            filters = {} if request.user.role == "superadmin" else {"admin": request.user.admin}
+            filters = {} if request.user.role == "superadmin" else {"admin": request.user}
             bundle_id = self.request.POST.get("bundle_id")
             bundle = Bundle.objects.filter(id=bundle_id, **filters).first()
             
