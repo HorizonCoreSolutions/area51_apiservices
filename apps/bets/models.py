@@ -130,7 +130,7 @@ class WageringRequirement(AbstractBaseModel):
     accreditable = models.ForeignKey(Users, on_delete=models.CASCADE, null=True, default=None, related_name="accreditable_wagerings")
 
     # the amount the user has deposited
-    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    amount = models.DecimalField(max_digits=10, decimal_places=2, editable=False)
 
     # the amount of bonus it has (like if player 5 and amount 5, here should be 5)
     balance = models.DecimalField(max_digits=10, decimal_places=2)
