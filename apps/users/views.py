@@ -1549,7 +1549,7 @@ class GetSlug(APIView):
     def get(self, request):
         slugs=[]
 
-        slugs.append(CmsPages.objects.filter(hidden=False).all().values("slug"))
+        slugs.append(CmsPages.objects.filter(hidden=False).all().values("slug", "title"))
 
         return Response({"response": slugs}, status.HTTP_200_OK)
 
