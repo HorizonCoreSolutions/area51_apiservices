@@ -53,6 +53,7 @@ class Command(BaseCommand):
         'Funky Games',
         'GameArt', # This is not necesary
         'Inbet',
+        'Jili Games (Sweepstakes)',
         'Kagaming2',
         'King Show Games',
         'Mancala',
@@ -81,6 +82,10 @@ class Command(BaseCommand):
             flat=True
         )
 
+        # Track providers we've already asked about and session-allowed providers
+        asked_providers = set()
+        session_allowed = set(self.ALLOWED_PROVIDERS)
+
         print(f"TOTAL GAMES: {len(self.games)}")
         casino_game_ids = []
         for game in self.games:
@@ -88,8 +93,23 @@ class Command(BaseCommand):
                 continue
             game_id = game.get("id")
             provider = game.get("provider")
-            if provider not in self.ALLOWED_PROVIDERS:
-                continue
+            
+            # Check if provider is allowed
+            if provider not in session_allowed:
+                # Only ask once per provider
+                if provider not in asked_providers:
+                    asked_providers.add(provider)
+                    answer = input(f"\nNew provider found: '{provider}'\nAdd to allowed providers? (y/n): ").strip().lower()
+                    if answer == 'y':
+                        session_allowed.add(provider)
+                        print(f"Provider '{provider}' added for this session.")
+                        print(f"NOTE: Add '{provider}' to ALLOWED_PROVIDERS in the code to make it permanent.")
+                    else:
+                        print(f"Provider '{provider}' skipped.")
+                        continue
+                else:
+                    # Already asked and user said no
+                    continue
 
             resumen[provider] = resumen.get(provider, 0) + 1
 
