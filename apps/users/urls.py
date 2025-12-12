@@ -8,7 +8,7 @@ from apps.users.views import (AboutCmsView, AddSpinWheelView, AdminAdsPublicDeta
                               FortunePandasCategoryAPIView, GetOTPView, GetSlug, IntroductionView, LoginAPIView,
                               Notification, OffMarketDepositView, OffmarketTransaction, OffMarketWithdrawView,
                               PagesDeatilsView, PlayerDeActiveView, PlayerEmailOTPsender, PlayerEmailOTPsender,
-                              PromotionCmsView, QueueView, ReadMessageView, RecentMessagesView, RestrictedLoginView,
+                              PromotionCmsView, QueueView, ReactorBonusAPIView, ReadMessageView, RecentMessagesView, RestrictedLoginView,
                               SetlanguageView, SetPlayerBettingLimitView, SetPlayerBlackoutView,
                               SetPlayerMaxSpendLimitView,
                               SettingsLimitsView, SignUpOTP, SignUpView, SpintheWheelDetailsAPIView, StaffDetailView,
@@ -84,6 +84,7 @@ urlpatterns = [
     # url(r"^fortunepandas/?", FortunePandasAPIView.as_view(), name="fortunepandas"),
 
     url(r'^countries/?', CountriesView.as_view(), name='countries'),
+    url(r'^reactor-bonus/?', ReactorBonusAPIView.as_view(), name="reactor-bonus"),
     url(r'^deposit-limits/?', ChageDepositLimit.as_view(), name="change-deposit-limits")
 
 ]

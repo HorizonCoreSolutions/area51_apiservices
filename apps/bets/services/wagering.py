@@ -58,7 +58,7 @@ def __single_wr_clear(
     given = Decimal('0.00')
 
     if multiplier > 0:
-        given = max(Decimal("1.00") * multiplier, c_balance)
+        given = min(Decimal("1.00") * multiplier, c_balance)
         if given == c_balance:
             wagrec.active = False
             wagrec.balance = Decimal('0.00')
@@ -181,6 +181,8 @@ def bet_wr(user: Users, amount: Decimal, wagrecs: List[WageringRequirement]) -> 
             wr_ids[wagrec.id] = (Decimal(math.floor((betted / total_betted) * 100) / 100), betted)
         if reminder <= 0:
             break
+    user.balance -= amount
+    user.save()
     return wr_ids
 
 
@@ -201,7 +203,7 @@ def platform_pay(user: Users, won: Decimal, data: Dict) -> bool:
     total_to_pay = Decimal('0.00')
     paid = Decimal('0.00')
     for wagrec in objects:
-        to_pay = data[wagrec.id][1] * won
+        to_pay = Decimal(math.floor(data[wagrec.id][0] * won * 10)/10)
         paid += to_pay
         to_wallet = __single_wr_pay(wagrec, to_pay)
         total_to_pay += to_wallet

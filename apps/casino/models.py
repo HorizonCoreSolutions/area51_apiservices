@@ -123,6 +123,8 @@ class GSoftTransactions(AbstractBaseModel):
     completed = models.CharField(max_length=500, null=True, blank=True)
     is_tournament_transaction = models.BooleanField(default=False)
     transaction_type = models.CharField(blank=True, null=True, choices=TransactionType.choices, max_length=500)
+    
+    wr_data = JSONField(null=False, default={}, blank=False)
 
 
 

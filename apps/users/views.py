@@ -13,6 +13,7 @@ from compat import render_to_string
 from datetime import datetime,timedelta
 from django.utils import timezone
 
+from apps.bets.repository import get_react_bonus_amount
 from apps.core.file_logger import SimpleLogger
 from apps.users import promo_handler
 from apps.users.services.spin_wheel import get_price, process_spin_transaction, get_spin_status
@@ -2670,6 +2671,18 @@ class FortunePandasCategoryAPIView(APIView):
             print("Error in Fortunepandas Category API", e)
             print(traceback.format_exc())
             return Response({"message": "Internal Server Error"}, 500)
+
+class ReactorBonusAPIView(APIView):
+    http_method_names = ["get"]
+    permission_classes = [IsPlayer,]
+
+    def get(self, request):
+        try:
+            bonus_amount = get_react_bonus_amount(self.request.user)
+            return Response(bonus_amount, status.HTTP_200_OK)
+        except Exception as e:
+            print(e)
+            return Response({"message": "Something Went Wrong"}, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class ChageDepositLimit(APIView):

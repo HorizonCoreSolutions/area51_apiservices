@@ -110,6 +110,15 @@ class GetWageringBalanceTests(TestCase, WageringTestMixin):
         
         result = get_wagering_balance(user)
         self.assertEqual(result, Decimal("30.00"))
+    
+    def test_non_betable_wagering_requirements_excluded(self):
+        """Non-betable wagering requirements should not be counted."""
+        user = self.create_user()
+        self.create_wagering_requirement(user, balance=Decimal("30.00"), betable=False)
+        self.create_wagering_requirement(user, balance=Decimal("20.00"), betable=True)
+        
+        result = get_wagering_balance(user)
+        self.assertEqual(result, Decimal("20.00"))
 
 
 class GetWageringRequirementsTests(TransactionTestCase, WageringTestMixin):
@@ -246,13 +255,20 @@ class SingleWRClearTests(TransactionTestCase, WageringTestMixin):
         """Clearing should update played without completing if limit not reached."""
         user = self.create_user(balance=Decimal("0.00"))
         wr = self.create_wagering_requirement(
-            user, balance=Decimal("10.00"), played=Decimal("0.00"), limit=Decimal("100.00")
+            user,
+            amount=Decimal("15.00"),
+            balance=Decimal("10.00"),
+            played=Decimal("0.00"),
+            limit=Decimal("225.00"),
+            betable=False,
         )
         
         clear_wr(user, Decimal("15.00"), [wr])
         
         wr.refresh_from_db()
         self.assertEqual(wr.played, Decimal("15.00"))
+        self.assertEqual(wr.result, Decimal("1.00"))
+        self.assertEqual(wr.balance, Decimal("9.00"))
         self.assertEqual(wr.active, True)
 
 
@@ -263,15 +279,20 @@ class SingleWRPayTests(TransactionTestCase, WageringTestMixin):
         """Payment should add to WR balance when active."""
         user = self.create_user(balance=Decimal("0.00"))
         wr = self.create_wagering_requirement(
-            user, balance=Decimal("10.00"), played=Decimal("5.00"), limit=Decimal("100.00")
+            user,
+            amount=Decimal("10.00"),
+            balance=Decimal("10.00"),
+            limit=Decimal("100.00"),
+            played=Decimal("5.00"),
+            betable=True,
         )
         
         data = {wr.id: (Decimal("1.00"), Decimal("5.00"))}
         platform_pay(user, Decimal("10.00"), data)
         
         wr.refresh_from_db()
-        # Payment should be proportional: 5.00 * 10.00 = 50.00
-        self.assertEqual(wr.balance, Decimal("60.00"))
+        # Payment should be proportional: 10.00 * 1.00 (100%) = 10.00
+        self.assertEqual(wr.balance, Decimal("20.00"))
     
     def test_pay_returns_to_wallet_if_limit_passed(self):
         """Payment should go to wallet if WR limit was already passed."""
@@ -339,6 +360,28 @@ class PlatformBetTests(TransactionTestCase, WageringTestMixin):
         
         wr_clearable.refresh_from_db()
         self.assertEqual(wr_clearable.active, False)
+    
+    @transaction.atomic
+    def test_platform_bet_uses_user_balance(self):
+        """Platform bet should use user balance if no betable WRs are available."""
+        user = self.create_user(balance=Decimal("100.00"))
+        wr = self.create_wagering_requirement(
+            user,
+            amount=Decimal("10.00"),
+            balance=Decimal("10.00"),
+            played=Decimal("0.00"),
+            limit=Decimal("100.00"),
+            betable=True,
+        )
+        
+        result = platform_bet(user, Decimal("30.00"))
+        
+        wr.refresh_from_db()
+        self.assertIsNotNone(result)
+        self.assertIn(wr.id, result)
+        self.assertEqual(wr.played, Decimal("10.00"))
+        self.assertEqual(wr.balance, Decimal("00.00"))
+        self.assertEqual(user.balance, Decimal("80.00"))
 
 
 class PlatformPayTests(TransactionTestCase, WageringTestMixin):
@@ -348,7 +391,11 @@ class PlatformPayTests(TransactionTestCase, WageringTestMixin):
         """Platform pay should distribute winnings to WRs based on data."""
         user = self.create_user(balance=Decimal("0.00"))
         wr = self.create_wagering_requirement(
-            user, balance=Decimal("10.00"), played=Decimal("10.00"), limit=Decimal("100.00")
+            user,
+            balance=Decimal("10.00"),
+            played=Decimal("10.00"),
+            limit=Decimal("100.00"),
+            betable=True,
         )
         
         # Data format: {wr_id: (ratio, amount_bet)}
@@ -358,8 +405,9 @@ class PlatformPayTests(TransactionTestCase, WageringTestMixin):
         
         self.assertTrue(result)
         wr.refresh_from_db()
-        # Won amount proportional to bet: 10.00 * 20.00 = 200.00
-        self.assertEqual(wr.balance, Decimal("210.00"))
+        # Won amount proportional to ratio of betted amount: 20.00 * 1.00 (100%) = 20.00
+        # Balance = 10.00 + 20.00 = 30.00
+        self.assertEqual(wr.balance, Decimal("30.00"))
     
     def test_platform_pay_handles_adjustment(self):
         """Platform pay should handle any adjustment differences."""
@@ -372,12 +420,88 @@ class PlatformPayTests(TransactionTestCase, WageringTestMixin):
         
         platform_pay(user, Decimal("20.00"), data)
         
+        wr.refresh_from_db()
         user.refresh_from_db()
-        # Adjustment should be added to user balance
-        # won=20, paid to WR = 5 * 20 = 100, adjustment = 20 - 100 = -80 (negative)
-        # Actually in code: to_pay = data[wagrec.id][1] * won = 5 * 20 = 100
-        # This seems off - let me check the formula again
+        self.assertEqual(wr.balance, Decimal("20.00"))
+        self.assertEqual(user.balance, Decimal("10.00"))
 
+    def test_platform_pay_handles_adjustment_with_multiple_wrs(self):
+        """Platform pay should handle any adjustment differences with multiple WRs."""
+        user = self.create_user(balance=Decimal("0.00"))
+        wr1 = self.create_wagering_requirement(
+            user, balance=Decimal("10.00"), played=Decimal("10.00"), limit=Decimal("100.00")
+        )
+        wr2 = self.create_wagering_requirement(
+            user, balance=Decimal("10.00"), played=Decimal("10.00"), limit=Decimal("100.00")
+        )
+        data = {
+            wr1.id: (Decimal("0.40"), Decimal("10.00")),
+            wr2.id: (Decimal("0.40"), Decimal("5.00")),
+        }
+        
+        platform_pay(user, Decimal("20.00"), data)
+        
+        wr1.refresh_from_db()
+        wr2.refresh_from_db()
+        user.refresh_from_db()
+        self.assertEqual(wr1.balance, Decimal("18.00"))
+        self.assertEqual(wr2.balance, Decimal("18.00"))
+        self.assertEqual(user.balance, Decimal("4.00"))
+
+    def test_platform_pay_handles_adjustment_with_multiple_wrs_and_different_ratios(self):
+        """Platform pay should handle any adjustment differences with multiple WRs and different ratios."""
+        user = self.create_user(balance=Decimal("0.00"))
+        wr1 = self.create_wagering_requirement(
+            user, balance=Decimal("10.00"), played=Decimal("10.00"), limit=Decimal("100.00")
+        )
+        wr2 = self.create_wagering_requirement(
+            user, balance=Decimal("10.00"), played=Decimal("10.00"), limit=Decimal("100.00")
+        )
+        data = {
+            wr1.id: (Decimal("0.50"), Decimal("5.00")),
+            wr2.id: (Decimal("0.25"), Decimal("5.00")),
+        }
+        
+        platform_pay(user, Decimal("20.00"), data)
+        
+        user.refresh_from_db()
+        wr1.refresh_from_db()
+        wr2.refresh_from_db()
+        self.assertEqual(wr1.balance, Decimal("20.00"))
+        self.assertEqual(wr2.balance, Decimal("15.00"))
+        self.assertEqual(user.balance, Decimal("5.00"))
+    
+    def test_platform_pay_handles_adjustment_with_multiple_wrs_and_odd_ratios(self):
+        """Platform pay should handle any adjustment differences with multiple WRs and odd ratios."""
+        user = self.create_user(balance=Decimal("0.00"))
+        wr1 = self.create_wagering_requirement(
+            user,
+            amount=Decimal("21.00"),
+            balance=Decimal("0.00"),
+            played=Decimal("10.00"),
+            limit=Decimal("100.00"),
+            betable=True,
+        )
+        wr2 = self.create_wagering_requirement(
+            user,
+            amount=Decimal("10.00"),
+            balance=Decimal("0.00"),
+            played=Decimal("10.00"),
+            limit=Decimal("100.00"),
+            betable=True,
+        )
+        data = {
+            wr1.id: (Decimal("1.00")/ Decimal("3.00"), Decimal("21.00")),
+            wr2.id: (Decimal("1.00")/ Decimal("7.00"), Decimal("9.00")),
+        }
+        
+        platform_pay(user, Decimal("30.00"), data)
+        
+        user.refresh_from_db()
+        wr1.refresh_from_db()
+        wr2.refresh_from_db()
+        total_balance = Decimal(wr1.balance) + Decimal(wr2.balance) + Decimal(user.balance)
+        self.assertEqual(total_balance, Decimal("30.00"))
 
 class IntegrationTests(TransactionTestCase, WageringTestMixin):
     """Integration tests for the full wagering workflow."""
