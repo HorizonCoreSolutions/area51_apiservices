@@ -20,9 +20,12 @@ def get_react_bonus_amount(user: Users) -> Dict:
         user=user,
         active=True,
         betable=False,
-    ).order_by('created_at').values('played').first()
+    ).order_by('created').values('played').first()
     percentage = ((oldest['played'] % 20) * 5) // 1 if oldest else Decimal('0.00')
     return {
+        'cycly_progress': 20,
+        'cycle_progress_ratio': 1,
+        'next_reward': 1,
         'pool_amount': data.get('pool_amount') or 0,
         'generated': data.get('generated') or 0,
         'percentage': percentage,
