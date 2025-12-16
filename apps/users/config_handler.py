@@ -86,6 +86,8 @@ class PlatformConfigHandler:
         # Try Redis first
         data = redis_client.get(f"config:{name}")
         if data:
+            if isinstance(data, bytes):
+                data = data.decode("utf-8")
             return object.__getattribute__(self, "_deserialize_data")(data)
 
         # Try database
