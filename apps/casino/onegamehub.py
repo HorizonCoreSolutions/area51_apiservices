@@ -12,6 +12,7 @@ from apps.casino.models import GSoftTransactions
 from django.db import transaction as db_transaction
 from typing import Dict, Optional, Any, List, Tuple, Union
 from urllib.parse import urlencode, quote, unquote, parse_qs
+from apps.bets.services import wagering as wagering_service
 
 FAKE_COIN = "GOC"
 REAL_COIN = "SSC"
@@ -133,7 +134,7 @@ class OneGameHub:
                              user: Users,
                              is_real_play: bool,
                              ) -> Dict[str, Union[int, Decimal, str]]:
-        balance = user.balance if is_real_play else user.bonus_balance
+        balance = wagering_service.platfom_playable_balance(user) if is_real_play else user.bonus_balance
         cur = REAL_COIN if is_real_play else FAKE_COIN
         return {"status": 200,
                 "balance": int(Decimal(balance or 0)*100),
