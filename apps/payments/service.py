@@ -49,6 +49,9 @@ def platform_deposit(
     bonus_type: Literal["SC", "MC"],
     custom_multiplier: Optional[Decimal] = None,
 ):
+    """
+        If is_bonos, custom_multiplier is ignored
+    """
     multiplier = custom_multiplier or Decimal(1)
     if bonus_type == "SC":
         betable = True

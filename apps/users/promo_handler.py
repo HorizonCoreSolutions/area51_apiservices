@@ -9,6 +9,7 @@ from django.db.models import Count, Q, Sum
 from datetime import datetime, date, timedelta
 from apps.bets.utils import generate_reference
 from typing import Optional, Tuple, Literal,Callable, TYPE_CHECKING
+from apps.payments.service import platform_deposit
 from apps.users.models import PromoCodes, PromoCodesLogs, Users
 from apps.users.utils import send_player_balance_update_notification
 
@@ -216,16 +217,35 @@ def redeem_code(
             bonus_amount = promo_obj.gold_bonus
             amount = promo_obj.instant_bonus_amount
             user.bonus_balance += promo_obj.gold_bonus
-            user.balance += promo_obj.instant_bonus_amount
+            platform_deposit(
+                user,
+                is_bonus=True,
+                amount=promo_obj.instant_bonus_amount,
+                bonus_type="SC",
+                accreditable=None,
+            )
         elif promo_obj.bonus_distribution_method == method.mixture:
             bonus_amount = promo_obj.gold_bonus
             amount = Decimal(promo_obj.bonus_percentage or 0) * amount_dep / 100
-            user.balance += amount
+            platform_deposit(
+                user,
+                is_bonus=True,
+                amount=amount,
+                bonus_type="SC",
+                accreditable=None,
+            )
             user.bonus_balance += promo_obj.gold_bonus
         elif promo_obj.bonus_distribution_method == method.deposit:
             amount = Decimal(promo_obj.bonus_percentage or 0) * amount_dep / 100
             bonus_amount = amount * settings.BONUS_MULTIPLIER
-            user.balance += amount
+            platform_deposit(
+                user,
+                is_bonus=True,
+                amount=amount,
+                bonus_type="SC",
+                accreditable=None,
+            )
+
             user.bonus_balance += promo_obj.gold_bonus
         user.save()
 
@@ -238,7 +258,7 @@ def redeem_code(
             bonus_amount=bonus_amount,
             previous_balance=pre_balance,
             bonus_type=f"{bonus_type}_bonus",
-            description=f"{bonus_type} bonus for {amount}SC and {bonus_amount}GC",
+            description=f"{bonus_type} bonus for {amount}SC x20 and {bonus_amount}GC",
             reference=generate_reference(user),
         )
 
@@ -332,7 +352,13 @@ def materialize(
     else:
         return
 
-    user.balance += bonus
+    platform_deposit(
+        user,
+        is_bonus=True,
+        amount=bonus,
+        bonus_type="SC",
+        accreditable=None,
+    )
     user.bonus_balance += g_bns
     user.save()
 
@@ -343,9 +369,9 @@ def materialize(
         bonus_amount=g_bns,
         journal_entry="bonus",
         new_balance=user.balance,
-        previous_balance=user.balance - bonus,
+        previous_balance=user.balance,
         bonus_type=pm.bonus.bonus_type,  # type: ignore
-        description="Bonus for user",
+        description=f"Bonus for {bonus}SC x20 and {g_bns}GC",
         reference=generate_reference(user)
     )
 
