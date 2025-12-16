@@ -55,6 +55,29 @@ class PlatformConfigHandler:
 
         return converter(raw_value)
 
+    def _validate_type(self, name: str, value: Any) -> None:
+        """Validate that value matches the type of the class default, if one exists."""
+        cls = object.__getattribute__(self, "__class__")
+
+        # Check if there's a default defined on the class
+        if not hasattr(cls, name):
+            raise AttributeError(f"Config '{name}' not found")
+
+        default_value = getattr(cls, name)
+
+        # Skip validation for internal attributes
+        if callable(default_value):
+            return
+
+        expected_type = type(default_value)
+        actual_type = type(value)
+
+        if actual_type is not expected_type:
+            raise TypeError(
+                f"Config '{name}' expects {expected_type.__name__}, "
+                f"got {actual_type.__name__}"
+            )
+
     def __getattribute__(self, name: str) -> Any:
         # Internal/private attributes bypass config lookup
         if name.startswith("_"):
@@ -79,6 +102,10 @@ class PlatformConfigHandler:
         if name.startswith("_"):
             object.__setattr__(self, name, value)
             return
+
+        # Validate type matches the default (if one exists)
+        validate = object.__getattribute__(self, "_validate_type")
+        validate(name, value)
 
         serialize = object.__getattribute__(self, "_serialize_data")
         data = serialize(value)
