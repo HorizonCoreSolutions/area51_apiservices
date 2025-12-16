@@ -690,8 +690,8 @@ class SuperAdmin(Users):
 
 
 class Configs(AbstractBaseModel):
-    name = models.CharField(_("config name"), max_length=250, choices=CONFIGS_CHOICES, unique=True)
-    value = models.IntegerField(_("config value"), default=DEFAULT_TRANSACTION_DELAY)
+    name = models.CharField(_("config name"), max_length=250, unique=True)
+    value = models.CharField(_("config value"), max_length=250, null=False, blank=False)
 
 
 
