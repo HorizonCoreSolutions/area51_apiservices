@@ -1,5 +1,5 @@
 from decimal import Decimal
-from typing import Any, ClassVar
+from typing import Any, ClassVar, Dict
 
 from apps.users.models import Configs
 from apps.core.concurrency import redis_client
@@ -12,14 +12,14 @@ class PlatformConfigHandler:
 
     INFLUENCER_MINIMUM_AMOUNT: Decimal = Decimal("0.00")
 
-    _SERIALIZATION_TABLE: ClassVar[dict[type, str]] = {
+    _SERIALIZATION_TABLE: ClassVar[Dict[type, str]] = {
         int: "int ",
         str: "str ",
         bool: "bool",
         Decimal: "dcml",
     }
 
-    _DESERIALIZATION_TABLE: ClassVar[dict[str, type]] = {
+    _DESERIALIZATION_TABLE: ClassVar[Dict[str, type]] = {
         "int ": int,
         "str ": str,
         "bool": bool,
