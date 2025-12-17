@@ -20,7 +20,7 @@ from typing import Callable, Dict, Optional, Tuple
 from apps.core.custom_types import BasicReturn
 from apps.core.file_logger import SimpleLogger
 from apps.acuitytec.acuitytec import AcuityTecAPI
-from apps.payments.models import CoinFlowTransaction
+from apps.payments.models import Bundle, CoinFlowTransaction
 from apps.acuitytec.models import DocumentTypeChoise
 from apps.users.models import (
     Users,
@@ -663,6 +663,7 @@ class CoinFlowClient:
         self,
         user: Users,
         amount_cents: int,
+        bundle: Optional[Bundle] = None,
         item_id: Optional[str] = None,
         is_preset_amount: bool = False,
         item_name: str = 'Sweeptokens',
@@ -734,6 +735,9 @@ class CoinFlowClient:
                 if not promo_log:
                     return BasicReturn(success=False, error=f"This message should not be shown, please contact us.")
                 logger.debug(f"Promo code: {promo_code} has been used for user {user.username}")
+
+            if bundle:
+                amount_cents = int(bundle.price * 100)
 
             # Construct checkout payload
             payload = {
@@ -808,7 +812,7 @@ class CoinFlowClient:
                 transaction_type=CoinFlowTransaction.TransactionType.deposit,
                 account_type=CoinFlowTransaction.AccountType.card,
                 status=CoinFlowTransaction.StatusType.requested,
-
+                bundle=bundle
             )
 
             logger.info(f"Checkout link created successfully for user {user.id}-{user.username}")

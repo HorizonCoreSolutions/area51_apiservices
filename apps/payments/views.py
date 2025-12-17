@@ -1528,7 +1528,14 @@ class GetCoinFlowLink(APIView):
         # if data.error:
         #     return Response(data={'message' : data.error}, status=status.HTTP_400_BAD_REQUEST)
         
+        bundle = request.data.get("bundle")
+        if bundle is not None:
+            bundle = Bundle.objects.filter(id=str(bundle)).first()
+            if not bundle:
+                return Response(data={'message' : 'Bundle not found.'}, status=status.HTTP_400_BAD_REQUEST)
+
         cents = request.data.get('cents', None)
+        cents = bundle.price * 100 if bundle else cents
         
         if cents is None:
             return Response(data={'message': 'You must sent a cent amount.'}, status=status.HTTP_400_BAD_REQUEST)
@@ -1552,10 +1559,12 @@ class GetCoinFlowLink(APIView):
         promo_code = request.data.get("promo_code")
         promo_code = str(promo_code) if promo_code else None
 
+
         link = cf.create_checkout_link(
             user=user,
             amount_cents=cents,
-            promo_code=promo_code
+            promo_code=promo_code,
+            bundle=bundle
         )
 
         if link.error:
