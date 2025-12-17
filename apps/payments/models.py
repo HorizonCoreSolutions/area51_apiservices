@@ -223,6 +223,15 @@ class CoinFlowTransaction(AbstractBaseModel):
         default=None,
         related_name="coinflow_transaction"
     )
+
+    bundle = models.ForeignKey(
+        'bets.Bundle',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        default=None,
+        related_name="coinflow_transactions"
+    )
     confimation_needed = models.BooleanField(default=False)
     
     processor_name = models.CharField(max_length=20,null=True,blank=True)
