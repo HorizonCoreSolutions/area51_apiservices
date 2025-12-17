@@ -225,7 +225,7 @@ class CoinFlowTransaction(AbstractBaseModel):
     )
 
     bundle = models.ForeignKey(
-        'bets.Bundle',
+        'payments.Bundle',
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
