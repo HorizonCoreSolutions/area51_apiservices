@@ -141,3 +141,5 @@ class WageringRequirement(AbstractBaseModel):
     result = models.DecimalField(max_digits=10, decimal_places=2, null=True, default=None)
     active = models.BooleanField(default=True, db_index=True)
     betable = models.BooleanField(db_index=True)
+
+    description = models.CharField(max_length=500, null=True, default=None)

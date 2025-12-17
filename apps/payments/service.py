@@ -3,7 +3,12 @@ from datetime import timedelta
 from apps.users.models import Users
 from typing import Literal, Optional, Tuple
 from apps.bets.models import WageringRequirement
+from apps.payments.models import BonusAbstractModel
 from apps.payments.repository import amount_deposited
+
+####################
+# Deposit services #
+####################
 
 def can_deposit_limits(
     user: Users,
@@ -48,9 +53,10 @@ def platform_deposit(
     accreditable: Optional[Users],
     bonus_type: Literal["SC", "MC"],
     custom_multiplier: Optional[Decimal] = None,
+    description: Optional[str] = None,
 ):
     """
-        If is_bonos, custom_multiplier is ignored
+        If is_bonos, custom_multiplier is ignored and default to x20
     """
     multiplier = custom_multiplier or Decimal(1)
     if bonus_type == "SC":
@@ -70,5 +76,58 @@ def platform_deposit(
         amount=amount,
         balance=amount,
         betable=betable,
-        accreditable=accreditable
+        accreditable=accreditable,
+        description=description
     )
+
+##################
+# Bonus services #
+##################
+
+def apply_bonus(
+    user: Users,
+    bonus: BonusAbstractModel,
+    accreditable: Optional[Users] = None,
+    description: Optional[str] = None,
+):
+    bsc = bonus.balance
+    # SC x1
+    if bsc > 0:
+        platform_deposit(
+            user=user,
+            amount=bsc,
+            is_bonus=False,
+            bonus_type="SC",
+            accreditable=accreditable,
+            custom_multiplier=Decimal(1),
+            description=description,
+        )
+    # GC
+
+    bgc = bonus.bonus
+    user.bonus_balance += bgc
+    user.save(update_fields=["bonus_balance"])
+
+    # MC = SC x20
+    mnc = bonus.miner
+    if mnc > 0:
+        platform_deposit(
+            user=user,
+            amount=mnc,
+            is_bonus=True,
+            bonus_type="MC",
+            accreditable=accreditable,
+            description=description,
+        )
+    
+    # SC x multiplier
+    if bonus.playable > 0:
+        platform_deposit(
+            user=user,
+            amount=bonus.playable,
+            is_bonus=False,
+            bonus_type="SC",
+            accreditable=accreditable,
+            custom_multiplier=Decimal(bonus.multiplier),
+            description=description,
+        )

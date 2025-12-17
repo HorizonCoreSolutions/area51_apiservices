@@ -233,20 +233,26 @@ class CoinFlowTransaction(AbstractBaseModel):
     error_description = models.CharField(max_length=500,null=True,blank=True)
 
 
-class Bundle(AbstractBaseModel):
-    code = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
-
-    admin = models.ForeignKey(Users, on_delete=models.CASCADE, blank=False, null=True)
-
-    name = models.CharField(max_length=255)
-    enabled = models.BooleanField(default=True)
-
-    price = models.DecimalField(max_digits=10, decimal_places=2)
-
-    balance = models.DecimalField(max_digits=10, decimal_places=2)
+class BonusAbstractModel(AbstractBaseModel):
+    balance = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
     playable = models.DecimalField(max_digits=10, decimal_places=2)
 
     multiplier = models.IntegerField()
 
     bonus = models.DecimalField(max_digits=10, decimal_places=2)
     miner = models.DecimalField(max_digits=10, decimal_places=2)
+
+    class Meta:
+        abstract = True
+
+
+class Bundle(BonusAbstractModel):
+    code = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+
+    admin = models.ForeignKey(Users, on_delete=models.CASCADE, blank=False, null=True)
+
+    name = models.CharField(max_length=255)
+    enabled = models.BooleanField(default=True, db_index=True)
+
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+
