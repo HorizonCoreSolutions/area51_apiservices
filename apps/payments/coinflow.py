@@ -13,6 +13,7 @@ from apps.core.utils import time as time_utils
 from datetime import datetime, timedelta, time
 from apps.payments import repository as payments_repository
 from apps.core.utils.encryption import decrypt_combined, encrypt_combined
+from apps.payments.service import apply_bonus, platform_deposit
 from apps.users import promo_handler
 from apps.users.utils import redis_client
 from typing import Callable, Dict, Optional, Tuple
@@ -1232,7 +1233,16 @@ class CoinFlowClient:
         cid = l_data.get('customerId').split("ʬ")[-1]
         if cid is None:
             return BasicReturn(success=False, error='User id was not found on the webhook')
-        user = self._parse_user_id(cid)
+
+        if not cid.startswith(f"{settings.ENV_POSTFIX}-"):
+            user = None
+
+        try:
+            user_pk = int(cid[len(settings.ENV_POSTFIX) + 1:])
+            user = Users.objects.select_for_update().get(id=user_pk)
+        except (ValueError, IndexError, Users.DoesNotExist):
+            user = None
+
         if user is None:
             return BasicReturn(success=False, error='User does not exist. Or does not belong to this game instance.')
 
@@ -1251,20 +1261,35 @@ class CoinFlowClient:
             if not transaction:
                 return BasicReturn(success=False, error='Deduplication this transaction was already claimed')
 
-            old_balance = user.balance
-            new_balance = old_balance + Decimal(money) / 100
+            if not transaction.bundle:
 
-            bonus = (Decimal(money) * settings.BONUS_MULTIPLIER) / 100
-            user.bonus_balance += bonus
+                bonus = (Decimal(money) * settings.BONUS_MULTIPLIER) / 100
+                user.bonus_balance += bonus
 
-            transaction.external_id = external_id
-            transaction.status=CoinFlowTransaction.StatusType.approved
-            transaction.amount=Decimal(money) / 100
-            transaction.subtotal=Decimal(subtotal) / 100
-            transaction.pre_balance=old_balance
-            transaction.post_balance = new_balance
-            transaction.is_deleted = False
-            user.balance = new_balance
+                transaction.external_id = external_id
+                transaction.pre_balance = user.balance
+                transaction.post_balance = user.balance
+                transaction.amount = Decimal(money) / 100
+                transaction.subtotal = Decimal(subtotal) / 100
+                transaction.status = CoinFlowTransaction.StatusType.approved
+                transaction.is_deleted = False
+
+                platform_deposit(
+                    user=user,
+                    is_bonus=False,
+                    bonus_type="SC",
+                    accreditable=None,
+                    amount=transaction.amount,
+                    custom_multiplier=Decimal(1),
+                    description=f"Deposit coinflow of {transaction.amount}SC x1",
+                )
+            else:
+                apply_bonus(
+                    user=user,
+                    bonus=transaction.bundle,
+                    accreditable=None,
+                    description=f"Deposit coinflow of bundle {transaction.bundle.id} of {transaction.bundle.price}SC",
+                )
 
             user.save()
 
@@ -1276,8 +1301,8 @@ class CoinFlowClient:
                 )
 
             transaction.save()
-            logger.info(f'Successfully processed payment for user {user.id}-{user.username}, amount: ${transaction.amount}, new balance: ${new_balance}')
-            return BasicReturn(success=True, message=f'Payment processed successfully. New balance: ${new_balance}')
+            logger.info(f'Successfully processed payment for user {user.id}-{user.username}, amount: ${transaction.amount}, new balance: ${user.balance}')
+            return BasicReturn(success=True, message=f'Payment processed successfully. New balance: ${user.balance}')
 
         elif eventType in {"Card Payment Declined", "Card Payment Suspected Fraud", "ACH Failed", "ACH Returned", "PIX Failed"}:
             # Failed payments - mark transaction as failed
