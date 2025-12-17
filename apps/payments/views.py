@@ -1530,7 +1530,7 @@ class GetCoinFlowLink(APIView):
         
         bundle = request.data.get("bundle")
         if bundle is not None:
-            bundle = Bundle.objects.filter(id=str(bundle)).first()
+            bundle = Bundle.objects.filter(code=str(bundle)).first()
             if not bundle:
                 return Response(data={'message' : 'Bundle not found.'}, status=status.HTTP_400_BAD_REQUEST)
 
