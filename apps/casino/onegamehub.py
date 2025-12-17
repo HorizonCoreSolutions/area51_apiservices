@@ -273,7 +273,6 @@ class OneGameHub:
             bonus_bet_amount = None
 
             if is_real_play:
-                balance = Decimal(user.balance or 0)
                 game_data = wagering_service.platform_bet(
                     user=user,
                     amount=amount
@@ -311,7 +310,7 @@ class OneGameHub:
             transaction_obj.game_status = GSoftTransactions.GameStatus.pending
             transaction_obj.request_type = GSoftTransactions.RequestType.wager
             transaction_obj.time = timezone.now()
-            transaction_obj.wr_data = play_data
+            transaction_obj.wr_data = play_data or {}
             transaction_obj.save()
 
             return self.get_formated_balance(
@@ -399,12 +398,18 @@ class OneGameHub:
             if payout < 0:
                 logger.debug(f"Payout {payout} does not make sence.")
                 return self.parse_to_message("ERR001"), status.HTTP_400_BAD_REQUEST
+            
+            transfer_balance = Decimal(0)
+            if is_real_play:
+                transfer_balance = wagering_service.platform_pay(
+                    user=user,
+                    won=payout,
+                    data=(session.first().wr_data or {})
+                )
 
             transfer_bonus = Decimal(0) if is_real_play else payout
-            transfer_balance = payout if is_real_play else Decimal(0)
 
             user.bonus_balance = transfer_bonus + Decimal(user.bonus_balance or 0)
-            user.balance = transfer_balance + Decimal(user.balance or 0)
             user.save()
 
             transaction_obj = GSoftTransactions()

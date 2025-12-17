@@ -202,7 +202,19 @@ def platform_bet(user: Users, amount: Decimal) -> Optional[Tuple[Dict, Decimal]]
     return data
 
 
-def platform_pay(user: Users, won: Decimal, data: Dict) -> bool:
+def platform_pay(user: Users, won: Decimal, data: Dict) -> Optional[Decimal]:
+    """
+    Function to pay the winnings to the user
+    This already pays the user
+
+    Args:
+        user (Users): User to be paid
+        won (Decimal): Amount to be paid
+        data (Dict): Data of the wagering requirements
+
+    Returns:
+        Optional[Decimal]: This is only for the record keeping
+    """
     objects = WageringRequirement.objects.filter(id__in=data.keys())
     total_to_pay = Decimal('0.00')
     paid = Decimal('0.00')
@@ -214,4 +226,4 @@ def platform_pay(user: Users, won: Decimal, data: Dict) -> bool:
     adjustment = won - paid
     user.balance += total_to_pay + adjustment
     user.save()
-    return True
+    return total_to_pay + adjustment
