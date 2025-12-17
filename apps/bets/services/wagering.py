@@ -92,7 +92,8 @@ def __single_wr_bet(
         return amount, give, give
     c_balance = Decimal(wagrec.balance or 0)
     limit = Decimal(wagrec.limit or 0)
-    rest = min(c_balance, amount, limit - c_balance)
+    c_played = Decimal(wagrec.played or 0)
+    rest = min(c_balance, amount, limit - c_played)
     wagrec.balance = c_balance - rest
     wagrec.played += rest
 
