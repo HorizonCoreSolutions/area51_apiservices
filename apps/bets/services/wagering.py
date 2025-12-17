@@ -163,7 +163,7 @@ def clear_wr(user: Users, amount: Decimal, wagrecs: List[WageringRequirement]) -
     return None
 
 
-def bet_wr(user: Users, amount: Decimal, wagrecs: List[WageringRequirement]) -> Optional[Dict]:
+def bet_wr(user: Users, amount: Decimal, wagrecs: List[WageringRequirement]) -> Optional[Tuple[Dict, Decimal]]:
     total = sum((Decimal(wagrec.balance) for wagrec in wagrecs), Decimal('0.00')) + Decimal(user.balance or 0)
     if total < amount:
         return None
@@ -183,14 +183,14 @@ def bet_wr(user: Users, amount: Decimal, wagrecs: List[WageringRequirement]) -> 
             break
     user.balance -= amount
     user.save()
-    return wr_ids
+    return wr_ids, amount
 
 
 def platfom_playable_balance(user: Users) -> Decimal:
     return get_wagering_balance(user) + user.balance
 
 
-def platform_bet(user: Users, amount: Decimal) -> Optional[Dict]:
+def platform_bet(user: Users, amount: Decimal) -> Optional[Tuple[Dict, Decimal]]:
     wagrecs = get_wagering_requirements(user)
     clerables = [wagrec for wagrec in wagrecs if not wagrec.betable]
     bettables = [wagrec for wagrec in wagrecs if wagrec.betable]

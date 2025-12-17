@@ -269,29 +269,36 @@ class OneGameHub:
 
             # CHECK: win_amount is higher or equals to 0
             # 3.2: 7.
+            adjust_amount = None
+            bonus_bet_amount = None
+
             if is_real_play:
                 balance = Decimal(user.balance or 0)
+                game_data = wagering_service.platform_bet(
+                    user=user,
+                    amount=amount
+                )
+                if game_data is None:
+                    response_data = self.parse_to_message("ERR003")
+                    return response_data, status.HTTP_200_OK
+                play_data, adjust_amount = game_data
             else:
                 balance = Decimal(user.bonus_balance or 0)
+                if balance < amount:
+                    response_data = self.parse_to_message("ERR003")
+                    return response_data, status.HTTP_200_OK
+                transfer_balance = -amount
+                bonus_bet_amount = abs(transfer_balance)
+                user.bonus_balance = transfer_balance + balance
 
             # Check if user  has enought money to bet
-            if balance < amount:
-                response_data = self.parse_to_message("ERR003")
-                return response_data, status.HTTP_200_OK
-
-            transfer_balance = - abs(amount)
             withdraw = abs(amount)
 
             transaction_obj = GSoftTransactions()
-
-            if is_real_play:
-                user.balance = transfer_balance + balance
-                transaction_obj.amount = abs(transfer_balance)
-            else:
-                transaction_obj.bonus_bet_amount = abs(transfer_balance)
-                user.bonus_balance = transfer_balance + balance
             user.save()
 
+            transaction_obj.amount = adjust_amount
+            transaction_obj.bonus_bet_amount = bonus_bet_amount
             transaction_obj.callerId = settings.ONE_GAME_HUB_ID
             transaction_obj.user = user
             transaction_obj.withdraw = withdraw if withdraw != 0 else None
@@ -304,6 +311,7 @@ class OneGameHub:
             transaction_obj.game_status = GSoftTransactions.GameStatus.pending
             transaction_obj.request_type = GSoftTransactions.RequestType.wager
             transaction_obj.time = timezone.now()
+            transaction_obj.wr_data = play_data
             transaction_obj.save()
 
             return self.get_formated_balance(

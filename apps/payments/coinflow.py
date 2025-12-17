@@ -1261,7 +1261,7 @@ class CoinFlowClient:
             if not transaction:
                 return BasicReturn(success=False, error='Deduplication this transaction was already claimed')
 
-            if not transaction.bundle:
+            if not transaction.bundle or transaction.bundle.is_deleted:
 
                 bonus = (Decimal(money) * settings.BONUS_MULTIPLIER) / 100
                 user.bonus_balance += bonus
