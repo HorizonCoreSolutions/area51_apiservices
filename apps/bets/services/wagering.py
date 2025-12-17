@@ -188,7 +188,7 @@ def bet_wr(user: Users, amount: Decimal, wagrecs: List[WageringRequirement]) -> 
     return wr_ids, amount
 
 
-def platfom_playable_balance(user: Users) -> Decimal:
+def platform_playable_balance(user: Users) -> Decimal:
     return get_wagering_balance(user) + user.balance
 
 

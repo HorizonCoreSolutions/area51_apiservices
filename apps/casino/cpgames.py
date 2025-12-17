@@ -11,7 +11,7 @@ from apps.users.models import Users
 from apps.casino.models import GSoftTransactions
 from django.db import transaction as db_transaction
 from typing import Optional, Dict, List, Union, Tuple
-from apps.bets.services.wagering import platform_playable_balance
+from apps.bets.services import wagering as wagering_service
 
 
 @dataclass
@@ -198,7 +198,7 @@ class CPgames():
                                        Union[str, Dict[str, Union[str, int]]]]:
         balance = 0
         if app.is_real_play:
-            balance = platform_playable_balance(user)
+            balance = wagering_service.platform_playable_balance(user)
         else:
             balance = user.bonus_balance or 0
         return {
@@ -339,7 +339,7 @@ class CPgames():
 
         balance = 0
         if app.is_real_play:
-            balance = platform_playable_balance(user)
+            balance = wagering_service.platform_playable_balance(user)
         else:
             balance = user.bonus_balance or 0
         return {

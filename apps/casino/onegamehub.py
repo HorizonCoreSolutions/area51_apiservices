@@ -134,7 +134,7 @@ class OneGameHub:
                              user: Users,
                              is_real_play: bool,
                              ) -> Dict[str, Union[int, Decimal, str]]:
-        balance = wagering_service.platfom_playable_balance(user) if is_real_play else user.bonus_balance
+        balance = wagering_service.platform_playable_balance(user) if is_real_play else user.bonus_balance
         cur = REAL_COIN if is_real_play else FAKE_COIN
         return {"status": 200,
                 "balance": int(Decimal(balance or 0)*100),
