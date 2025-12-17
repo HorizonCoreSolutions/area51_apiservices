@@ -2,6 +2,7 @@ import math
 from typing import Dict, List, Optional, Tuple
 from decimal import Decimal
 from django.db.models import Sum
+from apps.bets.utils import deserialize_wr_data, serialize_wr_data
 from apps.users.models import Users
 from apps.bets.models import WageringRequirement
 
@@ -199,7 +200,9 @@ def platform_bet(user: Users, amount: Decimal) -> Optional[Tuple[Dict, Decimal]]
         return None
     if clerables:
         clear_wr(user, amount, clerables)
-    return data
+    a, b = data
+    a = serialize_wr_data(a)
+    return a, b
 
 
 def platform_pay(user: Users, won: Decimal, data: Dict) -> Optional[Decimal]:
@@ -215,6 +218,7 @@ def platform_pay(user: Users, won: Decimal, data: Dict) -> Optional[Decimal]:
     Returns:
         Optional[Decimal]: This is only for the record keeping
     """
+    data = deserialize_wr_data(data)
     objects = WageringRequirement.objects.filter(id__in=data.keys())
     total_to_pay = Decimal('0.00')
     paid = Decimal('0.00')
