@@ -30,19 +30,19 @@ def can_deposit_limits(
 
     if amount > user.weekly_dl or amount > user.daily_dl:
         if mx_depo < 5:
-            return False, "Amount is above your limits. Please contact support."
-        return False, f"Amount is above your limits. You can deposit up to {mx_depo} SC"
+            return False, "You have exceeded your limits. Please contact support."
+        return False, f"You have exceeded your limits. You can deposit up to {mx_depo} SC"
 
     # weekly
     if weekly + amount > user.weekly_dl:
         if mx_depo < 5:
-            return False, f"Weekly limit reached. Try again on {next_date}."
+            return False, f"You have exceeded your weekly limits. Try again on {next_date}."
         return False, f"You can deposit up to {mx_depo} SC."
 
     # daily
     if daily + amount > user.daily_dl:
         if mx_depo < 5:
-            return False, "Daily limit reached. Try again tomorrow."
+            return False, "You have exceeded your daily limits. Try again tomorrow."
         return False, f"You can deposit up to {mx_depo} SC."
 
     return True, "OK"
