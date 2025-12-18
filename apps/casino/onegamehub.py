@@ -271,6 +271,7 @@ class OneGameHub:
             # 3.2: 7.
             adjust_amount = None
             bonus_bet_amount = None
+            play_data = None
 
             if is_real_play:
                 game_data = wagering_service.platform_bet(
