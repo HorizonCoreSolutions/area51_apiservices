@@ -1265,18 +1265,19 @@ class CoinFlowClient:
             if not transaction:
                 return BasicReturn(success=False, error='Deduplication this transaction was already claimed')
 
+            transaction.status = CoinFlowTransaction.StatusType.approved
+            transaction.is_deleted = False
+            transaction.pre_balance = user.balance
+            transaction.post_balance = user.balance
+            transaction.external_id = external_id
+
+            transaction.amount = Decimal(money) / 100
+            transaction.subtotal = Decimal(subtotal) / 100
+
             if not transaction.bundle or transaction.bundle.is_deleted:
 
                 bonus = (Decimal(money) * settings.BONUS_MULTIPLIER) / 100
                 user.bonus_balance += bonus
-
-                transaction.external_id = external_id
-                transaction.pre_balance = user.balance
-                transaction.post_balance = user.balance
-                transaction.amount = Decimal(money) / 100
-                transaction.subtotal = Decimal(subtotal) / 100
-                transaction.status = CoinFlowTransaction.StatusType.approved
-                transaction.is_deleted = False
 
                 platform_deposit(
                     user=user,
