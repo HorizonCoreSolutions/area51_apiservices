@@ -29,6 +29,8 @@ def can_deposit_limits(
     mx_depo = min(mx_week, mx_day)
 
     if amount > user.weekly_dl or amount > user.daily_dl:
+        if mx_depo < 5:
+            return False, "Amount is above your limits. Please contact support."
         return False, f"Amount is above your limits. You can deposit up to {mx_depo} SC"
 
     # weekly
