@@ -193,6 +193,16 @@ def platform_playable_balance(user: Users) -> Decimal:
 
 
 def platform_bet(user: Users, amount: Decimal) -> Optional[Tuple[Dict, Decimal]]:
+    """
+    Function to bet on the platform
+
+    Args:
+        user (Users): User to be bet on
+        amount (Decimal): Amount betted from the users.balance (only for the record keeping)
+
+    Returns:
+        Optional[Tuple[Dict, Decimal]]: Data of the wagering requirements and the amount betted from the users.balance (only for the record keeping)
+    """
     wagrecs = get_wagering_requirements(user)
     clerables = [wagrec for wagrec in wagrecs if not wagrec.betable]
     bettables = [wagrec for wagrec in wagrecs if wagrec.betable]

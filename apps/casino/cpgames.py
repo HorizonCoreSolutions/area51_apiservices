@@ -392,18 +392,27 @@ class CPgames():
             if win_amount < 0:
                 return self.parse_to_message(1110), status.HTTP_200_OK
 
+
             balance = None
+            played_data = {}
+            adjust_bet_amount = Decimal(0)
             if app.is_real_play:
                 balance = user.balance or 0
+                bet_result = wagering_service.platform_bet(
+                    user=user,
+                    amount=amount
+                )
+                if bet_result is None:
+                    return self.parse_to_message(1110), status.HTTP_200_OK
+                played_data, adjust_bet_amount = bet_result
             else:
                 balance = user.bonus_balance or 0
+                balance = Decimal(balance)  # type: ignore
 
-            balance = Decimal(balance)  # type: ignore
-
-            # Check if user  has enought money to bet
-            if balance < amount:
-                response_data = self.parse_to_message(1117)
-                return response_data, status.HTTP_200_OK
+                # Check if user  has enought money to bet
+                if balance < amount:
+                    response_data = self.parse_to_message(1117)
+                    return response_data, status.HTTP_200_OK
 
             withdraw = 0
             deposit = 0
@@ -421,7 +430,13 @@ class CPgames():
             transfer_balance = transfer_amount
 
             if app.is_real_play:
-                user.balance = transfer_balance + Decimal(user.balance)
+                payout = transfer_balance + amount
+                if payout > 0:
+                    adjust_pay_amount = wagering_service.platform_pay(
+                        user=user,
+                        won=payout,
+                        data=played_data
+                    )
                 transaction_obj.amount = abs(transfer_balance)
             else:
                 user.bonus_balance = transfer_balance + \
@@ -441,6 +456,7 @@ class CPgames():
             transaction_obj.action_type = action_type
             transaction_obj.game_status = GSoftTransactions.GameStatus.completed
             transaction_obj.time = timezone.now()
+            transaction_obj.wr_data = played_data
             transaction_obj.save()
 
             return (self.get_formated_balance(user=user, app=app),
@@ -571,15 +587,23 @@ class CPgames():
 
             # CHECK: win_amount is higher or equals to 0
             # 3.2: 7.
+            played_data = {}
             if app.is_real_play:
-                balance = Decimal(user.balance or 0)
+                balance = user.balance or 0
+                bet_result = wagering_service.platform_bet(
+                    user=user,
+                    amount=amount
+                )
+                if bet_result is None:
+                    return self.parse_to_message(1110), status.HTTP_200_OK
+                played_data, adjust_bet_amount = bet_result
             else:
                 balance = Decimal(user.bonus_balance or 0)
 
-            # Check if user  has enought money to bet
-            if balance < amount:
-                response_data = self.parse_to_message(1117)
-                return response_data, status.HTTP_200_OK
+                # Check if user  has enought money to bet
+                if balance < amount:
+                    response_data = self.parse_to_message(1117)
+                    return response_data, status.HTTP_200_OK
 
             transfer_balance = - abs(amount)
             withdraw = abs(amount)
@@ -587,10 +611,9 @@ class CPgames():
             transaction_obj = GSoftTransactions()
 
             if app.is_real_play:
-                user.balance = transfer_balance + balance
-                transaction_obj.amount = abs(transfer_balance)
+                transaction_obj.amount = withdraw
             else:
-                transaction_obj.bonus_bet_amount = abs(transfer_balance)
+                transaction_obj.bonus_bet_amount = withdraw
                 user.bonus_balance = transfer_balance + balance
             user.save()
 
@@ -605,6 +628,7 @@ class CPgames():
             transaction_obj.action_type = GSoftTransactions.ActionType.bet
             transaction_obj.time = timezone.now()
             transaction_obj.game_status = GSoftTransactions.GameStatus.pending
+            transaction_obj.wr_data = played_data
             transaction_obj.save()
 
             return self.get_formated_balance(user=user, app=app), status.HTTP_200_OK
@@ -773,11 +797,17 @@ class CPgames():
             all_games.update(
                 game_status=GSoftTransactions.GameStatus.completed)
             
+            adjust_pay_amount = Decimal(0)
+            if app.is_real_play:
+                adjust_pay_amount = wagering_service.platform_pay(
+                    user=user,
+                    won=payout,
+                    data=last_game.wr_data
+                )
+            
             transfer_bonus   = Decimal(0) if app.is_real_play else payout
-            transfer_balance = payout if app.is_real_play else Decimal(0)
 
             user.bonus_balance = transfer_bonus + Decimal(user.bonus_balance or 0)
-            user.balance = transfer_balance + Decimal(user.balance or 0)
             user.save()
 
             transaction_obj = GSoftTransactions()
@@ -790,7 +820,7 @@ class CPgames():
             transaction_obj.round_id = round_id
             transaction_obj.request_type = GSoftTransactions.RequestType.result
             transaction_obj.action_type = GSoftTransactions.ActionType.win
-            transaction_obj.amount = abs(transfer_balance)
+            transaction_obj.amount = abs(adjust_pay_amount)
             transaction_obj.bonus_bet_amount = abs(transfer_bonus)
             transaction_obj.time = timezone.now()
             transaction_obj.game_status = GSoftTransactions.GameStatus.completed
