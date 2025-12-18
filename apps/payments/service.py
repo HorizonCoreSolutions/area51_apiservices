@@ -18,7 +18,7 @@ def can_deposit_limits(
         return False, "Minimum deposit is 5 SC."
 
     if user.weekly_dl is None or user.daily_dl is None:
-        return False, "Set your deposit limits first."
+        return False, "Please configure your responsible gaming first."
     
     daily, weekly, first = amount_deposited(user=user)
     first = first.replace(hour=0, minute=0, second=0, microsecond=0)
