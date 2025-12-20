@@ -403,7 +403,7 @@ class CPgames():
                     amount=amount
                 )
                 if bet_result is None:
-                    return self.parse_to_message(1110), status.HTTP_200_OK
+                    return self.parse_to_message(1117), status.HTTP_200_OK
                 played_data, adjust_bet_amount = bet_result
             else:
                 balance = user.bonus_balance or 0
