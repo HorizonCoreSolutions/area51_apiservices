@@ -464,10 +464,22 @@ class CPgames():
         except AttributeError as e:
             print("grep here")
             print(e)
+            tb = e.__traceback__
+            while tb is not None:
+                print(f"File: {tb.tb_frame.f_code.co_filename}")
+                print(f"Line: {tb.tb_lineno}")
+                print(f"Function: {tb.tb_frame.f_code.co_name}")
+                tb = tb.tb_next
             return self.parse_to_message(1110), status.HTTP_200_OK
         except TypeError as e:
             print("grep here")
             print(e)
+            tb = e.__traceback__
+            while tb is not None:
+                print(f"File: {tb.tb_frame.f_code.co_filename}")
+                print(f"Line: {tb.tb_lineno}")
+                print(f"Function: {tb.tb_frame.f_code.co_name}")
+                tb = tb.tb_next
             return self.parse_to_message(1110), status.HTTP_200_OK
 
     @db_transaction.atomic
