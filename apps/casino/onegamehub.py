@@ -352,6 +352,9 @@ class OneGameHub:
             ext_round_id = data.get("ext_round_id")
             transaction_id = data.get("transaction_id")
 
+            ext_round_finished = data.get("ext_round_finished") or "0"
+            ext_round_finished = ext_round_finished == "1"
+
             round_id = data.get("round_id")
             payout = Decimal(data.get("amount", 0)) / 100
 
@@ -360,6 +363,7 @@ class OneGameHub:
                 user=user,
                 round_id=round_id,
                 callerId=settings.ONE_GAME_HUB_ID,
+                game_status=GSoftTransactions.GameStatus.pending,
             ).order_by("-created")
             bet = GSoftTransactions.objects.filter(
                 user=user,
@@ -405,8 +409,10 @@ class OneGameHub:
                 transfer_balance = wagering_service.platform_pay(
                     user=user,
                     won=payout,
-                    data=(session.first().wr_data or {})
+                    data=(session.last().wr_data or {})
                 )
+            if ext_round_finished:
+                session.update(game_status=GSoftTransactions.GameStatus.completed)
 
             transfer_bonus = Decimal(0) if is_real_play else payout
 
@@ -426,7 +432,7 @@ class OneGameHub:
             transaction_obj.sessionalternativeid = ext_round_id
             transaction_obj.action_type = GSoftTransactions.ActionType.win
             transaction_obj.request_type = GSoftTransactions.RequestType.result
-            transaction_obj.game_status = GSoftTransactions.GameStatus.pending
+            transaction_obj.game_status = GSoftTransactions.GameStatus.completed if ext_round_finished else GSoftTransactions.GameStatus.pending
             transaction_obj.time = timezone.now()
             transaction_obj.save()
 
