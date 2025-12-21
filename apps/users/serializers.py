@@ -39,7 +39,7 @@ from apps.users.utils import check_otp
 import logging
 logger = logging.getLogger('django')
 
-from .models import DEFAULT_AFFILIATE_COMMISION_PERCENTAGE, DEFAULT_AFFILIATE_DURATION_IN_DAYS, Admin, CmsPromotions, DefaultAffiliateValues, OffMarketTransactions, Player, UserGames, Users, BonusPercentage , SpintheWheelDetails, CashappQr 
+from .models import DEFAULT_AFFILIATE_COMMISION_PERCENTAGE, DEFAULT_AFFILIATE_DURATION_IN_DAYS, VERIFICATION_APPROVED, Admin, CmsPromotions, DefaultAffiliateValues, OffMarketTransactions, Player, UserGames, Users, BonusPercentage , SpintheWheelDetails, CashappQr 
 
 jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
 jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
@@ -112,7 +112,7 @@ class PlayerSerializer(serializers.Serializer):
     is_max_spending_limit_set_by_admin = serializers.SerializerMethodField()
     affiliate_link = serializers.CharField(max_length=250)
     is_active = serializers.BooleanField(default=False)
-    phone_verified = serializers.IntegerField()
+    phone_verified = serializers.SerializerMethodField()
     document_verified = serializers.IntegerField()
     is_verified = serializers.SerializerMethodField()
     no_of_deposit_counts = serializers.IntegerField()
@@ -252,6 +252,12 @@ class PlayerSerializer(serializers.Serializer):
     def get_credit(obj):
         balance = obj.balance
         return balance 
+    
+    @staticmethod
+    def get_phone_verified(obj):
+        if settings.PHONE_VERIF_ENABLED:
+            return obj.phone_verified
+        return 1 if obj.document_verified == VERIFICATION_APPROVED else 0
 
     @staticmethod
     def get_user_hash(obj):
