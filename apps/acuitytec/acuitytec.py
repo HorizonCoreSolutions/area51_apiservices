@@ -272,7 +272,7 @@ class AcuityTecAPI:
             'id_value', 'gender', 'marital_status'
         ]
 
-        if customer_info['phone1'] == '' or len(customer_info['phone1']) < 4 or not settings.PHONE_VERIF_ENABLED:
+        if customer_info['phone1'] == '' or len(customer_info['phone1']) < 4:
             del customer_info['phone1']
 
         for field in optional_fields:
