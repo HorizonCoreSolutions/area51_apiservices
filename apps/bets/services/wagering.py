@@ -1,10 +1,13 @@
 import math
-from typing import Dict, List, Optional, Tuple
 from decimal import Decimal
 from django.db.models import Sum
-from apps.bets.utils import deserialize_wr_data, serialize_wr_data
 from apps.users.models import Users
+from apps.bets.utils import deserialize_wr_data, serialize_wr_data
+from typing import Dict, List, Optional, Tuple, cast
+from apps.core.file_logger import SimpleLogger
 from apps.bets.models import WageringRequirement
+
+logger = SimpleLogger(name="Wagering", log_file="logs/wagering.log").get_logger()
 
 
 def get_wagering_balance(user: Users) -> Decimal:
@@ -145,6 +148,53 @@ def __single_wr_pay(wagrec: WageringRequirement, amount: Decimal) -> Decimal:
     return give
 
 
+def __single_wr_bet_cancel(
+    wagrec: WageringRequirement,
+    taken: Decimal,
+    user: Users,
+    balance: Decimal
+) -> Decimal:
+    """
+    Args:
+        wagrec (WageringRequirement):
+        amount (Decimal): 
+        balance (Decimal):
+    Returns:
+        Decimal (new_balance):
+
+    """
+    new_balance = Decimal(0)
+    if taken <= 0:
+        return new_balance
+
+    nplayed = cast(Decimal, wagrec.played) - taken
+    if nplayed < 0:
+        nplayed = Decimal(0)
+        logger.critical(
+            f"Played out of {wagrec.id}. " # type: ignore
+            f"Played {wagrec.played} - {taken} < 0 "
+        )
+
+    if wagrec.result or wagrec.played == wagrec.limit:
+        old_result = cast(Decimal, wagrec.result or Decimal(0))
+        new_balance = balance - old_result
+        if new_balance < 0:
+            logger.warning(f"User: {user.id}-{user.username} had withdraw some balance")
+            old_result += new_balance
+            new_balance = Decimal(0)
+        wagrec.balance = old_result + taken
+        wagrec.result = None
+    else:
+        wagrec.balance += taken
+        wagrec.result = None
+
+    wagrec.active = True
+    wagrec.played = nplayed
+
+    wagrec.save()
+    return new_balance
+
+
 def get_wagering_requirements(user: Users) -> List[WageringRequirement]:
     return WageringRequirement.objects.select_for_update().filter(
         user_id=user.id,
@@ -165,7 +215,11 @@ def clear_wr(user: Users, amount: Decimal, wagrecs: List[WageringRequirement]) -
     return None
 
 
-def bet_wr(user: Users, amount: Decimal, wagrecs: List[WageringRequirement]) -> Optional[Tuple[Dict, Decimal]]:
+def bet_wr(
+    user: Users,
+    amount: Decimal,
+    wagrecs: List[WageringRequirement]
+) -> Optional[Tuple[Dict[int, Tuple[str, str]], Decimal]]:
     total = sum((Decimal(wagrec.balance) for wagrec in wagrecs), Decimal('0.00')) + Decimal(user.balance or 0)
     if total < amount:
         return None
@@ -185,14 +239,17 @@ def bet_wr(user: Users, amount: Decimal, wagrecs: List[WageringRequirement]) -> 
             break
     user.balance -= amount
     user.save()
-    return wr_ids, amount
+    return serialize_wr_data(wr_ids), amount
 
 
 def platform_playable_balance(user: Users) -> Decimal:
     return get_wagering_balance(user) + user.balance
 
 
-def platform_bet(user: Users, amount: Decimal) -> Optional[Tuple[Dict, Decimal]]:
+def platform_bet(
+    user: Users,
+    amount: Decimal
+) -> Optional[Tuple[Dict[int, Tuple[str, str]], Decimal]]:
     """
     Function to bet on the platform
 
@@ -211,9 +268,7 @@ def platform_bet(user: Users, amount: Decimal) -> Optional[Tuple[Dict, Decimal]]
         return None
     if clerables:
         clear_wr(user, amount, clerables)
-    a, b = data
-    a = serialize_wr_data(a)
-    return a, b
+    return data
 
 
 def platform_pay(user: Users, won: Decimal, data: Dict) -> Optional[Decimal]:
@@ -229,12 +284,12 @@ def platform_pay(user: Users, won: Decimal, data: Dict) -> Optional[Decimal]:
     Returns:
         Optional[Decimal]: This is only for the record keeping
     """
-    data = deserialize_wr_data(data)
+    # data = deserialize_wr_data(data)
     objects = WageringRequirement.objects.filter(id__in=data.keys())
     total_to_pay = Decimal('0.00')
     paid = Decimal('0.00')
     for wagrec in objects:
-        to_pay = Decimal(math.floor(data[wagrec.id][0] * won * 10)/10)
+        to_pay = Decimal(math.floor(Decimal(data[wagrec.id][0]) * won * 10)/10)
         paid += to_pay
         to_wallet = __single_wr_pay(wagrec, to_pay)
         total_to_pay += to_wallet
