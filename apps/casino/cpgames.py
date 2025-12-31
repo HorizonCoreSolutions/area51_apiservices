@@ -768,6 +768,7 @@ class CPgames():
             # Idempotency by transaction_id (single credit per provider order)
             if transaction_id and GSoftTransactions.objects.filter(
                 callerId=settings.CP_GAMES_ID,
+                user=user,
                 game_status=GSoftTransactions.GameStatus.completed,
                 transaction_id=transaction_id
             ).exists():
