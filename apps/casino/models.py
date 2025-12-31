@@ -114,7 +114,7 @@ class GSoftTransactions(AbstractBaseModel):
     game_status = models.CharField(blank=True, null=True, choices=GameStatus.choices, max_length=500)
     frbid = models.CharField(max_length=500, blank=True, null=True)
     time = models.DateTimeField()
-    user = models.ForeignKey(Users, on_delete=models.CASCADE, blank=False, index=True)
+    user = models.ForeignKey(Users, on_delete=models.CASCADE, blank=False, db_index=True)
     amount = models.FloatField(null=True,blank=True)
     bonus_bet_amount = models.FloatField(default=None, null=True, blank=True)
     bonus_type = models.CharField(blank=True, default=None, null=True, choices=BonusType.choices, max_length=500)
