@@ -456,12 +456,14 @@ class SignUpSerializer(serializers.ModelSerializer):
         #     raise serializers.ValidationError("Phone number already exists.")
         
         if data.get("applied_promo_code"):
-            is_valid, msg = promo_handler.verify_code(
+            is_valid, _ = promo_handler.verify_code(
                 promo_code=data.get("applied_promo_code"),
                 bypass_limit_check=True
             )
             if not is_valid:
-                raise serializers.ValidationError(msg)
+                pcode = data.pop("applied_promo_code")
+                logger.debug(f"User tried to use Invalid Promo Code {pcode}")
+                # raise serializers.ValidationError(msg)
         
         if data.get('otp'):
             checkotp = check_otp(data.get('otp'))
