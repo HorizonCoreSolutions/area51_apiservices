@@ -1,5 +1,7 @@
 from decimal import Decimal
 from datetime import timedelta
+
+from django.conf import settings
 from apps.users.models import Users
 from typing import Literal, Optional, Tuple
 from apps.bets.models import WageringRequirement
@@ -68,7 +70,7 @@ def platform_deposit(
     
     limit = amount
     if is_bonus or bonus_type == "MC":
-        limit = amount * 20
+        limit = amount * settings.REACTOR_MULTIPLIER
     else:
         limit = amount * multiplier
     
