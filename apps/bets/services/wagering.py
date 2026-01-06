@@ -219,7 +219,7 @@ def bet_wr(
     user: Users,
     amount: Decimal,
     wagrecs: List[WageringRequirement]
-) -> Optional[Tuple[Dict[int, Tuple[str, str]], Decimal]]:
+) -> Optional[Tuple[Dict[str, Tuple[str, str]], Decimal]]:
     total = sum((Decimal(wagrec.balance) for wagrec in wagrecs), Decimal('0.00')) + Decimal(user.balance or 0)
     if total < amount:
         return None
@@ -242,6 +242,14 @@ def bet_wr(
     return serialize_wr_data(wr_ids), amount
 
 
+def cancel_get_wr(
+    user: Users,
+    data: Dict[str, Tuple[str, str]]
+):
+
+    return
+
+
 def platform_playable_balance(user: Users) -> Decimal:
     return get_wagering_balance(user) + user.balance
 
@@ -249,7 +257,7 @@ def platform_playable_balance(user: Users) -> Decimal:
 def platform_bet(
     user: Users,
     amount: Decimal
-) -> Optional[Tuple[Dict[int, Tuple[str, str]], Decimal]]:
+) -> Optional[Tuple[Dict[str, Tuple[str, str]], Decimal]]:
     """
     Function to bet on the platform
 
@@ -271,7 +279,11 @@ def platform_bet(
     return data
 
 
-def platform_pay(user: Users, won: Decimal, data: Dict) -> Optional[Decimal]:
+def platform_pay(
+    user: Users,
+    won: Decimal,
+    data: Dict[str, Tuple[str, str]]
+) -> Optional[Decimal]:
     """
     Function to pay the winnings to the user
     This already pays the user
@@ -289,7 +301,7 @@ def platform_pay(user: Users, won: Decimal, data: Dict) -> Optional[Decimal]:
     total_to_pay = Decimal('0.00')
     paid = Decimal('0.00')
     for wagrec in objects:
-        to_pay = Decimal(math.floor(Decimal(data[wagrec.id][0]) * won * 10)/10)
+        to_pay = Decimal(math.floor(Decimal(data[str(wagrec.id)][0]) * won * 10)/10)
         paid += to_pay
         to_wallet = __single_wr_pay(wagrec, to_pay)
         total_to_pay += to_wallet

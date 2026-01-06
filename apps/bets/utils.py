@@ -1,6 +1,6 @@
 import datetime
 from decimal import Decimal
-from typing import Any, Dict
+from typing import Any, Dict, Tuple
 
 
 def generate_reference(user):
@@ -15,7 +15,7 @@ def validate_date(date):
     except ValueError:
         return False
 
-def serialize_wr_data(data: Dict) -> Dict:
+def serialize_wr_data(data: Dict[int, Tuple[Decimal, Decimal]]) -> Dict[str, Tuple[str, str]]:
     """
     Function to serialize the wagering requirements data
 
@@ -35,7 +35,7 @@ def serialize_wr_data(data: Dict) -> Dict:
     return {str(k): serialize_value(v) for k, v in data.items()}
 
 
-def deserialize_wr_data(data: Dict) -> Dict:
+def deserialize_wr_data(data: Dict[str, Tuple[str, str]]) -> Dict[int, Tuple[Decimal, Decimal]]:
     """
     Function to deserialize the wagering requirements data
 
