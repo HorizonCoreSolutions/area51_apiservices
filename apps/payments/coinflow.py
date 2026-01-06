@@ -1061,12 +1061,12 @@ class CoinFlowClient:
 
         if res.status_code == 503:
             logger.critical(f"{idpk} - for cents {cents} failed 3 times")
-            return BasicReturn(success=False, data={"message" : "This service is down, please try again later. If the problem persist contact support.", "status" : 400})
+            return BasicReturn(success=False, error="This service is down, please try again later. If the problem persist contact support.")
 
         if res.status_code == 409:
             user.save()
             logger.info(f"Duplication of ")
-            return BasicReturn(success=True, data={"message" : "The withdraw has already been created.", "status" : 200})
+            return BasicReturn(success=False, error="The withdraw has already been created.")
 
         if res.status_code == 400:
             try:
@@ -1082,7 +1082,7 @@ class CoinFlowClient:
                     error=log[19:]
 
             logger.warning(f"Error {error} | for user {user.id}-{user.username}: {idpk} = {serial}")
-            return BasicReturn(success=True, data={"message" : "This service is not enabled right now, please try again later.", "status" : 200})
+            return BasicReturn(success=False, data="This transaction couldn't be processed, please try again later or call support.")
 
         if res.status_code != 200:
             logger.critical("Coinflow API is not working propertly")
