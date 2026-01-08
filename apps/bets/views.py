@@ -218,7 +218,11 @@ class WageringRequirementsView(viewsets.ModelViewSet):
     ]
 
     def get_queryset(self):
-        queryset = WageringRequirement.objects.filter(user=self.request.user, active=True)
+        queryset = WageringRequirement.objects.filter(
+            user=self.request.user,
+            balance__gt=0,
+            active=True
+        )
 
         from_date = self.request.query_params.get("from_date", None)
         to_date = self.request.query_params.get("to_date", None)
