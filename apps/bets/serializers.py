@@ -7,7 +7,7 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework.fields import empty
 
-from apps.bets.models import BONUS,DEPOSIT, WITHDRAW,Transactions
+from apps.bets.models import BONUS,DEPOSIT, WITHDRAW,Transactions, WageringRequirement
 from apps.casino.models import *
 # from apps.pulls.management.commands import firestore
 
@@ -133,3 +133,9 @@ class GamePoolBetsSerializer(serializers.ModelSerializer):
     def get_total_bet_win(obj):
         total = round((Decimal(obj.bonus_bet_amount or 0) + Decimal(obj.amount or 0)), 2)
         return -total if obj.request_type == GSoftTransactions.RequestType.wager else total
+
+
+class WageringRequirementsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = WageringRequirement
+        fields = ("created", "balance", "played", "limit", "description")
