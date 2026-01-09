@@ -101,7 +101,7 @@ def remaning_cooldown(user: Users) -> dict:
     
         return {
             "withdrawalAvailable": False,
-            "time": remaining
+            "time": remaining.total_seconds()
         }
 
     return {"withdrawalAvailable": True, "time": 0}
