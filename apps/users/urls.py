@@ -15,7 +15,7 @@ from apps.users.views import (AboutCmsView, AddSpinWheelView, AdminAdsPublicDeta
                               SettingsLimitsView, SignUpOTP, SignUpView, SpintheWheelDetailsAPIView, StaffDetailView,
                               TermsConditinosView, TipView, TransactionsAPIView, UserUpdateView, ValidatePromoCode,
                               ValidateReferralUser, ValidateSignUpPromoCode, VerifyOTPView, VerifyOTPView, VerifyToken,
-                              OTPActionsView, CountriesView, NextSpinWheel)
+                              OTPActionsView, CountriesView, NextSpinWheel, ModifyGCBonus)
     
 
 app_name = "Users"
@@ -87,6 +87,7 @@ urlpatterns = [
 
     url(r'^countries/?', CountriesView.as_view(), name='countries'),
     url(r'^reactor-bonus/?', ReactorBonusAPIView.as_view(), name="reactor-bonus"),
-    url(r'^deposit-limits/?', ChageDepositLimit.as_view(), name="change-deposit-limits")
+    url(r'^deposit-limits/?', ChageDepositLimit.as_view(), name="change-deposit-limits"),
+    url(r'^modify-gc/?', ModifyGCBonus.as_view(), name="modify-gc")
 
 ]

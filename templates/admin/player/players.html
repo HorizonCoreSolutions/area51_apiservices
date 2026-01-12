@@ -537,6 +537,21 @@ Players
                                                                     </a>
                                                                 {% endif %}
                                                                 <!--  Credit tab end -->
+
+                                                                <!-- Bonus/GC tab start -->
+                                                                {% if request.user.role == 'agent' or request.user.role == 'admin' or request.user.role == 'superadmin' %}
+                                                                    <a title="Adjust Bonus (GC)" class="nav-item nav-link"
+                                                                       id="nav-bonus-{{ forloop.counter }}-tab"
+                                                                       data-toggle="tab"
+                                                                       href="#nav-bonus-{{ forloop.counter }}" role="tab"
+                                                                       aria-controls="nav-bonus-{{ forloop.counter }}"
+                                                                       aria-selected="false" style="padding: .5rem 0.5rem;">
+                                                                        <div class="noti__item mr-0 pl-2 pr-2">
+                                                                            <i class="fas fa-gift fa-lg"></i>
+                                                                        </div>
+                                                                    </a>
+                                                                {% endif %}
+                                                                <!-- Bonus/GC tab end -->
             
                                                                 <!-- Profit tab start -->
                                                                 {% if request.user.role != 'staff' %}
@@ -723,6 +738,46 @@ Players
                                                                 </div>
                                                             {% endif %}
                                                             <!-- Credit tab content end -->
+
+                                                            <!-- Bonus/GC tab content start -->
+                                                            {% if request.user.role == 'agent' or request.user.role == 'admin' or request.user.role == 'superadmin' %}
+                                                                <div class="tab-pane fade" id="nav-bonus-{{ forloop.counter }}"
+                                                                    role="tabpanel"
+                                                                    aria-labelledby="nav-bonus-{{ forloop.counter }}-tab">
+                                                                    <div class="card m-0" style="border-top: 0;border-radius: 0;">
+                                                                        <div class="card-body pl-md-3 pr-md-3 pb-2  pl-0 pr-0 ">
+                                                                            <div id="user-bonus-" class="user-bonus-wrap">
+                                                                                <div class="input-group">
+                                                                                    <div class="input-group-btn">
+                                                                                        <button class="au-btn au-btn-icon btn fa fa-minus-circle"
+                                                                                                data-id="1"
+                                                                                                onclick="bonus_adjust()"
+                                                                                                style="background-color:coral; font-size:25px;"
+                                                                                                id="bonus-decrease-{{ forloop.counter }}">
+                                                                                        </button>
+                                                                                    </div>
+                                                                                    <input id="bonus-transaction-input-{{ forloop.counter }}"
+                                                                                        name="bonus-payment" type="text"
+                                                                                        class="form-control bonus-transaction-input" aria-required="true"
+                                                                                        aria-invalid="false" placeholder="0" onkeypress="return isNumberKey(event)">
+                                                                                    <input type="hidden"
+                                                                                        id="bonus-player-id-{{ forloop.counter }}"
+                                                                                        value="{{ player.id }}">
+                                                                                    <div class="input-group-btn">
+                                                                                        <button class="au-btn au-btn-icon au-btn--green btn fa fa-plus-circle"
+                                                                                                id="bonus-increase-{{ forloop.counter }}"
+                                                                                                onclick="bonus_adjust()"
+                                                                                                style="background-color:lightblue; font-size:25px;"
+                                                                                                data-id="1">
+                                                                                        </button>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            {% endif %}
+                                                            <!-- Bonus/GC tab content end -->
             
                                                             <!-- Profit tab content start -->
                                                             {% if request.user.role != 'staff' %}
@@ -1521,6 +1576,119 @@ Players
                     });
                 } else if (result.dismiss === "cancel") {
                     // show message ?
+                }
+        })
+    };
+
+    function bonus_adjust() {
+        var row_id = event.target.id.split("-").pop();
+        var input_id = "#bonus-transaction-input-" + row_id;
+        var amount = $(input_id).val();
+        var player_id = "#bonus-player-id-" + row_id;
+        
+    
+        if(amount == '' || isNaN(amount)){
+    
+            Swal.fire({
+                title: 'Oops...',
+                text: "Please type in an amount!!",
+                icon: 'error',
+            });
+            return false;
+        }
+
+        if(amount == 0){
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: "Amount cannot be zero!!"
+            });
+            return false;
+        }
+        
+        var player_id_val = $(player_id).val();
+        var bonus_balance_id = "#player-bonus-balance-" + row_id;
+
+        var bonus_change, confirmationPopupText;
+
+        if (event.target.id.includes("increase")) {
+            bonus_change = parseFloat(amount);
+            confirmationPopupText = '<span class="swal-custom-text text-c-green">Add ' + amount + ' to Bonus Balance</span>';
+        } else {
+            bonus_change = -parseFloat(amount);
+            confirmationPopupText = '<span class="swal-custom-text text-c-red">Subtract ' + amount + ' from Bonus Balance</span>';
+        }
+
+        Swal.fire({
+            html:
+                '<div class="swal-custom-content">' + 
+                '<p class="swal-custom-icon"><i class="cp-icon">&#xe815;</i></p>' +
+                '<h3 class="swal-custom-title">{% trans "Are you sure" %} ?</h3>' +
+                confirmationPopupText + 
+                '</div>',
+            customClass: {
+                actions: 'swal-custom-actions',
+                confirmButton: 'swal-custom-btn swal-custom-confirm-btn',
+                cancelButton: 'swal-custom-btn swal-custom-cancel-btn',
+            },
+            showCancelButton: true,
+            confirmButtonText: '{% trans "Yes" %}',
+            cancelButtonText: '{% trans "No" %}'
+            }).then((result) => {
+                if (result.value) {
+                    $.ajax({
+                        url: "{% url 'users-api:modify-gc' %}",
+                        type: "POST",
+                        headers: { "X-CSRFToken": csrf() },
+                        dataType: "json",
+                        data: {
+                            bonus_change: bonus_change,
+                            user_id: player_id_val
+                        },
+                        success: function (data) {
+                            if(data.message === 'OK'){
+                                // Update the bonus balance display
+                                var currentBonus = parseFloat($(bonus_balance_id).text());
+                                var newBonus = (currentBonus + bonus_change).toFixed(2);
+                                $(bonus_balance_id).text(newBonus);
+
+                                Swal.fire({
+                                    title: 'Success!',
+                                    text: 'Bonus balance updated successfully',
+                                    icon: 'success',
+                                });
+                                
+                                $(".user-bonus-wrap .bonus-transaction-input").val('');
+                            } else {
+                                Swal.fire({
+                                    title: 'Oops...',
+                                    text: data.message || 'An error occurred',
+                                    icon: 'error',
+                                });
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            var errorMessage = 'An error occurred';
+                            
+                            if (xhr.responseJSON && xhr.responseJSON.message) {
+                                errorMessage = xhr.responseJSON.message;
+                            } else if (xhr.status === 401) {
+                                errorMessage = 'You need to be authenticated';
+                            } else if (xhr.status === 404) {
+                                errorMessage = 'User does not exist';
+                            } else if (xhr.status === 400) {
+                                errorMessage = 'Invalid request or insufficient balance';
+                            }
+                            
+                            Swal.fire({
+                                title: 'Error',
+                                text: errorMessage,
+                                icon: 'error',
+                            });
+                        }
+                    });
+                } else if (result.dismiss === "cancel") {
+                    // User cancelled
                 }
         })
     };

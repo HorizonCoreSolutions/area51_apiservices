@@ -2728,3 +2728,35 @@ class ChageDepositLimit(APIView):
         user.save(update_fields=["weekly_dl", "daily_dl"])
 
         return Response({"message": "OK"})
+
+class ModifyGCBonus(APIView):
+    http_method_names = ["post"]
+
+    @transaction.atomic
+    def post(self, request):
+        if not self.user.is_authenticated:
+            return Response({"message": "You should authenticate first"},status=401)
+
+        if not request.user.role in ("agent", "admin", "superadmin"):
+            return Response({"message": "You should authenticate first"},status=401)
+
+        balance = request.data.get("bonus_change")
+        user_id = request.data.get("user_id")
+
+        if balance is None:
+            return Response({"message", "balance is not valid"}, status=400)
+        try:
+            balance = round(Decimal(balance), 2)
+        except Exception:
+            return Response()
+        try:
+            user = Users.objects.select_for_update().get(user_id=user_id)
+        except Users.DoesNotExist:
+            return Response({"message": "User does not exist"}, status=404)
+
+        if user.bonus_balance + balance < 0:
+            return Response({"message", "User has not enought balance"}, status=400)
+        
+        user.bonus_balance += balance
+        user.save(update_fields=["bonus_balance"])
+        return Response({"message": "OK"}, status=200)
