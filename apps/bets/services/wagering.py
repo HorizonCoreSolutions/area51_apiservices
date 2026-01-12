@@ -292,18 +292,19 @@ def clear_wr(user: Users, amount: Decimal, wagrecs: List[WageringRequirement]) -
             total_to_return += to_return
         if reminder <= 0:
             break
-    Transactions.objects.create(
-        user=user,
-        journal_entry="bonus",
-        amount=total_to_return,
-        status="charged",
-        previous_balance=user.balance,
-        new_balance=cast(Decimal, user.balance) + total_to_return,
-        description="Reactor Bonus",
-        reference=generate_reference(user),
-        bonus_type="Reactor",
-        bonus_amount=Decimal("0.00"),
-    )
+    if total_to_return > 0:
+        Transactions.objects.create(
+            user=user,
+            journal_entry="bonus",
+            amount=total_to_return,
+            status="charged",
+            previous_balance=user.balance,
+            new_balance=cast(Decimal, user.balance) + total_to_return,
+            description="Reactor Bonus",
+            reference=generate_reference(user),
+            bonus_type="Reactor",
+            bonus_amount=total_to_return,
+        )
     user.balance += total_to_return
     user.save()
     return total_to_return, amount
