@@ -221,6 +221,7 @@ class WageringRequirementsView(viewsets.ModelViewSet):
         queryset = WageringRequirement.objects.filter(
             user=self.request.user,
             balance__gt=0,
+            betable=True,
             active=True
         )
 
