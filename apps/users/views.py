@@ -2734,7 +2734,7 @@ class ModifyGCBonus(APIView):
 
     @transaction.atomic
     def post(self, request):
-        if not self.user.is_authenticated:
+        if not request.user.is_authenticated:
             return Response({"message": "You should authenticate first"},status=401)
 
         if not request.user.role in ("agent", "admin", "superadmin"):
