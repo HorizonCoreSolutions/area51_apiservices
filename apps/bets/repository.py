@@ -21,7 +21,7 @@ def get_react_bonus_amount(user: Users) -> Dict:
     oldest = base.order_by('created').first()
     if oldest:
         cycle_progress = (oldest.limit / oldest.amount)
-        percentage = (((oldest.played % oldest.limit) * (100 / cycle_progress)) // 1)
+        percentage = (((oldest.played % oldest.limit) * (1 / cycle_progress)) // 1)
     else:
         cycle_progress = settings.REACTOR_MULTIPLIER
         percentage = Decimal('0.00')
