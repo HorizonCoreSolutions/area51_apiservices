@@ -1,11 +1,13 @@
+from asyncio import current_task
 import math
 from decimal import Decimal
+from django.conf import settings
 from django.db.models import Sum
 from apps.users.models import Users
-from apps.bets.utils import deserialize_wr_data, serialize_wr_data
+from apps.bets.utils import serialize_wr_data, generate_reference
 from typing import Dict, List, Optional, Tuple, cast
 from apps.core.file_logger import SimpleLogger
-from apps.bets.models import WageringRequirement
+from apps.bets.models import WageringRequirement, Transactions
 
 logger = SimpleLogger(name="Wagering", log_file="logs/wagering.log").get_logger()
 
@@ -37,20 +39,20 @@ def __single_wr_clear(
         Decimal: Amount of money to be cleared
         Decimal: Amount of money to be returned to the main balance
     """
-    c_balance = Decimal(wagrec.balance)
-    if c_balance <= 0:
+    c_balance = cast(Decimal, wagrec.balance)
+    if c_balance <= 0 or wagrec.betable:
         return amount, Decimal('0.00')
 
-    c_played = Decimal(wagrec.played)
-    c_limit = Decimal(wagrec.limit)
-    c_result = Decimal(wagrec.result or 0)
+    c_played = cast(Decimal, wagrec.played)
+    c_limit = cast(Decimal, wagrec.limit)
+    c_result = cast(Decimal, wagrec.result or 0)
 
     current = c_played + amount
-    c_multiplier = Decimal(wagrec.limit / wagrec.amount)
+    c_multiplier = c_limit / cast(Decimal, wagrec.amount)
 
     if current >= c_limit:
         wagrec.balance = Decimal('0.00')
-        wagrec.result = c_result + c_balance
+        wagrec.result = c_balance
         wagrec.played = c_limit
         wagrec.active = False
 
@@ -148,12 +150,31 @@ def __single_wr_pay(wagrec: WageringRequirement, amount: Decimal) -> Decimal:
     return give
 
 
+def __reduce_adjust(user: Users, adjust: Decimal) -> Decimal:
+    WageringRequirement.objects.select_for_update().filter(
+        user__id=user.id,
+        betable=False,
+        balance__gt=Decimal(0),
+        active=True,
+    ).order_by('created')
+    for wagrec in wagrecs:
+        if wagrec.balance > 0:
+            adjust = adjust + wagrec.balance
+            wagrec.balance = Decimal(0)
+            wagrec.save()
+        if adjust > 0:
+            wagrec.balance = adjust
+            wagrec.save()
+            break
+    return adjust
+
+
 def __single_wr_bet_cancel(
     wagrec: WageringRequirement,
     taken: Decimal,
-    user: Users,
-    balance: Decimal
-) -> Decimal:
+    balance: Decimal,
+    adjust: Decimal,
+) -> Tuple[Decimal, Decimal]:
     """
     Args:
         wagrec (WageringRequirement):
@@ -163,26 +184,28 @@ def __single_wr_bet_cancel(
         Decimal (new_balance):
 
     """
-    new_balance = Decimal(0)
-    if taken <= 0:
-        return new_balance
 
     nplayed = cast(Decimal, wagrec.played) - taken
     if nplayed < 0:
         nplayed = Decimal(0)
-        logger.critical(
+        logger.warning(
             f"Played out of {wagrec.id}. " # type: ignore
             f"Played {wagrec.played} - {taken} < 0 "
         )
 
     if wagrec.result or wagrec.played == wagrec.limit:
         old_result = cast(Decimal, wagrec.result or Decimal(0))
-        new_balance = balance - old_result
-        if new_balance < 0:
-            logger.warning(f"User: {user.id}-{user.username} had withdraw some balance")
-            old_result += new_balance
-            new_balance = Decimal(0)
-        wagrec.balance = old_result + taken
+        balance -= old_result
+        wr_balance = old_result + taken
+
+        if balance < 0:
+            wr_balance += balance
+            if wr_balance < 0:
+                adjust += wr_balance
+                wr_balance = Decimal(0)
+            balance = Decimal(0)
+
+        wagrec.balance = wr_balance
         wagrec.result = None
     else:
         wagrec.balance += taken
@@ -192,7 +215,64 @@ def __single_wr_bet_cancel(
     wagrec.played = nplayed
 
     wagrec.save()
-    return new_balance
+
+    partial_adjust = min(balance, abs(adjust))
+    balance = balance - partial_adjust
+    adjust = adjust + partial_adjust
+    return balance, adjust
+
+
+def __cancel_wr_clear(user: Users, data: Tuple[Decimal, Decimal]) -> Tuple[Decimal, Decimal]:
+    debit = Decimal('0.00')
+    restore = min(cast(Decimal, user.balance), data[0])
+    if data[1] == 0:
+        return cast(Decimal, user.balance), Decimal('0.00')
+
+    differential = data[1] % settings.REACTOR_MULTIPLIER
+    wagrec = WageringRequirement.objects.select_for_update().filter(
+        user__id=user.id,
+        betable=False,
+        balance__gt=Decimal(0),
+        active=True,
+    ).order_by('created').first()
+    user.balance = round(cast(Decimal, user.balance) - restore, 2)
+    if user.balance < 0:
+        user.balance = Decimal('0.00')
+    debit = data[0] - restore
+    if not wagrec:
+        new_bonus = data[0]
+        if data[1] > settings.REACTOR_MULTIPLIER * data[0]:
+            new_bonus += Decimal(1)
+            if  user.balance > 1:
+                user.balance -= Decimal(1)
+            else:
+                debit += Decimal(1) - max(user.balance, Decimal(0))
+                user.balance = Decimal('0.00')
+        wagrec = WageringRequirement.objects.create(
+            user=user,
+            betable=False,
+            amount=new_bonus,
+            balance=new_bonus,
+            played=settings.REACTOR_MULTIPLIER - differential,
+            limit=settings.REACTOR_MULTIPLIER * restore,
+            active=True,
+            result=None,
+        )
+    else:
+        wagrec.balance += data[0]
+        step = wagrec.played - differential
+        if data[1] > settings.REACTOR_MULTIPLIER * data[0]:
+            wagrec.balance += Decimal(1)
+            if  user.balance > 1:
+                user.balance -= Decimal(1)
+            else:
+                debit += Decimal(1) - max(user.balance, Decimal(0))
+                user.balance = Decimal('0.00')
+        else:
+            wagrec.played = step
+        wagrec.save()
+    user.save()
+    return cast(Decimal, user.balance), debit
 
 
 def get_wagering_requirements(user: Users) -> List[WageringRequirement]:
@@ -203,16 +283,30 @@ def get_wagering_requirements(user: Users) -> List[WageringRequirement]:
     ).order_by('created').all()
 
 
-def clear_wr(user: Users, amount: Decimal, wagrecs: List[WageringRequirement]) -> None:
+def clear_wr(user: Users, amount: Decimal, wagrecs: List[WageringRequirement]) -> Tuple[Decimal, Decimal]:
+    total_to_return = Decimal('0.00')
     for wagrec in wagrecs:
         reminder, to_return = __single_wr_clear(wagrec, amount)
         amount = reminder
         if to_return > 0:
-            user.balance += to_return
+            total_to_return += to_return
         if reminder <= 0:
             break
+    Transactions.objects.create(
+        user=user,
+        journal_entry="bonus",
+        amount=total_to_return,
+        status="charged",
+        previous_balance=user.balance,
+        new_balance=cast(Decimal, user.balance) + total_to_return,
+        description="Reactor Bonus",
+        reference=generate_reference(user),
+        bonus_type="Reactor",
+        bonus_amount=Decimal("0.00"),
+    )
+    user.balance += total_to_return
     user.save()
-    return None
+    return total_to_return, amount
 
 
 def bet_wr(
@@ -220,38 +314,75 @@ def bet_wr(
     amount: Decimal,
     wagrecs: List[WageringRequirement]
 ) -> Optional[Tuple[Dict[str, Tuple[str, str]], Decimal]]:
-    total = sum((Decimal(wagrec.balance) for wagrec in wagrecs), Decimal('0.00')) + Decimal(user.balance or 0)
+    total = sum((cast(Decimal, wagrec.balance) for wagrec in wagrecs), Decimal('0.00')) + cast(Decimal, user.balance or 0)
     if total < amount:
         return None
     
     total_betted = amount
+    total_to_return = Decimal('0.00')
 
     wr_ids = {}
     for wagrec in wagrecs:
         reminder, to_return, betted = __single_wr_bet(wagrec, amount)
         amount = reminder
         if to_return > 0:
-            user.balance += to_return
-            user.save()
+            total_to_return += to_return
         if betted > 0:
             wr_ids[wagrec.id] = (Decimal(math.floor((betted / total_betted) * 100) / 100), betted)
         if reminder <= 0:
+            amount = Decimal('0.00')
             break
+
+    wr_ids["from_wallet"] = (amount, amount)
+
     user.balance -= amount
+    user.balance += total_to_return
     user.save()
-    return serialize_wr_data(wr_ids), amount
+    return serialize_wr_data(wr_ids), total_to_return - amount
 
 
-def cancel_get_wr(
+def platform_cancel_bet_wr(
     user: Users,
     data: Dict[str, Tuple[str, str]]
 ):
+    wr_clear = data.pop("wr_clear", ('0.00', '0.00'))
+    relative_amount = Decimal(data.pop("from_wallet", ('0.00', ))[0]) or Decimal('0.00')
 
-    return
+    wr_clear = (Decimal(wr_clear[0]), Decimal(wr_clear[1]))
+
+    balance, debit = __cancel_wr_clear(user, wr_clear)
+
+    adjust = -abs(debit)
+    balance += relative_amount
+
+    padjust = min(balance, abs(adjust))
+    balance = balance - padjust
+    adjust = adjust + padjust
+
+    objects = WageringRequirement.objects.select_for_update().filter(id__in=data.keys())
+
+    for wagrec in objects:
+        balance, adjust = __single_wr_bet_cancel(
+            wagrec,
+            Decimal(data[str(wagrec.id)][1]),
+            balance,
+            adjust,
+        )
+    
+    if adjust < 0:
+        adjust = __reduce_adjust(user, adjust)
+    
+    if balance + adjust < 0:
+        logger.warning(f"User: {user.id}-{user.username} had withdraw some balance need to pay us {abs(balance + adjust)}")
+        balance = Decimal('0.00')
+
+    user.balance = balance
+    user.save()
+    return None
 
 
 def platform_playable_balance(user: Users) -> Decimal:
-    return get_wagering_balance(user) + user.balance
+    return get_wagering_balance(user) + cast(Decimal, user.balance)
 
 
 def platform_bet(
@@ -297,7 +428,9 @@ def platform_pay(
         Optional[Decimal]: This is only for the record keeping
     """
     # data = deserialize_wr_data(data)
-    objects = WageringRequirement.objects.filter(id__in=data.keys())
+    data.pop("from_wallet", None)
+    data.pop("wr_clear", None)
+    objects = WageringRequirement.objects.select_for_update().filter(id__in=data.keys())
     total_to_pay = Decimal('0.00')
     paid = Decimal('0.00')
     for wagrec in objects:

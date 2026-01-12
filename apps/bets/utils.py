@@ -55,4 +55,4 @@ def deserialize_wr_data(data: Dict[str, Tuple[str, str]]) -> Dict[int, Tuple[Dec
             return tuple(deserialize_value(v) for v in value)
         return value
 
-    return {int(k): deserialize_value(v) for k, v in data.items()}
+    return {int(k): deserialize_value(v) for k, v in data.items() if k not in ["from_wallet", "wr_clear"]}

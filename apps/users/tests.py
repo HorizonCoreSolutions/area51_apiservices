@@ -36,7 +36,7 @@ class TestLimiter:
         self.redis.incr(key)
         return True
 
-    def lock_key(self, key, timeout=3600):
+    def lock_key(self, key, timeout: int=3600):
         """
         Lock a key for a specific duration.
         Mimics RateLimiter.lock_key behavior.
@@ -248,7 +248,7 @@ class PromoCodesTestCase(TestCase):
         self.notify_patch.stop()
         self.fake_redis.flushall()
 
-    def test_valid_promo_instant_redeem_creates_transaction_and_updates_balance(self):
+    def test_valid_promo_instant_redeem_creates_transaction_and_not_updates_balance(self):
         success, msg = promo_module.redeem_code(
             user=self.user,
             promo_code="INSTANT100",
@@ -259,7 +259,8 @@ class PromoCodesTestCase(TestCase):
         self.assertEqual(msg, "OK")
 
         self.user.refresh_from_db()
-        self.assertEqual(self.user.balance, Decimal("150.00"))  # 100 + 50
+        # New balance will be sent to WR
+        self.assertEqual(self.user.balance, Decimal("100.00"))
         self.assertEqual(self.user.bonus_balance, Decimal("10.00"))
 
         tx = Transactions.objects.filter(user=self.user, journal_entry="bonus").first()
@@ -276,7 +277,7 @@ class PromoCodesTestCase(TestCase):
         self.assertEqual(log.transfer, Decimal("50.00"))
         self.assertEqual(log.transfer_gold, Decimal("10.00"))
 
-    def test_valid_promo_mixture_redeem_updates_balance(self):
+    def test_valid_promo_mixture_redeem_not_updates_balance(self):
         success, msg = promo_module.redeem_code(
             user=self.user,
             promo_code="MIX10",
@@ -287,8 +288,8 @@ class PromoCodesTestCase(TestCase):
         self.assertEqual(msg, "OK")
 
         self.user.refresh_from_db()
-        # mixture: amount = 10% of 10 => 1.00; gold_bonus added to bonus_balance
-        self.assertEqual(self.user.balance, Decimal("101.00"))
+        # Bonus know will be added to the wr
+        self.assertEqual(self.user.balance, Decimal("100.00"))
         self.assertEqual(self.user.bonus_balance, Decimal("5.00"))
 
         tx = Transactions.objects.filter(
@@ -299,7 +300,7 @@ class PromoCodesTestCase(TestCase):
         self.assertEqual(tx.amount, Decimal("1.00"))
         self.assertEqual(tx.bonus_amount, Decimal("5.00"))
 
-    def test_valid_promo_deposit_redeem_updates_balance_and_bonus_multiplier(self):
+    def test_valid_promo_deposit_redeem_not_updates_balance_and_bonus_multiplier(self):
         amount_dep = Decimal("20.00")
         success, msg = promo_module.redeem_code(
             user=self.user,
@@ -311,8 +312,8 @@ class PromoCodesTestCase(TestCase):
         self.assertEqual(msg, "OK")
 
         self.user.refresh_from_db()
-        # amount = 10% * 20 = 2.00
-        self.assertEqual(self.user.balance, Decimal("102.00"))
+        # New balance will be sent to WR
+        self.assertEqual(self.user.balance, Decimal("100.00"))
 
         tx = Transactions.objects.filter(
             user=self.user,
@@ -325,7 +326,7 @@ class PromoCodesTestCase(TestCase):
 
     def test_verify_code_expired(self):
         now_date = timezone.now().date()
-        expired = PromoCodes.objects.create(
+        _expired = PromoCodes.objects.create(
             dealer=None,
             bonus=self.bp_welcome,
             promo_code="OLD",
@@ -410,7 +411,7 @@ class PromoCodesTestCase(TestCase):
         lock_seen = False
         last_msg = None
         for _ in range(10):
-            promo_obj, msg = promo_module.verify_code(
+            _promo_obj, msg = promo_module.verify_code(
                 promo_code="DOES_NOT_EXIST",
                 user=self.user
             )

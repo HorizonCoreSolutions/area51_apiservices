@@ -125,6 +125,13 @@ class GSoftTransactions(AbstractBaseModel):
     transaction_type = models.CharField(blank=True, null=True, choices=TransactionType.choices, max_length=500)
     
     wr_data = JSONField(null=False, default=dict, blank=False)
+    # WR data is a dictionary with the following keys:
+    # - "wr_cancel" => Tuple[Decimal, Decimal]
+    #   - first value is the amount of the Reactor Coin Consumed
+    #   - second value is the amount of SC used to consume that RC
+    # - [wr_id] => Tuple[Decimal, Decimal]
+    #   - first value is a percentage of the total amount of the bet
+    #   - second value is the amount of the WR that was set as played
 
 
 

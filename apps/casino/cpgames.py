@@ -608,7 +608,7 @@ class CPgames():
                 )
                 if bet_result is None:
                     return self.parse_to_message(1110), status.HTTP_200_OK
-                played_data, adjust_bet_amount = bet_result
+                played_data, _adjust_bet_amount = bet_result
             else:
                 balance = Decimal(user.bonus_balance or 0)
 
@@ -704,8 +704,12 @@ class CPgames():
             transfer_balance = Decimal(to_rollback.amount or 0) * multipliyer
             transfer_bonus   = Decimal(to_rollback.bonus_bet_amount or 0) * multipliyer
 
-            user.bonus_balance = transfer_bonus + Decimal(user.bonus_balance)
-            user.balance = transfer_balance + Decimal(user.balance)
+            if (to_rollback.bonus_bet_amount and to_rollback.bonus_bet_amount != 0) or to_rollback.wr_data == {}:
+                user.bonus_balance = Decimal(user.bonus_balance)
+                user.bonus_balance = transfer_bonus + Decimal(user.bonus_balance)
+            else:
+                wagering_service.platform_cancel_bet_wr(user, to_rollback.wr_data)
+
             user.save()
             to_rollback.game_status = GSoftTransactions.GameStatus.completed
 
