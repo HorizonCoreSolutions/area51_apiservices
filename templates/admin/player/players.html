@@ -1570,6 +1570,11 @@ Players
             confirmationPopupText = '<span class="swal-custom-text text-c-red">Subtract ' + amount + ' from Bonus Balance</span>';
         }
 
+
+        function csrf() {
+            return $("input[name='csrfmiddlewaretoken']").val();
+        }
+
         Swal.fire({
             html:
                 '<div class="swal-custom-content">' + 
