@@ -328,6 +328,27 @@ class SingleWRPayTests(TransactionTestCase, WageringTestMixin):
 
 class PlatformBetTests(TransactionTestCase, WageringTestMixin):
     """Tests for platform_bet function."""
+
+    @transaction.atomic
+    def test_small_bets(self):
+        """Platform bet should return the correct amount of money to be bet."""
+        user = self.create_user(balance=Decimal("100.00"))
+        wr_betable = self.create_wagering_requirement(
+            user, balance=Decimal("20.00"), betable=True
+        )
+        wr_clearable = self.create_wagering_requirement(
+            user, balance=Decimal("10.00"), betable=False
+        )
+        
+        result = platform_bet(user, Decimal("0.50"))
+        
+        self.assertIsNotNone(result)
+        if result is not None:
+            result = result[0]
+            # Only betable WR should be in result
+            self.assertIn(str(wr_betable.id), result.keys())
+            self.assertEqual(Decimal(result[str(wr_betable.id)][1]), Decimal("0.50"))
+            self.assertNotIn(str(wr_clearable.id), result.keys())
     
     @transaction.atomic
     def test_platform_bet_separates_bettable_and_clearable(self):
