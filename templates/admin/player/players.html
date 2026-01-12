@@ -1591,7 +1591,6 @@ Players
                         url: "{% url 'users-api:modify-gc' %}",
                         type: "POST",
                         headers: { "X-CSRFToken": csrf() },
-                        dataType: "json",
                         data: {
                             bonus_change: bonus_change,
                             user_id: player_id_val
@@ -1618,24 +1617,12 @@ Players
                                 });
                             }
                         },
-                        error: function(xhr, status, error) {
-                            var errorMessage = 'An error occurred';
-                            
-                            if (xhr.responseJSON && xhr.responseJSON.message) {
-                                errorMessage = xhr.responseJSON.message;
-                            } else if (xhr.status === 401) {
-                                errorMessage = 'You need to be authenticated';
-                            } else if (xhr.status === 404) {
-                                errorMessage = 'User does not exist';
-                            } else if (xhr.status === 400) {
-                                errorMessage = 'Invalid request or insufficient balance';
-                            }
-                            
+                        error: function(data) {
                             Swal.fire({
                                 title: 'Error',
-                                text: errorMessage,
+                                text: data['responseJSON']?.['message'] || 'Something went wrong.',
                                 icon: 'error',
-                            });
+                            }).then(() => window.location.reload());
                         }
                     });
                 } else if (result.dismiss === "cancel") {
