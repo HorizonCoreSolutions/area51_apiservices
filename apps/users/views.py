@@ -2750,7 +2750,7 @@ class ModifyGCBonus(APIView):
         except Exception:
             return Response()
         try:
-            user = Users.objects.select_for_update().get(user_id=user_id)
+            user = Users.objects.select_for_update().get(id=user_id)
         except Users.DoesNotExist:
             return Response({"message": "User does not exist"}, status=404)
 
