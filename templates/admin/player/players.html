@@ -538,21 +538,6 @@ Players
                                                                 {% endif %}
                                                                 <!--  Credit tab end -->
 
-                                                                <!-- Bonus/GC tab start -->
-                                                                {% if request.user.role == 'agent' or request.user.role == 'admin' or request.user.role == 'superadmin' %}
-                                                                    <a title="Adjust Bonus (GC)" class="nav-item nav-link"
-                                                                       id="nav-bonus-{{ forloop.counter }}-tab"
-                                                                       data-toggle="tab"
-                                                                       href="#nav-bonus-{{ forloop.counter }}" role="tab"
-                                                                       aria-controls="nav-bonus-{{ forloop.counter }}"
-                                                                       aria-selected="false" style="padding: .5rem 0.5rem;">
-                                                                        <div class="noti__item mr-0 pl-2 pr-2">
-                                                                            <i class="fas fa-gift fa-lg"></i>
-                                                                        </div>
-                                                                    </a>
-                                                                {% endif %}
-                                                                <!-- Bonus/GC tab end -->
-            
                                                                 <!-- Profit tab start -->
                                                                 {% if request.user.role != 'staff' %}
                                                                     <a title="Profit"
@@ -676,6 +661,10 @@ Players
                                                                     aria-labelledby="nav-credit-{{ forloop.counter }}-tab">
                                                                     <div class="card m-0" style="border-top: 0;border-radius: 0;">
                                                                         <div class="card-body pl-md-3 pr-md-3 pb-2  pl-0 pr-0 ">
+                                                                            <!-- Credit Balance Section -->
+                                                                            <div class="mb-2">
+                                                                                <small class="text-muted font-weight-bold">{% trans "Credit Balance" %}</small>
+                                                                            </div>
                                                                             <div id="user-credit-" class="user-credit-wrap">
                                                                                 <div class="input-group">
                                                                                     <div class="input-group-btn">
@@ -702,50 +691,12 @@ Players
                                                                                         </button>
                                                                                     </div>
                                                                                 </div>
-                                                                                <!-- <div class="balance-options">
-                                                                                    <label class="balance-option custom-checkbox custom-checkbox-gray">
-                                                                                        <input type="radio" name="balance_option" value="10">
-                                                                                        <span>10</span>
-                                                                                    </label>
-                                                                                    <label class="balance-option custom-checkbox custom-checkbox-gray">
-                                                                                        <input type="radio" name="balance_option" value="20">
-                                                                                        <span>20</span>
-                                                                                    </label>
-                                                                                    <label class="balance-option custom-checkbox custom-checkbox-gray">
-                                                                                        <input type="radio" name="balance_option" value="50">
-                                                                                        <span>50</span>
-                                                                                    </label>
-                                                                                    <label class="balance-option custom-checkbox custom-checkbox-gray">
-                                                                                        <input type="radio" name="balance_option" value="100">
-                                                                                        <span>100</span>
-                                                                                    </label>
-                                                                                    <label class="balance-option custom-checkbox custom-checkbox-gray">
-                                                                                        <input type="radio" name="balance_option" value="150">
-                                                                                        <span>150</span>
-                                                                                    </label>
-                                                                                    <label class="balance-option custom-checkbox custom-checkbox-gray">
-                                                                                        <input type="radio" name="balance_option" value="200">
-                                                                                        <span>200</span>
-                                                                                    </label>
-                                                                                    <label class="balance-option custom-checkbox custom-checkbox-gray">
-                                                                                        <input type="radio" name="balance_option" value="500">
-                                                                                        <span>500</span>
-                                                                                    </label>
-                                                                                </div> -->
                                                                             </div>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            {% endif %}
-                                                            <!-- Credit tab content end -->
-
-                                                            <!-- Bonus/GC tab content start -->
-                                                            {% if request.user.role == 'agent' or request.user.role == 'admin' or request.user.role == 'superadmin' %}
-                                                                <div class="tab-pane fade" id="nav-bonus-{{ forloop.counter }}"
-                                                                    role="tabpanel"
-                                                                    aria-labelledby="nav-bonus-{{ forloop.counter }}-tab">
-                                                                    <div class="card m-0" style="border-top: 0;border-radius: 0;">
-                                                                        <div class="card-body pl-md-3 pr-md-3 pb-2  pl-0 pr-0 ">
+                                                                            
+                                                                            <!-- Bonus/GC Balance Section -->
+                                                                            <div class="mt-3 mb-2">
+                                                                                <small class="text-muted font-weight-bold">{% trans "Bonus Balance (GC)" %}</small>
+                                                                            </div>
                                                                             <div id="user-bonus-" class="user-bonus-wrap">
                                                                                 <div class="input-group">
                                                                                     <div class="input-group-btn">
@@ -777,7 +728,7 @@ Players
                                                                     </div>
                                                                 </div>
                                                             {% endif %}
-                                                            <!-- Bonus/GC tab content end -->
+                                                            <!-- Credit tab content end -->
             
                                                             <!-- Profit tab content start -->
                                                             {% if request.user.role != 'staff' %}
