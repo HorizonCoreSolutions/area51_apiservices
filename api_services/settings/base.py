@@ -45,6 +45,7 @@ cache_layer_buckets = (0, 1, 2, 3)
 
 DEFAULT_APPS = [
     'django.contrib.contenttypes',
+    'django.contrib.postgres',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.sessions',
