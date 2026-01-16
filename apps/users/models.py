@@ -416,6 +416,13 @@ class Users(AbstractBaseUser, AbstractBaseModel, PermissionsMixin):
         _("payout balance"), max_digits=15, decimal_places=2, default=0.00, null=False, blank=False
     )
 
+    balance_reactor = models.DecimalField(
+        _("balance reactor"), max_digits=15, decimal_places=2, default=0.00, null=False, blank=False
+    )
+    balance_wagering = models.DecimalField(
+        _("balance wagering"), max_digits=15, decimal_places=2, default=0.00, null=False, blank=False
+    )
+
     weekly_dl = models.DecimalField(
         max_digits=15, decimal_places=2, default=None, null=True, blank=False
     )
