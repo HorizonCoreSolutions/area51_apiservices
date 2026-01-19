@@ -564,6 +564,7 @@ def claim_action_bonus(user: Users, action: Literal["reactor", "bonus"]):
         amount += a.balance_wagering
         a.balance_wagering = Decimal(0)
     if action == "reactor":
+        t = t.filter(amount__gt=Decimal('0.00'))
         a.balance += a.balance_reactor
         amount += a.balance_reactor
         a.balance_reactor = Decimal(0)
