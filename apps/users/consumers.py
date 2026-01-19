@@ -851,14 +851,37 @@ class BalanceUpdateConsumer(AsyncWebsocketConsumer):
 class BalanceSnapshotConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         try:
-            query_params = parse_qs(self.scope['query_string'].decode())
-            if query_params.get('user_id'):
-                self.user_id = int(query_params.get('user_id')[0])
-                self.user = await sync_to_async(Users.objects.filter(id=self.user_id).first)()
-                if not self.user:
-                    await self.close(code=401)
-                    return
-            else:
+            self.user = None
+            self.user_id = None
+            self.room_group_name = None
+            await self.accept()
+        except Exception as e:
+            print("ERROR", e)
+
+    async def disconnect(self, close_code=None):
+        if self.room_group_name:
+            await self.channel_layer.group_discard(
+                self.room_group_name,
+                self.channel_name
+            )
+
+    async def receive(self, text_data=None, bytes_data=None):
+        if self.user:
+            return None
+
+        try:
+            payload = json.loads(text_data or "{}")
+            user_id = payload.get("user_id")
+            access_token = payload.get("access_token")
+            if not user_id or not access_token:
+                await self.close(code=401)
+                return
+
+            self.user_id = int(user_id)
+            self.user = await sync_to_async(
+                Users.objects.filter(id=self.user_id, access_token=access_token).first
+            )()
+            if not self.user:
                 await self.close(code=401)
                 return
 
@@ -867,22 +890,16 @@ class BalanceSnapshotConsumer(AsyncWebsocketConsumer):
                 self.room_group_name,
                 self.channel_name
             )
-            await self.accept()
         except Exception as e:
             print("ERROR", e)
-
-    async def disconnect(self, close_code=None):
-        await self.channel_layer.group_discard(
-            self.room_group_name,
-            self.channel_name
-        )
-
-    async def receive(self, text_data=None):
-        return None
+            await self.close(code=401)
 
     async def send_balance_snapshot(self, event):
         try:
             message = json.loads(event['message'])
+            if self.user is None:
+                await self.close(code=401)
+                return
             await self.send(text_data=json.dumps(message))
         except Exception as e:
             print("ERROR", e)
