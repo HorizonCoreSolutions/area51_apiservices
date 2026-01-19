@@ -282,7 +282,7 @@ class ClaimView(APIView):
 
     permission_classes = (IsPlayer,)
     http_method_names = [
-        "get",
+        "post",
     ]
     def post(self, request: HttpRequest):
         data = request.data.get("action")
