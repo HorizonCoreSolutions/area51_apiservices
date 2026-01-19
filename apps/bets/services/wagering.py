@@ -542,7 +542,7 @@ def get_user_wagering_snapshot(user: Users) -> Dict[str, Any]:
 
         "gc": user.bonus_balance or Decimal("0.00"),
 
-        "balance_reactor": totals["reactor_total"] or Decimal("0.00"),
+        "pool_amount": totals["reactor_total"] or Decimal("0.00"),
         "percentage_active": percentage_active,
         "next_win": next_win,
     }
