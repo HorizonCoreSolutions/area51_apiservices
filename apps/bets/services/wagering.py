@@ -480,6 +480,7 @@ def platform_pay(
 def get_user_wagering_snapshot(user: Users) -> Dict[str, Any]:
     base_qs = WageringRequirement.objects.filter(
         user_id=user.id,
+        claimed=False,
         active=True,
         result__isnull=True,
     )
