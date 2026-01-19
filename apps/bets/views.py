@@ -19,8 +19,8 @@ from apps.core.rest_any_permissions import AnyPermissions
 
 from django.utils.translation import activate
 from django.utils.translation import gettext_lazy as _
-from django.db.models import Q
-from rest_framework import viewsets
+from django.db.models import Q, Case, When, F, DateTimeField
+from rest_framework import viewsets, mixins
 
 from .models import (
     BONUS,
@@ -206,8 +206,10 @@ class CasinoTransactionsView(viewsets.ModelViewSet):
 
         return queryset
 
-class WageringRequirementsView(viewsets.ModelViewSet):
-    queryset = WageringRequirement.objects.none()
+class WageringRequirementsView(
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet
+):
     serializer_class = WageringRequirementsSerializer
     http_method_names = [
         "get",
@@ -222,52 +224,44 @@ class WageringRequirementsView(viewsets.ModelViewSet):
             user=self.request.user,
             balance__gt=0,
             betable=True,
-            active=True
         )
-
         from_date = self.request.query_params.get("from_date", None)
         to_date = self.request.query_params.get("to_date", None)
+        timezone_offset = self.request.query_params.get("timezone_offset", None)
 
         transaction_filter_dict = {"user": self.request.user}
-
-        timezone_offset = self.request.query_params.get("timezone_offset", None)
+        if timezone_offset:
+            timezone_offset = float(timezone_offset)
 
         if from_date and validate_date(from_date):
             from_date = datetime.datetime.strptime(
-                from_date + " 00:00:00", "%Y-%m-%d %H:%M:%S"
+                from_date + " 00:00:00",
+                "%Y-%m-%d %H:%M:%S"
             )
             if timezone_offset:
-                timezone_offset = float(timezone_offset)
-                if timezone_offset < 0:
-                    transaction_filter_dict[
-                        "created__gte"
-                    ] = from_date + datetime.timedelta(
-                        minutes=(-(timezone_offset) * 60)
-                    )
-                else:
-                    transaction_filter_dict[
-                        "created__gte"
-                    ] = from_date - datetime.timedelta(minutes=(timezone_offset * 60))
-            else:
-                transaction_filter_dict["created__date__gte"] = from_date
+                from_date -= datetime.timedelta(minutes=timezone_offset * 60)
+            transaction_filter_dict["created__date__gte"] = from_date
 
         if to_date and validate_date(to_date):
             to_date = datetime.datetime.strptime(
-                to_date + " 23:59:59", "%Y-%m-%d %H:%M:%S"
+                to_date + " 23:59:59",
+                "%Y-%m-%d %H:%M:%S"
             )
             if timezone_offset:
-                timezone_offset = float(timezone_offset)
-                if timezone_offset < 0:
-                    transaction_filter_dict[
-                        "created__lte"
-                    ] = to_date + datetime.timedelta(minutes=(-(timezone_offset) * 60))
-                else:
-                    transaction_filter_dict[
-                        "created__lte"
-                    ] = to_date - datetime.timedelta(minutes=(timezone_offset * 60))
-            else:
-                transaction_filter_dict["created__date__lte"] = to_date
+                to_date -= datetime.timedelta(minutes=timezone_offset * 60)
+            transaction_filter_dict["created__date__lte"] = to_date
 
-        queryset = queryset.filter(**transaction_filter_dict).order_by("-created")
+        queryset = queryset.filter(**transaction_filter_dict).order_by("-active",
+            Case(
+                When(active=True, then=F("created")),
+                default=None,
+                output_field=DateTimeField(),
+            ).desc(),
+            Case(
+                When(active=False, then=F("created")),
+                default=None,
+                output_field=DateTimeField(),
+            ).asc(),
+        )
 
         return queryset

@@ -98,6 +98,8 @@ dependencies = [
     "sqlparse==0.4.1",
     "swagger-spec-validator==2.3.1",
     "twilio==6.63.0",
+    "tzdata==2023.4",
+    "tzlocal==4.3",
     "xhtml2pdf>=0.2.11",
     "xmltodict==0.12.0",
 ]
