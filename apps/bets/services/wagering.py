@@ -2,7 +2,7 @@ import math
 from decimal import Decimal
 from django.conf import settings
 from apps.users.models import Users
-from typing import Dict, List, Optional, Tuple, Union, cast
+from typing import Any, Dict, List, Optional, Tuple, Union, cast
 from apps.core.file_logger import SimpleLogger
 from django.db.models import F, Sum, Case, When, DecimalField
 from apps.bets.models import WageringRequirement, Transactions
@@ -476,8 +476,7 @@ def platform_pay(
     user.save()
     return wallet_to_pay + wallet_adjustment
 
-
-def get_user_wagering_snapshot(user: Users) -> Dict[str, Union[Decimal, str]]:
+def get_user_wagering_snapshot(user: Users) -> Dict[str, Any]:
     base_qs = WageringRequirement.objects.filter(
         user_id=user.id,
         active=True,
@@ -487,21 +486,31 @@ def get_user_wagering_snapshot(user: Users) -> Dict[str, Union[Decimal, str]]:
     totals = base_qs.aggregate(
         bonus_total=Sum(
             Case(
-                When(betable=True, limit__ne=F("amount"), then="balance"),
+                When(
+                    Q(betable=True) & ~Q(limit=F("amount")),
+                    then=F("balance"),
+                ),
                 default=Decimal("0.00"),
                 output_field=DecimalField(),
             )
         ),
         wagering_total=Sum(
             Case(
-                When(betable=True, limit=F("amount"), then="balance"),
+                When(
+                    betable=True,
+                    limit=F("amount"),
+                    then=F("balance"),
+                ),
                 default=Decimal("0.00"),
                 output_field=DecimalField(),
             )
         ),
         reactor_total=Sum(
             Case(
-                When(betable=False, then="balance"),
+                When(
+                    betable=False,
+                    then=F("balance"),
+                ),
                 default=Decimal("0.00"),
                 output_field=DecimalField(),
             )
@@ -515,25 +524,25 @@ def get_user_wagering_snapshot(user: Users) -> Dict[str, Union[Decimal, str]]:
         .first()
     )
 
-    if next_betable and (limit := cast(Decimal, next_betable.limit or 0)) > 0:
-        played = cast(Decimal, next_betable.played or 0)
+    if next_betable and (limit := next_betable.limit or Decimal("0.00")) > 0:
+        played = next_betable.played or Decimal("0.00")
         percentage_active: Union[Decimal, str] = played / limit
-        next_win = cast(Decimal, next_betable.balance or 0)
+        next_win = next_betable.balance or Decimal("0.00")
     else:
         percentage_active = "full"
         next_win = Decimal("0.00")
 
     return {
-        "pending_reactor": cast(Decimal, user.balance_reactor or 0),
-        "pending_balance": cast(Decimal, user.balance_wagering or 0),
+        "pending_reactor": user.balance_reactor or Decimal("0.00"),
+        "pending_balance": user.balance_wagering or Decimal("0.00"),
 
-        "sc_bonus": cast(Decimal, totals["bonus_total"] or 0),
-        "sc_playable": cast(Decimal, totals["wagering_total"] or 0),
-        "sc_redeamable": cast(Decimal, user.balance or 0),
+        "sc_bonus": totals["bonus_total"] or Decimal("0.00"),
+        "sc_playable": totals["wagering_total"] or Decimal("0.00"),
+        "sc_redeamable": user.balance or Decimal("0.00"),
 
-        "gc": cast(Decimal, user.bonus_balance or 0),
+        "gc": user.bonus_balance or Decimal("0.00"),
 
-        "barance_reactor": cast(Decimal, totals["reactor_total"] or 0),
+        "balance_reactor": totals["reactor_total"] or Decimal("0.00"),
         "percentage_active": percentage_active,
         "next_win": next_win,
     }
