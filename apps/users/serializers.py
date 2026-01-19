@@ -40,7 +40,7 @@ from apps.users.utils import check_otp
 import logging
 logger = logging.getLogger('django')
 
-from .models import DEFAULT_AFFILIATE_COMMISION_PERCENTAGE, DEFAULT_AFFILIATE_DURATION_IN_DAYS, Admin, CmsPromotions, DefaultAffiliateValues, OffMarketTransactions, Player, UserGames, Users, BonusPercentage , SpintheWheelDetails, CashappQr 
+from .models import DEFAULT_AFFILIATE_COMMISION_PERCENTAGE, DEFAULT_AFFILIATE_DURATION_IN_DAYS, VERIFICATION_APPROVED, Admin, CmsPromotions, DefaultAffiliateValues, OffMarketTransactions, Player, UserGames, Users, BonusPercentage , SpintheWheelDetails, CashappQr 
 
 jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
 jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
@@ -113,7 +113,7 @@ class PlayerSerializer(serializers.Serializer):
     is_max_spending_limit_set_by_admin = serializers.SerializerMethodField()
     affiliate_link = serializers.CharField(max_length=250)
     is_active = serializers.BooleanField(default=False)
-    phone_verified = serializers.IntegerField(read_only=True)
+    phone_verified = serializers.SerializerMethodField()
     document_verified = serializers.IntegerField(read_only=True)
     is_verified = serializers.SerializerMethodField()
     no_of_deposit_counts = serializers.IntegerField()
@@ -258,6 +258,12 @@ class PlayerSerializer(serializers.Serializer):
     def get_credit(obj):
         balance = obj.balance
         return balance 
+    
+    @staticmethod
+    def get_phone_verified(obj):
+        if settings.PHONE_VERIF_ENABLED:
+            return obj.phone_verified
+        return 1 if obj.document_verified == VERIFICATION_APPROVED else 0
 
     @staticmethod
     def get_user_hash(obj):
@@ -456,12 +462,14 @@ class SignUpSerializer(serializers.ModelSerializer):
         #     raise serializers.ValidationError("Phone number already exists.")
         
         if data.get("applied_promo_code"):
-            is_valid, msg = promo_handler.verify_code(
+            is_valid, _ = promo_handler.verify_code(
                 promo_code=data.get("applied_promo_code"),
                 bypass_limit_check=True
             )
             if not is_valid:
-                raise serializers.ValidationError(msg)
+                pcode = data.pop("applied_promo_code")
+                logger.debug(f"User tried to use Invalid Promo Code {pcode}")
+                # raise serializers.ValidationError(msg)
         
         if data.get('otp'):
             checkotp = check_otp(data.get('otp'))
