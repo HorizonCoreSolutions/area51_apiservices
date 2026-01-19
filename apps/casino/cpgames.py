@@ -12,6 +12,7 @@ from apps.casino.models import GSoftTransactions
 from django.db import transaction as db_transaction
 from typing import Optional, Dict, List, Union, Tuple
 from apps.bets.services import wagering as wagering_service
+from apps.users.utils import send_user_balance_snapshot_async
 
 
 @dataclass
@@ -458,6 +459,7 @@ class CPgames():
             transaction_obj.time = timezone.now()
             transaction_obj.wr_data = played_data
             transaction_obj.save()
+            send_user_balance_snapshot_async(user=user)
 
             return (self.get_formated_balance(user=user, app=app),
                     status.HTTP_200_OK)
@@ -642,6 +644,7 @@ class CPgames():
             transaction_obj.game_status = GSoftTransactions.GameStatus.pending
             transaction_obj.wr_data = played_data
             transaction_obj.save()
+            send_user_balance_snapshot_async(user=user)
 
             return self.get_formated_balance(user=user, app=app), status.HTTP_200_OK
         except AttributeError as e:

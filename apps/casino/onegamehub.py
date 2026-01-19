@@ -13,6 +13,7 @@ from django.db import transaction as db_transaction
 from typing import Dict, Optional, Any, List, Tuple, Union
 from urllib.parse import urlencode, quote, unquote, parse_qs
 from apps.bets.services import wagering as wagering_service
+from apps.users.utils import send_user_balance_snapshot_async
 
 FAKE_COIN = "GOC"
 REAL_COIN = "SSC"
@@ -435,7 +436,7 @@ class OneGameHub:
             transaction_obj.game_status = GSoftTransactions.GameStatus.completed if ext_round_finished else GSoftTransactions.GameStatus.pending
             transaction_obj.time = timezone.now()
             transaction_obj.save()
-
+            send_user_balance_snapshot_async(user=user)
             return self.get_formated_balance(
                     user=user,
                     is_real_play=is_real_play), status.HTTP_200_OK
@@ -522,6 +523,7 @@ class OneGameHub:
             transaction_obj.request_type = GSoftTransactions.RequestType.rollback
             transaction_obj.time = timezone.now()
             transaction_obj.save()
+            send_user_balance_snapshot_async(user=user)
 
             return self.get_formated_balance(
                     user=user,
