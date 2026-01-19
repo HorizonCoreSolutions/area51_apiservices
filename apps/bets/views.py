@@ -274,5 +274,5 @@ class WalletView(APIView):
     http_method_names = [
         "get",
     ]
-    def post(self, request: HttpRequest):
+    def get(self, request: HttpRequest):
         return get_user_wagering_snapshot(self.request.user)
