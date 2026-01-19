@@ -229,7 +229,7 @@ class WageringRequirementsView(
         to_date = self.request.query_params.get("to_date", None)
         timezone_offset = self.request.query_params.get("timezone_offset", None)
 
-        transaction_filter_dict = {"user": self.request.user}
+        transaction_filter_dict = {}
         if timezone_offset:
             timezone_offset = float(timezone_offset)
 
