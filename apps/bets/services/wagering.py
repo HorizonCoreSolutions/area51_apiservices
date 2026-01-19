@@ -4,7 +4,7 @@ from django.conf import settings
 from apps.users.models import Users
 from typing import Any, Dict, List, Optional, Tuple, Union, cast
 from apps.core.file_logger import SimpleLogger
-from django.db.models import F, Sum, Case, When, DecimalField
+from django.db.models import F, Sum, Case, When, DecimalField, Q
 from apps.bets.models import WageringRequirement, Transactions
 from apps.bets.utils import serialize_wr_data, generate_reference
 
