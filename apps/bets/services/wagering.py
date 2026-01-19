@@ -1,12 +1,12 @@
 import math
 from decimal import Decimal
 from django.conf import settings
-from django.db.models import F, Sum
 from apps.users.models import Users
-from apps.bets.utils import serialize_wr_data, generate_reference
 from typing import Dict, List, Optional, Tuple, Union, cast
 from apps.core.file_logger import SimpleLogger
+from django.db.models import F, Sum, Case, When, DecimalField
 from apps.bets.models import WageringRequirement, Transactions
+from apps.bets.utils import serialize_wr_data, generate_reference
 
 logger = SimpleLogger(name="Wagering", log_file="logs/wagering.log").get_logger()
 
@@ -478,50 +478,62 @@ def platform_pay(
 
 
 def get_user_wagering_snapshot(user: Users) -> Dict[str, Union[Decimal, str]]:
-    bettable_qs = WageringRequirement.objects.filter(
+    base_qs = WageringRequirement.objects.filter(
         user_id=user.id,
-        betable=True,
         active=True,
         result__isnull=True,
     )
-    bonus_total = bettable_qs.exclude(limit=F('amount')).aggregate(
-        total=Sum('balance')
-    ).get('total') or Decimal('0.00')
-    wagering_total = bettable_qs.filter(limit=F('amount')).aggregate(
-        total=Sum('balance')
-    ).get('total') or Decimal('0.00')
-    reactor_total = WageringRequirement.objects.filter(
-        user_id=user.id,
-        betable=False,
-        active=True,
-        result__isnull=True,
-    ).aggregate(
-        total=Sum('balance')
-    ).get('total') or Decimal('0.00')
 
-    next_betable = bettable_qs.order_by('created').first()
-    if next_betable:
-        limit = cast(Decimal, next_betable.limit or 0)
+    totals = base_qs.aggregate(
+        bonus_total=Sum(
+            Case(
+                When(betable=True, limit__ne=F("amount"), then="balance"),
+                default=Decimal("0.00"),
+                output_field=DecimalField(),
+            )
+        ),
+        wagering_total=Sum(
+            Case(
+                When(betable=True, limit=F("amount"), then="balance"),
+                default=Decimal("0.00"),
+                output_field=DecimalField(),
+            )
+        ),
+        reactor_total=Sum(
+            Case(
+                When(betable=False, then="balance"),
+                default=Decimal("0.00"),
+                output_field=DecimalField(),
+            )
+        ),
+    )
+
+    next_betable = (
+        base_qs.filter(betable=True)
+        .only("limit", "played", "balance")
+        .order_by("created")
+        .first()
+    )
+
+    if next_betable and (limit := cast(Decimal, next_betable.limit or 0)) > 0:
         played = cast(Decimal, next_betable.played or 0)
-        percentage_active: Union[Decimal, str] = (
-            (played / limit) if limit > 0 else Decimal('0.00')
-        )
+        percentage_active: Union[Decimal, str] = played / limit
         next_win = cast(Decimal, next_betable.balance or 0)
     else:
         percentage_active = "full"
-        next_win = Decimal('0.00')
+        next_win = Decimal("0.00")
 
     return {
         "pending_reactor": cast(Decimal, user.balance_reactor or 0),
         "pending_balance": cast(Decimal, user.balance_wagering or 0),
 
-        "sc_bonus": cast(Decimal, bonus_total),
-        "sc_playable": cast(Decimal, wagering_total),
+        "sc_bonus": cast(Decimal, totals["bonus_total"] or 0),
+        "sc_playable": cast(Decimal, totals["wagering_total"] or 0),
         "sc_redeamable": cast(Decimal, user.balance or 0),
 
         "gc": cast(Decimal, user.bonus_balance or 0),
 
-        "barance_reactor": cast(Decimal, reactor_total),
+        "barance_reactor": cast(Decimal, totals["reactor_total"] or 0),
         "percentage_active": percentage_active,
         "next_win": next_win,
     }
