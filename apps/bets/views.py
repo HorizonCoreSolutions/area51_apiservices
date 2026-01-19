@@ -1,5 +1,7 @@
 import datetime
 
+from django.http.request import HttpRequest
+from rest_framework.views import APIView
 
 from apps.bets.filters import (
     LiveCasinoTransactionFilters,
@@ -10,6 +12,7 @@ from apps.bets.serializers import (
     Transactionandinerializer,
     WageringRequirementsSerializer,
 )
+from apps.bets.services.wagering import get_user_wagering_snapshot
 from apps.bets.utils import validate_date
 from apps.casino.models import *
 from apps.core.pagination import PageNumberPagination
@@ -264,3 +267,12 @@ class WageringRequirementsView(
         )
 
         return queryset
+
+class WalletView(APIView):
+
+    permission_classes = (IsPlayer,)
+    http_method_names = [
+        "get",
+    ]
+    def post(self, request: HttpRequest):
+        return get_user_wagering_snapshot(self.request.user)
