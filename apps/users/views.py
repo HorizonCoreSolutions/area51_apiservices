@@ -13,8 +13,10 @@ from compat import render_to_string
 from datetime import datetime,timedelta
 from django.utils import timezone
 
+from apps.bets.repository import get_react_bonus_amount
 from apps.core.file_logger import SimpleLogger
 from apps.users import promo_handler
+from apps.users.services.spin_wheel import get_price, process_spin_transaction, get_spin_status
 from apps.core.concurrency import limiter
 from pyhanko_certvalidator import ValidationError
 
@@ -2240,30 +2242,13 @@ class NextSpinWheel(APIView):
     http_method_names = ["post"]
     def post(self, request):
         try:
-            # get tz_offset or default to UTC+0:00
-            tz_offset = request.data.get("tz_offset", "").strip()
-            if tz_offset == "":
-                tz_offset = "UTC+0:00"
-            # Transform the offset to a delta time
-            result = get_tz_offset(tz_offset)
-            # Catch errors
-            if result.get("message"):
-                return Response(result, status=status.HTTP_400_BAD_REQUEST)
-            offset = result.get("offset")
-
-            users_date = (timezone.now() + offset).date()
-
-            # __gte to catch any "future rolls" in case user has change its tz
-            spin_wheel = Transactions.objects.filter(journal_entry="bonus", bonus_type=SPIN_WHEEL, created__date__gte=users_date, user=self.request.user).order_by("-created").first()
-            is_spin_available = not bool(spin_wheel)
-
-            next_spin = users_date
-            if not is_spin_available:
-                next_spin = (spin_wheel.created + timedelta(days=1)).date()
+            status_data = get_spin_status(request.user, request.data.get("tz_offset"))
+            if not status_data["success"]:
+                return Response(status_data, status=status.HTTP_400_BAD_REQUEST)
 
             return Response({
-                "is_spin_available": is_spin_available,
-                "next_spin": next_spin,
+                "is_spin_available": status_data["is_available"],
+                "next_spin": status_data["next_spin"],
             }, status.HTTP_200_OK)
         except Exception as e:
             print(e)
@@ -2276,53 +2261,29 @@ class AddSpinWheelView(APIView):
     @transaction.atomic
     def post(self, request):
         try:
-            # get tz_offset or default to UTC+0:00
-            tz_offset = request.data.get("tz_offset", "").strip()
-            if tz_offset == "":
-                tz_offset = "UTC+0:00"
-            # Transform the offset to a delta time
-            result = get_tz_offset(tz_offset)
-            # Catch errors
-            if result.get("message"):
-                return Response(result, status=status.HTTP_400_BAD_REQUEST)
-            offset = result.get("offset")
-
-            # Calculates the date of the user
-            now = timezone.now()
-            users_date = (now + offset).date()
-
-            user=self.request.user
-            data = Transactions.objects.filter(journal_entry="bonus",bonus_type=SPIN_WHEEL, created__date=users_date, user=user).first()
-            if data:
+            user = self.request.user
+            status_data = get_spin_status(user, request.data.get("tz_offset"))
+            if not status_data["success"]:
+                return Response(status_data, status=status.HTTP_400_BAD_REQUEST)
+            
+            if not status_data["is_available"]:
                 return Response({"message": "Already given spin bonus"}, status.HTTP_400_BAD_REQUEST)
 
+            offset = status_data["offset"]
+            now = status_data["now"]
+
             # Get a random SpinWheelDetail
-            spin_id = random.choice(SpintheWheelDetails.objects.values_list('pk', flat=True))
-            spin_wheel=SpintheWheelDetails.objects.filter(id=spin_id).first()
+            try:
+                spin_wheel = get_price(user)
+            except ValueError:
+                return Response({"message": "Wheel is not active right now."}, status=status.HTTP_400_BAD_REQUEST)
+
+            if spin_wheel is None or user is None:
+                return Response({"message": "Please try again."}, status=status.HTTP_400_BAD_REQUEST)
+
             serializer = SpintheWheelDetailsSerializer(spin_wheel, many=False)
+            process_spin_transaction(user, spin_wheel, now, offset)
 
-            # Updates user balance
-            bonus_amount = spin_wheel.value
-            previous_bonus = user.bonus_balance
-            user.bonus_balance = user.bonus_balance + bonus_amount
-            user.save()
-
-            # Save the bonus on transactions
-            t = Transactions.objects.create(
-                user=user,
-                journal_entry="bonus",
-                amount=Decimal(spin_wheel.value),
-                status="charged",
-                previous_balance=previous_bonus,
-                new_balance=Decimal(user.bonus_balance),
-                description="Spin the Wheel Bonus to player",
-                reference=generate_reference(user),
-                bonus_type=SPIN_WHEEL,
-                bonus_amount=bonus_amount,
-            )
-            # saves the spin with the correct date (user_date)
-            t._force_created = now + offset
-            t.save()
             return Response({"message": "Bonus added", "result": serializer.data}, status.HTTP_200_OK)
         except:
             return Response({"message": "Something Went Wrong"}, status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -2710,3 +2671,92 @@ class FortunePandasCategoryAPIView(APIView):
             print("Error in Fortunepandas Category API", e)
             print(traceback.format_exc())
             return Response({"message": "Internal Server Error"}, 500)
+
+class ReactorBonusAPIView(APIView):
+    http_method_names = ["get"]
+    permission_classes = [IsPlayer,]
+
+    def get(self, request):
+        try:
+            bonus_amount = get_react_bonus_amount(self.request.user)
+            return Response(bonus_amount, status.HTTP_200_OK)
+        except Exception as e:
+            print(e)
+            return Response({"message": "Something Went Wrong"}, status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class ChageDepositLimit(APIView):
+    http_method_names = ["post"]
+    
+    @transaction.atomic
+    def post(self, request):
+        extra = request.user.role in ("agent", "admin", "superadmin")
+
+        # Target user
+        user_id = (request.data.get("user_id", None) or request.user.id) if extra else request.user.id
+        if extra and not user_id:
+            return Response({"message": "user_id required."}, status=400)
+
+        weekly = request.data.get("weekly_dl")
+        daily = request.data.get("daily_dl")
+        
+        try:
+            weekly = Decimal(weekly) if weekly else None
+            daily = Decimal(daily) if daily else None
+        except ValueError:
+            return Response({"message": "Limits should be numbers"}, status=400)
+
+        # Normal users must provide both values
+        if not extra and (weekly is None or daily is None):
+            return Response({"message": "Weekly and daily limits should be set."}, status=400)
+
+        try:
+            user = Users.objects.only("weekly_dl", "daily_dl").get(id=user_id)
+        except Users.DoesNotExist:
+            return Response({"message": "User does not exist."}, status=400)
+
+        # Normal users cannot overwrite existing limits
+        if not extra and (user.weekly_dl is not None or user.daily_dl is not None):
+            return Response({"message": "Limits already set."}, status=400)
+        
+        if weekly is None or daily is None:
+            weekly = None
+            daily = None
+
+        user.weekly_dl = weekly
+        user.daily_dl = daily
+        user.save(update_fields=["weekly_dl", "daily_dl"])
+
+        return Response({"message": "OK"})
+
+class ModifyGCBonus(APIView):
+    http_method_names = ["post"]
+
+    @transaction.atomic
+    def post(self, request):
+        if not request.user.is_authenticated:
+            return Response({"message": "You should authenticate first"},status=401)
+
+        if not request.user.role in ("agent", "admin", "superadmin"):
+            return Response({"message": "You should authenticate first"},status=401)
+
+        balance = request.data.get("bonus_change")
+        user_id = request.data.get("user_id")
+
+        if balance is None:
+            return Response({"message", "balance is not valid"}, status=400)
+        try:
+            balance = round(Decimal(balance), 2)
+        except Exception:
+            return Response()
+        try:
+            user = Users.objects.select_for_update().get(id=user_id)
+        except Users.DoesNotExist:
+            return Response({"message": "User does not exist"}, status=404)
+
+        if user.bonus_balance + balance < 0:
+            return Response({"message", "User has not enought balance"}, status=400)
+        
+        user.bonus_balance += balance
+        user.save(update_fields=["bonus_balance"])
+        return Response({"message": "OK"}, status=200)

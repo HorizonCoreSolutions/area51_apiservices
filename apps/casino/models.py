@@ -114,7 +114,7 @@ class GSoftTransactions(AbstractBaseModel):
     game_status = models.CharField(blank=True, null=True, choices=GameStatus.choices, max_length=500)
     frbid = models.CharField(max_length=500, blank=True, null=True)
     time = models.DateTimeField()
-    user = models.ForeignKey(Users, on_delete=models.CASCADE, blank=False)
+    user = models.ForeignKey(Users, on_delete=models.CASCADE, blank=False, db_index=True)
     amount = models.FloatField(null=True,blank=True)
     bonus_bet_amount = models.FloatField(default=None, null=True, blank=True)
     bonus_type = models.CharField(blank=True, default=None, null=True, choices=BonusType.choices, max_length=500)
@@ -123,6 +123,15 @@ class GSoftTransactions(AbstractBaseModel):
     completed = models.CharField(max_length=500, null=True, blank=True)
     is_tournament_transaction = models.BooleanField(default=False)
     transaction_type = models.CharField(blank=True, null=True, choices=TransactionType.choices, max_length=500)
+    
+    wr_data = JSONField(null=False, default=dict, blank=False)
+    # WR data is a dictionary with the following keys:
+    # - "wr_cancel" => Tuple[Decimal, Decimal]
+    #   - first value is the amount of the Reactor Coin Consumed
+    #   - second value is the amount of SC used to consume that RC
+    # - [wr_id] => Tuple[Decimal, Decimal]
+    #   - first value is a percentage of the total amount of the bet
+    #   - second value is the amount of the WR that was set as played
 
 
 

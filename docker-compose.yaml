@@ -1,0 +1,23 @@
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: postgres_area51
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./docker/postgres:/var/lib/postgresql/data
+    env_file:
+      - .env
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis_area51
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./docker/redis:/data
+    command: ["redis-server", "--appendonly", "yes"]
+    env_file:
+      - .env
+    restart: unless-stopped

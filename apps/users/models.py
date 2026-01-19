@@ -17,6 +17,7 @@ from decimal import Decimal
 from django.conf import settings
 from djchoices import ChoiceItem, DjangoChoices
 from django.urls import reverse
+from apps.core.coins import Coins
 from apps.core.models import AbstractBaseModel
 from django.contrib.auth.models import PermissionsMixin
 import requests
@@ -415,6 +416,20 @@ class Users(AbstractBaseUser, AbstractBaseModel, PermissionsMixin):
         _("payout balance"), max_digits=15, decimal_places=2, default=0.00, null=False, blank=False
     )
 
+    balance_reactor = models.DecimalField(
+        _("balance reactor"), max_digits=15, decimal_places=2, default=0.00, null=False, blank=False
+    )
+    balance_wagering = models.DecimalField(
+        _("balance wagering"), max_digits=15, decimal_places=2, default=0.00, null=False, blank=False
+    )
+
+    weekly_dl = models.DecimalField(
+        max_digits=15, decimal_places=2, default=None, null=True, blank=False
+    )
+    daily_dl = models.DecimalField(
+        max_digits=15, decimal_places=2, default=None, null=True, blank=False
+    )
+
     VERIFICATION_FIELDS = {
         'document_verified' : 'Document/Passport/Government ID"',
         'phone_verified' : 'Phone number',
@@ -682,8 +697,8 @@ class SuperAdmin(Users):
 
 
 class Configs(AbstractBaseModel):
-    name = models.CharField(_("config name"), max_length=250, choices=CONFIGS_CHOICES, unique=True)
-    value = models.IntegerField(_("config value"), default=DEFAULT_TRANSACTION_DELAY)
+    name = models.CharField(_("config name"), max_length=250, unique=True)
+    value = models.CharField(_("config value"), max_length=250, null=False, blank=False)
 
 
 
@@ -1251,7 +1266,9 @@ class OffmarketWithdrawalRequests(AbstractBaseModel):
 
 class SpintheWheelDetails(AbstractBaseModel):
     admin = models.ForeignKey(Users, on_delete=models.CASCADE, default=None, null=True, blank=True)
-    value = models.IntegerField(null=True, blank=True)
+    value = models.IntegerField()
+    odds = models.DecimalField(max_digits=15, decimal_places=2)
+    coin = models.CharField(max_length=50, choices=Coins)
     code = models.CharField(max_length=250, null=True, blank=True, default=None)
 
 

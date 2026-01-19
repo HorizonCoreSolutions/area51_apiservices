@@ -10,7 +10,7 @@ from rest_framework import status
 
 from apps.users import promo_handler
 
-from .models import AlchemypayOrder, CoinFlowTransaction, CoinWithdrawal, MnetTransaction, NowPaymentsTransactions
+from .models import AlchemypayOrder, Bundle, CoinFlowTransaction, CoinWithdrawal, MnetTransaction, NowPaymentsTransactions
 from apps.users.models import Users
 from apps.bets.models import Transactions, DEPOSIT, ROLLBACK, CHARGED, WITHDRAW
 from apps.casino.utils import ErrorResponseMsg
@@ -237,4 +237,98 @@ class CoinflowTransactionsSerializer(serializers.ModelSerializer):
     class Meta:
         model = CoinFlowTransaction
         fields = ("id", "transaction_id", "created", "amount", "transaction_type", "status" )
-    
+
+
+class BundleSerializer(serializers.ModelSerializer):
+
+    base = serializers.SerializerMethodField()
+
+    @staticmethod
+    def get_base(obj):
+        return obj.balance
+
+    class Meta:
+        model = Bundle
+        fields = ("code", "price", "base", "playable", "bonus", "miner", "enabled")
+
+
+class BundleCreateSerializer(serializers.ModelSerializer):
+    """
+    This serializer handles bundle creation requests from the admin panel form.
+    Admin and code fields are auto-managed.
+    """
+
+    class Meta:
+        model = Bundle
+        fields = [
+            "name",
+            "enabled",
+            "price",
+            "balance",
+            "playable",
+            "multiplier",
+            "bonus",
+            "miner",
+        ]
+
+    def validate_price(self, value):
+        """
+        Ensure price has at most two decimal places and is positive.
+        """
+        if value < 0:
+            raise serializers.ValidationError("Price must be a positive amount.")
+        if value * 100 != int(value * 100):  # Enforces at most 2 decimal places
+            raise serializers.ValidationError(
+                "Price must have at most two decimal places."
+            )
+        return value
+
+    def validate_multiplier(self, value):
+        """
+        Only allow predefined WR multiplier values.
+        """
+        valid_multipliers = [10, 13, 17, 20, 25]
+        if value not in valid_multipliers:
+            raise serializers.ValidationError(
+                f"Invalid multiplier. Must be one of: {valid_multipliers}"
+            )
+        return value
+
+    def validate(self, attrs):
+        """
+        Cross-field validation: ensure numeric consistency or required business rules.
+        """
+        price = attrs.get("price")
+        balance = attrs.get("balance")
+        playable = attrs.get("playable")
+        miner = attrs.get("miner")
+
+        # Basic sanity checks for positive values
+        for field_name, field_value in [
+            ("balance", balance),
+            ("playable", playable),
+            ("miner", miner),
+        ]:
+            if field_value is not None and field_value < 0:
+                raise serializers.ValidationError({field_name: "Value must be positive."})
+
+        # optional rule: playable must not exceed balance + miner
+        if playable and balance and playable > (balance + miner):
+            raise serializers.ValidationError(
+                {"playable": "Playable coins cannot exceed the sum of balance and miner."}
+            )
+
+        return attrs
+
+    def create(self, validated_data):
+        """
+        Create a new Bundle instance, assigning the admin (creator) automatically.
+        """
+        request = self.context.get("request")
+        admin_user = getattr(request, "user", None)
+
+        bundle = Bundle.objects.create(
+            admin=admin_user,
+            **validated_data,
+        )
+        return bundle

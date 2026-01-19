@@ -590,6 +590,18 @@
                                     </ul>
                                 {% endif %}
 
+                                {% if request.user.role == "admin" or request.user.role == "superadmin" %}
+                                    <ul class="pcoded-item pcoded-left-item" style="padding-bottom: 0.1em;">
+                                        <li class="">
+                                            <a href="{% url 'admin-panel:bundles-list' %}" class="waves-effect waves-dark">
+                                                <span class="pcoded-micon"><i class="fa fa-gift"></i></span>
+                                                <span class="pcoded-mtext">{% trans "Bundles" %}</span>
+                                                <span class="pcoded-mcaret"></span>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                {% endif %}
+
                                 {% if request.user.role == "admin" %}
                                     {% if request.user.is_welcome_bonus_enabled or request.user.is_deposit_bonus_enabled %}
                                         <ul class="pcoded-item pcoded-left-item" style="padding-bottom: 0.1em;">

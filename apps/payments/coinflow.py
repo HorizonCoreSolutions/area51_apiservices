@@ -9,15 +9,18 @@ from django.db import transaction
 from dataclasses import dataclass
 from django.utils import timezone
 from django.db.models import Q, Count
+from apps.core.utils import time as time_utils
 from datetime import datetime, timedelta, time
+from apps.payments import repository as payments_repository
 from apps.core.utils.encryption import decrypt_combined, encrypt_combined
+from apps.payments.service import apply_bonus, platform_deposit
 from apps.users import promo_handler
 from apps.users.utils import redis_client
 from typing import Callable, Dict, Optional, Tuple
 from apps.core.custom_types import BasicReturn
 from apps.core.file_logger import SimpleLogger
 from apps.acuitytec.acuitytec import AcuityTecAPI
-from apps.payments.models import CoinFlowTransaction
+from apps.payments.models import Bundle, CoinFlowTransaction
 from apps.acuitytec.models import DocumentTypeChoise
 from apps.users.models import (
     Users,
@@ -660,6 +663,7 @@ class CoinFlowClient:
         self,
         user: Users,
         amount_cents: int,
+        bundle: Optional[Bundle] = None,
         item_id: Optional[str] = None,
         is_preset_amount: bool = False,
         item_name: str = 'Sweeptokens',
@@ -731,6 +735,9 @@ class CoinFlowClient:
                 if not promo_log:
                     return BasicReturn(success=False, error=f"This message should not be shown, please contact us.")
                 logger.debug(f"Promo code: {promo_code} has been used for user {user.username}")
+
+            if bundle:
+                amount_cents = int(bundle.price * 100)
 
             # Construct checkout payload
             payload = {
@@ -805,7 +812,7 @@ class CoinFlowClient:
                 transaction_type=CoinFlowTransaction.TransactionType.deposit,
                 account_type=CoinFlowTransaction.AccountType.card,
                 status=CoinFlowTransaction.StatusType.requested,
-
+                bundle=bundle
             )
 
             logger.info(f"Checkout link created successfully for user {user.id}-{user.username}")
@@ -885,88 +892,20 @@ class CoinFlowClient:
         """
         # Only generate one per day:
 
-        WITHDRAW_STATUS = [
-            CoinFlowTransaction.StatusType.requested,
-            CoinFlowTransaction.StatusType.paid_out,
-            CoinFlowTransaction.StatusType.pending,
-            CoinFlowTransaction.StatusType.cancelled
-            # CoinFlowTransaction.StatusType.failed,
-        ]
-        
-        WITHDRAW_TYPES = [
-            CoinFlowTransaction.TransactionType.withdraw,
-            CoinFlowTransaction.TransactionType.withdraw_request
-        ]
-
-        DAY_SHIFT_HOURS = 5
-
-        # 1. Get today at midnight (timezone-aware)
-        # Get timezone-aware "today at midnight"
-        start_of_day = timezone.now().replace(
-            hour=0,
-            minute=0,
-            second=0,
-            microsecond=0
-        )
-
-        # Shift forward by N hours (e.g. day starts at 5 AM)
-        shifted_start = start_of_day + timedelta(hours=DAY_SHIFT_HOURS)
-        if shifted_start > timezone.now():
-            shifted_start -= timedelta(days=1)
-
-        qs = CoinFlowTransaction.objects.filter(
-            user_id=user.id,
-            transaction_type__in=WITHDRAW_TYPES,
-            status__in=WITHDRAW_STATUS,
-            created__gte=shifted_start,
-            is_deleted=False
-        )
-
-        counts = qs.aggregate(
-            total=Count("id"),
-            requested=Count("id", filter=Q(
-                transaction_type=CoinFlowTransaction.TransactionType.withdraw_request,
-                status=CoinFlowTransaction.StatusType.requested
-            )),
-            cancelled=Count("id", filter=Q(
-                transaction_type=CoinFlowTransaction.TransactionType.withdraw_request,
-                status=CoinFlowTransaction.StatusType.cancelled
-            ))
-        )
-
-        # total = proccesed + requested + failed_request
-        total = counts.get("total") or 0
-        # total - (requested + failed_request)
-        requested = counts.get("requested") or 0
-        cancelled = counts.get("cancelled") or 0
-        
-        had_procesed = total - (requested + cancelled) >= 1
-        has_requested = requested >= 1
-        should_request = cancelled + requested <= 2
-
-
-        if had_procesed or has_requested:
-            logger.info(f"User: {user.id}-{user.username} tried more than one transaction")
-            return BasicReturn(
-                success=False,
-                data={
-                    'message' : 'Only one transaction per day, please try again tomorrow.',
-                    'status' : 429
-                }
-            )
-        
-        if not should_request:
-            logger.info(f"User: {user.id}-{user.username} tried more than one transaction")
-            return BasicReturn(
-                success=False,
-                data={
-                    'message' : 'You can only request 2 transactions per day, please try again tomorrow.',
-                    'status' : 429
-                }
-            )
-
-
         user = Users.objects.select_for_update().get(id=user.id)
+        remaning_data = payments_repository.remaning_cooldown(user=user)
+
+        if not remaning_data.get("withdrawalAvailable"):
+            ts = int(remaning_data.get("time") or 0)
+            logger.info(f"User: {user.id}-{user.username} tried more than one transaction")
+            return BasicReturn(
+                success=False,
+                data={
+                    'message' : f'You have reach your limit, please try again in {time_utils.format_time(s=ts)}.',
+                    'status' : 429
+                }
+            )
+
         if (user.balance * 100) < cents:
             logger.info(f"User: {user.id}-{user.username} has balance: {user.balance} tried to remove {round(cents/100, 2)}")
             return BasicReturn(
@@ -1298,7 +1237,16 @@ class CoinFlowClient:
         cid = l_data.get('customerId').split("ʬ")[-1]
         if cid is None:
             return BasicReturn(success=False, error='User id was not found on the webhook')
-        user = self._parse_user_id(cid)
+
+        if not cid.startswith(f"{settings.ENV_POSTFIX}-"):
+            user = None
+
+        try:
+            user_pk = int(cid[len(settings.ENV_POSTFIX) + 1:])
+            user = Users.objects.select_for_update().get(id=user_pk)
+        except (ValueError, IndexError, Users.DoesNotExist):
+            user = None
+
         if user is None:
             return BasicReturn(success=False, error='User does not exist. Or does not belong to this game instance.')
 
@@ -1317,20 +1265,36 @@ class CoinFlowClient:
             if not transaction:
                 return BasicReturn(success=False, error='Deduplication this transaction was already claimed')
 
-            old_balance = user.balance
-            new_balance = old_balance + Decimal(money) / 100
-
-            bonus = (Decimal(money) * settings.BONUS_MULTIPLIER) / 100
-            user.bonus_balance += bonus
-
-            transaction.external_id = external_id
-            transaction.status=CoinFlowTransaction.StatusType.approved
-            transaction.amount=Decimal(money) / 100
-            transaction.subtotal=Decimal(subtotal) / 100
-            transaction.pre_balance=old_balance
-            transaction.post_balance = new_balance
+            transaction.status = CoinFlowTransaction.StatusType.approved
             transaction.is_deleted = False
-            user.balance = new_balance
+            transaction.pre_balance = user.balance
+            transaction.post_balance = user.balance
+            transaction.external_id = external_id
+
+            transaction.amount = Decimal(money) / 100
+            transaction.subtotal = Decimal(subtotal) / 100
+
+            if not transaction.bundle or transaction.bundle.is_deleted:
+
+                bonus = (Decimal(money) * settings.BONUS_MULTIPLIER) / 100
+                user.bonus_balance += bonus
+
+                platform_deposit(
+                    user=user,
+                    is_bonus=False,
+                    bonus_type="SC",
+                    accreditable=None,
+                    amount=transaction.amount,
+                    custom_multiplier=Decimal(1),
+                    description=f"Deposit coinflow of {transaction.amount}SC x1",
+                )
+            else:
+                apply_bonus(
+                    user=user,
+                    bonus=transaction.bundle,
+                    accreditable=None,
+                    description=f"Deposit coinflow of bundle {transaction.bundle.id} of {transaction.bundle.price}SC",
+                )
 
             user.save()
 
@@ -1342,8 +1306,8 @@ class CoinFlowClient:
                 )
 
             transaction.save()
-            logger.info(f'Successfully processed payment for user {user.id}-{user.username}, amount: ${transaction.amount}, new balance: ${new_balance}')
-            return BasicReturn(success=True, message=f'Payment processed successfully. New balance: ${new_balance}')
+            logger.info(f'Successfully processed payment for user {user.id}-{user.username}, amount: ${transaction.amount}, new balance: ${user.balance}')
+            return BasicReturn(success=True, message=f'Payment processed successfully. New balance: ${user.balance}')
 
         elif eventType in {"Card Payment Declined", "Card Payment Suspected Fraud", "ACH Failed", "ACH Returned", "PIX Failed"}:
             # Failed payments - mark transaction as failed

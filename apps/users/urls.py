@@ -1,20 +1,21 @@
 from django.conf.urls import url
+from apps.bets.views import WageringRequirementsView
 from apps.users.views import (AboutCmsView, AddSpinWheelView, AdminAdsPublicDetailsView,
                               AdminPublicDetailsView, AffiiateRequestView, AffiliatedPlayers, BonusDetailView,
-                              CashAppDetailsApi, CashappQrListView, CashbackView, ChangePassword, ChatSupportView,
+                              CashAppDetailsApi, CashappQrListView, CashbackView, ChageDepositLimit, ChangePassword, ChatSupportView,
                               CmsFAQView, CmsPrivacyPolicyView, CmsPromotionsView, ComingSoonPagesDeatilsView, ContactUsView,
                               CookiePolicyView,
                               CsrQueryView, FooterDeatilsView, ForgotPassword, FortunePandasAPIView,
                               FortunePandasCategoryAPIView, GetOTPView, GetSlug, IntroductionView, LoginAPIView,
                               Notification, OffMarketDepositView, OffmarketTransaction, OffMarketWithdrawView,
                               PagesDeatilsView, PlayerDeActiveView, PlayerEmailOTPsender, PlayerEmailOTPsender,
-                              PromotionCmsView, QueueView, ReadMessageView, RecentMessagesView, RestrictedLoginView,
+                              PromotionCmsView, QueueView, ReactorBonusAPIView, ReadMessageView, RecentMessagesView, RestrictedLoginView,
                               SetlanguageView, SetPlayerBettingLimitView, SetPlayerBlackoutView,
                               SetPlayerMaxSpendLimitView,
                               SettingsLimitsView, SignUpOTP, SignUpView, SpintheWheelDetailsAPIView, StaffDetailView,
                               TermsConditinosView, TipView, TransactionsAPIView, UserUpdateView, ValidatePromoCode,
                               ValidateReferralUser, ValidateSignUpPromoCode, VerifyOTPView, VerifyOTPView, VerifyToken,
-                              OTPActionsView, CountriesView, NextSpinWheel)
+                              OTPActionsView, CountriesView, NextSpinWheel, ModifyGCBonus)
     
 
 app_name = "Users"
@@ -81,8 +82,12 @@ urlpatterns = [
     url(r"^set-language/?", SetlanguageView.as_view(), name="set-language"),
     url(r"^bonus-detail/?", BonusDetailView.as_view(), name="bonus-detail"),
     url(r"^fortunepandas-categories/?", FortunePandasCategoryAPIView.as_view(), name="fortunepandas-categories"),
+    url(r"^wagering-requirements/", WageringRequirementsView.as_view({"get": "list"}), name="wagering-requirements"),
     # url(r"^fortunepandas/?", FortunePandasAPIView.as_view(), name="fortunepandas"),
 
     url(r'^countries/?', CountriesView.as_view(), name='countries'),
+    url(r'^reactor-bonus/?', ReactorBonusAPIView.as_view(), name="reactor-bonus"),
+    url(r'^deposit-limits/?', ChageDepositLimit.as_view(), name="change-deposit-limits"),
+    url(r'^modify-gc/?', ModifyGCBonus.as_view(), name="modify-gc")
 
 ]

@@ -45,6 +45,7 @@ cache_layer_buckets = (0, 1, 2, 3)
 
 DEFAULT_APPS = [
     'django.contrib.contenttypes',
+    'django.contrib.postgres',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.sessions',
@@ -493,3 +494,4 @@ USE_X_FORWARDED_HOST = True
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 PHONE_VERIF_ENABLED = get_env_var('PHONE_NUMBER_VERIFICATION_ENABLED', "True") == "True"
+REACTOR_MULTIPLIER = 30

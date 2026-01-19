@@ -21,6 +21,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.db.models import Q
 
+from apps.bets.services.wagering import get_wagering_balance
 from apps.users import promo_handler
 from api_services.settings.base import DOMAIN_URL
 from apps.admin_panel.utils import create_casino_account_id
@@ -113,7 +114,7 @@ class PlayerSerializer(serializers.Serializer):
     affiliate_link = serializers.CharField(max_length=250)
     is_active = serializers.BooleanField(default=False)
     phone_verified = serializers.SerializerMethodField()
-    document_verified = serializers.IntegerField()
+    document_verified = serializers.IntegerField(read_only=True)
     is_verified = serializers.SerializerMethodField()
     no_of_deposit_counts = serializers.IntegerField()
     is_bonus_on_all_deposits = serializers.BooleanField(default=False)
@@ -132,6 +133,9 @@ class PlayerSerializer(serializers.Serializer):
     mnet_url = serializers.SerializerMethodField()
     coinflow_state = serializers.SerializerMethodField()
     country = serializers.SerializerMethodField()
+    weekly_dl = serializers.DecimalField(decimal_places=2, max_digits=15, read_only=True)
+    daily_dl = serializers.DecimalField(decimal_places=2, max_digits=15, read_only=True)
+    playable = serializers.SerializerMethodField()
 
 
     @staticmethod
@@ -142,8 +146,10 @@ class PlayerSerializer(serializers.Serializer):
             'VRFD' : 2
         }
         return trans_layer[obj.coinflow_state]
-
-
+    
+    def get_playable(self, obj):
+        return get_wagering_balance(obj)
+    
     def get_country(self, obj):
         lang = self.context.get("lang_code", "en")
         if obj.country_obj:
@@ -644,7 +650,7 @@ class OffmarketTransactionsSerializer(serializers.Serializer):
 class SpintheWheelDetailsSerializer(serializers.ModelSerializer):
     class Meta:
         model = SpintheWheelDetails
-        fields = ('id', 'admin', 'value', 'code')
+        fields = ('id', 'value', 'code', 'coin')
 
 class TransactionsSerializer(serializers.ModelSerializer):
     bonus_amount = serializers.SerializerMethodField()

@@ -1,0 +1,172 @@
+{% extends "index.html" %}
+{% load static %}
+{% load i18n %}
+{% load math %}
+{% load date_utils %}
+{% block title %}
+Bundles
+{% endblock title %}
+
+{% block content %}
+{% include "components/css/utils/edit_template.html" %}
+<style>
+  .admin-card{
+    background-color: #ffffff;
+    box-shadow: 0px 0px 6px 6px rgb(204 204 204 / 0.25);
+    padding: 30px 10px;
+  }
+
+  .pcode.left-spacer {
+    margin-left: 0px;
+  }
+  .pcode{
+    margin-left: 250px;
+  }
+
+  @media(max-width:991px){
+    .setting-page .card-title h3{
+      font-size: 18px;
+    }
+    .pcode{
+      margin-left: 0px;
+    }
+  }
+</style>
+
+<div class="pcode" id="nw1" >
+    <div class="container-fluid pt-4" >
+        <div class="admin-card">
+            <div class="row">
+                <div class="col-xs-12 col-lg-12 ">
+                    <div class="page-content">
+                        <div class="main-heading-wrap d-flex justify-content-between align-items-center mb-4">
+                            <h5>{% trans "Bundles" %}</h5>
+                            <a href="{% url 'admin-panel:bundles-create' %}" class="btn btn-primary">{% trans "Create Bundle" %}</a>
+                        </div>
+                        
+                        <div class="container-fluid">
+                            <div class="table-responsive table-responsive-data2 mt-4">
+                                <table class="table table-data2 table-hover text-center">
+                                    <thead>
+                                        <tr>
+                                            <th>{% trans "Name" %}</th>
+                                            <th>{% trans "Price" %}</th>
+                                            <th>{% trans "Balance" %} (SC) x1</th>
+                                            <th>{% trans "Playable" %} (SC)</th>
+                                            <th>{% trans "Multiplier" %}</th>
+                                            <th>{% trans "Bonus" %} (GC)</th>
+                                            <th>{% trans "Miner" %} (RC)</th>
+                                            <th>{% trans "Status" %}</th>
+                                            <th>{% trans "Action" %}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% if not bundles %}
+                                            <tr>
+                                                <td colspan="9" class="text-center">
+                                                    <span>{% trans "No bundles found" %}</span>
+                                                </td>
+                                            </tr>
+                                        {% endif %}
+                                        {% for bundle in bundles %}
+                                            <tr class="table-row bg-light">
+                                                <td onclick="location.href='{% url 'admin-panel:bundles-edit' bundle.id %}'" style="cursor: pointer;">
+                                                    {{ bundle.name }}
+                                                </td>
+                                                <td onclick="location.href='{% url 'admin-panel:bundles-edit' bundle.id %}'" style="cursor: pointer;">
+                                                    {{ bundle.price }}
+                                                </td>
+                                                <td onclick="location.href='{% url 'admin-panel:bundles-edit' bundle.id %}'" style="cursor: pointer;">
+                                                    {{ bundle.balance }}
+                                                </td>
+                                                <td onclick="location.href='{% url 'admin-panel:bundles-edit' bundle.id %}'" style="cursor: pointer;">
+                                                    {{ bundle.playable }}
+                                                </td>
+                                                <td onclick="location.href='{% url 'admin-panel:bundles-edit' bundle.id %}'" style="cursor: pointer;">
+                                                    x{{ bundle.multiplier }}
+                                                </td>
+                                                <td onclick="location.href='{% url 'admin-panel:bundles-edit' bundle.id %}'" style="cursor: pointer;">
+                                                    {{ bundle.bonus }}
+                                                </td>
+                                                <td onclick="location.href='{% url 'admin-panel:bundles-edit' bundle.id %}'" style="cursor: pointer;">
+                                                    {{ bundle.miner }}
+                                                </td>
+                                                <td>
+                                                    {% if bundle.enabled %}
+                                                        <span class="text-success">{% trans "Active" %}</span>
+                                                    {% else %}
+                                                        <span class="text-danger">{% trans "Disabled" %}</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td class="d-flex justify-content-center align-items-center gap-2">
+                                                    <button class="enablebundlebutton toggle-btn {% if bundle.enabled %}active{% endif %}" bundle_id="{{ bundle.id }}"></button>
+                                                    <a href="{% url 'admin-panel:bundles-edit' bundle.id %}" class="btn btn-primary btn-sm" title="{% trans 'Edit' %}">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(".enablebundlebutton").click(function(e){
+        e.preventDefault();
+        var isActive = $(this).hasClass("active");
+        var action = isActive ? "disable" : "enable";
+        
+        Swal.fire({
+            html:
+                '<div class="swal-custom-content">' +
+                '<p class="swal-custom-icon"><i class="cp-icon">&#xe815;</i></p>' +
+                '<p class="swal-custom-title">{% trans "Are you sure you want to" %} ' + action + ' {% trans "this bundle?" %}</p>' +
+                '</div>',
+            customClass: {
+                actions: 'swal-custom-actions',
+                confirmButton: 'swal-custom-btn swal-custom-confirm-btn',
+                cancelButton: 'swal-custom-btn swal-custom-cancel-btn',
+            },
+            showCancelButton: true,
+            confirmButtonText: '{% trans "Yes" %}',
+            cancelButtonText: '{% trans "No" %}'
+        }).then((resp) => {
+            if(resp.value){
+                var bundle_id = $(this).attr("bundle_id");
+                var url_mask = "{% url 'admin-panel:enable-bundle' %}";
+                $.ajax({
+                    url: url_mask,
+                    type: "POST",
+                    dataType: "json",
+                    data: {
+                        bundle_id: bundle_id
+                    },
+                    success: function (data) {
+                        Swal.fire({
+                            icon: data["status"],
+                            title: data["status"] == "success" ? "Success" : "Error",
+                            text: data['message'],
+                        }).then((result) => {
+                            location.reload();
+                        });
+                    },
+                    error: function (data) {
+                         Swal.fire({
+                            icon: "error",
+                            title: "Error",
+                            text: "Something went wrong",
+                        });
+                    }
+                });
+            }
+        });
+    });
+</script>
+{% endblock content %}

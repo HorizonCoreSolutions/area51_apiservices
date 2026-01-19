@@ -1,10 +1,10 @@
-from django.db import models
+import uuid
 from decimal import Decimal
-from apps.core.models import AbstractBaseModel
-from apps.users.models import PromoCodesLogs, Users
 from django.db import models
-from django.utils.translation import gettext_lazy as _
+from apps.core.models import AbstractBaseModel
 from djchoices import ChoiceItem, DjangoChoices
+from apps.users.models import PromoCodesLogs, Users
+from django.utils.translation import gettext_lazy as _
 # Create your models here.
 
 
@@ -223,6 +223,15 @@ class CoinFlowTransaction(AbstractBaseModel):
         default=None,
         related_name="coinflow_transaction"
     )
+
+    bundle = models.ForeignKey(
+        'payments.Bundle',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        default=None,
+        related_name="coinflow_transactions"
+    )
     confimation_needed = models.BooleanField(default=False)
     
     processor_name = models.CharField(max_length=20,null=True,blank=True)
@@ -231,3 +240,28 @@ class CoinFlowTransaction(AbstractBaseModel):
     
     error_code = models.CharField(max_length=20,null=True,blank=True)
     error_description = models.CharField(max_length=500,null=True,blank=True)
+
+
+class BonusAbstractModel(AbstractBaseModel):
+    balance = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
+    playable = models.DecimalField(max_digits=10, decimal_places=2)
+
+    multiplier = models.IntegerField()
+
+    bonus = models.DecimalField(max_digits=10, decimal_places=2)
+    miner = models.DecimalField(max_digits=10, decimal_places=2)
+
+    class Meta:
+        abstract = True
+
+
+class Bundle(BonusAbstractModel):
+    code = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+
+    admin = models.ForeignKey(Users, on_delete=models.CASCADE, blank=False, null=True)
+
+    name = models.CharField(max_length=255)
+    enabled = models.BooleanField(default=True, db_index=True)
+
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+

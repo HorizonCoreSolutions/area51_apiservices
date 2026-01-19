@@ -65,7 +65,7 @@ from apps.admin_panel.forms import (AdminModelForm, AgentModelForm,
                                     )
 from apps.casino.tasks import task_update_offmarket_transaction
 from apps.casino.clients import RefujiClient
-from apps.payments.models import (AlchemypayOrder, CoinFlowTransaction, MnetTransaction, NowPaymentsTransactions,
+from apps.payments.models import (AlchemypayOrder, Bundle, CoinFlowTransaction, MnetTransaction, NowPaymentsTransactions,
     WithdrawalCurrency, WithdrawalRequests)
 from apps.users.forms import PageBlockerCmsPromotionsForm, ToasterCmsPromotionsForm
 from apps.users.models import FooterPages, MAX_SPEND_AMOUNT, Permission, ResponsibleGambling, BONUS_EVENTS
@@ -5797,6 +5797,66 @@ class ReferAFriendBonusPermission(CheckRolesMixin, views.JSONResponseMixin, view
             },
             status=200
         )
+
+class BundlesAdminView(CheckRolesMixin, TemplateView, View):
+    allowed_roles = ("admin", "superadmin")
+    template_name = "admin/bundles/bundles.html"
+
+    def get(self, request):
+        bundles = Bundle.objects.all().order_by("price")
+        return render(request, template_name=self.template_name,
+                      context={"bundles": bundles})
+
+
+class BundlesAdminCreateView(CheckRolesMixin, TemplateView, View):
+    allowed_roles = ("admin", "superadmin")
+    template_name = "admin/bundles/bundles_create.html"
+
+    def get(self, request):
+        return render(request, template_name=self.template_name)
+
+
+class BundlesAdminEditView(CheckRolesMixin, TemplateView, View):
+    allowed_roles = ("admin", "superadmin")
+    template_name = "admin/bundles/bundles_create.html"
+
+    def get(self, request, pk):
+        bundle = Bundle.objects.filter(id=pk).first()
+        return render(request, template_name=self.template_name, context={"bundle": bundle})
+
+
+class EnableBundleView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseMixin, View):
+    http_method_names = ["post"]
+    allowed_roles = ("admin", "superadmin")
+
+    @method_decorator(csrf_exempt)
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+
+    def post_ajax(self, request, *args, **kwargs):
+        try:
+            # if request.user.role not in ("admin", "superadmin"):
+            #     return self.render_json_response({"message": "You are not authorized to enable bundles", "status": "error"})
+            
+            filters = {} if request.user.role == "superadmin" else {"admin": request.user}
+            bundle_id = self.request.POST.get("bundle_id")
+            bundle = Bundle.objects.filter(id=bundle_id, **filters).first()
+            
+            if not bundle:
+                return self.render_json_response({"message": "Bundle not found", "status": "error"})
+
+            bundle.enabled = not bundle.enabled
+            bundle.save()
+
+            status_text = "Active" if bundle.enabled else "Disabled"
+            response = { "message": f"Bundle status changed to {status_text}", "status": "success", "enabled": bundle.enabled }
+
+        except Exception as err:
+            print(err)
+            response = { "message": str(err), "status": "error" }
+
+        return self.render_json_response(response)
+
 
 class PromotionPageView(CheckRolesMixin, TemplateView, View):
     allowed_roles = ["admin", ]

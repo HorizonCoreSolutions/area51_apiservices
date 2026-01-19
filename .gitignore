@@ -31,3 +31,5 @@ client.key
 ssl_backup
 staging_ssl
 requests_log.txt
+
+docker/*

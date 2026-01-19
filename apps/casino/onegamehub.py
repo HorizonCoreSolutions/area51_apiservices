@@ -12,6 +12,7 @@ from apps.casino.models import GSoftTransactions
 from django.db import transaction as db_transaction
 from typing import Dict, Optional, Any, List, Tuple, Union
 from urllib.parse import urlencode, quote, unquote, parse_qs
+from apps.bets.services import wagering as wagering_service
 
 FAKE_COIN = "GOC"
 REAL_COIN = "SSC"
@@ -133,7 +134,7 @@ class OneGameHub:
                              user: Users,
                              is_real_play: bool,
                              ) -> Dict[str, Union[int, Decimal, str]]:
-        balance = user.balance if is_real_play else user.bonus_balance
+        balance = wagering_service.platform_playable_balance(user) if is_real_play else user.bonus_balance
         cur = REAL_COIN if is_real_play else FAKE_COIN
         return {"status": 200,
                 "balance": int(Decimal(balance or 0)*100),
@@ -268,29 +269,36 @@ class OneGameHub:
 
             # CHECK: win_amount is higher or equals to 0
             # 3.2: 7.
+            adjust_amount = None
+            bonus_bet_amount = None
+            play_data = None
+
             if is_real_play:
-                balance = Decimal(user.balance or 0)
+                game_data = wagering_service.platform_bet(
+                    user=user,
+                    amount=amount
+                )
+                if game_data is None:
+                    response_data = self.parse_to_message("ERR003")
+                    return response_data, status.HTTP_200_OK
+                play_data, adjust_amount = game_data
             else:
                 balance = Decimal(user.bonus_balance or 0)
+                if balance < amount:
+                    response_data = self.parse_to_message("ERR003")
+                    return response_data, status.HTTP_200_OK
+                transfer_balance = -amount
+                bonus_bet_amount = abs(transfer_balance)
+                user.bonus_balance = transfer_balance + balance
 
             # Check if user  has enought money to bet
-            if balance < amount:
-                response_data = self.parse_to_message("ERR003")
-                return response_data, status.HTTP_200_OK
-
-            transfer_balance = - abs(amount)
             withdraw = abs(amount)
 
             transaction_obj = GSoftTransactions()
-
-            if is_real_play:
-                user.balance = transfer_balance + balance
-                transaction_obj.amount = abs(transfer_balance)
-            else:
-                transaction_obj.bonus_bet_amount = abs(transfer_balance)
-                user.bonus_balance = transfer_balance + balance
             user.save()
 
+            transaction_obj.amount = adjust_amount
+            transaction_obj.bonus_bet_amount = bonus_bet_amount
             transaction_obj.callerId = settings.ONE_GAME_HUB_ID
             transaction_obj.user = user
             transaction_obj.withdraw = withdraw if withdraw != 0 else None
@@ -303,6 +311,7 @@ class OneGameHub:
             transaction_obj.game_status = GSoftTransactions.GameStatus.pending
             transaction_obj.request_type = GSoftTransactions.RequestType.wager
             transaction_obj.time = timezone.now()
+            transaction_obj.wr_data = play_data or {}
             transaction_obj.save()
 
             return self.get_formated_balance(
@@ -343,6 +352,9 @@ class OneGameHub:
             ext_round_id = data.get("ext_round_id")
             transaction_id = data.get("transaction_id")
 
+            ext_round_finished = data.get("ext_round_finished") or "0"
+            ext_round_finished = ext_round_finished == "1"
+
             round_id = data.get("round_id")
             payout = Decimal(data.get("amount", 0)) / 100
 
@@ -351,6 +363,7 @@ class OneGameHub:
                 user=user,
                 round_id=round_id,
                 callerId=settings.ONE_GAME_HUB_ID,
+                game_status=GSoftTransactions.GameStatus.pending,
             ).order_by("-created")
             bet = GSoftTransactions.objects.filter(
                 user=user,
@@ -390,12 +403,20 @@ class OneGameHub:
             if payout < 0:
                 logger.debug(f"Payout {payout} does not make sence.")
                 return self.parse_to_message("ERR001"), status.HTTP_400_BAD_REQUEST
+            
+            transfer_balance = Decimal(0)
+            if is_real_play:
+                transfer_balance = wagering_service.platform_pay(
+                    user=user,
+                    won=payout,
+                    data=(session.last().wr_data or {})
+                )
+            if ext_round_finished:
+                session.update(game_status=GSoftTransactions.GameStatus.completed)
 
             transfer_bonus = Decimal(0) if is_real_play else payout
-            transfer_balance = payout if is_real_play else Decimal(0)
 
             user.bonus_balance = transfer_bonus + Decimal(user.bonus_balance or 0)
-            user.balance = transfer_balance + Decimal(user.balance or 0)
             user.save()
 
             transaction_obj = GSoftTransactions()
@@ -411,7 +432,7 @@ class OneGameHub:
             transaction_obj.sessionalternativeid = ext_round_id
             transaction_obj.action_type = GSoftTransactions.ActionType.win
             transaction_obj.request_type = GSoftTransactions.RequestType.result
-            transaction_obj.game_status = GSoftTransactions.GameStatus.pending
+            transaction_obj.game_status = GSoftTransactions.GameStatus.completed if ext_round_finished else GSoftTransactions.GameStatus.pending
             transaction_obj.time = timezone.now()
             transaction_obj.save()
 

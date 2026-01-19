@@ -2,6 +2,7 @@ import json
 import math
 import traceback
 from decimal import Decimal
+from typing import Tuple
 
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
@@ -110,3 +111,35 @@ class ChartStats(AbstractBaseModel):
     per_sports_bet_count = JSONField(default=None, null=True, blank=False)
     per_sports_profit = JSONField(default=None, null=True, blank=False)
     per_sports_winning = JSONField(default=None, null=True, blank=False)
+
+
+class WageringRequirement(AbstractBaseModel):
+    """_summary_
+
+    Args:
+        AbstractBaseModel (_type_): _description_
+        
+    I'm sorry if you are reading this, but I'm writing this so you can get a better understand on this model
+    
+    1) amount and balance should start at the same value
+    2) as the user plays it should be reduced from balance
+       - on each bet the value of the bet should be added to played
+    3) once the user has played more than the limit the balance should be given to the user
+    """
+    user = models.ForeignKey(Users, on_delete=models.CASCADE, related_name="wagering_requirements")
+    accreditable = models.ForeignKey(Users, on_delete=models.CASCADE, null=True, default=None, related_name="accreditable_wagerings")
+
+    # the amount the user has deposited
+    amount = models.DecimalField(max_digits=10, decimal_places=2, editable=False)
+
+    # the amount of bonus it has (like if player 5 and amount 5, here should be 5)
+    balance = models.DecimalField(max_digits=10, decimal_places=2)
+    # The amount the user has played
+    played = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
+    limit = models.DecimalField(max_digits=10, decimal_places=2)
+
+    result = models.DecimalField(max_digits=10, decimal_places=2, null=True, default=None)
+    active = models.BooleanField(default=True, db_index=True)
+    betable = models.BooleanField(db_index=True)
+
+    description = models.CharField(max_length=500, null=True, default=None)
