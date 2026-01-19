@@ -207,7 +207,8 @@ class CasinoTransactionsView(viewsets.ModelViewSet):
         return queryset
 
 class WageringRequirementsView(
-    viewsets.ModelViewSet
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet
 ):
     serializer_class = WageringRequirementsSerializer
     http_method_names = [
