@@ -1,6 +1,7 @@
 import datetime
 
 from django.http.request import HttpRequest
+from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.bets.filters import (
@@ -23,7 +24,7 @@ from apps.core.rest_any_permissions import AnyPermissions
 from django.utils.translation import activate
 from django.utils.translation import gettext_lazy as _
 from django.db.models import Q, Case, When, F, DateTimeField
-from rest_framework import viewsets, mixins
+from rest_framework import status, viewsets, mixins
 
 from .models import (
     BONUS,
@@ -275,4 +276,4 @@ class WalletView(APIView):
         "get",
     ]
     def get(self, request: HttpRequest):
-        return get_user_wagering_snapshot(self.request.user)
+        return Response(get_user_wagering_snapshot(self.request.user), status=status.HTTP_200_OK)
