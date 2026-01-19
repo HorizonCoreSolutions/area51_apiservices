@@ -221,7 +221,6 @@ class WageringRequirementsView(
     def get_queryset(self):
         queryset = WageringRequirement.objects.filter(
             user=self.request.user,
-            balance__gt=0,
             betable=True,
         )
         from_date = self.request.query_params.get("from_date", None)
