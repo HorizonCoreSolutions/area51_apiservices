@@ -136,6 +136,22 @@ class GamePoolBetsSerializer(serializers.ModelSerializer):
 
 
 class WageringRequirementsSerializer(serializers.ModelSerializer):
+    completed = serializers.SerializerMethodField()
+    played = serializers.SerializerMethodField()
+    balance = serializers.SerializerMethodField()
+    
+    @staticmethod
+    def get_completed(obj):
+        return obj.result is not None
+
+    @staticmethod
+    def get_played(obj):
+        return obj.limit if obj.balance == 0 else obj.played
+
+    @staticmethod
+    def get_balance(obj):
+        return obj.result or obj.balance
+
     class Meta:
         model = WageringRequirement
-        fields = ("created", "balance", "played", "limit", "description", "result")
+        fields = ("created", "limit", "description")
