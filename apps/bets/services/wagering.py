@@ -526,10 +526,10 @@ def get_user_wagering_snapshot(user: Users) -> Dict[str, Any]:
 
     if next_betable and (limit := next_betable.limit or Decimal("0.00")) > 0:
         played = next_betable.played or Decimal("0.00")
-        percentage_active: Union[Decimal, str] = played / limit
+        percentage_active: Decimal = played / limit
         next_win = next_betable.balance or Decimal("0.00")
     else:
-        percentage_active = "full"
+        percentage_active = Decimal("1.00")
         next_win = Decimal("0.00")
 
     return {
