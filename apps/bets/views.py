@@ -13,7 +13,7 @@ from apps.bets.serializers import (
     Transactionandinerializer,
     WageringRequirementsSerializer,
 )
-from apps.bets.services.wagering import get_user_wagering_snapshot
+from apps.bets.services.wagering import claim_action_bonus, get_user_wagering_snapshot
 from apps.bets.utils import validate_date
 from apps.casino.models import *
 from apps.core.pagination import PageNumberPagination
@@ -277,3 +277,15 @@ class WalletView(APIView):
     ]
     def get(self, request: HttpRequest):
         return Response(get_user_wagering_snapshot(self.request.user), status=status.HTTP_200_OK)
+
+class ClaimView(APIView):
+
+    permission_classes = (IsPlayer,)
+    http_method_names = [
+        "get",
+    ]
+    def post(self, request: HttpRequest):
+        data = request.data.get("action")
+        if data is None or not data in ("reactor", "bonus"):
+            return Response({"message": "Please use an action to continue. bonus | reactor"})
+        return Response(claim_action_bonus(self.request.user, data), status=status.HTTP_200_OK)

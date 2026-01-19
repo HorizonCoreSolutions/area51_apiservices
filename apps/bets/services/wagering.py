@@ -1,11 +1,12 @@
 import math
 from decimal import Decimal
 from django.conf import settings
+from django.db import transaction
 from apps.users.models import Users
-from typing import Any, Dict, List, Optional, Tuple, Union, cast
+from typing import Any, Dict, List, Literal, Optional, Tuple, Union, cast
 from apps.core.file_logger import SimpleLogger
 from django.db.models import F, Sum, Case, When, DecimalField, Q
-from apps.bets.models import WageringRequirement, Transactions
+from apps.bets.models import CHARGED, CREDIT, WageringRequirement, Transactions
 from apps.bets.utils import serialize_wr_data, generate_reference
 
 logger = SimpleLogger(name="Wagering", log_file="logs/wagering.log").get_logger()
@@ -546,3 +547,40 @@ def get_user_wagering_snapshot(user: Users) -> Dict[str, Any]:
         "percentage_active": percentage_active,
         "next_win": next_win,
     }
+
+@transaction.atomic
+def claim_action_bonus(user: Users, action: Literal["reactor", "bonus"]):
+    a = Users.objects.select_for_update().get(id=user.id)
+    pre = a.balance
+    t = WageringRequirement.objects.select_for_update().filter(
+        claimed=False,
+        betable=action == "bonus",
+        active=False
+    )
+    amount = Decimal(0)
+    if action == "bonus":
+        a.balance += a.balance_wagering
+        amount += a.balance_wagering
+        a.balance_wagering = Decimal(0)
+    if action == "reactor":
+        a.balance += a.balance_reactor
+        amount += a.balance_reactor
+        a.balance_reactor = Decimal(0)
+
+    a.save()
+    t.update(claimed=True)
+
+    Transactions.objects.create(
+        user=user,
+        amount=amount,
+        journal_entry=CREDIT,
+        status=CHARGED,
+        previous_balance=pre,
+        new_balance=a.balance,
+        reference=generate_reference(a),
+
+        description=f"Claimed action for {action} -> {amount}SC",
+        bonus_type="N/A" if action == "bonus" else "reactor",
+        bonus_amount=0
+    )
+    return {"status": "ok"}

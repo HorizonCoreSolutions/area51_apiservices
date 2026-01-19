@@ -1,5 +1,5 @@
 from django.conf.urls import url
-from apps.bets.views import WageringRequirementsView, WalletView
+from apps.bets.views import ClaimView, WageringRequirementsView, WalletView
 from apps.users.views import (AboutCmsView, AddSpinWheelView, AdminAdsPublicDetailsView,
                               AdminPublicDetailsView, AffiiateRequestView, AffiliatedPlayers, BonusDetailView,
                               CashAppDetailsApi, CashappQrListView, CashbackView, ChageDepositLimit, ChangePassword, ChatSupportView,
@@ -84,6 +84,7 @@ urlpatterns = [
     url(r"^fortunepandas-categories/?", FortunePandasCategoryAPIView.as_view(), name="fortunepandas-categories"),
     url(r"^wagering-requirements/", WageringRequirementsView.as_view({"get": "list"}), name="wagering-requirements"),
     url(r"^wallet/", WalletView.as_view(), name="wallet-resume"),
+    url(r"^claim-action/", ClaimView.as_view(), name="claim-action-bonus"),
     # url(r"^fortunepandas/?", FortunePandasAPIView.as_view(), name="fortunepandas"),
 
     url(r'^countries/?', CountriesView.as_view(), name='countries'),
