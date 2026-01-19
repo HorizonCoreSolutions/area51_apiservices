@@ -848,6 +848,46 @@ class BalanceUpdateConsumer(AsyncWebsocketConsumer):
             print("ERROR", e)
 
 
+class BalanceSnapshotConsumer(AsyncWebsocketConsumer):
+    async def connect(self):
+        try:
+            query_params = parse_qs(self.scope['query_string'].decode())
+            if query_params.get('user_id'):
+                self.user_id = int(query_params.get('user_id')[0])
+                self.user = await sync_to_async(Users.objects.filter(id=self.user_id).first)()
+                if not self.user:
+                    await self.close(code=401)
+                    return
+            else:
+                await self.close(code=401)
+                return
+
+            self.room_group_name = f"balance_{self.user_id}"
+            await self.channel_layer.group_add(
+                self.room_group_name,
+                self.channel_name
+            )
+            await self.accept()
+        except Exception as e:
+            print("ERROR", e)
+
+    async def disconnect(self, close_code=None):
+        await self.channel_layer.group_discard(
+            self.room_group_name,
+            self.channel_name
+        )
+
+    async def receive(self, text_data=None):
+        return None
+
+    async def send_balance_snapshot(self, event):
+        try:
+            message = json.loads(event['message'])
+            await self.send(text_data=json.dumps(message))
+        except Exception as e:
+            print("ERROR", e)
+
+
 class TournamentScoreboardConsumer(AsyncWebsocketConsumer):
     
     async def connect(self):

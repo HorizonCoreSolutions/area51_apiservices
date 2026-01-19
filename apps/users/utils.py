@@ -6,6 +6,7 @@ import random
 import string
 import redis
 import json
+import threading
 import base64
 import traceback
 from Crypto.Cipher import AES
@@ -24,6 +25,7 @@ from apps.bets.models import Transactions
 from apps.bets.utils import generate_reference
 from apps.users.models import ChatRoom, OffMarketGames, OffMarketTransactions, Users
 from apps.casino.models import Tournament, UserTournament
+from apps.bets.services.wagering import get_user_wagering_snapshot
 from apps.casino.utils import get_user_tournament_rank
 
 redis_client = redis.Redis(host=settings.REDIS_HOST,port=settings.REDIS_PORT,db=0)
@@ -283,6 +285,27 @@ def decimal_serializer(obj):
     if isinstance(obj, Decimal):
         return float(obj)
     raise TypeError("Object of type {} is not JSON serializable".format(type(obj)))
+
+
+def send_user_balance_snapshot_async(user: Users) -> None:
+    def _send_snapshot() -> None:
+        try:
+            refreshed_user = Users.objects.get(id=user.id)
+            payload = get_user_wagering_snapshot(refreshed_user)
+            channel_layer = get_channel_layer()
+            room_group_name = f"balance_{refreshed_user.id}"
+            async_to_sync(channel_layer.group_send)(
+                room_group_name,
+                {
+                    'type': 'send_balance_snapshot',
+                    'message': json.dumps(payload, default=decimal_serializer),
+                }
+            )
+        except Exception as exc:
+            print("Error in send_user_balance_snapshot_async", exc)
+            print(traceback.format_exc())
+
+    threading.Thread(target=_send_snapshot, daemon=True).start()
 
 
 def update_tournament_scorboard(tournament: Tournament, user_tournament: UserTournament):
