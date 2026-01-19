@@ -138,4 +138,4 @@ class GamePoolBetsSerializer(serializers.ModelSerializer):
 class WageringRequirementsSerializer(serializers.ModelSerializer):
     class Meta:
         model = WageringRequirement
-        fields = ("created", "balance", "played", "limit", "description")
+        fields = ("created", "balance", "played", "limit", "description", "result")
