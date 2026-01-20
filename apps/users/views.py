@@ -224,7 +224,7 @@ class LoginAPIView(APIViewContext):
                 if result_geo['status'] == -1:
                     return Response(result_geo['message'], status.HTTP_401_UNAUTHORIZED)
 
-            if user.is_currently_active:
+            if user.is_currently_active and settings.MULTI_DEVICE_LOGIN_ENABLED:
                 if user.last_activity_time < timezone.now()-timedelta(minutes=15):  
                     user.last_activity_time = timezone.now()
                     user.save()
