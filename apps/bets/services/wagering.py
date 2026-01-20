@@ -518,7 +518,7 @@ def get_user_wagering_snapshot(user: Users, calculate_reactor: bool = False) -> 
     )
 
     next_betable = (
-        base_qs.filter(betable=True)
+        base_qs.filter(betable=True, result__isnull=True)
         .only("limit", "played", "balance")
         .order_by("created")
         .first()
