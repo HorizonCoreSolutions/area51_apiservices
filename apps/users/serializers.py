@@ -671,7 +671,7 @@ class TransactionsSerializer(serializers.ModelSerializer):
     @staticmethod
     def get_bonus_amount(obj):
         if hasattr(obj, "bonus_type"):
-            return obj.bonus_amount
+            return obj.amount
         # for offmarket transactions
         return obj.bonus
     
