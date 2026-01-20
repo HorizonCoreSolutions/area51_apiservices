@@ -137,7 +137,7 @@ def deposit(
     task_update_offmarket_transaction.apply_async(
         args=[deposit.id],  # type: ignore
         countdown=19
-    )  # type: ignore
+    )
     return True, None
 
 
@@ -242,7 +242,7 @@ def edit_transaction(
 
     # Refund if failed
     if user_status == "Failed":
-        off_market_refund_transactions(transaction.id) # type: ignore
+        off_market_refund_transactions(transaction.id)
 
     return True, None
 
