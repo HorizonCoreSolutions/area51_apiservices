@@ -16,6 +16,7 @@ from apps.bets.serializers import (
 from apps.bets.services.wagering import claim_action_bonus, get_user_wagering_snapshot
 from apps.bets.utils import validate_date
 from apps.casino.models import *
+from apps.core.concurrency import limiter
 from apps.core.pagination import PageNumberPagination
 from apps.core.permissions import IsPlayer
 from apps.core.rest_any_permissions import AnyPermissions
@@ -291,4 +292,15 @@ class ClaimView(APIView):
         data = request.data.get("action")
         if data is None or not data in ("reactor", "bonus"):
             return Response({"message": "Please use an action to continue. bonus | reactor"})
-        return Response(claim_action_bonus(self.request.user, data), status=status.HTTP_200_OK)
+        is_allowed = limiter.allow(
+            key=f"user:{self.user.id}:claim_action:{data}",
+            limit=1,  # 2 request / (window)
+            window=15,  # 5 seconds
+            sliding=True
+        )
+        if not is_allowed:
+            return Response({"message": "Please wait a few seconds. Request limit reached"}, status=status.HTTP_429_TOO_MANY_REQUESTS)
+        res = claim_action_bonus(self.request.user, data)
+        if res.get("status") == "error":
+            return Response(res, status=status.HTTP_400_BAD_REQUEST)
+        return Response(res, status=status.HTTP_200_OK)

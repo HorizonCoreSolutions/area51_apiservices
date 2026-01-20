@@ -584,6 +584,9 @@ def claim_action_bonus(user: Users, action: Literal["reactor", "bonus"]):
         a.balance += a.balance_reactor
         amount += a.balance_reactor
         a.balance_reactor = Decimal(0)
+    
+    if amount > 0:
+        return {"status": "error", "message": "No amount to claim"}
 
     a.save()
     t.update(claimed=True)
@@ -598,7 +601,7 @@ def claim_action_bonus(user: Users, action: Literal["reactor", "bonus"]):
         reference=generate_reference(a),
 
         description=f"Claimed action for {action} -> {amount}SC",
-        bonus_type="Bet" if action == "bonus" else "Reactor",
+        bonus_type="Play_Bonus" if action == "bonus" else "Solar_Bonus",
         bonus_amount=0
     )
     return {"status": "ok"}
