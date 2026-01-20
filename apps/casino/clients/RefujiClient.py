@@ -1,4 +1,3 @@
-import random
 import string
 import secrets
 import requests
@@ -45,7 +44,7 @@ def deposit(
     if not (user and game and user_game):
         return False, "Game or account not found"
     
-    username = user.username or ""
+    username = str(user.username or "")
 
     deposit_id = generate_deposit_id(username=username)
     bonus_amount = (Decimal(game.bonus_percentage) / 100) * amount
@@ -68,14 +67,14 @@ def deposit(
         "area51_username" : encrypt(username),
     }
 
-    messages = ['Promo Code Is Invalid',
-                'Promo Code Expired',
-                'Promo Code Already Claimed']
+    # messages = ['Promo Code Is Invalid',
+    #             'Promo Code Expired',
+    #             'Promo Code Already Claimed']
 
     if promo_code is not None:
         request_payload.update({
             "promo_code" : promo_code,
-            "username" : encrypt("a51" + (user.username or ""))
+            "username" : encrypt("a51" + username)
             # Usuario de area51
         })
 
@@ -90,6 +89,7 @@ def deposit(
             },
         )
     except Exception as e:
+        print(e)
         return False, "Service is not available. Please try again later."
         
 
@@ -179,11 +179,11 @@ def create_user(
     if UserGames.objects.filter(game=game, user=player).exists():
         return False, "User already has an account for this game"
 
-    user_game = UserGames()
-    user_game.game = game
-    user_game.username = username
-    user_game.user = player
-    user_game.save()
+    _user_game = UserGames.objects.create(
+        game=game,
+        username=username,
+        user=player,
+    )
 
     return True, None
 
