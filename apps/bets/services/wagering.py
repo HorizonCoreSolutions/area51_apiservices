@@ -482,14 +482,14 @@ def get_user_wagering_snapshot(user: Users) -> Dict[str, Any]:
         user_id=user.id,
         claimed=False,
         active=True,
-        result__isnull=True,
+        ,
     )
 
     totals = base_qs.aggregate(
         bonus_total=Sum(
             Case(
                 When(
-                    Q(betable=True) & ~Q(limit=F("amount")),
+                    Q(betable=True) & ~Q(limit=F("amount")) & Q(result__isnull=True),
                     then=F("balance"),
                 ),
                 default=Decimal("0.00"),
@@ -499,7 +499,7 @@ def get_user_wagering_snapshot(user: Users) -> Dict[str, Any]:
         wagering_total=Sum(
             Case(
                 When(
-                    betable=True,
+                    Q(betable=True) & Q(result__isnull=True),
                     limit=F("amount"),
                     then=F("balance"),
                 ),
