@@ -572,15 +572,15 @@ def claim_action_bonus(user: Users, action: Literal["reactor", "bonus"]):
     t = WageringRequirement.objects.select_for_update().filter(
         claimed=False,
         betable=action == "bonus",
-        active=False
     )
     amount = Decimal(0)
     if action == "bonus":
+        t = t.filter(Q(balance=Decimal('0.00')) | Q(active=False))
         a.balance += a.balance_wagering
         amount += a.balance_wagering
         a.balance_wagering = Decimal(0)
     if action == "reactor":
-        t = t.filter(amount__gt=Decimal('0.00'))
+        t = t.filter(balance=Decimal('0.00'))
         a.balance += a.balance_reactor
         amount += a.balance_reactor
         a.balance_reactor = Decimal(0)
