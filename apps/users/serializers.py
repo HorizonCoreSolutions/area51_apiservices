@@ -363,65 +363,68 @@ class PlayerSerializer(serializers.Serializer):
 class LoginSerializer(JSONWebTokenSerializer):
     def validate(self, attrs):
         from django.utils import timezone
+        from datetime import timedelta
         credentials = {"username": attrs.get("username").lower(), "password": attrs.get("password")}
 
-        if all(credentials.values()):
-            try:
-                if not Users.objects.filter(username=attrs.get("username").lower()).exists():
+        if not all(credentials.values()):
+            raise serializers.ValidationError(
+                _('Must include "{username_field}" and "password".').format(
+                    username_field=self.username_field
+                )
+            )
+        try:
+            if not Users.objects.filter(username=attrs.get("username").lower()).exists():
+                raise serializers.ValidationError(
+                    _(f"Invalid username")
+                )
+            user = authenticate(**credentials)
+            if (user and
+                settings.ENV_POSTFIX != "devp" and
+                user.is_currently_active and
+                user.last_activity_time > timezone.now()-timedelta(minutes=15)
+            ):  
+                raise serializers.ValidationError(
+                    _(f" You are already logged in on another device")
+                )
+                
+            if not user:
+                msg = _("Incorrect password. Please try again.")
+                raise serializers.ValidationError(msg)
+            # if user.role != "player":
+            #     raise serializers.ValidationError("Only player are allowed")
+            # Auth Token System
+            # token = Token.objects.get(user=user)
+            # if token:
+            #     token.delete()
+            #     token = Token.objects.create(user=user)
+            # user.last_login = datetime.datetime.now()
+            # user.save()
+            # return {"token": token.key, "user": user}
+            # jwt token system
+    
+            if user.role == "player":
+                responsible_gambling = ResponsibleGambling.objects.get_or_create(user=user)[0]
+                if responsible_gambling.is_account_cancelled:
                     raise serializers.ValidationError(
-                        _(f"Invalid username")
+                        _(f"You Account is in cancelled state. Please contact your admin.")
                     )
-                user = authenticate(**credentials)
-                if user and user.is_currently_active:
-                  if user.last_activity_time > timezone.now()-datetime.timedelta(minutes=15):  
-                       raise serializers.ValidationError(
-                                _(f" You are already logged in on another device")
-                            )
-                  
-                if user:
-                    # if user.role != "player":
-                    #     raise serializers.ValidationError("Only player are allowed")
-                    # Auth Token System
-                    # token = Token.objects.get(user=user)
-                    # if token:
-                    #     token.delete()
-                    #     token = Token.objects.create(user=user)
-                    # user.last_login = datetime.datetime.now()
-                    # user.save()
-                    # return {"token": token.key, "user": user}
-                    # jwt token system
-           
-                    if user.role =="player":
-                        responsible_gambling = ResponsibleGambling.objects.get_or_create(user=user)[0]
-                        if responsible_gambling.is_account_cancelled:
-                            raise serializers.ValidationError(
-                                _(f"You Account is in cancelled state. Please contact your admin.")
-                            )
-                    
 
-                    code = "".join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
-                    user.username = code + user.username
-                    payload = jwt_payload_handler(user)
-                    token = jwt_encode_handler(payload)
-                    user.username = user.username[6:]
-                    existing_token = user.access_token
-                    user.access_token = token
-                    user.last_login = timezone.now()
+            code = "".join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
+            user.username = code + user.username
+            payload = jwt_payload_handler(user)
+            token = jwt_encode_handler(payload)
+            user.username = user.username[6:]
+            # existing_token = user.access_token
+            user.access_token = token
+            user.last_login = timezone.now()
 
-                    user.save()
-                    return {"token": token, "user": user}
-                else:
-                    msg = _("Incorrect password. Please try again.")
-                    raise serializers.ValidationError(msg)
-            except NotActiveUserException:
-                msg = _("Your account has been deactivated. Please contact your agent.")
-                raise serializers.ValidationError(msg)
-            except DeactivatedUserException:
-                msg = _("Your account is deactivated")
-                raise serializers.ValidationError(msg)
-        else:
-            msg = _('Must include "{username_field}" and "password".')
-            msg = msg.format(username_field=self.username_field)
+            user.save()
+            return {"token": token, "user": user}
+        except NotActiveUserException:
+            msg = _("Your account has been deactivated. Please contact your agent.")
+            raise serializers.ValidationError(msg)
+        except DeactivatedUserException:
+            msg = _("Your account is deactivated")
             raise serializers.ValidationError(msg)
 
 
