@@ -103,18 +103,18 @@ def deposit(
     user.balance = user.balance - Decimal(amount) 
     user.save()
 
-    deposit = OffMarketTransactions()
-    deposit.user = user
-    deposit.amount = total_amount
-    deposit.status = 'Pending'
-    deposit.txn_id = deposit_id
-    deposit.game_name = game_code
-    deposit.journal_entry = 'credit'
-    deposit.transaction_type = 'DEPOSIT'
-    deposit.description = f'deposit {amount} by {user.username} in game {game_code}'
-    deposit.game_name_full = game.title
-    deposit.bonus = bonus_amount
-    deposit.save()
+    deposit = OffMarketTransactions.objects.create(
+        user=user,
+        amount=total_amount,
+        status='Pending',
+        txn_id=deposit_id,
+        game_name=game_code,
+        journal_entry='credit',
+        transaction_type='DEPOSIT',
+        description=f'deposit {amount} by {user.username} in game {game_code}',
+        game_name_full=game.title,
+        bonus=bonus_amount,
+    )
     
     if force_update:
         complete_request_payload = {
