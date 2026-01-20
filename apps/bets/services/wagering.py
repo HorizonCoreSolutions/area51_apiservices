@@ -6,7 +6,7 @@ from apps.users.models import Users
 from typing import Any, Dict, List, Literal, Optional, Tuple, Union, cast
 from apps.core.file_logger import SimpleLogger
 from django.db.models import F, Sum, Case, When, DecimalField, Q
-from apps.bets.models import CHARGED, CREDIT, WageringRequirement, Transactions
+from apps.bets.models import BONUS, CHARGED, CREDIT, WageringRequirement, Transactions
 from apps.bets.utils import serialize_wr_data, generate_reference
 
 logger = SimpleLogger(name="Wagering", log_file="logs/wagering.log").get_logger()
@@ -591,14 +591,14 @@ def claim_action_bonus(user: Users, action: Literal["reactor", "bonus"]):
     Transactions.objects.create(
         user=user,
         amount=amount,
-        journal_entry=CREDIT,
+        journal_entry=BONUS,
         status=CHARGED,
         previous_balance=pre,
         new_balance=a.balance,
         reference=generate_reference(a),
 
         description=f"Claimed action for {action} -> {amount}SC",
-        bonus_type="N/A" if action == "bonus" else "reactor",
+        bonus_type="Bet" if action == "bonus" else "Reactor",
         bonus_amount=0
     )
     return {"status": "ok"}
