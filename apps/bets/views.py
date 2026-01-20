@@ -276,7 +276,7 @@ class WalletView(APIView):
         "get",
     ]
     def get(self, request: HttpRequest):
-        return Response(get_user_wagering_snapshot(self.request.user), status=status.HTTP_200_OK)
+        return Response(get_user_wagering_snapshot(self.request.user, calculate_reactor=True), status=status.HTTP_200_OK)
 
 class ClaimView(APIView):
 

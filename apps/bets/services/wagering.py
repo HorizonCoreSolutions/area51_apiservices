@@ -477,12 +477,11 @@ def platform_pay(
     user.save()
     return wallet_to_pay + wallet_adjustment
 
-def get_user_wagering_snapshot(user: Users) -> Dict[str, Any]:
+def get_user_wagering_snapshot(user: Users, calculate_reactor: bool = False) -> Dict[str, Any]:
     base_qs = WageringRequirement.objects.filter(
         user_id=user.id,
         claimed=False,
         active=True,
-        ,
     )
 
     totals = base_qs.aggregate(
@@ -534,6 +533,19 @@ def get_user_wagering_snapshot(user: Users) -> Dict[str, Any]:
         percentage_active = Decimal("1.00")
         next_win = Decimal("0.00")
 
+    percentage_reactor: Decimal = Decimal(1)
+    if calculate_reactor:
+        next_reactor = (
+            base_qs.filter(betable=False, balance__gt=0)
+            .only("played")
+            .order_by("created")
+            .first()
+        )
+
+        if next_reactor:
+            reactor_played = next_reactor.played or Decimal("0.00")
+            percentage_reactor = (reactor_played % 30) / Decimal("30")
+
     return {
         "pending_reactor": user.balance_reactor or Decimal("0.00"),
         "pending_balance": user.balance_wagering or Decimal("0.00"),
@@ -546,6 +558,7 @@ def get_user_wagering_snapshot(user: Users) -> Dict[str, Any]:
 
         "pool_amount": totals["reactor_total"] or Decimal("0.00"),
         "percentage_active": percentage_active,
+        **({"percentage_reactor": percentage_reactor} if calculate_reactor else {}),
         "next_win": next_win,
     }
 
