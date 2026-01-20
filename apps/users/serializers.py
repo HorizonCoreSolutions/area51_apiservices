@@ -379,7 +379,7 @@ class LoginSerializer(JSONWebTokenSerializer):
                 )
             user = authenticate(**credentials)
             if (user and
-                settings.MULTI_DEVICE_LOGIN_ENABLED and
+                not settings.MULTI_DEVICE_LOGIN_ENABLED and
                 user.is_currently_active and
                 user.last_activity_time > timezone.now()-timedelta(minutes=15)
             ):  
