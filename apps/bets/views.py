@@ -293,7 +293,7 @@ class ClaimView(APIView):
         if data is None or not data in ("reactor", "bonus"):
             return Response({"message": "Please use an action to continue. bonus | reactor"})
         is_allowed = limiter.allow(
-            key=f"user:{self.user.id}:claim_action:{data}",
+            key=f"user:{self.request.user.id}:claim_action:{data}",
             limit=1,  # 2 request / (window)
             window=15,  # 5 seconds
             sliding=True
