@@ -585,7 +585,7 @@ def claim_action_bonus(user: Users, action: Literal["reactor", "bonus"]):
         amount += a.balance_reactor
         a.balance_reactor = Decimal(0)
     
-    if amount > 0:
+    if amount == 0:
         return {"status": "error", "message": "No amount to claim"}
 
     a.save()
