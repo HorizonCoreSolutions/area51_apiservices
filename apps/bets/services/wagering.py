@@ -557,8 +557,8 @@ def get_user_wagering_snapshot(user: Users, calculate_reactor: bool = False) -> 
 
         "pool_amount": totals["reactor_total"] or Decimal("0.00"),
         "percentage_active": percentage_active,
-        **({"percentage_reactor": percentage_reactor} if calculate_reactor else {}),
         "next_win": next_win,
+        **({"percentage_reactor": percentage_reactor} if calculate_reactor else {}),
     }
 
 @transaction.atomic
