@@ -543,7 +543,7 @@ def get_user_wagering_snapshot(user: Users, calculate_reactor: bool = False) -> 
 
         if next_reactor:
             reactor_played = next_reactor.played or Decimal("0.00")
-            percentage_reactor = (reactor_played % 30) / Decimal("30")
+            percentage_reactor = round((reactor_played % 30) / Decimal("30"), 4)
 
     return {
         "pending_reactor": user.balance_reactor or Decimal("0.00"),
