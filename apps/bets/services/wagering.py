@@ -498,8 +498,7 @@ def get_user_wagering_snapshot(user: Users, calculate_reactor: bool = False) -> 
         wagering_total=Sum(
             Case(
                 When(
-                    Q(betable=True) & Q(result__isnull=True),
-                    limit=F("amount"),
+                    Q(betable=True) & Q(result__isnull=True) & Q(limit=F("amount")),
                     then=F("balance"),
                 ),
                 default=Decimal("0.00"),
