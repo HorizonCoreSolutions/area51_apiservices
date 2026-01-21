@@ -1896,7 +1896,13 @@ class BundleView(APIView):
         bundles = get_bundles(self.request.user)
         if len(bundles) == 0:
             return Response([], status=status.HTTP_200_OK)
-        serializer = BundleSerializer(bundles, many=True, context={"user": self.request.user})
+        
+        allowed_bundles = []
+        for bundle in bundles.copy():
+            if bundle.processing_time and bundle.processing_time + bundle.created < timezone.now():
+                continue
+            allowed_bundles.append(bundle)
+        serializer = BundleSerializer(allowed_bundles, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request) -> Response:

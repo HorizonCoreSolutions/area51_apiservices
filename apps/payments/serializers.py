@@ -242,17 +242,6 @@ class CoinflowTransactionsSerializer(serializers.ModelSerializer):
 class BundleSerializer(serializers.ModelSerializer):
 
     base = serializers.SerializerMethodField()
-    
-    def to_representation(self, data):
-        user = self.context.get("user", None)
-        if user:
-            results = []
-            for obj in data:
-                if obj.processing_time and obj.processing_time + user.created < timezone.now():
-                    continue
-                results.append(obj)
-            data = results
-        return super().to_representation(data)
 
     @staticmethod
     def get_base(obj):
