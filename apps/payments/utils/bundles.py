@@ -1,5 +1,5 @@
 from decimal import Decimal
-from typing import List
+from typing import List, Optional
 from django.db.models import Case, Count, F, IntegerField, OuterRef, Q, Subquery, Value, When
 from django.db.models.functions import Coalesce
 from apps.users.models import Users
@@ -76,3 +76,14 @@ def get_bundles(user: Users) -> List[Bundle]:
         )
         .order_by("price")
     )
+
+
+def can_purchase_bundle(bundle_code: str, user: Users) -> Optional[Bundle]:
+    """
+    Check if a user can purchase a bundle.
+    """
+    bundles = get_bundles(user)
+    for bundle in bundles:
+        if bundle.code == bundle_code:
+            return bundle
+    return None
