@@ -1896,7 +1896,7 @@ class BundleView(APIView):
         bundles = get_bundles(self.request.user)
         if len(bundles) == 0:
             return Response([], status=status.HTTP_200_OK)
-        serializer = BundleSerializer(bundles, many=True)
+        serializer = BundleSerializer(bundles, many=True, context={"user": self.request.user})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request) -> Response:
