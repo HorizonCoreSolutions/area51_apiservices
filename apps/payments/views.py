@@ -21,6 +21,7 @@ from rest_framework import status
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 from apps.payments.service import can_deposit_limits
+from apps.payments.utils.bundles import get_bundles
 from apps.users import promo_handler
 from rest_framework.views import APIView
 from apps.users.utils import redis_client
@@ -1918,8 +1919,8 @@ class BundleView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request) -> Response:
-        bundles = Bundle.objects.filter(admin=request.user.admin, enabled=True).order_by("price")
-        if not bundles.exists():
+        bundles = get_bundles(self.request.user)
+        if len(bundles) == 0:
             return Response([], status=status.HTTP_200_OK)
         serializer = BundleSerializer(bundles, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
