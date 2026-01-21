@@ -590,7 +590,7 @@ class CoinFlowClient:
             year, month, day = user.dob.split('-')
             formatted_date_str = f"{year}-{month}-{day}"
         else:
-            ] = ''
+            formatted_date_str = ''
 
         customer_info = {
             "address": user.complete_address,
