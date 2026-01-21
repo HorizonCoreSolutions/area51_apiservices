@@ -344,7 +344,8 @@ def bet_wr(
 
 def platform_cancel_bet_wr(
     user: Users,
-    data: Dict[str, Tuple[str, str]]
+    data: Dict[str, Tuple[str, str]],
+    shortfall: Decimal = Decimal('0.00')
 ):
     starting_balance = cast(Decimal, user.balance)
     wr_clear = data.pop("wr_clear", ('0.00', '0.00'))
@@ -355,7 +356,7 @@ def platform_cancel_bet_wr(
     balance, debit = __cancel_wr_clear(user, wr_clear)
     balance_wagering = cast(Decimal, user.balance_wagering)
 
-    adjust = -abs(debit)
+    adjust = -abs(debit) - abs(shortfall)
     balance += relative_amount
 
     padjust = min(balance, abs(adjust))
@@ -433,7 +434,7 @@ def platform_pay(
     user: Users,
     won: Decimal,
     data: Dict[str, Tuple[str, str]]
-) -> Optional[Decimal]:
+) -> Optional[Tuple[Decimal, Dict[str, Tuple[str, str]]]]:
     """
     Function to pay the winnings to the user
     This already pays the user
@@ -447,9 +448,13 @@ def platform_pay(
         Optional[Decimal]: This is only for the record keeping
     """
     # data = deserialize_wr_data(data)
+
+    wr_data = {}
     from_wallet = data.pop("from_wallet", None)
+
     data.pop("wr_clear", None)
     objects = WageringRequirement.objects.select_for_update().filter(id__in=data.keys())
+
     total_to_pay = Decimal('0.00')
     paid = Decimal('0.00')
     wallet_bet_amount = Decimal(from_wallet[0]) if from_wallet else Decimal('0.00')
@@ -464,18 +469,120 @@ def platform_pay(
     )
     wallet_to_pay = Decimal(math.floor(wallet_ratio * won * 10) / 10)
     for wagrec in objects:
-        to_pay = Decimal(math.floor(Decimal(data[str(wagrec.id)][0]) * won * 10)/10)
-        paid += to_pay
-        to_wallet = __single_wr_pay(wagrec, to_pay)
-        total_to_pay += to_wallet
+        ratio = Decimal(data[str(wagrec.id)][0])
+        amount = Decimal(math.floor(ratio * won * 10) / 10)
+        wr_data[str(wagrec.id)] = (ratio, amount)
+        paid += amount
+        total_to_pay += __single_wr_pay(wagrec, amount)
+
     paid_total = paid + wallet_to_pay
     adjustment = won - paid_total
     wallet_adjustment = adjustment if wallet_bet_amount > 0 else Decimal('0.00')
     pool_adjustment = adjustment if wallet_bet_amount == 0 else Decimal('0.00')
+
+    wr_data["to_wallet"] = (str(wallet_to_pay), str(wallet_to_pay))
+    wr_data["to_wagering"] = (str(total_to_pay), str(total_to_pay))
     user.balance += wallet_to_pay + wallet_adjustment
     user.balance_wagering += total_to_pay + pool_adjustment
     user.save()
-    return wallet_to_pay + wallet_adjustment
+    return wallet_to_pay + wallet_adjustment, wr_data
+
+
+def __single_wr_cancel_pay(wagrec: WageringRequirement, amount: Decimal) -> Decimal:
+    """Reverse of __single_wr_pay - deducts the payout from a WR.
+
+    Args:
+        wagrec (WageringRequirement): The wagering requirement to deduct from
+        amount (Decimal): Amount to deduct
+
+    Returns:
+        Decimal: Amount that couldn't be deducted from WR (shortfall)
+    """
+    if not wagrec.betable:
+        return Decimal('0.00')
+
+    current_balance = cast(Decimal, wagrec.balance or Decimal('0.00'))
+
+    if current_balance >= amount:
+        # Can fully deduct from WR balance
+        wagrec.balance = current_balance - amount
+        if wagrec.balance <= 0:
+            wagrec.active = False
+            wagrec.result = Decimal('0.00')
+        wagrec.save()
+        return Decimal('0.00')
+    else:
+        # Can only partially deduct - there's a shortfall
+        shortfall = amount - current_balance
+        wagrec.balance = Decimal('0.00')
+        wagrec.active = False
+        wagrec.result = Decimal('0.00')
+        wagrec.save()
+        return shortfall
+
+
+def platform_cancel_pay(
+    user: Users,
+    pay_data: Dict[str, Tuple[str, str]]
+) -> Decimal:
+    """
+    Reverses the effect of platform_pay.
+    Deducts the payout amounts from WRs, wallet, and wagering pool.
+
+    Args:
+        user (Users): User whose payout is being cancelled
+        pay_data (Dict): The wr_data returned from platform_pay, containing:
+            - {wr_id: (ratio, amount)} for each WR that received payout
+            - "to_wallet": (amount, amount) - amount added to wallet
+            - "to_wagering": (amount, amount) - amount added to wagering pool
+
+    Returns:
+        Decimal: Total shortfall (amount that couldn't be deducted, if any)
+    """
+    total_shortfall = Decimal('0.00')
+
+    # Extract wallet and wagering amounts
+    to_wallet_data = pay_data.pop("to_wallet", ('0.00', '0.00'))
+    to_wagering_data = pay_data.pop("to_wagering", ('0.00', '0.00'))
+
+    wallet_amount = Decimal(to_wallet_data[0])
+    wagering_amount = Decimal(to_wagering_data[0])
+
+    # Deduct from WR balances
+    wr_ids = [k for k in pay_data.keys() if k not in ("to_wallet", "to_wagering")]
+    if wr_ids:
+        objects = WageringRequirement.objects.select_for_update().filter(id__in=wr_ids)
+        for wagrec in objects:
+            wr_payout = Decimal(pay_data[str(wagrec.id)][1])
+            shortfall = __single_wr_cancel_pay(wagrec, wr_payout)
+            total_shortfall += shortfall
+
+    # Deduct from user's wagering pool
+    current_wagering = cast(Decimal, user.balance_wagering or Decimal('0.00'))
+    if current_wagering >= wagering_amount:
+        user.balance_wagering = current_wagering - wagering_amount
+    else:
+        # Shortfall from wagering pool goes to balance deduction
+        wagering_shortfall = wagering_amount - current_wagering
+        user.balance_wagering = Decimal('0.00')
+        wallet_amount += wagering_shortfall
+
+    # Deduct from user's balance (wallet)
+    current_balance = cast(Decimal, user.balance or Decimal('0.00'))
+    if current_balance >= wallet_amount:
+        user.balance = current_balance - wallet_amount
+    else:
+        # Can't fully deduct - user may have spent some winnings
+        balance_shortfall = wallet_amount - current_balance
+        user.balance = Decimal('0.00')
+        total_shortfall += balance_shortfall
+        logger.warning(
+            f"User {user.id}-{user.username} cancel_pay shortfall: {balance_shortfall}. User may have spent some winnings."
+        )
+
+    user.save()
+    return total_shortfall
+
 
 def get_user_wagering_snapshot(user: Users, calculate_reactor: bool = False) -> Dict[str, Any]:
     base_qs = WageringRequirement.objects.filter(

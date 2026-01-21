@@ -430,14 +430,21 @@ class CPgames():
             transaction_obj = GSoftTransactions()
             transfer_balance = transfer_amount
 
+            # Store both bet and pay data for proper cancellation
+            # wr_data format: [bet_data, pay_data] where pay_data can be {} if no payout
+            bet_data = played_data.copy() if played_data else {}
+            pay_data = {}
+
             if app.is_real_play:
                 payout = transfer_balance + amount
                 if payout > 0:
-                    adjust_pay_amount = wagering_service.platform_pay(
+                    pay_result = wagering_service.platform_pay(
                         user=user,
                         won=payout,
                         data=played_data
                     )
+                    if pay_result:
+                        _, pay_data = pay_result
                 transaction_obj.amount = abs(transfer_balance)
             else:
                 user.bonus_balance = transfer_balance + \
@@ -457,9 +464,14 @@ class CPgames():
             transaction_obj.action_type = action_type
             transaction_obj.game_status = GSoftTransactions.GameStatus.completed
             transaction_obj.time = timezone.now()
-            transaction_obj.wr_data = played_data
+            # Store as list [bet_data, pay_data] for proper cancellation
+            transaction_obj.wr_data = [bet_data, pay_data]
             transaction_obj.save()
-            send_user_balance_snapshot_async(user=user)
+            try:
+                send_user_balance_snapshot_async(user=user)
+            except Exception as e:
+                print("grep here")
+                print("ws info not working")
 
             return (self.get_formated_balance(user=user, app=app),
                     status.HTTP_200_OK)
@@ -507,17 +519,19 @@ class CPgames():
             bet_id = msg.get("bet_id")
 
             # CHECK: if the bet already exist
-            # 3.2: 2.
+            # Fixed: filter by bet_id field, not game_id
             qs = GSoftTransactions.objects.filter(
                 callerId=settings.CP_GAMES_ID,
                 user=user,
-                game_id=bet_id,
-            )
+                bet_id=bet_id,
+            ).order_by("-created")
+
             has_rolled = qs.filter(
                 request_type=GSoftTransactions.RequestType.rollback)
+
             if not qs.exists():
                 return self.parse_to_message(1118), status.HTTP_200_OK
-            
+
             if has_rolled.exists():
                 return self.get_formated_balance(user=user, app=app), status.HTTP_200_OK
 
@@ -525,25 +539,88 @@ class CPgames():
             if to_rollback is None:
                 return self.get_formated_balance(user=user, app=app), status.HTTP_200_OK
 
-            # CHECK: win_amount is higher or equals to 0
-            # 3.2: 7.
-            deposit = to_rollback.deposit or Decimal(0)
-            withdraw = to_rollback.withdraw or Decimal(0)
-            multipliyer = 1 if withdraw > 0 else -1
+            # Calculate reversal amounts
+            # If original was withdraw (loss), we add back (multiplier = 1)
+            # If original was deposit (win), we subtract (multiplier = -1)
+            deposit = Decimal(to_rollback.deposit or 0)
+            withdraw = Decimal(to_rollback.withdraw or 0)
+            multiplier = 1 if withdraw > 0 else -1
 
-            transfer_balance = Decimal(to_rollback.amount or 0) * multipliyer
-            transfer_bonus   = Decimal(to_rollback.bonus_bet_amount or 0) * multipliyer
+            transfer_balance = Decimal(to_rollback.amount or 0) * multiplier
+            transfer_bonus = Decimal(to_rollback.bonus_bet_amount or 0) * multiplier
 
-            user.bonus_balance = transfer_bonus + \
-                Decimal(user.bonus_balance or 0)
-            user.balance = transfer_balance + Decimal(user.balance or 0)
+            # Handle real play vs bonus play based on stored data
+            # Check if wr_data is new format [bet_data, pay_data] or old format {dict}
+            wr_data = to_rollback.wr_data
+            is_new_format = isinstance(wr_data, list) and len(wr_data) == 2
+
+            is_bonus_play = (
+                (to_rollback.bonus_bet_amount and to_rollback.bonus_bet_amount != 0)
+                or (not is_new_format and wr_data == {})
+                or (is_new_format and wr_data[0] == {})
+            )
+
+            if is_bonus_play:
+                # Bonus play - directly adjust bonus_balance
+                user.bonus_balance = transfer_bonus + Decimal(user.bonus_balance or 0)
+            else:
+                # Real play with wagering data
+                # In transfer_in_out, two operations happened:
+                # 1. platform_bet(amount) - deducted bet from WRs/wallet
+                # 2. platform_pay(payout) - added payout to WRs/wallet (if payout > 0)
+                #
+                # To cancel, we need to reverse both in order:
+                # 1. First cancel the pay (deduct payout from WRs/wallet)
+                # 2. Then cancel the bet (restore bet amount to WRs/wallet)
+
+                if is_new_format:
+                    # New format: [bet_data, pay_data]
+                    bet_data, pay_data = wr_data[0], wr_data[1]
+
+                    # Step 1: Cancel the pay first (if there was a payout)
+                    pay_shortfall = Decimal('0.00')
+                    if pay_data and pay_data != {}:
+                        pay_shortfall = wagering_service.platform_cancel_pay(
+                            user, pay_data.copy()
+                        )
+
+                    # Step 2: Cancel the bet (restore bet amounts to WRs/wallet)
+                    # Pass shortfall to adjust if user spent some winnings
+                    wagering_service.platform_cancel_bet_wr(
+                        user, bet_data.copy(), shortfall=pay_shortfall
+                    )
+                else:
+                    # Old format: single dict (backwards compatibility)
+                    # Fall back to old logic: cancel bet and estimate payout deduction
+                    wr_data_copy = (wr_data or {}).copy()
+                    wr_data_copy.pop("wr_clear", None)
+                    from_wallet_data = wr_data_copy.pop("from_wallet", ('0', '0'))
+                    from_wallet_bet = Decimal(from_wallet_data[1] if len(from_wallet_data) > 1 else from_wallet_data[0])
+                    wr_bet_total = sum(
+                        Decimal(v[1]) for v in wr_data_copy.values()
+                    ) if wr_data_copy else Decimal(0)
+                    original_bet_amount = from_wallet_bet + wr_bet_total
+
+                    payout = transfer_balance + original_bet_amount
+
+                    wagering_service.platform_cancel_bet_wr(user, wr_data)
+
+                    if payout > 0:
+                        user.balance = Decimal(user.balance or 0) - payout
+
             user.save()
 
+            # Mark original transaction as rolled back
+            to_rollback.game_status = GSoftTransactions.GameStatus.completed
+            to_rollback.save()
+
+            # Create rollback transaction record
+            # Note: deposit/withdraw are swapped for the rollback record
             transaction_obj = GSoftTransactions()
             transaction_obj.callerId = settings.CP_GAMES_ID
             transaction_obj.user = user
-            transaction_obj.deposit = deposit if deposit != 0 else None
-            transaction_obj.withdraw = withdraw if withdraw != 0 else None
+            transaction_obj.deposit = withdraw if withdraw != 0 else None
+            transaction_obj.withdraw = deposit if deposit != 0 else None
             transaction_obj.game_id = game_id
             transaction_obj.transaction_id = to_rollback.transaction_id
             transaction_obj.bet_id = bet_id
@@ -555,6 +632,8 @@ class CPgames():
             transaction_obj.time = timezone.now()
             transaction_obj.game_status = GSoftTransactions.GameStatus.completed
             transaction_obj.save()
+
+            send_user_balance_snapshot_async(user=user)
 
             return self.get_formated_balance(user=user, app=app), status.HTTP_200_OK
         except AttributeError:
@@ -819,11 +898,15 @@ class CPgames():
             
             adjust_pay_amount = Decimal(0)
             if app.is_real_play:
-                adjust_pay_amount = wagering_service.platform_pay(
+                due = wagering_service.platform_pay(
                     user=user,
                     won=payout,
                     data=last_game.wr_data
                 )
+                if due is not None:
+                    adjust_pay_amount, _ = due
+                else:
+                    print("error in platform_pay")
             
             transfer_bonus   = Decimal(0) if app.is_real_play else payout
 

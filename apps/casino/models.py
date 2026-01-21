@@ -133,6 +133,9 @@ class GSoftTransactions(AbstractBaseModel):
     #   - first value is a percentage of the total amount of the bet
     #   - second value is the amount of the WR that was set as played
 
+    # Special cases
+    # On place_in_out for cpgames data will be saved to wr_data as [bet_data, pay_data]
+
 
 
 class PlayerFavouriteCasinoGames(AbstractBaseModel):

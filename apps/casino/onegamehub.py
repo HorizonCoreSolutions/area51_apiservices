@@ -407,11 +407,15 @@ class OneGameHub:
             
             transfer_balance = Decimal(0)
             if is_real_play:
-                transfer_balance = wagering_service.platform_pay(
+                data = wagering_service.platform_pay(
                     user=user,
                     won=payout,
                     data=(session.last().wr_data or {})
                 )
+                if data is not None:
+                    transfer_balance, _ = data
+                else:
+                    print("error in platform_pay")
             if ext_round_finished:
                 session.update(game_status=GSoftTransactions.GameStatus.completed)
 
