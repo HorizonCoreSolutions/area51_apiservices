@@ -269,7 +269,15 @@ class BundleCreateSerializer(serializers.ModelSerializer):
             "multiplier",
             "bonus",
             "miner",
+            "limit_per_user",
+            "limit_total",
+            "processing_time",
         ]
+        extra_kwargs = {
+            "limit_per_user": {"required": False, "allow_null": True},
+            "limit_total": {"required": False, "allow_null": True},
+            "processing_time": {"required": False, "allow_null": True},
+        }
 
     def validate_price(self, value):
         """
