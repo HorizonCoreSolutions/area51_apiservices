@@ -1,8 +1,23 @@
+from decimal import Decimal
 from typing import List
 from django.db.models import Case, Count, F, IntegerField, OuterRef, Q, Subquery, Value, When
 from django.db.models.functions import Coalesce
 from apps.users.models import Users
 from apps.payments.models import Bundle, BundleUsage
+
+
+def recerve_bundle(bundle: Bundle, user: Users, price: Decimal, platform: str) -> str:
+    """
+    Reserve a bundle for a user.
+    """
+    return BundleUsage.objects.create(bundle=bundle, user=user, price=price, platform=platform).reference
+
+
+def release_bundle(reference: str, user: Users):
+    """
+    Release a bundle reference for a user.
+    """
+    BundleUsage.objects.filter(reference=reference, user=user).delete()
 
 
 def get_bundles(user: Users) -> List[Bundle]:

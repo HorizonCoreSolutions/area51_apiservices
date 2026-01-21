@@ -234,6 +234,7 @@ class CoinFlowTransaction(AbstractBaseModel):
         default=None,
         related_name="coinflow_transactions"
     )
+    reference_usage_bundle = models.CharField(max_length=255, null=True, blank=True)
     confimation_needed = models.BooleanField(default=False)
     
     processor_name = models.CharField(max_length=20,null=True,blank=True)
@@ -280,6 +281,7 @@ class BundleUsage(AbstractBaseModel):
     bundle = models.ForeignKey(Bundle, on_delete=models.CASCADE, related_name="bundle_usages")
     user = models.ForeignKey(Users, on_delete=models.CASCADE, related_name="bundle_usages")
     price = models.DecimalField(max_digits=10, decimal_places=2)
+    reference = models.CharField(max_length=255, default=str(uuid.uuid4()))
     platform = models.CharField(max_length=20, choices=PlatformType)
 
 
