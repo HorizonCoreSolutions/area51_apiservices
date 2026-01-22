@@ -7118,11 +7118,20 @@ class CasinoManagementProviderView(CheckRolesMixin, ListView):
             if brands and len(brands) > 0 :
                 brand_filter = [int(x) for x in brands]
                 print(brand_filter)
-                queryset = queryset.filter(game__id__in=brand_filter)
+                queryset = queryset.filter(game__id__in=brand_filter).annotate(
+                    can_bonus_sc=Max("game__can_bonus_sc"),
+                    can_clear_sc=Max("game__can_clear_sc"),
+                )
             return queryset
 
-        queryset = queryset.filter(admin=self.request.user).distinct("game__vendor_name")
-
+        queryset = (
+            CasinoManagement.objects.filter(admin=self.request.user)
+            .values("game__vendor_name")
+            .annotate(
+                can_bonus_sc=Max("game__can_bonus_sc"),
+                can_clear_sc=Max("game__can_clear_sc"),
+            )
+        )
         return queryset
 
 
