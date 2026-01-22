@@ -7095,43 +7095,70 @@ class CasinoManagementView(CheckRolesMixin, ListView):
 
 
 class CasinoManagementProviderView(CheckRolesMixin, ListView):
-    '''
+    """
     URL: admin/casino-management-provider-list/
     Shows the panel to activate or deactivate providers
-    '''
+    """
 
-    allowed_roles = ["admin",]
+    allowed_roles = ["admin"]
     template_name = "admin/provider_casino_management.html"
     paginate_by = 20
     model = CasinoManagement
-    queryset = CasinoManagement.objects.all()
     context_object_name = "casinogames"
     date_format = "%d/%m/%Y"
 
     def get_queryset(self):
-        queryset = super().get_queryset()
+        user = self.request.user
         brands = self.request.GET.get("brand_id")
-        if brands:
-            brands = [int(x) for x in brands.split(",") if x.isdigit()]
-            queryset = queryset.filter(admin=self.request.user)
 
-            if brands and len(brands) > 0 :
-                brand_filter = [int(x) for x in brands]
-                print(brand_filter)
-                queryset = queryset.filter(game__id__in=brand_filter).annotate(
-                    can_bonus_sc=BoolOr("game__can_bonus_sc"),
-                    can_clear_sc=BoolOr("game__can_clear_sc"),
-                )
-            return queryset
-
-        queryset = (
-            CasinoManagement.objects.filter(admin=self.request.user)
+        # Subquery: aggregate booleans per vendor
+        vendor_bonus_subquery = (
+            CasinoManagement.objects.filter(
+                admin=user,
+                game__vendor_name=OuterRef("game__vendor_name"),
+            )
             .values("game__vendor_name")
+            .annotate(val=BoolOr("game__can_bonus_sc"))
+            .values("val")[:1]
+        )
+
+        vendor_clear_subquery = (
+            CasinoManagement.objects.filter(
+                admin=user,
+                game__vendor_name=OuterRef("game__vendor_name"),
+            )
+            .values("game__vendor_name")
+            .annotate(val=BoolOr("game__can_clear_sc"))
+            .values("val")[:1]
+        )
+
+        # Base queryset with aggregated booleans
+        queryset = (
+            CasinoManagement.objects.filter(admin=user)
             .annotate(
-                can_bonus_sc=BoolOr("game__can_bonus_sc"),
-                can_clear_sc=BoolOr("game__can_clear_sc"),
+                vendor_can_bonus_sc=Coalesce(
+                    Subquery(vendor_bonus_subquery),
+                    False,
+                    output_field=BooleanField(),
+                ),
+                vendor_can_clear_sc=Coalesce(
+                    Subquery(vendor_clear_subquery),
+                    False,
+                    output_field=BooleanField(),
+                ),
             )
         )
+
+        # Filter by specific games if requested
+        if brands:
+            brands = [int(x) for x in brands.split(",") if x.isdigit()]
+            if brands:
+                queryset = queryset.filter(game__id__in=brands)
+            return queryset
+
+        # Default: one row per vendor
+        queryset = queryset.order_by("game__vendor_name").distinct("game__vendor_name")
+
         return queryset
 
 
