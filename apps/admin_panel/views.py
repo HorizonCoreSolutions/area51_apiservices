@@ -52,7 +52,7 @@ from rest_framework.views import APIView
 from django.db.models import Exists, F, OuterRef, Q, Sum, Count, TextField, Value, DecimalField, ExpressionWrapper, \
     Subquery, Max, CharField, Case, When, BooleanField 
 from django.db.models.functions import Coalesce, Lower, Replace, Cast
-from django.contrib.postgres.aggregates import ArrayAgg
+from django.contrib.postgres.aggregates import ArrayAgg, BoolOr
 
 from apps.admin_panel.payments import get_payment_qr_code, get_preference
 from apps.casino.models import (CasinoGameList, CasinoHeaderCategory, CasinoManagement, GSoftTransactions, Tournament,
@@ -7119,8 +7119,8 @@ class CasinoManagementProviderView(CheckRolesMixin, ListView):
                 brand_filter = [int(x) for x in brands]
                 print(brand_filter)
                 queryset = queryset.filter(game__id__in=brand_filter).annotate(
-                    can_bonus_sc=Max("game__can_bonus_sc"),
-                    can_clear_sc=Max("game__can_clear_sc"),
+                    can_bonus_sc=BoolOr("game__can_bonus_sc"),
+                    can_clear_sc=BoolOr("game__can_clear_sc"),
                 )
             return queryset
 
@@ -7128,8 +7128,8 @@ class CasinoManagementProviderView(CheckRolesMixin, ListView):
             CasinoManagement.objects.filter(admin=self.request.user)
             .values("game__vendor_name")
             .annotate(
-                can_bonus_sc=Max("game__can_bonus_sc"),
-                can_clear_sc=Max("game__can_clear_sc"),
+                can_bonus_sc=BoolOr("game__can_bonus_sc"),
+                can_clear_sc=BoolOr("game__can_clear_sc"),
             )
         )
         return queryset
