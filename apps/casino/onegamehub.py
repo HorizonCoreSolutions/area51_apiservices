@@ -305,6 +305,7 @@ class OneGameHub:
             transaction_id = data.get("transaction_id")
             extra = data.get("extra")
             parsed = CoinParams.deserialize(extra)
+            logger.debug(f"Parsed: {parsed}, serialized: {extra}")
             round_id = data.get("round_id")
             amount = Decimal(0 if freerounds_id else data.get("amount", 0)) / 100
 
