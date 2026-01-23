@@ -880,16 +880,31 @@ class Casino25APIView(APIView):
 
             casino = Casino25(user=self.request.user, tournament_id=tournament_id, user_tournament=user_tournament, debug=True, request_data=request.data)
             if request_type == "startgame":
-                provider = CasinoGameList.objects.filter(game_id=game_id).values_list("section_id",flat=True)
-                if not provider:
-                    pass
-                elif provider[0] == "OneGameHub":
-                    cp = OneGameHub()
-                    success, response = cp.start_game(
-                        request_param=request.data,
-                        ip=get_user_ip_from_request(request=self.request)
+                result = (
+                    CasinoGameList.objects
+                    .filter(game_id=game_id)
+                    .values_list(
+                        "section_id",
+                        "can_clear_sc",
+                        "can_bonus_sc",
                     )
-                elif provider[0] == "CPgames":
+                    .first()
+                )
+
+                if result is None:
+                    return JsonResponse({"success" : False, "message" : "Game not found"}, status=status.HTTP_400_BAD_REQUEST)
+
+                provider, can_clear_sc, can_bonus_sc = result
+
+                if provider == "OneGameHub":
+                    one = OneGameHub()
+                    success, response = one.start_game(
+                        request_param=request.data,
+                        ip=get_user_ip_from_request(request=self.request),
+                        clear=can_clear_sc,
+                        bonus=can_bonus_sc
+                    )
+                elif provider == "CPgames":
                     cp = CPgames()
                     success, response = cp.start_game(request.data)
                 else:
@@ -902,6 +917,43 @@ class Casino25APIView(APIView):
         except Exception as e:
             print(e)
             return JsonResponse({"success" : False, "message" : "Internal Error"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class ModifyCasinoGamesAPIView(APIView):
+    http_method_name = ["post"]
+    permission_classes = (IsPlayer,)
+
+    def post(self, request, **kwargs):
+        try:
+            field = request.data.get("field")
+            if field not in ["can_clear_sc", "can_bonus_sc"]:
+                return JsonResponse({"success" : False, "message" : "Invalid field"}, status=status.HTTP_400_BAD_REQUEST)
+            value = request.data.get("value")
+            if value not in ["True", "False"]:
+                return JsonResponse({"success" : False, "message" : "Invalid value"}, status=status.HTTP_400_BAD_REQUEST)
+            subject = request.data.get("subject")
+            if subject not in ["game_id", "vendor_name"]:
+                return JsonResponse({"success" : False, "message" : "Invalid subject"}, status=status.HTTP_400_BAD_REQUEST)
+
+            subject_id = request.data.get("subject_id")
+            if not subject_id:
+                return JsonResponse({"success" : False, "message" : "Subject ID is required"}, status=status.HTTP_400_BAD_REQUEST)
+            subject_id = str(subject_id)
+
+            if subject == "game_id":
+                games = CasinoGameList.objects.filter(game_id=subject_id)
+            else:
+                games = CasinoGameList.objects.filter(vendor_name=subject_id)
+
+            if games.count() == 0:
+                return JsonResponse({"success" : False, "message" : "Game not found"}, status=status.HTTP_400_BAD_REQUEST)
+            
+            games.update(**{field: value == "True"})
+            return JsonResponse({"success" : True, "message" : "Game modified"}, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            print(e)
+            return JsonResponse({"success" : False, "message" : "Internal Error"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 
 class Casino25CallBackAPIView(APIView):

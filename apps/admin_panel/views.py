@@ -7393,6 +7393,14 @@ class SpinToWinGameStatus(CheckRolesMixin, views.JSONResponseMixin, views.AjaxRe
             casino_obj.is_top_pick = not casino_obj.is_top_pick
             casino_obj.save()
             message = "Game marked as top pick" if casino_obj.is_top_pick else "Game removed from top picks"
+        elif switch_field == "can_clear_sc":
+            casino_obj.game.can_clear_sc = not casino_obj.game.can_clear_sc
+            casino_obj.game.save()
+            message = "Can Clear SC enabled" if casino_obj.game.can_clear_sc else "Can Clear SC disabled"
+        elif switch_field == "can_bonus_sc":
+            casino_obj.game.can_bonus_sc = not casino_obj.game.can_bonus_sc
+            casino_obj.game.save()
+            message = "Can Bonus SC enabled" if casino_obj.game.can_bonus_sc else "Can Bonus SC disabled"
         else:
             casino_obj.game_enabled = not casino_obj.game_enabled
             message = "Game enabled" if casino_obj.game_enabled else "Game disabled"

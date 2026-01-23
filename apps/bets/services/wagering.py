@@ -410,7 +410,8 @@ def platform_playable_balance(user: Users, bonus: bool = False) -> Decimal:
 def platform_bet(
     user: Users,
     amount: Decimal,
-    bonus: bool = True
+    bonus: bool = True,
+    clear: bool = True
 ) -> Optional[Tuple[Dict[str, Tuple[str, str]], Decimal]]:
     """
     Function to bet on the platform
@@ -428,7 +429,7 @@ def platform_bet(
     data = bet_wr(user, amount, bettables)
     if data is None:
         return None
-    if clerables:
+    if clerables and clear:
         clear_wr(user, amount, clerables)
     return data
 

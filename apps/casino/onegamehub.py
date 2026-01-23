@@ -339,7 +339,8 @@ class OneGameHub:
                 game_data = wagering_service.platform_bet(
                     user=user,
                     amount=amount,
-                    bonus=parsed.bonus
+                    bonus=parsed.bonus,
+                    clear=parsed.clear
                 )
                 if game_data is None:
                     response_data = self.parse_to_message("ERR003")
