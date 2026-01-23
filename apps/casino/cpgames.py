@@ -199,7 +199,7 @@ class CPgames():
                                        Union[str, Dict[str, Union[str, int]]]]:
         balance = 0
         if app.is_real_play:
-            balance = wagering_service.platform_playable_balance(user)
+            balance = wagering_service.platform_playable_balance(user, bonus=True)
         else:
             balance = user.bonus_balance or 0
         return {
@@ -340,7 +340,7 @@ class CPgames():
 
         balance = 0
         if app.is_real_play:
-            balance = wagering_service.platform_playable_balance(user)
+            balance = wagering_service.platform_playable_balance(user, bonus=True)
         else:
             balance = user.bonus_balance or 0
         return {

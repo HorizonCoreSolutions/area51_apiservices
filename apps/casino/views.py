@@ -1332,7 +1332,7 @@ class CPGamesQueryBalanceApiView(APIView):
 
         try:
             message = json.loads(request.data.get("message"))
-            sub_uid = message.get("sub_uid") 
+            sub_uid = message.get("sub_uid")
             app_id = str(request.data.get('appid', ''))
             response_data = cp.get_user_balance(sub_uid, app_id=app_id)
             return Response(data=response_data, status=status.HTTP_200_OK)

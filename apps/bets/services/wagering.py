@@ -12,12 +12,13 @@ from apps.bets.utils import serialize_wr_data, generate_reference
 logger = SimpleLogger(name="Wagering", log_file="logs/wagering.log").get_logger()
 
 
-def get_wagering_balance(user: Users) -> Decimal:
+def get_wagering_balance(user: Users, bonus: bool) -> Decimal:
     data = WageringRequirement.objects.filter(
         result__isnull=True,
         user_id=user.id,
         betable=True,
         active=True,
+        **({"limit": F("amount")} if not bonus else {})
     ).aggregate(
         total=Sum('balance')
     )
@@ -287,11 +288,12 @@ def __cancel_wr_clear(user: Users, data: Tuple[Decimal, Decimal]) -> Tuple[Decim
     return cast(Decimal, user.balance), debit
 
 
-def get_wagering_requirements(user: Users) -> List[WageringRequirement]:
+def get_wagering_requirements(user: Users, bonus: bool = True) -> List[WageringRequirement]:
     return WageringRequirement.objects.select_for_update().filter(
         user_id=user.id,
         balance__gt=0,
         active=True,
+        **({"limit": F("amount")} if not bonus else {}),
     ).order_by('created').all()
 
 
@@ -401,13 +403,14 @@ def platform_cancel_bet_wr(
     return None
 
 
-def platform_playable_balance(user: Users) -> Decimal:
-    return get_wagering_balance(user) + cast(Decimal, user.balance)
+def platform_playable_balance(user: Users, bonus: bool = False) -> Decimal:
+    return get_wagering_balance(user, bonus=bonus) + cast(Decimal, user.balance)
 
 
 def platform_bet(
     user: Users,
-    amount: Decimal
+    amount: Decimal,
+    bonus: bool = True
 ) -> Optional[Tuple[Dict[str, Tuple[str, str]], Decimal]]:
     """
     Function to bet on the platform
@@ -419,7 +422,7 @@ def platform_bet(
     Returns:
         Optional[Tuple[Dict, Decimal]]: Data of the wagering requirements and the amount betted from the users.balance (only for the record keeping)
     """
-    wagrecs = get_wagering_requirements(user)
+    wagrecs = get_wagering_requirements(user, bonus=bonus)
     clerables = [wagrec for wagrec in wagrecs if not wagrec.betable]
     bettables = [wagrec for wagrec in wagrecs if wagrec.betable]
     data = bet_wr(user, amount, bettables)

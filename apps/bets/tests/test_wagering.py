@@ -77,7 +77,7 @@ class GetWageringBalanceTests(TestCase, WageringTestMixin):
     def test_no_wagering_requirements_returns_zero(self):
         """When user has no wagering requirements, balance should be 0."""
         user = self.create_user()
-        result = get_wagering_balance(user)
+        result = get_wagering_balance(user, bonus=True)
         self.assertEqual(result, Decimal("0"))
     
     def test_single_active_wagering_requirement(self):
@@ -85,7 +85,7 @@ class GetWageringBalanceTests(TestCase, WageringTestMixin):
         user = self.create_user()
         self.create_wagering_requirement(user, balance=Decimal("50.00"))
         
-        result = get_wagering_balance(user)
+        result = get_wagering_balance(user, bonus=True)
         self.assertEqual(result, Decimal("50.00"))
     
     def test_multiple_active_wagering_requirements(self):
@@ -94,7 +94,7 @@ class GetWageringBalanceTests(TestCase, WageringTestMixin):
         self.create_wagering_requirement(user, balance=Decimal("30.00"))
         self.create_wagering_requirement(user, balance=Decimal("20.00"))
         
-        result = get_wagering_balance(user)
+        result = get_wagering_balance(user, bonus=True)
         self.assertEqual(result, Decimal("50.00"))
     
     def test_inactive_wagering_requirements_excluded(self):
@@ -103,7 +103,7 @@ class GetWageringBalanceTests(TestCase, WageringTestMixin):
         self.create_wagering_requirement(user, balance=Decimal("30.00"), active=True)
         self.create_wagering_requirement(user, balance=Decimal("20.00"), active=False)
         
-        result = get_wagering_balance(user)
+        result = get_wagering_balance(user, bonus=True)
         self.assertEqual(result, Decimal("30.00"))
     
     def test_completed_wagering_requirements_excluded(self):
@@ -112,7 +112,7 @@ class GetWageringBalanceTests(TestCase, WageringTestMixin):
         self.create_wagering_requirement(user, balance=Decimal("30.00"), result=None)
         self.create_wagering_requirement(user, balance=Decimal("20.00"), result=Decimal("15.00"))
         
-        result = get_wagering_balance(user)
+        result = get_wagering_balance(user, bonus=True)
         self.assertEqual(result, Decimal("30.00"))
     
     def test_non_betable_wagering_requirements_excluded(self):
@@ -121,7 +121,7 @@ class GetWageringBalanceTests(TestCase, WageringTestMixin):
         self.create_wagering_requirement(user, balance=Decimal("30.00"), betable=False)
         self.create_wagering_requirement(user, balance=Decimal("20.00"), betable=True)
         
-        result = get_wagering_balance(user)
+        result = get_wagering_balance(user, bonus=True)
         self.assertEqual(result, Decimal("20.00"))
 
 

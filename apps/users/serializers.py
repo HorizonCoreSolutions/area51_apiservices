@@ -148,7 +148,7 @@ class PlayerSerializer(serializers.Serializer):
         return trans_layer[obj.coinflow_state]
     
     def get_playable(self, obj):
-        return get_wagering_balance(obj)
+        return get_wagering_balance(obj, bonus=True)
     
     def get_country(self, obj):
         lang = self.context.get("lang_code", "en")
