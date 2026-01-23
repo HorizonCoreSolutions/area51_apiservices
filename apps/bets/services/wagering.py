@@ -289,12 +289,15 @@ def __cancel_wr_clear(user: Users, data: Tuple[Decimal, Decimal]) -> Tuple[Decim
 
 
 def get_wagering_requirements(user: Users, bonus: bool = True) -> List[WageringRequirement]:
-    return WageringRequirement.objects.select_for_update().filter(
+    qs = WageringRequirement.objects.select_for_update().filter(
         user_id=user.id,
         balance__gt=0,
         active=True,
-        **({"limit": F("amount")} if not bonus else {}),
-    ).order_by('created').all()
+    )
+    if not bonus:
+        qs = qs.filter(Q(limit=F("amount")) | Q(betable=False))
+    
+    return qs.order_by('created').all()
 
 
 def clear_wr(user: Users, amount: Decimal, wagrecs: List[WageringRequirement]) -> Tuple[Decimal, Decimal]:
