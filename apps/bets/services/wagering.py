@@ -432,7 +432,7 @@ def platform_bet(
     data = bet_wr(user, amount, bettables)
     if data is None:
         return None
-    if clerables and clear:
+    if len(clerables) > 0 and clear:
         clear_wr(user, amount, clerables)
     return data
 
