@@ -1530,10 +1530,12 @@ class GetCoinFlowLink(APIView):
         #     return Response(data={'message' : data.error}, status=status.HTTP_400_BAD_REQUEST)
         
         bundle = request.data.get("bundle")
-        if bundle is not None:
-            bundle = can_purchase_bundle(bundle, user)
-            if not bundle:
-                return Response(data={'message' : 'Bundle not found.'}, status=status.HTTP_400_BAD_REQUEST)
+        if bundle is None:
+            return Response(data={'message' : 'Should send a bundle.'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        bundle = can_purchase_bundle(bundle, user)
+        if bundle is None:
+            return Response(data={'message' : 'Bundle not found.'}, status=status.HTTP_400_BAD_REQUEST)
 
         cents = request.data.get('cents', None)
         cents = int(bundle.price * 100) if bundle else cents
