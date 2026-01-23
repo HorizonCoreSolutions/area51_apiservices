@@ -1533,7 +1533,7 @@ class GetCoinFlowLink(APIView):
         if bundle is None:
             return Response(data={'message' : 'Should send a bundle.'}, status=status.HTTP_400_BAD_REQUEST)
             
-        bundle = can_purchase_bundle(bundle, user)
+        bundle = can_purchase_bundle(str(bundle), user)
         if bundle is None:
             return Response(data={'message' : 'Bundle not found.'}, status=status.HTTP_400_BAD_REQUEST)
 

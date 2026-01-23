@@ -84,6 +84,6 @@ def can_purchase_bundle(bundle_code: str, user: Users) -> Optional[Bundle]:
     """
     bundles = get_bundles(user)
     for bundle in bundles:
-        if bundle.code == bundle_code:
+        if str(bundle.code) == bundle_code:
             return bundle
     return None
