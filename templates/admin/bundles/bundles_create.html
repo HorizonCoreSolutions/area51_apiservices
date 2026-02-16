@@ -144,6 +144,86 @@ Create Bundle
                             </div>
                         </div>
 
+                        <hr>
+                        <h5 class="mb-3">Limits & Processing</h5>
+
+                        <!-- Limit Per User -->
+                        <div class="mb-3">
+                            <label for="id_limit_per_user" class="form-label">Limit Per User</label>
+                            <input type="number"
+                                   id="id_limit_per_user"
+                                   name="limit_per_user"
+                                   min="0"
+                                   step="1"
+                                   class="form-control"
+                                   placeholder="Leave empty for unlimited"
+                                   value="{{ bundle.limit_per_user|default:'' }}">
+                            <div class="form-text">
+                                Maximum number of times a single user can purchase this bundle. Leave empty for no limit.
+                            </div>
+                        </div>
+
+                        <!-- Limit Total -->
+                        <div class="mb-3">
+                            <label for="id_limit_total" class="form-label">Total Limit</label>
+                            <input type="number"
+                                   id="id_limit_total"
+                                   name="limit_total"
+                                   min="0"
+                                   step="1"
+                                   class="form-control"
+                                   placeholder="Leave empty for unlimited"
+                                   value="{{ bundle.limit_total|default:'' }}">
+                            <div class="form-text">
+                                Maximum total purchases allowed for this bundle across all users. Leave empty for no limit.
+                            </div>
+                        </div>
+
+                        <!-- Processing Time -->
+                        <div class="mb-3">
+                            <label for="id_processing_time" class="form-label">Maximum time after account creation to buy this bundle</label>
+                            <div class="row">
+                                <div class="col-4">
+                                    <input type="number"
+                                           id="id_processing_hours"
+                                           name="processing_hours"
+                                           min="0"
+                                           step="1"
+                                           class="form-control"
+                                           placeholder="Hours"
+                                           value="">
+                                    <small class="text-muted">Hours</small>
+                                </div>
+                                <div class="col-4">
+                                    <input type="number"
+                                           id="id_processing_minutes"
+                                           name="processing_minutes"
+                                           min="0"
+                                           max="59"
+                                           step="1"
+                                           class="form-control"
+                                           placeholder="Minutes"
+                                           value="">
+                                    <small class="text-muted">Minutes</small>
+                                </div>
+                                <div class="col-4">
+                                    <input type="number"
+                                           id="id_processing_seconds"
+                                           name="processing_seconds"
+                                           min="0"
+                                           max="59"
+                                           step="1"
+                                           class="form-control"
+                                           placeholder="Seconds"
+                                           value="">
+                                    <small class="text-muted">Seconds</small>
+                                </div>
+                            </div>
+                            <div class="form-text">
+                                Maximum time to buy this bundle. Leave all fields empty to allow purchase at any time.
+                            </div>
+                        </div>
+
                         <div class="mt-4 d-flex justify-content-between">
                             <a href="{% url 'admin-panel:bundles-list' %}" class="btn btn-secondary">
                                 Cancel
@@ -171,6 +251,36 @@ Create Bundle
     $(document).ready(function () {
         console.log(">>> Script loaded for bundle form");
         var bundleId = "{{ bundle.id|default:'' }}";
+
+        // Parse processing_time from bundle (format: "HH:MM:SS" or "D days, HH:MM:SS")
+        {% if bundle.processing_time %}
+        var processingTime = "{{ bundle.processing_time }}";
+        var totalSeconds = 0;
+        
+        // Handle "X days, HH:MM:SS" format
+        if (processingTime.includes("day")) {
+            var parts = processingTime.split(", ");
+            var days = parseInt(parts[0].split(" ")[0], 10);
+            totalSeconds = days * 86400;
+            processingTime = parts[1] || "0:00:00";
+        }
+        
+        // Parse HH:MM:SS
+        var timeParts = processingTime.split(":");
+        if (timeParts.length === 3) {
+            totalSeconds += parseInt(timeParts[0], 10) * 3600;
+            totalSeconds += parseInt(timeParts[1], 10) * 60;
+            totalSeconds += parseInt(timeParts[2], 10);
+        }
+        
+        var hours = Math.floor(totalSeconds / 3600);
+        var minutes = Math.floor((totalSeconds % 3600) / 60);
+        var seconds = totalSeconds % 60;
+        
+        if (hours > 0) $("#id_processing_hours").val(hours);
+        if (minutes > 0) $("#id_processing_minutes").val(minutes);
+        if (seconds > 0) $("#id_processing_seconds").val(seconds);
+        {% endif %}
 
         // Price validation
         function validatePrice(value) {
@@ -240,6 +350,35 @@ Create Bundle
                 bonus: $("#id_bonus").val(),
                 miner: $("#id_miner").val()
             };
+
+            // Add limit_per_user if provided
+            var limitPerUser = $("#id_limit_per_user").val();
+            if (limitPerUser !== "" && limitPerUser !== null) {
+                payload.limit_per_user = parseInt(limitPerUser, 10);
+            } else {
+                payload.limit_per_user = null;
+            }
+
+            // Add limit_total if provided
+            var limitTotal = $("#id_limit_total").val();
+            if (limitTotal !== "" && limitTotal !== null) {
+                payload.limit_total = parseInt(limitTotal, 10);
+            } else {
+                payload.limit_total = null;
+            }
+
+            // Build processing_time as ISO 8601 duration or total seconds
+            var procHours = parseInt($("#id_processing_hours").val(), 10) || 0;
+            var procMinutes = parseInt($("#id_processing_minutes").val(), 10) || 0;
+            var procSeconds = parseInt($("#id_processing_seconds").val(), 10) || 0;
+            
+            if (procHours > 0 || procMinutes > 0 || procSeconds > 0) {
+                // Send as total seconds for DurationField compatibility
+                var totalProcSeconds = (procHours * 3600) + (procMinutes * 60) + procSeconds;
+                payload.processing_time = totalProcSeconds;
+            } else {
+                payload.processing_time = null;
+            }
 
             if (bundleId) {
                 payload.id = parseInt(bundleId, 10);

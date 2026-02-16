@@ -387,6 +387,8 @@ input:checked + .slider-red:before {
                             <!-- <th>Tags</th> -->
                             <th style="text-align: center;">Status</th>
                             <th style="text-align: center;">Top Pick</th>
+                            <th style="text-align: center;">Can Clear SC</th>
+                            <th style="text-align: center;">Can Bonus SC</th>
                             {% comment %} <th style="text-align: center; width: 14%;">Order</th>
                             <th style="text-align: center; width: 13%;">Tile</th> {% endcomment %}
                         </tr>
@@ -426,6 +428,12 @@ input:checked + .slider-red:before {
 								</td>
                 <td style="text-align: center;"><label class="switch"><input type="checkbox" game-id='{{ game.game.game_id }}'
 									{% if game.is_top_pick %}checked{% endif %}><span title="{% if game.is_top_pick %}Remove top pick {% else %} Add as top pick {% endif %}" onclick="switchToggle(this, 'top_pick')" class="slider-red"></span></label>
+								</td>
+								<td style="text-align: center;"><label class="switch"><input type="checkbox" game-id='{{ game.game.game_id }}'
+									{% if game.game.can_clear_sc %}checked{% endif %}><span title="{% if game.game.can_clear_sc %}Disable Can Clear SC {% else %} Enable Can Clear SC {% endif %}" onclick="switchToggle(this, 'can_clear_sc')" class="slider"></span></label>
+								</td>
+								<td style="text-align: center;"><label class="switch"><input type="checkbox" game-id='{{ game.game.game_id }}'
+									{% if game.game.can_bonus_sc %}checked{% endif %}><span title="{% if game.game.can_bonus_sc %}Disable Can Bonus SC {% else %} Enable Can Bonus SC {% endif %}" onclick="switchToggle(this, 'can_bonus_sc')" class="slider"></span></label>
 								</td>
 								{% comment %} <td style="width: 14%;">
 									<input style="text-align: center; float:left; display:inline; width: 80%; margin-left: 22%;" class="form-control form-control-sm position col-sm-6" onkeydown="changePosition(event)" management-game-id='{{ game.id }}' data-position-value="{{ game.position }}" type="number" min="1" value="{{ game.position }}">

@@ -10,14 +10,69 @@ from apps.users.models import Users
 from apps.core.file_logger import SimpleLogger
 from apps.casino.models import GSoftTransactions
 from django.db import transaction as db_transaction
-from typing import Dict, Optional, Any, List, Tuple, Union
-from urllib.parse import urlencode, quote, unquote, parse_qs
+from typing import Dict, Optional, Any, List, Tuple, Union, ClassVar
+from urllib.parse import urlencode, quote, unquote, parse_qs, parse_qsl
 from apps.bets.services import wagering as wagering_service
+from apps.users.utils import send_user_balance_snapshot_async
 
 FAKE_COIN = "GOC"
 REAL_COIN = "SSC"
 
 logger = SimpleLogger(name="OGH", log_file='logs/OGH.log').get_logger()
+
+
+@dataclass(frozen=True)
+class CoinParams:
+    coin: str
+    clear: bool
+    bonus: bool
+
+    _REQUIRED_FIELDS: ClassVar[Tuple[str, str, str]] = (
+        "coin",
+        "clear",
+        "bonus",
+    )
+
+    def serialize(self) -> str:
+        """
+        Serialize to URL query string:
+        coin=USD&clear=True&bonus=False
+        """
+        return urlencode(
+            (
+                ("coin", self.coin),
+                ("clear", "True" if self.clear else "False"),
+                ("bonus", "True" if self.bonus else "False"),
+            )
+        )
+
+    @classmethod
+    def deserialize(cls, value: str) -> "CoinParams":
+        coin = None
+        clear = None
+        bonus = None
+
+        for key, val in parse_qsl(value, strict_parsing=True):
+            if key == "coin":
+                coin = val
+            elif key == "clear":
+                if val not in ("True", "False"):
+                    raise ValueError("Invalid clear value")
+                clear = val == "True"
+            elif key == "bonus":
+                if val not in ("True", "False"):
+                    raise ValueError("Invalid bonus value")
+                bonus = val == "True"
+
+        if coin is None:
+            coin = FAKE_COIN
+        if clear is None:
+            clear = False
+        if bonus is None:
+            bonus = False
+
+        return cls(coin=coin, clear=clear, bonus=bonus)
+
 
 @dataclass
 class Actions:
@@ -133,8 +188,9 @@ class OneGameHub:
     def get_formated_balance(self,
                              user: Users,
                              is_real_play: bool,
+                             bonus: bool = False
                              ) -> Dict[str, Union[int, Decimal, str]]:
-        balance = wagering_service.platform_playable_balance(user) if is_real_play else user.bonus_balance
+        balance = wagering_service.platform_playable_balance(user, bonus=bonus) if is_real_play else user.bonus_balance
         cur = REAL_COIN if is_real_play else FAKE_COIN
         return {"status": 200,
                 "balance": int(Decimal(balance or 0)*100),
@@ -197,6 +253,8 @@ class OneGameHub:
             return response_data, status.HTTP_401_UNAUTHORIZED
 
         try:
+            extra = data.get("extra")
+            parsed = CoinParams.deserialize(extra)
             player_id: str = data.get("player_id")
             user, error = self.select_user_for_update(player_id=player_id)
             if error is not None:
@@ -207,8 +265,10 @@ class OneGameHub:
             if error or is_real_play is None:
                 return self.parse_to_message("ERR008"), status.HTTP_400_BAD_REQUEST
             return self.get_formated_balance(
-                    user=user,
-                    is_real_play=is_real_play), status.HTTP_200_OK
+                user=user,
+                is_real_play=is_real_play,
+                bonus=parsed.bonus
+            ), status.HTTP_200_OK
         except AttributeError as e:
             print("grep here")
             print(e)
@@ -243,7 +303,9 @@ class OneGameHub:
             game_id = data.get("game_id")
             ext_round_id = data.get("ext_round_id")
             transaction_id = data.get("transaction_id")
-
+            extra = data.get("extra")
+            parsed = CoinParams.deserialize(extra)
+            logger.debug(f"Parsed: {parsed}, serialized: {extra}")
             round_id = data.get("round_id")
             amount = Decimal(0 if freerounds_id else data.get("amount", 0)) / 100
 
@@ -265,7 +327,8 @@ class OneGameHub:
                 # Deduplication
                 return self.get_formated_balance(
                         user=user,
-                        is_real_play=is_real_play), status.HTTP_200_OK
+                        is_real_play=is_real_play,
+                        bonus=parsed.bonus), status.HTTP_200_OK
 
             # CHECK: win_amount is higher or equals to 0
             # 3.2: 7.
@@ -276,7 +339,9 @@ class OneGameHub:
             if is_real_play:
                 game_data = wagering_service.platform_bet(
                     user=user,
-                    amount=amount
+                    amount=amount,
+                    bonus=parsed.bonus,
+                    clear=parsed.clear
                 )
                 if game_data is None:
                     response_data = self.parse_to_message("ERR003")
@@ -316,7 +381,8 @@ class OneGameHub:
 
             return self.get_formated_balance(
                     user=user,
-                    is_real_play=is_real_play), status.HTTP_200_OK
+                    is_real_play=is_real_play,
+                    bonus=parsed.bonus), status.HTTP_200_OK
         except AttributeError as e:
             logger.debug(f"This is {e}")
             return self.parse_to_message("ERR001"), status.HTTP_200_OK
@@ -347,6 +413,8 @@ class OneGameHub:
                 return self.parse_to_message("ERR008"), status.HTTP_400_BAD_REQUEST
 
             freerounds_id = data.get("freerounds_id")
+            extra = data.get("extra")
+            parsed = CoinParams.deserialize(extra)
 
             game_id = data.get("game_id")
             ext_round_id = data.get("ext_round_id")
@@ -388,7 +456,8 @@ class OneGameHub:
                 logger.debug("Session has already ended.")
                 return self.get_formated_balance(
                         user=user,
-                        is_real_play=is_real_play), status.HTTP_200_OK
+                        is_real_play=is_real_play,
+                        bonus=parsed.bonus), status.HTTP_200_OK
 
             if bet:
                 # Already processed this provider order:
@@ -396,7 +465,8 @@ class OneGameHub:
                 logger.debug("Bet already exist.")
                 return self.get_formated_balance(
                         user=user,
-                        is_real_play=is_real_play), status.HTTP_200_OK
+                        is_real_play=is_real_play,
+                        bonus=parsed.bonus), status.HTTP_200_OK
 
             # CHECK: win_amount is higher or equals to 0
             # 3.2: 7.
@@ -406,11 +476,15 @@ class OneGameHub:
             
             transfer_balance = Decimal(0)
             if is_real_play:
-                transfer_balance = wagering_service.platform_pay(
+                data = wagering_service.platform_pay(
                     user=user,
                     won=payout,
                     data=(session.last().wr_data or {})
                 )
+                if data is not None:
+                    transfer_balance, _ = data
+                else:
+                    print("error in platform_pay")
             if ext_round_finished:
                 session.update(game_status=GSoftTransactions.GameStatus.completed)
 
@@ -435,10 +509,11 @@ class OneGameHub:
             transaction_obj.game_status = GSoftTransactions.GameStatus.completed if ext_round_finished else GSoftTransactions.GameStatus.pending
             transaction_obj.time = timezone.now()
             transaction_obj.save()
-
+            send_user_balance_snapshot_async(user=user)
             return self.get_formated_balance(
                     user=user,
-                    is_real_play=is_real_play), status.HTTP_200_OK
+                    is_real_play=is_real_play,
+                    bonus=parsed.bonus), status.HTTP_200_OK
         except AttributeError as e:
             logger.debug(f"This is {e}")
             return self.parse_to_message("ERR001"), status.HTTP_200_OK
@@ -463,9 +538,8 @@ class OneGameHub:
                 return self.parse_to_message("ERR001"), status.HTTP_400_BAD_REQUEST
 
             extra = data.get("extra")
-            parsed = parse_qs(unquote(extra).strip('"')).items()
-            coin = {k: v[0] for k, v in parsed}
-            coin = coin.get("coin")
+            parsed = CoinParams.deserialize(extra)
+            coin = parsed.coin
 
             game_id = data.get("game_id")
             round_id = data.get("round_id")
@@ -484,14 +558,15 @@ class OneGameHub:
             deposit = Decimal(0)
             withdraw = Decimal(0)
 
-            is_real_play, error = self.get_is_real_play(coin=data.get("currency", ""))
+            is_real_play, error = self.get_is_real_play(coin=coin)
             if error or is_real_play is None:
                 return self.parse_to_message("ERR008"), status.HTTP_400_BAD_REQUEST
             if to_rollback:
                 if to_rollback.request_type == GSoftTransactions.RequestType.rollback:
                     return self.get_formated_balance(
                             user=user,
-                            is_real_play=is_real_play), status.HTTP_200_OK
+                            is_real_play=is_real_play,
+                            bonus=parsed.bonus), status.HTTP_200_OK
 
                 deposit = Decimal(to_rollback.deposit or 0)
                 withdraw = Decimal(to_rollback.withdraw or 0)
@@ -522,10 +597,12 @@ class OneGameHub:
             transaction_obj.request_type = GSoftTransactions.RequestType.rollback
             transaction_obj.time = timezone.now()
             transaction_obj.save()
+            send_user_balance_snapshot_async(user=user)
 
             return self.get_formated_balance(
                     user=user,
-                    is_real_play=is_real_play), status.HTTP_200_OK
+                    is_real_play=is_real_play,
+                    bonus=parsed.bonus), status.HTTP_200_OK
         except AttributeError as e:
             print("grep here")
             print(e)
@@ -537,7 +614,7 @@ class OneGameHub:
 
     def get_game_url(
         self, user: Users, game_id: str, lang: str,
-        currency: str, ip: str, device: str
+        currency: str, ip: str, device: str, data: CoinParams
     ) -> Tuple[Tuple[str, str], bool]:
         """
         Returns:
@@ -551,13 +628,11 @@ class OneGameHub:
             "ip_address": ip,
             "mobile": device,
             "language": lang,
-            "extra": f"%22coin%3D{currency}%22"
+            "extra": data.serialize()
         }
-        print(params)
         url = self.get_url(self.actions.real_play, params=params)
 
         try:
-            print(url)
             res = requests.get(url=url, timeout=20)
             res.raise_for_status()
         except requests.exceptions.RequestException:
@@ -565,7 +640,6 @@ class OneGameHub:
 
         try:
             data = res.json()
-            print(data)
             if data.get("status") != 200:
                 raise ValueError()
             data = data.get("response")
@@ -575,9 +649,13 @@ class OneGameHub:
         except ValueError:
             return ("", ""), True
 
-    def start_game(self,
-                   request_param,
-                   ip) -> Tuple[bool, Dict[str, Union[bool, str, Dict]]]:
+    def start_game(
+        self,
+        request_param: Dict[str, str],
+        ip: str,
+        clear: bool,
+        bonus: bool
+    ) -> Tuple[bool, Dict[str, Union[bool, str, Dict]]]:
         game_id = request_param.get("game_id")
         lang = request_param.get("lang", "en")
         account_id = request_param.get("account_id")
@@ -600,6 +678,7 @@ class OneGameHub:
             currency=currency,
             ip=ip,
             device=str(device),
+            data=CoinParams(coin=currency, clear=clear, bonus=bonus)
         )
         if err:
             return False, {

@@ -224,7 +224,7 @@ class LoginAPIView(APIViewContext):
                 if result_geo['status'] == -1:
                     return Response(result_geo['message'], status.HTTP_401_UNAUTHORIZED)
 
-            if user.is_currently_active:
+            if user.is_currently_active and not settings.MULTI_DEVICE_LOGIN_ENABLED:
                 if user.last_activity_time < timezone.now()-timedelta(minutes=15):  
                     user.last_activity_time = timezone.now()
                     user.save()
@@ -2306,48 +2306,30 @@ class TransactionsAPIView(APIView):
     pagination_class = CustomPagination
 
     def get(self, request, **kwargs):
-        request_params = self.request.query_params  # type: ignore
-        from_date = request_params.get("from_date", None)
-        to_date = request_params.get("to_date", None)
-        timezone_offset = request_params.get("timezone_offset", None)
-        bonus_type = request_params.get("type", None)
+
+        request_params = self.request.query_params
+
+        from_date = str(request_params.get("from_date") or "")
+        to_date = str(request_params.get("to_date") or "")
+        timezone_offset = str(request_params.get("timezone_offset") or "")
+        bonus_type = str(request_params.get("type") or "all")
         transaction_filter_dict = {"user":self.request.user, "journal_entry": "bonus"}
+
+        tz_offset_minutes = float(timezone_offset) * 60 if timezone_offset else 0
+
         if from_date and validate_date(from_date):
-            from_date = datetime.strptime(
-                from_date + " 00:00:00", "%Y-%m-%d %H:%M:%S"
-            )
-            if timezone_offset:
-                timezone_offset = float(timezone_offset)
-                if timezone_offset < 0:
-                    transaction_filter_dict[
-                        "created__gte"
-                    ] = from_date + timedelta(
-                        minutes=(-(timezone_offset) * 60)
-                    )
-                else:
-                    transaction_filter_dict[
-                        "created__gte"
-                    ] = from_date - timedelta(minutes=(timezone_offset * 60))
-            else:
-                transaction_filter_dict["created__date__gte"] = from_date
+            from_dt = datetime.strptime(from_date, "%Y-%m-%d").replace(hour=0, minute=0, second=0)
+            from_dt -= timedelta(minutes=tz_offset_minutes)
+            transaction_filter_dict["created__gte"] = from_dt
 
         if to_date and validate_date(to_date):
-            to_date = datetime.strptime(
-                to_date + " 23:59:59", "%Y-%m-%d %H:%M:%S"
-            )
-            if timezone_offset:
-                timezone_offset = float(timezone_offset)
-                if timezone_offset < 0:
-                    transaction_filter_dict[
-                        "created__lte"
-                    ] = to_date + timedelta(minutes=(-(timezone_offset) * 60))
-                else:
-                    transaction_filter_dict[
-                        "created__lte"
-                    ] = to_date - timedelta(minutes=(timezone_offset * 60))
+            to_dt = datetime.strptime(to_date, "%Y-%m-%d").replace(hour=23, minute=59, second=59)
+            to_dt -= timedelta(minutes=tz_offset_minutes)
+            transaction_filter_dict["created__lte"] = to_dt
 
         transaction_queryset = Transactions.objects.filter(**transaction_filter_dict).order_by("-created")
         del transaction_filter_dict["journal_entry"]
+
         transaction_filter_dict["bonus__gt"] = 0
         offmarket_queryset = OffMarketTransactions.objects.filter(**transaction_filter_dict).order_by("-created")
 
@@ -2355,7 +2337,6 @@ class TransactionsAPIView(APIView):
             transaction_queryset = transaction_queryset.filter(bonus_type=bonus_type)
             if bonus_type != "offmarket_bonus":
                 offmarket_queryset = []
-
 
         transactions = list(chain(transaction_queryset, offmarket_queryset))
         transactions = sorted(transactions, key=attrgetter('created'), reverse=True)

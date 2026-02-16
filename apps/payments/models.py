@@ -1,6 +1,8 @@
+from datetime import timedelta
 import uuid
 from decimal import Decimal
 from django.db import models
+from django.utils import timezone
 from apps.core.models import AbstractBaseModel
 from djchoices import ChoiceItem, DjangoChoices
 from apps.users.models import PromoCodesLogs, Users
@@ -232,6 +234,7 @@ class CoinFlowTransaction(AbstractBaseModel):
         default=None,
         related_name="coinflow_transactions"
     )
+    reference_usage_bundle = models.CharField(max_length=255, null=True, blank=True)
     confimation_needed = models.BooleanField(default=False)
     
     processor_name = models.CharField(max_length=20,null=True,blank=True)
@@ -265,3 +268,33 @@ class Bundle(BonusAbstractModel):
 
     price = models.DecimalField(max_digits=10, decimal_places=2)
 
+    limit_per_user = models.IntegerField(default=None, null=True, blank=True)
+    limit_total = models.IntegerField(default=None, null=True, blank=True)
+
+    processing_time = models.DurationField(null=True, default=None, blank=True)
+
+
+class BundleUsage(AbstractBaseModel):
+    class PlatformType(DjangoChoices):
+        coinflow = ChoiceItem("coinflow", _("Coinflow"))
+
+    bundle = models.ForeignKey(Bundle, on_delete=models.CASCADE, related_name="bundle_usages")
+    user = models.ForeignKey(Users, on_delete=models.CASCADE, related_name="bundle_usages")
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    reference = models.CharField(max_length=255, default=str(uuid.uuid4()))
+    platform = models.CharField(max_length=20, choices=PlatformType)
+
+
+# class FollowerBonus(AbstractBaseModel):
+#     influencer = models.ForeignKey(Users, on_delete=models.CASCADE, blank=False, null=True)
+#     deactivate_on = models.DateTimeField(null=False, default=lambda: timezone.now().astimezone(timezone.utc) - timedelta(minutes=5))
+
+
+# class FollowerBonusDetail(BonusAbstractModel):
+#     follower_bonus = models.ForeignKey(FollowerBonus, on_delete=models.CASCADE, blank=False, null=False)
+#     minimun_price = models.DecimalField(max_digits=10, decimal_places=2, null=False)
+
+#     apply_with_bonuses = models.BooleanField(default=False)
+#     apply_with_bundles = models.BooleanField(default=False)
+
+#     on_first_deposit = models.BooleanField(default=True)

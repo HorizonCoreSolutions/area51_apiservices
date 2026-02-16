@@ -21,6 +21,7 @@ from rest_framework import status
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 from apps.payments.service import can_deposit_limits
+from apps.payments.utils.bundles import can_purchase_bundle, get_bundles
 from apps.users import promo_handler
 from rest_framework.views import APIView
 from apps.users.utils import redis_client
@@ -1499,7 +1500,7 @@ class MnetTransactionView(APIView):
             response = {"msg": "Some Internal error.", "status_code": status.HTTP_500_INTERNAL_SERVER_ERROR}
             return Response(response)
         
-
+COINFLOW_CLIENT = CoinFlowClient()
 # Player can request for coin withdrawal
 class GetCoinFlowLink(APIView):
     http_method_names = ["post"]
@@ -1518,7 +1519,7 @@ class GetCoinFlowLink(APIView):
         # if country != 'US':
         #     return Response(data={'message' : 'Please update your information. We only accept US documents.'}, status=status.HTTP_400_BAD_REQUEST)
         
-        cf = CoinFlowClient()
+        
         
         # data = cf.register_user_with_document(
         #     user=user,
@@ -1529,10 +1530,12 @@ class GetCoinFlowLink(APIView):
         #     return Response(data={'message' : data.error}, status=status.HTTP_400_BAD_REQUEST)
         
         bundle = request.data.get("bundle")
-        if bundle is not None:
-            bundle = Bundle.objects.filter(code=str(bundle)).first()
-            if not bundle:
-                return Response(data={'message' : 'Bundle not found.'}, status=status.HTTP_400_BAD_REQUEST)
+        if bundle is None:
+            return Response(data={'message' : 'Should send a bundle.'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        bundle = can_purchase_bundle(str(bundle), user)
+        if bundle is None:
+            return Response(data={'message' : 'Bundle not found.'}, status=status.HTTP_400_BAD_REQUEST)
 
         cents = request.data.get('cents', None)
         cents = int(bundle.price * 100) if bundle else cents
@@ -1548,7 +1551,7 @@ class GetCoinFlowLink(APIView):
         if cents < 500 or cents > 500000:
             return Response(data={'message': 'Cents must be higher than 500 and lower than 500000.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        res = cf.register_user_attested(user=user)
+        res = COINFLOW_CLIENT.register_user_attested(user=user)
         
         can, msg = can_deposit_limits(user=user, amount= Decimal(cents/100))
         if not can:
@@ -1560,7 +1563,7 @@ class GetCoinFlowLink(APIView):
         promo_code = str(promo_code) if promo_code else None
 
 
-        link = cf.create_checkout_link(
+        link = COINFLOW_CLIENT.create_checkout_link(
             user=user,
             amount_cents=cents,
             promo_code=promo_code,
@@ -1580,9 +1583,8 @@ class GetCoinFlowLink(APIView):
 
 class WebhookView(APIView):
     def post(self, request):
-        
-        cf = CoinFlowClient()
-        data = cf.handle_webhook(request.data, request.headers.get('Authorization'))
+
+        data = COINFLOW_CLIENT.handle_webhook(request.data, request.headers.get('Authorization'))
         if data.error:
             save_request('spy', request)
             save_request('spy', {'data' : data.error, 'Authorization' : request.headers.get('Authorization', 'None')}, is_response=True)
@@ -1597,14 +1599,13 @@ class TestCoinflow(APIView):
     so this can be use by my coworkers to at least in teory play the game
     '''
     def post(self, request):
-        
-        cf = CoinFlowClient()
-        data = cf.register_user_with_document(user=request.user)
+
+        data = COINFLOW_CLIENT.register_user_with_document(user=request.user)
         if data.error:
             save_request('coinflow_testing', request)
             save_request('coinflow_testing', {'data' : data.error}, is_response=True)
         
-        data = cf.register_user_attested(user=request.user)
+        data = COINFLOW_CLIENT.register_user_attested(user=request.user)
         if data.error:
             save_request('coinflow_testing', request)
             save_request('conflow_testing', {'data' : data.error}, is_response=True)
@@ -1615,12 +1616,11 @@ class TestCoinflow(APIView):
 class GetBankRegistrationLink(APIView):
     permission_class = [IsPlayer]
     def post(self, request):
-        
-        cf = CoinFlowClient()
-        registration_result = cf.register_user_attested(request.user)
+
+        registration_result = COINFLOW_CLIENT.register_user_attested(request.user)
         if registration_result.error:
             return Response(data={'message' : registration_result.error}, status=status.HTTP_400_BAD_REQUEST)  
-        data = cf.create_bank_registration_link(user=request.user)
+        data = COINFLOW_CLIENT.create_bank_registration_link(user=request.user)
         if data.error:
             return Response(data={'message' : data.error}, status=status.HTTP_400_BAD_REQUEST)        
         
@@ -1641,9 +1641,8 @@ class CoinflowTotals(APIView):
         cents = int(cents)
         if cents < 500 or cents > 50000:
             return Response(data={'message' : '@cents min depossit of 500 cents. Max depossit is 50000 cents'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        cf = CoinFlowClient()
-        data = cf.get_totals(cents=cents, user=request.user)
+
+        data = COINFLOW_CLIENT.get_totals(cents=cents, user=request.user)
         if data.error:
             return Response(data={'message' : data.error}, status=status.HTTP_400_BAD_REQUEST)        
         
@@ -1652,11 +1651,10 @@ class CoinflowTotals(APIView):
 class CoinflowBanks(APIView):
     permission_class = [IsPlayer]
     def post(self, request):
-        cf = CoinFlowClient()
-        registration_result = cf.register_user_attested(request.user)
+        registration_result = COINFLOW_CLIENT.register_user_attested(request.user)
         if registration_result.error:
             return Response(data={'message' : registration_result.error}, status=status.HTTP_400_BAD_REQUEST)  
-        data = cf.get_cards_banks(request.user)
+        data = COINFLOW_CLIENT.get_cards_banks(request.user)
         if data.error:
             return Response(data={'message' : data.error}, status=status.HTTP_400_BAD_REQUEST)        
         
@@ -1729,16 +1727,15 @@ class CoinflowWithdraws(APIView):
             return Response(data={'message' : 'Please use and available card, For security reasons once started a transaction this id only last 30 min'}, status=status.HTTP_400_BAD_REQUEST)
         
         data = json.loads(data.decode())
-        cf = CoinFlowClient()
         user = request.user
         if not user.is_authenticated:
             return Response(data={'message' : 'Please use and available card, For security reasons once started a transaction this id only last 30 min'}, status=status.HTTP_400_BAD_REQUEST)
         
-        registration_result = cf.register_user_attested(user)
+        registration_result = COINFLOW_CLIENT.register_user_attested(user)
         if registration_result.error:
             return Response(data={'message' : registration_result.error}, status=status.HTTP_400_BAD_REQUEST)  
         ip = get_user_ip_from_request(request)
-        result = cf.create_transaction_withdraw(user, data, pairs[0][0], cents, ip)
+        result = COINFLOW_CLIENT.create_transaction_withdraw(user, data, pairs[0][0], cents, ip)
         
         if result.data:
             return Response(data=result.data, status=result.data.get("status"))
@@ -1764,8 +1761,7 @@ class CoinflowRegisterUserView(APIView):
         
         if request.user.coinflow_state in {CoinflowAuthState.verified}:
             return Response(data={"message" : "This user is already verified."}, status=status.HTTP_200_OK)
-        cf = CoinFlowClient()
-        data = cf.register_user(user=request.user, ssn=ssn)
+        data = COINFLOW_CLIENT.register_user(user=request.user, ssn=ssn)
         if data.error:
             return Response(data={"message" : data.error}, status=status.HTTP_400_BAD_REQUEST)
         
@@ -1791,14 +1787,12 @@ class CoinFlowProcessView(APIView):
         if cft is None:
             return Response(data={"error": "Given id does not exist"}, status=status.HTTP_400_BAD_REQUEST)
         
-        cf = CoinFlowClient()
-        
         data = None
         
         if resolve == "approve":
-            data = cf.process_transaction_withdraw(cft)
+            data = COINFLOW_CLIENT.process_transaction_withdraw(cft)
         else:
-            data = cf.reject_transaction_withdraw(cft)
+            data = COINFLOW_CLIENT.reject_transaction_withdraw(cft)
         
         if not data.success:
             return Response(data={"error": data.error}, status=status.HTTP_400_BAD_REQUEST)
@@ -1814,62 +1808,46 @@ class CoinflowTransactionView(APIView):
         from apps.bets.utils import validate_date
         try:
             player = Users.objects.filter(id=request.user.id).first()
-            if player:
-                transaction_filter_dict: Dict[str, Any] = {"is_deleted" : False}
-                from_date = self.request.query_params.get("from_date", None)
-                to_date = self.request.query_params.get("to_date", None)
-                activity_type = self.request.query_params.get("activity_type", None)
-                search = self.request.query_params.get("search", None) 
-                if activity_type:
-                    transaction_filter_dict["status"] = activity_type
-                timezone_offset = self.request.query_params.get("timezone_offset", None)
-                if from_date and validate_date(from_date):
-                    from_date = datetime.strptime(
-                        from_date + " 00:00:00", "%Y-%m-%d %H:%M:%S"
-                    )
-                    if timezone_offset:
-                        timezone_offset = float(timezone_offset)
-                        if timezone_offset < 0:
-                            transaction_filter_dict[
-                                "created__gte"
-                            ] = from_date + timedelta(
-                                minutes=(-(timezone_offset) * 60)
-                            )
-                        else:
-                            transaction_filter_dict[
-                                "created__gte"
-                            ] = from_date - timedelta(minutes=(timezone_offset * 60))
-                    else:
-                        transaction_filter_dict["created__date__gte"] = from_date
-
-                if to_date and validate_date(to_date):
-                    to_date = datetime.strptime(
-                        to_date + " 23:59:59", "%Y-%m-%d %H:%M:%S"
-                    )
-                    if timezone_offset:
-                        timezone_offset = float(timezone_offset)
-                        if timezone_offset < 0:
-                            transaction_filter_dict[
-                                "created__lte"
-                            ] = to_date + timedelta(minutes=(-(timezone_offset) * 60))
-                        else:
-                            transaction_filter_dict[
-                                "created__lte"
-                            ] = to_date - timedelta(minutes=(timezone_offset * 60))
-           
-                coinflow_transactions = CoinFlowTransaction.objects.filter(user=player).order_by("-created")
-                coinflow_transactions = coinflow_transactions.filter(**transaction_filter_dict).order_by("-created")
-                paginator = self.pagination_class()
-                try:
-                    result_page = paginator.paginate_queryset(coinflow_transactions, request)
-                except Exception as e:
-                    print(e)
-                    return Response({"msg": "Something went Wrong", "status_code": status.HTTP_400_BAD_REQUEST})
-                serializer =  CoinflowTransactionsSerializer(result_page, many=True)
-                return paginator.get_paginated_response(serializer.data)
-
-            else:
+            if not player:
                 return Response({"msg": "user not found", "status_code":status.HTTP_404_NOT_FOUND})
+
+            transaction_filter_dict: Dict[str, Any] = {"is_deleted" : False}
+            from_date = self.request.query_params.get("from_date")
+            to_date = self.request.query_params.get("to_date")
+            activity_type = self.request.query_params.get("activity_type")
+
+            if activity_type:
+                transaction_filter_dict["status"] = activity_type
+
+            timezone_offset = float(str(self.request.query_params.get("timezone_offset") or 0)) * 60
+
+            if from_date and validate_date(from_date):
+                from_date = datetime.strptime(
+                    str(from_date) + " 00:00:00", "%Y-%m-%d %H:%M:%S"
+                )
+                if timezone_offset != 0:
+                    from_date -= timedelta(minutes=timezone_offset)
+                transaction_filter_dict["created__gte"] = from_date
+
+            if to_date and validate_date(to_date):
+                to_date = datetime.strptime(
+                    str(to_date) + " 23:59:59", "%Y-%m-%d %H:%M:%S"
+                )
+                if timezone_offset != 0:
+                    to_date -= timedelta(minutes=timezone_offset)
+                transaction_filter_dict["created__lte"] = to_date
+        
+            coinflow_transactions = CoinFlowTransaction.objects.filter(user=player).order_by("-created")
+            coinflow_transactions = coinflow_transactions.filter(**transaction_filter_dict).order_by("-created")
+            paginator = self.pagination_class()
+            try:
+                result_page = paginator.paginate_queryset(coinflow_transactions, request)
+            except Exception as e:
+                print(e)
+                return Response({"msg": "Something went Wrong", "status_code": status.HTTP_400_BAD_REQUEST})
+            serializer =  CoinflowTransactionsSerializer(result_page, many=True)
+            return paginator.get_paginated_response(serializer.data)
+
         except Exception as e:
             print(f"error in fetching data {e}.")
             response = {"msg": "Some Internal error.", "status_code": status.HTTP_500_INTERNAL_SERVER_ERROR}
@@ -1883,8 +1861,7 @@ class CoinflowCancelTransaction(APIView):
         if not token:
             return Response({"message" : "Please use the token to cancel any of you checkouts"}, status=status.HTTP_400_BAD_REQUEST)
         token = str(token)
-        cf = CoinFlowClient()
-        cf.cancel_delete_unused_transaction(request.user, token)
+        COINFLOW_CLIENT.cancel_delete_unused_transaction(request.user, token)
         return Response({"message" : "ok"}, status=status.HTTP_200_OK)
 
 
@@ -1918,10 +1895,16 @@ class BundleView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request) -> Response:
-        bundles = Bundle.objects.filter(admin=request.user.admin, enabled=True).order_by("price")
-        if not bundles.exists():
+        bundles = get_bundles(self.request.user)
+        if len(bundles) == 0:
             return Response([], status=status.HTTP_200_OK)
-        serializer = BundleSerializer(bundles, many=True)
+        
+        allowed_bundles = []
+        for bundle in bundles.copy():
+            if bundle.processing_time and bundle.processing_time + bundle.created < timezone.now():
+                continue
+            allowed_bundles.append(bundle)
+        serializer = BundleSerializer(allowed_bundles, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request) -> Response:

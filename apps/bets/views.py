@@ -1,5 +1,8 @@
 import datetime
 
+from django.http.request import HttpRequest
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from apps.bets.filters import (
     LiveCasinoTransactionFilters,
@@ -10,8 +13,10 @@ from apps.bets.serializers import (
     Transactionandinerializer,
     WageringRequirementsSerializer,
 )
+from apps.bets.services.wagering import claim_action_bonus, get_user_wagering_snapshot
 from apps.bets.utils import validate_date
 from apps.casino.models import *
+from apps.core.concurrency import limiter
 from apps.core.pagination import PageNumberPagination
 from apps.core.permissions import IsPlayer
 from apps.core.rest_any_permissions import AnyPermissions
@@ -19,8 +24,8 @@ from apps.core.rest_any_permissions import AnyPermissions
 
 from django.utils.translation import activate
 from django.utils.translation import gettext_lazy as _
-from django.db.models import Q
-from rest_framework import viewsets
+from django.db.models import Q, Case, When, F, DateTimeField
+from rest_framework import status, viewsets, mixins
 
 from .models import (
     BONUS,
@@ -206,8 +211,10 @@ class CasinoTransactionsView(viewsets.ModelViewSet):
 
         return queryset
 
-class WageringRequirementsView(viewsets.ModelViewSet):
-    queryset = WageringRequirement.objects.none()
+class WageringRequirementsView(
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet
+):
     serializer_class = WageringRequirementsSerializer
     http_method_names = [
         "get",
@@ -220,54 +227,80 @@ class WageringRequirementsView(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = WageringRequirement.objects.filter(
             user=self.request.user,
-            balance__gt=0,
             betable=True,
-            active=True
+            claimed=False,
         )
-
         from_date = self.request.query_params.get("from_date", None)
         to_date = self.request.query_params.get("to_date", None)
-
-        transaction_filter_dict = {"user": self.request.user}
-
         timezone_offset = self.request.query_params.get("timezone_offset", None)
+
+        transaction_filter_dict = {}
+        if timezone_offset:
+            timezone_offset = float(timezone_offset)
 
         if from_date and validate_date(from_date):
             from_date = datetime.datetime.strptime(
-                from_date + " 00:00:00", "%Y-%m-%d %H:%M:%S"
+                from_date + " 00:00:00",
+                "%Y-%m-%d %H:%M:%S"
             )
             if timezone_offset:
-                timezone_offset = float(timezone_offset)
-                if timezone_offset < 0:
-                    transaction_filter_dict[
-                        "created__gte"
-                    ] = from_date + datetime.timedelta(
-                        minutes=(-(timezone_offset) * 60)
-                    )
-                else:
-                    transaction_filter_dict[
-                        "created__gte"
-                    ] = from_date - datetime.timedelta(minutes=(timezone_offset * 60))
-            else:
-                transaction_filter_dict["created__date__gte"] = from_date
+                from_date -= datetime.timedelta(minutes=timezone_offset * 60)
+            transaction_filter_dict["created__date__gte"] = from_date
 
         if to_date and validate_date(to_date):
             to_date = datetime.datetime.strptime(
-                to_date + " 23:59:59", "%Y-%m-%d %H:%M:%S"
+                to_date + " 23:59:59",
+                "%Y-%m-%d %H:%M:%S"
             )
             if timezone_offset:
-                timezone_offset = float(timezone_offset)
-                if timezone_offset < 0:
-                    transaction_filter_dict[
-                        "created__lte"
-                    ] = to_date + datetime.timedelta(minutes=(-(timezone_offset) * 60))
-                else:
-                    transaction_filter_dict[
-                        "created__lte"
-                    ] = to_date - datetime.timedelta(minutes=(timezone_offset * 60))
-            else:
-                transaction_filter_dict["created__date__lte"] = to_date
+                to_date -= datetime.timedelta(minutes=timezone_offset * 60)
+            transaction_filter_dict["created__date__lte"] = to_date
 
-        queryset = queryset.filter(**transaction_filter_dict).order_by("-created")
+        queryset = queryset.filter(**transaction_filter_dict).order_by("-active",
+            Case(
+                When(active=True, then=F("created")),
+                default=None,
+                output_field=DateTimeField(),
+            ).desc(),
+            Case(
+                When(active=False, then=F("created")),
+                default=None,
+                output_field=DateTimeField(),
+            ).asc(),
+        )
 
         return queryset
+
+class WalletView(APIView):
+
+    permission_classes = (IsPlayer,)
+    http_method_names = [
+        "get",
+    ]
+    def get(self, request: HttpRequest):
+        return Response(get_user_wagering_snapshot(self.request.user, calculate_reactor=True), status=status.HTTP_200_OK)
+
+class ClaimView(APIView):
+
+    permission_classes = (IsPlayer,)
+    http_method_names = [
+        "get",
+        "post",
+        "POST"
+    ]
+    def post(self, request: HttpRequest):
+        data = request.data.get("action")
+        if data is None or not data in ("reactor", "bonus"):
+            return Response({"message": "Please use an action to continue. bonus | reactor"})
+        is_allowed = limiter.allow(
+            key=f"user:{self.request.user.id}:claim_action:{data}",
+            limit=1,  # 2 request / (window)
+            window=15,  # 5 seconds
+            sliding=True
+        )
+        if not is_allowed:
+            return Response({"message": "Please wait a few seconds. Request limit reached"}, status=status.HTTP_429_TOO_MANY_REQUESTS)
+        res = claim_action_bonus(self.request.user, data)
+        if res.get("status") == "error":
+            return Response(res, status=status.HTTP_400_BAD_REQUEST)
+        return Response(res, status=status.HTTP_200_OK)

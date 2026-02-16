@@ -1,17 +1,9 @@
-import json
-import math
-import traceback
 from decimal import Decimal
-from typing import Tuple
+from typing import TYPE_CHECKING
 
-from asgiref.sync import async_to_sync
-from channels.layers import get_channel_layer
-from django.db import transaction
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.contrib.postgres.fields import JSONField
-from djchoices import ChoiceItem, DjangoChoices
-from django.core.validators import MinValueValidator
 
 
 from apps.core.models import AbstractBaseModel
@@ -126,6 +118,8 @@ class WageringRequirement(AbstractBaseModel):
        - on each bet the value of the bet should be added to played
     3) once the user has played more than the limit the balance should be given to the user
     """
+    if TYPE_CHECKING:
+        id: int
     user = models.ForeignKey(Users, on_delete=models.CASCADE, related_name="wagering_requirements")
     accreditable = models.ForeignKey(Users, on_delete=models.CASCADE, null=True, default=None, related_name="accreditable_wagerings")
 
@@ -139,6 +133,7 @@ class WageringRequirement(AbstractBaseModel):
     limit = models.DecimalField(max_digits=10, decimal_places=2)
 
     result = models.DecimalField(max_digits=10, decimal_places=2, null=True, default=None)
+    claimed = models.BooleanField(default=False, db_index=True)
     active = models.BooleanField(default=True, db_index=True)
     betable = models.BooleanField(db_index=True)
 

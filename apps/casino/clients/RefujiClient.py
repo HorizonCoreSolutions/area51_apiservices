@@ -1,4 +1,3 @@
-import random
 import string
 import secrets
 import requests
@@ -45,7 +44,7 @@ def deposit(
     if not (user and game and user_game):
         return False, "Game or account not found"
     
-    username = user.username or ""
+    username = str(user.username or "")
 
     deposit_id = generate_deposit_id(username=username)
     bonus_amount = (Decimal(game.bonus_percentage) / 100) * amount
@@ -68,14 +67,14 @@ def deposit(
         "area51_username" : encrypt(username),
     }
 
-    messages = ['Promo Code Is Invalid',
-                'Promo Code Expired',
-                'Promo Code Already Claimed']
+    # messages = ['Promo Code Is Invalid',
+    #             'Promo Code Expired',
+    #             'Promo Code Already Claimed']
 
     if promo_code is not None:
         request_payload.update({
             "promo_code" : promo_code,
-            "username" : encrypt("a51" + (user.username or ""))
+            "username" : encrypt("a51" + username)
             # Usuario de area51
         })
 
@@ -90,6 +89,7 @@ def deposit(
             },
         )
     except Exception as e:
+        print(e)
         return False, "Service is not available. Please try again later."
         
 
@@ -103,18 +103,18 @@ def deposit(
     user.balance = user.balance - Decimal(amount) 
     user.save()
 
-    deposit = OffMarketTransactions()
-    deposit.user = user
-    deposit.amount = total_amount
-    deposit.status = 'Pending'
-    deposit.txn_id = deposit_id
-    deposit.game_name = game_code
-    deposit.journal_entry = 'credit'
-    deposit.transaction_type = 'DEPOSIT'
-    deposit.description = f'deposit {amount} by {user.username} in game {game_code}'
-    deposit.game_name_full = game.title
-    deposit.bonus = bonus_amount
-    deposit.save()
+    deposit = OffMarketTransactions.objects.create(
+        user=user,
+        amount=total_amount,
+        status='Pending',
+        txn_id=deposit_id,
+        game_name=game_code,
+        journal_entry='credit',
+        transaction_type='DEPOSIT',
+        description=f'deposit {amount} by {user.username} in game {game_code}',
+        game_name_full=game.title,
+        bonus=bonus_amount,
+    )
     
     if force_update:
         complete_request_payload = {
@@ -137,7 +137,7 @@ def deposit(
     task_update_offmarket_transaction.apply_async(
         args=[deposit.id],  # type: ignore
         countdown=19
-    )  # type: ignore
+    )
     return True, None
 
 
@@ -179,11 +179,11 @@ def create_user(
     if UserGames.objects.filter(game=game, user=player).exists():
         return False, "User already has an account for this game"
 
-    user_game = UserGames()
-    user_game.game = game
-    user_game.username = username
-    user_game.user = player
-    user_game.save()
+    _user_game = UserGames.objects.create(
+        game=game,
+        username=username,
+        user=player,
+    )
 
     return True, None
 
@@ -242,7 +242,7 @@ def edit_transaction(
 
     # Refund if failed
     if user_status == "Failed":
-        off_market_refund_transactions(transaction.id) # type: ignore
+        off_market_refund_transactions(transaction.id)
 
     return True, None
 

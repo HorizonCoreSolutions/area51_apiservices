@@ -77,7 +77,7 @@ class GetWageringBalanceTests(TestCase, WageringTestMixin):
     def test_no_wagering_requirements_returns_zero(self):
         """When user has no wagering requirements, balance should be 0."""
         user = self.create_user()
-        result = get_wagering_balance(user)
+        result = get_wagering_balance(user, bonus=True)
         self.assertEqual(result, Decimal("0"))
     
     def test_single_active_wagering_requirement(self):
@@ -85,7 +85,7 @@ class GetWageringBalanceTests(TestCase, WageringTestMixin):
         user = self.create_user()
         self.create_wagering_requirement(user, balance=Decimal("50.00"))
         
-        result = get_wagering_balance(user)
+        result = get_wagering_balance(user, bonus=True)
         self.assertEqual(result, Decimal("50.00"))
     
     def test_multiple_active_wagering_requirements(self):
@@ -94,7 +94,7 @@ class GetWageringBalanceTests(TestCase, WageringTestMixin):
         self.create_wagering_requirement(user, balance=Decimal("30.00"))
         self.create_wagering_requirement(user, balance=Decimal("20.00"))
         
-        result = get_wagering_balance(user)
+        result = get_wagering_balance(user, bonus=True)
         self.assertEqual(result, Decimal("50.00"))
     
     def test_inactive_wagering_requirements_excluded(self):
@@ -103,7 +103,7 @@ class GetWageringBalanceTests(TestCase, WageringTestMixin):
         self.create_wagering_requirement(user, balance=Decimal("30.00"), active=True)
         self.create_wagering_requirement(user, balance=Decimal("20.00"), active=False)
         
-        result = get_wagering_balance(user)
+        result = get_wagering_balance(user, bonus=True)
         self.assertEqual(result, Decimal("30.00"))
     
     def test_completed_wagering_requirements_excluded(self):
@@ -112,7 +112,7 @@ class GetWageringBalanceTests(TestCase, WageringTestMixin):
         self.create_wagering_requirement(user, balance=Decimal("30.00"), result=None)
         self.create_wagering_requirement(user, balance=Decimal("20.00"), result=Decimal("15.00"))
         
-        result = get_wagering_balance(user)
+        result = get_wagering_balance(user, bonus=True)
         self.assertEqual(result, Decimal("30.00"))
     
     def test_non_betable_wagering_requirements_excluded(self):
@@ -121,7 +121,7 @@ class GetWageringBalanceTests(TestCase, WageringTestMixin):
         self.create_wagering_requirement(user, balance=Decimal("30.00"), betable=False)
         self.create_wagering_requirement(user, balance=Decimal("20.00"), betable=True)
         
-        result = get_wagering_balance(user)
+        result = get_wagering_balance(user, bonus=True)
         self.assertEqual(result, Decimal("20.00"))
 
 
@@ -257,7 +257,7 @@ class SingleWRClearTests(TransactionTestCase, WageringTestMixin):
         
         self.assertEqual(wr.active, False)
         self.assertEqual(wr.balance, Decimal("0.00"))
-        self.assertEqual(user.balance, Decimal("10.00"))  # Balance returned to user
+        self.assertEqual(user.balance_reactor, Decimal("10.00"))  # Balance returned to reactor pool
     
     def test_clear_partial_progress(self):
         """Clearing should update played without completing if limit not reached."""
@@ -322,8 +322,8 @@ class SingleWRPayTests(TransactionTestCase, WageringTestMixin):
         platform_pay(user, Decimal("20.00"), data)
         
         user.refresh_from_db()
-        # Payment should go directly to user balance
-        self.assertGreater(user.balance, Decimal("0.00"))
+        # Payment should go directly to wagering pool
+        self.assertGreater(user.balance_wagering, Decimal("0.00"))
 
 
 class PlatformBetTests(TransactionTestCase, WageringTestMixin):
@@ -461,7 +461,7 @@ class PlatformPayTests(TransactionTestCase, WageringTestMixin):
         wr.refresh_from_db()
         user.refresh_from_db()
         self.assertEqual(wr.balance, Decimal("20.00"))
-        self.assertEqual(user.balance, Decimal("10.00"))
+        self.assertEqual(user.balance_wagering, Decimal("10.00"))
 
     @transaction.atomic
     def test_platform_pay_handles_adjustment_with_multiple_wrs(self):
@@ -485,7 +485,7 @@ class PlatformPayTests(TransactionTestCase, WageringTestMixin):
         user.refresh_from_db()
         self.assertEqual(wr1.balance, Decimal("18.00"))
         self.assertEqual(wr2.balance, Decimal("18.00"))
-        self.assertEqual(user.balance, Decimal("4.00"))
+        self.assertEqual(user.balance_wagering, Decimal("4.00"))
 
     @transaction.atomic
     def test_platform_pay_handles_adjustment_with_multiple_wrs_and_different_ratios(self):
@@ -509,7 +509,7 @@ class PlatformPayTests(TransactionTestCase, WageringTestMixin):
         wr2.refresh_from_db()
         self.assertEqual(wr1.balance, Decimal("20.00"))
         self.assertEqual(wr2.balance, Decimal("15.00"))
-        self.assertEqual(user.balance, Decimal("5.00"))
+        self.assertEqual(user.balance_wagering, Decimal("5.00"))
     
     @transaction.atomic
     def test_platform_pay_handles_adjustment_with_multiple_wrs_and_odd_ratios(self):
@@ -541,7 +541,11 @@ class PlatformPayTests(TransactionTestCase, WageringTestMixin):
         user.refresh_from_db()
         wr1.refresh_from_db()
         wr2.refresh_from_db()
-        total_balance = cast(Decimal, wr1.balance) + cast(Decimal, wr2.balance) + cast(Decimal, user.balance)
+        total_balance = (
+            cast(Decimal, wr1.balance)
+            + cast(Decimal, wr2.balance)
+            + cast(Decimal, user.balance_wagering)
+        )
         self.assertEqual(total_balance, Decimal("30.00"))
 
 class IntegrationTests(TransactionTestCase, WageringTestMixin):
@@ -678,7 +682,7 @@ class IntegrationTests(TransactionTestCase, WageringTestMixin):
         self.assertEqual(wr2.played, Decimal("0.00"))
 
     @transaction.atomic
-    def test_cancel_multiple_wrs_processed_in_order_with_debit(self):
+    def test_cancel_multiple_wrs_processed_in_order_with_debit_large_wr(self):
         """Multiple WRs should be processed in creation order."""
         user = self.create_user(balance=Decimal("1.00"))
         
@@ -712,13 +716,15 @@ class IntegrationTests(TransactionTestCase, WageringTestMixin):
         self.assertEqual(wr2.balance, Decimal("0.00"))
         self.assertEqual(wr2.played, Decimal("10.00"))
 
-        self.assertEqual(user.balance, Decimal("9.00"))
+        self.assertEqual(user.balance, Decimal("0.00"))
+        self.assertEqual(user.balance_wagering, Decimal("9.00"))
 
         user.balance = Decimal("0.00")
+        user.balance_wagering = Decimal("0.00")
         user.save()
 
         platform_cancel_bet_wr(user, data)
-        
+
         wr1.refresh_from_db()
         wr2.refresh_from_db()
         user.refresh_from_db()
@@ -763,9 +769,11 @@ class IntegrationTests(TransactionTestCase, WageringTestMixin):
         wr2.refresh_from_db()
         user.refresh_from_db()
 
-        self.assertEqual(user.balance, Decimal("9.00"))
+        self.assertEqual(user.balance, Decimal("-20.00"))
+        self.assertEqual(user.balance_wagering, Decimal("29.00"))
 
         user.balance = Decimal("0.00")
+        user.balance_wagering = Decimal("0.00")
         user.save()
 
         platform_cancel_bet_wr(user, data)
@@ -801,9 +809,11 @@ class IntegrationTests(TransactionTestCase, WageringTestMixin):
         wr1.refresh_from_db()
         user.refresh_from_db()
 
-        self.assertEqual(user.balance, Decimal("99.00"))
+        self.assertEqual(user.balance, Decimal("0.00"))
+        self.assertEqual(user.balance_wagering, Decimal("99.00"))
 
         user.balance = Decimal("0.00")
+        user.balance_wagering = Decimal("0.00")
         user.save()
 
         platform_cancel_bet_wr(user, data)
@@ -1246,6 +1256,8 @@ class CancelIntegrationTests(TransactionTestCase, WageringTestMixin):
         
         initial_total = (
             cast(Decimal, user.balance) +
+            cast(Decimal, user.balance_wagering) +
+            cast(Decimal, user.balance_reactor) +
             cast(Decimal, wr1.balance) +
             cast(Decimal, wr2.balance)
         )
@@ -1283,6 +1295,8 @@ class CancelIntegrationTests(TransactionTestCase, WageringTestMixin):
         
         final_total = (
             cast(Decimal, user.balance) +
+            cast(Decimal, user.balance_wagering) +
+            cast(Decimal, user.balance_reactor) +
             cast(Decimal, wr1.balance) +
             cast(Decimal, wr2.balance)
         )

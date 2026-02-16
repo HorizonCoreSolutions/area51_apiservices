@@ -37,6 +37,10 @@ class CasinoGameList(AbstractBaseModel):
     is_desktop_supported = models.BooleanField(default=False)
     is_free_round_supported = models.BooleanField(default=False)
 
+    can_clear_sc = models.BooleanField(default=False)
+    can_bonus_sc = models.BooleanField(default=False)
+
+
 class GameImages(AbstractBaseModel):
     name = models.CharField(max_length=256, default=None, null=True, blank=False)
     url = models.URLField(max_length=200, default=None, null=True, blank=False)
@@ -132,6 +136,9 @@ class GSoftTransactions(AbstractBaseModel):
     # - [wr_id] => Tuple[Decimal, Decimal]
     #   - first value is a percentage of the total amount of the bet
     #   - second value is the amount of the WR that was set as played
+
+    # Special cases
+    # On place_in_out for cpgames data will be saved to wr_data as [bet_data, pay_data]
 
 
 
@@ -241,4 +248,3 @@ class TournamentTransaction(AbstractBaseModel):
         _("Points"), max_digits=15, decimal_places=2, default=0.00, null=False, blank=False
     )
     type = models.CharField(null=True, blank=True, choices=TransactionType.choices, max_length=500)
-

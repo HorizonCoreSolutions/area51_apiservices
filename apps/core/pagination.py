@@ -8,6 +8,8 @@ class PageNumberPagination(DefaultPageNumberPagination):
     Override DefaultPageNumberPagination for disabling pagination from QUERY PARAM
     """
 
+    max_page_size = 100
+
     def __init__(self):
         super().__init__()
 
@@ -30,14 +32,13 @@ class PageNumberPagination(DefaultPageNumberPagination):
         :param query_params:
         :return: None
         """
-
+        self.page_size = 20
         try:
             page_size = int(query_params.get("page_size", "20"))
+            if page_size > 0:
+                self.page_size = page_size
         except ValueError:
             return
-
-        if page_size > 0:
-            self.page_size = page_size
 
 
 class MyBetsPageNumberPagination(DefaultPageNumberPagination):

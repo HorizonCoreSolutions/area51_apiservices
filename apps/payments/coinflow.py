@@ -7,16 +7,14 @@ from urllib.parse import quote
 from django.conf import settings
 from django.db import transaction
 from dataclasses import dataclass
-from django.utils import timezone
-from django.db.models import Q, Count
 from apps.core.utils import time as time_utils
-from datetime import datetime, timedelta, time
 from apps.payments import repository as payments_repository
 from apps.core.utils.encryption import decrypt_combined, encrypt_combined
 from apps.payments.service import apply_bonus, platform_deposit
+from apps.payments.utils import bundles as bundle_utils
 from apps.users import promo_handler
 from apps.users.utils import redis_client
-from typing import Callable, Dict, Optional, Tuple
+from typing import Any, Callable, Dict, Optional
 from apps.core.custom_types import BasicReturn
 from apps.core.file_logger import SimpleLogger
 from apps.acuitytec.acuitytec import AcuityTecAPI
@@ -188,7 +186,7 @@ class CoinFlowClient:
                     auth_session_key: Optional[str]=None,
                     auth_user_id: Optional[str]=None,
                     auth_wallet: Optional[str]=None,
-                    device_id: Optional[str]=None) -> dict:
+                    device_id: Optional[str]=None) -> Dict[str, str]:
         '''
         This functions returns the right headers, by default the auth and token
         headers are enabled, this design had in mind the docs given at:
@@ -262,7 +260,7 @@ class CoinFlowClient:
             )
         return BasicReturn(success=True)
 
-    def _make_api_request(self, method: str, url: str, **kwargs) -> requests.Response:
+    def _make_api_request(self, method: str, url: str, **kwargs: Any) -> requests.Response:
         """Make API request with proper error handling"""
         try:
             response = requests.request(
@@ -441,7 +439,7 @@ class CoinFlowClient:
             return BasicReturn(success=True)
 
         if user.dob:
-            year, month, day = user.dob.split('-')
+            year, month, day = str(user.dob).split('-')
             formatted_date_str = f"{year}{month}{day}"
         else:
             formatted_date_str = ''
@@ -522,7 +520,7 @@ class CoinFlowClient:
     def register_user(self, user: Users, ssn: int) -> BasicReturn:
 
         if user.dob:
-            year, month, day = user.dob.split('-')
+            year, month, day = str(user.dob).split('-')
             formatted_date_str = f"{year}{month}{day}"
         else:
             formatted_date_str = ''
@@ -605,7 +603,7 @@ class CoinFlowClient:
             "surName": user.last_name,
         }
 
-        for k, v in customer_info.items():
+        for _k, v in customer_info.items():
             if v is None:
                 return BasicReturn(success=False, error='Please complete your profile before taking any extra steps.')
 
@@ -617,7 +615,7 @@ class CoinFlowClient:
             "email": user.email,
         }
 
-        res = self._make_api_request(
+        _res = self._make_api_request(
             'POST',
             self.endpoints.create_customer,
             json=payload,
@@ -656,7 +654,7 @@ class CoinFlowClient:
             logger.critical(f'HTTP error: >> cannot get session key: {e}')
             return BasicReturn(success=False, error='This service is down, please try again later')
 
-    def build_payout_headers(self) -> dict:
+    def build_payout_headers(self) -> Dict[str, str]:
         return self._build_headers()
 
     def create_checkout_link(
@@ -736,7 +734,9 @@ class CoinFlowClient:
                     return BasicReturn(success=False, error=f"This message should not be shown, please contact us.")
                 logger.debug(f"Promo code: {promo_code} has been used for user {user.username}")
 
+            reference = None
             if bundle:
+                reference = bundle_utils.recerve_bundle(bundle=bundle, user=user, price=bundle.price, platform="coinflow")
                 amount_cents = int(bundle.price * 100)
 
             # Construct checkout payload
@@ -812,11 +812,12 @@ class CoinFlowClient:
                 transaction_type=CoinFlowTransaction.TransactionType.deposit,
                 account_type=CoinFlowTransaction.AccountType.card,
                 status=CoinFlowTransaction.StatusType.requested,
-                bundle=bundle
+                bundle=bundle,
+                reference_usage_bundle=reference
             )
 
             logger.info(f"Checkout link created successfully for user {user.id}-{user.username}")
-            token = encrypt_combined(transaction.id, transaction_id) # type: ignore
+            token = encrypt_combined(transaction.id, transaction_id)
 
             return BasicReturn(
                 success=True,
@@ -1211,8 +1212,8 @@ class CoinFlowClient:
         external_id = l_data.get('id', '')
 
         if tid is None:
-            logger.critical('The webhook is not retorning the '
-                            'transacction id, no webhook handling '
+            logger.critical('The webhook is not retorning the ' +
+                            'transacction id, no webhook handling ' +
                             'can be done')
             return BasicReturn(
                 success=False,
@@ -1325,6 +1326,9 @@ class CoinFlowClient:
             status = CoinFlowTransaction.StatusType.failed
             if eventType == "Card Payment Suspected Fraud":
                 status = CoinFlowTransaction.StatusType.failed_fraud
+            
+            if transaction.reference_usage_bundle:
+                bundle_utils.release_bundle(transaction.reference_usage_bundle, user)
 
             transaction.external_id = external_id
             transaction.status=status
@@ -1358,7 +1362,7 @@ class CoinFlowClient:
                 user.balance = 0
                 logger.warning(f'Insufficient balance for chargeback - User {user.id}-{user.username}, required: ${transaction.amount}, available: ${user.balance}. ONLY available mony has been taken please contact the user')
 
-                chargeback_transaction = CoinFlowTransaction.objects.create(
+                _chargeback_transaction = CoinFlowTransaction.objects.create(
                     user=user,
                     currency='USD',
                     amount=pre_balance,
@@ -1378,7 +1382,7 @@ class CoinFlowClient:
 
             # Update user balance
             user.balance -= transaction.amount
-            chargeback_transaction = CoinFlowTransaction.objects.create(
+            _chargeback_transaction = CoinFlowTransaction.objects.create(
                 user=user,
                 currency='USD',
                 transaction_id=tid,
@@ -1446,7 +1450,7 @@ class CoinFlowClient:
 
 
             # Create a new transaction record for the refund
-            refund_transaction = CoinFlowTransaction.objects.create(
+            _refund_transaction = CoinFlowTransaction.objects.create(
                 user=user,
                 currency='USD',
                 transaction_id=tid,
