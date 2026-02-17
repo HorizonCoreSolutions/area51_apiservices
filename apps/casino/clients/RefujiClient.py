@@ -2,6 +2,7 @@ import string
 import secrets
 import requests
 from decimal import Decimal
+from apps.bets.services import wagering as wagering_service
 from django.conf import settings
 from django.db import transaction
 from typing import Optional, Tuple
@@ -45,6 +46,10 @@ def deposit(
         return False, "Game or account not found"
     
     username = str(user.username or "")
+
+    balance = wagering_service.get_wagering_balance(user=user, bonus=False)
+    if balance < amount:
+        return False, "Not enought playable/redeemable balance."
 
     deposit_id = generate_deposit_id(username=username)
     bonus_amount = (Decimal(game.bonus_percentage) / 100) * amount
@@ -100,8 +105,7 @@ def deposit(
         except ValueError:
             return False, "Request Not Processed"
     
-    user.balance = user.balance - Decimal(amount) 
-    user.save()
+    wagering_service.platform_bet(user=user, amount=amount, bonus=False, clear=False)
 
     deposit = OffMarketTransactions.objects.create(
         user=user,

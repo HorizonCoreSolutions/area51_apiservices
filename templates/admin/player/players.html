@@ -724,6 +724,58 @@ Players
                                                                                     </div>
                                                                                 </div>
                                                                             </div>
+
+                                                                            <!-- Wallet Resume Section -->
+                                                                            <div class="mt-3 mb-2">
+                                                                                <small class="text-muted font-weight-bold">{% trans "Wallet Resume" %}</small>
+                                                                                <button type="button" class="btn btn-sm btn-outline-primary ml-2" id="wallet-refresh-{{ forloop.counter }}" onclick="refreshWalletResume({{ forloop.counter }}, {{ player.id }})">
+                                                                                    <i class="fa fa-refresh"></i> {% trans "Refresh" %}
+                                                                                </button>
+                                                                            </div>
+                                                                            <div class="d-flex align-items-start gap-2 mb-2">
+                                                                                <div class="flex-grow-1">
+                                                                                    <table class="table table-sm table-bordered wallet-resume-table" id="wallet-resume-table-{{ forloop.counter }}">
+                                                                                        <thead>
+                                                                                            <tr>
+                                                                                                <th></th>
+                                                                                                <th>{% trans "Playable" %}</th>
+                                                                                                <th>{% trans "Bonus" %}</th>
+                                                                                                <th>{% trans "Redeemable" %}</th>
+                                                                                                <th>{% trans "Total" %}</th>
+                                                                                            </tr>
+                                                                                        </thead>
+                                                                                        <tbody>
+                                                                                            <tr>
+                                                                                                <td><strong>GC</strong></td>
+                                                                                                <td id="wallet-gc-playable-{{ forloop.counter }}">-</td>
+                                                                                                <td id="wallet-gc-bonus-{{ forloop.counter }}">-</td>
+                                                                                                <td id="wallet-gc-redeemable-{{ forloop.counter }}">-</td>
+                                                                                                <td id="wallet-gc-total-{{ forloop.counter }}">-</td>
+                                                                                            </tr>
+                                                                                            <tr>
+                                                                                                <td><strong>SC</strong></td>
+                                                                                                <td id="wallet-sc-playable-{{ forloop.counter }}">-</td>
+                                                                                                <td id="wallet-sc-bonus-{{ forloop.counter }}">-</td>
+                                                                                                <td id="wallet-sc-redeemable-{{ forloop.counter }}">-</td>
+                                                                                                <td id="wallet-sc-total-{{ forloop.counter }}">-</td>
+                                                                                            </tr>
+                                                                                            <tr>
+                                                                                                <td><strong>{% trans "Solar" %}</strong></td>
+                                                                                                <td id="wallet-solar-playable-{{ forloop.counter }}">-</td>
+                                                                                                <td id="wallet-solar-bonus-{{ forloop.counter }}">-</td>
+                                                                                                <td id="wallet-solar-redeemable-{{ forloop.counter }}">-</td>
+                                                                                                <td id="wallet-solar-total-{{ forloop.counter }}">-</td>
+                                                                                            </tr>
+                                                                                        </tbody>
+                                                                                    </table>
+                                                                                </div>
+                                                                                <div class="wallet-pending-wrap">
+                                                                                    <div class="mb-1">
+                                                                                        <small class="text-muted font-weight-bold">{% trans "Pending balance to be claimed" %}</small>
+                                                                                    </div>
+                                                                                    <div id="wallet-pending-{{ forloop.counter }}" class="font-weight-bold text-info">-</div>
+                                                                                </div>
+                                                                            </div>
                                                                         </div>
                                                                     </div>
                                                                 </div>
@@ -1296,6 +1348,55 @@ Players
         if (charCode > 31 && (charCode < 48 || charCode > 57))
             return false;
         return true;
+    }
+
+    function formatDecimal(val) {
+        if (val === null || val === undefined || val === '-') return '-';
+        var n = parseFloat(val);
+        return isNaN(n) ? '-' : n.toFixed(2);
+    }
+
+    function refreshWalletResume(row_id, player_id) {
+        var btn = $("#wallet-refresh-" + row_id);
+        btn.prop("disabled", true).html('<i class="fa fa-spinner fa-spin"></i> {% trans "Loading..." %}');
+        $.ajax({
+            type: "POST",
+            url: "{% url 'admin-panel:wallet-resume-ajax' %}",
+            headers: { "X-CSRFToken": $("input[name='csrfmiddlewaretoken']").val() },
+            data: { user_id: player_id },
+            dataType: "json",
+            success: function (data) {
+                if (data.error) {
+                    Swal.fire({ icon: 'error', title: 'Error', text: data.error });
+                } else {
+                    var fmt = formatDecimal;
+                    // GC: only total from api (gc), show as bonus/total
+                    $("#wallet-gc-playable-" + row_id).text(fmt(0));
+                    $("#wallet-gc-bonus-" + row_id).text(fmt(data.gc));
+                    $("#wallet-gc-redeemable-" + row_id).text(fmt(0));
+                    $("#wallet-gc-total-" + row_id).text(fmt(data.gc));
+                    // SC
+                    $("#wallet-sc-playable-" + row_id).text(fmt(data.sc_playable));
+                    $("#wallet-sc-bonus-" + row_id).text(fmt(data.sc_bonus));
+                    $("#wallet-sc-redeemable-" + row_id).text(fmt(data.sc_redeemable));
+                    $("#wallet-sc-total-" + row_id).text(fmt(data.sc_total));
+                    // Solar (pool_amount)
+                    $("#wallet-solar-playable-" + row_id).text(fmt(0));
+                    $("#wallet-solar-bonus-" + row_id).text(fmt(data.pool_amount));
+                    $("#wallet-solar-redeemable-" + row_id).text(fmt(0));
+                    $("#wallet-solar-total-" + row_id).text(fmt(data.pool_amount));
+                    // Pending balance to be claimed
+                    $("#wallet-pending-" + row_id).text(fmt(data.pending_to_claim));
+                }
+            },
+            error: function (xhr) {
+                var msg = xhr.responseJSON && xhr.responseJSON.error ? xhr.responseJSON.error : '{% trans "Failed to load wallet data" %}';
+                Swal.fire({ icon: 'error', title: 'Error', text: msg });
+            },
+            complete: function () {
+                btn.prop("disabled", false).html('<i class="fa fa-refresh"></i> {% trans "Refresh" %}');
+            }
+        });
     }
 
     function payment_delay(){

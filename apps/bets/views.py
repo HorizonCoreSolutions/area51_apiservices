@@ -273,12 +273,20 @@ class WageringRequirementsView(
 
 class WalletView(APIView):
 
-    permission_classes = (IsPlayer,)
+    permission_classes = (AnyPermissions,)
     http_method_names = [
         "get",
     ]
     def get(self, request: HttpRequest):
-        return Response(get_user_wagering_snapshot(self.request.user, calculate_reactor=True), status=status.HTTP_200_OK)
+        user = self.request.user
+        if getattr(self.request.user, "role", None) in ("admin", "superadmin", "dealer", "agent"):
+            user_id = request.query_params.get("user_id") or request.data.get("user_id")
+            if user_id is None:
+                return Response({"error": "Invalid user_id None."}, status=status.HTTP_400_BAD_REQUEST)
+            user = Users.objects.filter(id=user_id, role="player").first()
+            if user is None:
+                return Response({"error": "There is no player with this id."}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(get_user_wagering_snapshot(user, calculate_reactor=True), status=status.HTTP_200_OK)
 
 class ClaimView(APIView):
 

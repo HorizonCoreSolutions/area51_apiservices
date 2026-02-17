@@ -89,6 +89,7 @@ from apps.users.models import (
         SuperAdminSetting,
         CmsPromotions)
 from apps.bets.models import BONUS, CASHBACK, CREDIT, DEBIT, DEPOSIT, WITHDRAW, Transactions
+from apps.bets.services.wagering import get_user_wagering_snapshot
 from apps.users.utils import send_player_balance_update_notification
 from apps.users.models import (
     Admin,
@@ -1356,6 +1357,56 @@ class UpdateDealer(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseM
         dealer.save()
 
         return self.render_json_response({"status": "Success", "message": _("Master Agent has been edited.")})
+
+
+class WalletResumeAjaxView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseMixin, View):
+    """Fetches wallet data from get_user_wagering_snapshot (volatile, no persistence)."""
+    http_method_names = ("get", "post")
+    allowed_roles = ("admin", "dealer", "superadmin", "agent")
+
+    def _get_user_id(self, request):
+        if request.method == "POST":
+            return request.POST.get("user_id")
+        return request.GET.get("user_id")
+
+    def _handle_request(self, request):
+        user_id = self._get_user_id(request)
+        if not user_id:
+            return self.render_json_response(
+                {"error": _("user_id is required")},
+                status=400,
+            )
+        player = Player.objects.filter(id=user_id, role="player").first()
+        if not player:
+            return self.render_json_response(
+                {"error": _("Player not found")},
+                status=400,
+            )
+        data = get_user_wagering_snapshot(player, calculate_reactor=True)
+        # Compute derived values for the table
+        pending_reactor = data.get("pending_reactor") or Decimal("0.00")
+        pending_balance = data.get("pending_balance") or Decimal("0.00")
+        sc_bonus = data.get("sc_bonus") or Decimal("0.00")
+        sc_playable = data.get("sc_playable") or Decimal("0.00")
+        sc_redeemable = data.get("sc_redeamable") or Decimal("0.00")
+        payload = {
+            "pending_reactor": str(pending_reactor),
+            "pending_balance": str(pending_balance),
+            "pending_to_claim": str(pending_reactor + pending_balance),
+            "sc_bonus": str(sc_bonus),
+            "sc_playable": str(sc_playable),
+            "sc_redeemable": str(sc_redeemable),
+            "sc_total": str(sc_bonus + sc_playable + sc_redeemable),
+            "gc": str(data.get("gc") or Decimal("0.00")),
+            "pool_amount": str(data.get("pool_amount") or Decimal("0.00")),
+        }
+        return self.render_json_response(payload)
+
+    def get_ajax(self, request, *args, **kwargs):
+        return self._handle_request(request)
+
+    def post_ajax(self, request, *args, **kwargs):
+        return self._handle_request(request)
 
 
 class CreditAjaxView(CheckRolesMixin, views.JSONResponseMixin, views.AjaxResponseMixin, View):
@@ -10658,9 +10709,7 @@ class OffMarketCreditAjaxView(CheckRolesMixin, views.JSONResponseMixin, views.Aj
             user = Users.objects.filter(id=request.POST["player_id"]).first()
             amount = float(request.POST["value"])
             deposit_id = str(request.POST.get("payment_id", None))
-            if user.balance < Decimal(amount):
-                return self.render_json_response({"status":"Failed","message": "Insufficient Funds"}, 400)
-            elif deposit_id.strip() in [None, 'None', ""] or len(deposit_id)<5:
+            if deposit_id.strip() in [None, 'None', ""] or len(deposit_id)<5:
                 return self.render_json_response({"status":"Failed","message": "Invalid Payment ID"}, 400)
             elif OffMarketTransactions.objects.filter(txn_id=deposit_id).exists():
                 return self.render_json_response({"status":"Failed","message": "Payment ID Already Exists"}, 400)
