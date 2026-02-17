@@ -273,7 +273,7 @@ class WageringRequirementsView(
 
 class WalletView(APIView):
 
-    permission_classes = [AnyPermissions,]
+    permission_classes = (IsPlayer,)
     http_method_names = [
         "get",
     ]
