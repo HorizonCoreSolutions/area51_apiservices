@@ -10658,9 +10658,7 @@ class OffMarketCreditAjaxView(CheckRolesMixin, views.JSONResponseMixin, views.Aj
             user = Users.objects.filter(id=request.POST["player_id"]).first()
             amount = float(request.POST["value"])
             deposit_id = str(request.POST.get("payment_id", None))
-            if user.balance < Decimal(amount):
-                return self.render_json_response({"status":"Failed","message": "Insufficient Funds"}, 400)
-            elif deposit_id.strip() in [None, 'None', ""] or len(deposit_id)<5:
+            if deposit_id.strip() in [None, 'None', ""] or len(deposit_id)<5:
                 return self.render_json_response({"status":"Failed","message": "Invalid Payment ID"}, 400)
             elif OffMarketTransactions.objects.filter(txn_id=deposit_id).exists():
                 return self.render_json_response({"status":"Failed","message": "Payment ID Already Exists"}, 400)

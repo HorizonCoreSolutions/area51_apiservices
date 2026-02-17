@@ -2093,9 +2093,6 @@ class OffMarketDepositView(APIView):
         except Exception as e:
             return Response({"message" : "invalid amount"}, status=status.HTTP_400_BAD_REQUEST)
 
-        if user.balance < amount:
-                return Response({"message": "Insufficient Funds"}, status.HTTP_400_BAD_REQUEST)
-        
         success, error = RefujiClient.deposit(
             user=user,
             amount=amount,
