@@ -687,10 +687,18 @@ class IntegrationTests(TransactionTestCase, WageringTestMixin):
         user = self.create_user(balance=Decimal("1.00"))
         
         wr1 = self.create_wagering_requirement(
-            user, balance=Decimal("10.00"), played=Decimal("99.00"), limit=Decimal("100.00")
+            user,
+            amount=Decimal('100.00'),
+            balance=Decimal("10.00"),
+            played=Decimal("99.00"),
+            limit=Decimal("100.00")
         )
         wr2 = self.create_wagering_requirement(
-            user, balance=Decimal("10.00"), played=Decimal("0.00"), limit=Decimal("100.00")
+            user,
+            amount=Decimal('100.00'),
+            balance=Decimal("10.00"),
+            played=Decimal("0.00"),
+            limit=Decimal("100.00")
         )
 
         playable_balance = platform_playable_balance(user)
@@ -710,14 +718,14 @@ class IntegrationTests(TransactionTestCase, WageringTestMixin):
 
         # First WR should be fully used
         self.assertEqual(wr1.balance, Decimal("0.00"))
-        self.assertEqual(wr1.played, Decimal("100.00"))
+        self.assertEqual(wr1.played, Decimal("109.00"))
         
         # Second WR should have remainder
-        self.assertEqual(wr2.balance, Decimal("0.00"))
-        self.assertEqual(wr2.played, Decimal("10.00"))
+        self.assertEqual(wr2.balance, Decimal("8.00"))
+        self.assertEqual(wr2.played, Decimal("2.00"))
 
-        self.assertEqual(user.balance, Decimal("0.00"))
-        self.assertEqual(user.balance_wagering, Decimal("9.00"))
+        self.assertEqual(user.balance, Decimal("1.00"))
+        self.assertEqual(user.balance_wagering, Decimal("0.00"))
 
         user.balance = Decimal("0.00")
         user.balance_wagering = Decimal("0.00")
@@ -731,11 +739,11 @@ class IntegrationTests(TransactionTestCase, WageringTestMixin):
 
         playable_balance = platform_playable_balance(user)
         # after a 9 SC withdrawal
-        self.assertEqual(playable_balance, Decimal("12.00"))
+        self.assertEqual(playable_balance, Decimal("20.00"))
 
         self.assertEqual(user.balance, Decimal("0.00"))
         # First WR should be partially restored
-        self.assertEqual(wr1.balance, Decimal("2.00"))
+        self.assertEqual(wr1.balance, Decimal("10.00"))
         self.assertEqual(wr1.played, Decimal("99.00"))
         
         # Second WR should have remainder
@@ -748,10 +756,10 @@ class IntegrationTests(TransactionTestCase, WageringTestMixin):
         user = self.create_user(balance=Decimal("1.00"))
         
         wr1 = self.create_wagering_requirement(
-            user, balance=Decimal("30.00"), played=Decimal("99.00"), limit=Decimal("100.00")
+            user, amount=Decimal('100.00'), balance=Decimal("30.00"), played=Decimal("99.00"), limit=Decimal("100.00")
         )
         wr2 = self.create_wagering_requirement(
-            user, balance=Decimal("10.00"), played=Decimal("0.00"), limit=Decimal("100.00")
+            user, amount=Decimal('100.00'), balance=Decimal("10.00"), played=Decimal("0.00"), limit=Decimal("100.00")
         )
 
         playable_balance = platform_playable_balance(user)
@@ -769,12 +777,8 @@ class IntegrationTests(TransactionTestCase, WageringTestMixin):
         wr2.refresh_from_db()
         user.refresh_from_db()
 
-        self.assertEqual(user.balance, Decimal("-20.00"))
-        self.assertEqual(user.balance_wagering, Decimal("29.00"))
-
-        user.balance = Decimal("0.00")
-        user.balance_wagering = Decimal("0.00")
-        user.save()
+        self.assertEqual(user.balance, Decimal("1.00"))
+        self.assertEqual(user.balance_wagering, Decimal("0.00"))
 
         platform_cancel_bet_wr(user, data)
         
@@ -783,8 +787,8 @@ class IntegrationTests(TransactionTestCase, WageringTestMixin):
         user.refresh_from_db()
 
         playable_balance = platform_playable_balance(user)
-        self.assertEqual(user.balance, Decimal("0.00"))
-        self.assertEqual(playable_balance, Decimal("32.00"))
+        self.assertEqual(user.balance, Decimal("1.00"))
+        self.assertEqual(playable_balance, Decimal("41.00"))
 
     @transaction.atomic
     def test_cancel_single_wrs_processed_with_debit(self):
@@ -792,10 +796,10 @@ class IntegrationTests(TransactionTestCase, WageringTestMixin):
         user = self.create_user(balance=Decimal("0.00"))
         
         wr1 = self.create_wagering_requirement(
-            user, balance=Decimal("100.00"), played=Decimal("99.00"), limit=Decimal("100.00")
+            user, amount=Decimal('200.00'), balance=Decimal("100.00"), played=Decimal("99.00"), limit=Decimal("100.00")
         )
 
-        playable_balance = platform_playable_balance(user)
+        playable_balance = platform_playable_balance(user, bonus=True)
         self.assertEqual(playable_balance, Decimal("100.00"))
         
         # Bet more than first WR balance
@@ -821,7 +825,7 @@ class IntegrationTests(TransactionTestCase, WageringTestMixin):
         wr1.refresh_from_db()
         user.refresh_from_db()
 
-        playable_balance = platform_playable_balance(user)
+        playable_balance = platform_playable_balance(user, bonus=True)
         self.assertEqual(user.balance, Decimal("0.00"))
         self.assertEqual(playable_balance, Decimal("1.00"))
 
@@ -1357,4 +1361,3 @@ class CancelIntegrationTests(TransactionTestCase, WageringTestMixin):
         # Both should be restored
         self.assertEqual(wr.balance, Decimal("10.00"))
         self.assertEqual(user.balance, Decimal("50.00"))
-
