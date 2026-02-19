@@ -146,7 +146,7 @@ class WageringRequirementsSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_played(obj):
-        return obj.limit if obj.balance == 0 else obj.played
+        return min(obj.limit if obj.balance == 0 else obj.played, obj.limit)
 
     @staticmethod
     def get_balance(obj):

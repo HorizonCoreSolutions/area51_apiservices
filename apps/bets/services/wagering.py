@@ -93,13 +93,14 @@ def __single_wr_bet(
         - Amount of money to be return to the main balance
         - Amount bet on this WR
     """
+
     give = Decimal('0')
     if not wagrec.betable:
         return amount, give, give
     c_balance = Decimal(wagrec.balance or 0)
     limit = Decimal(wagrec.limit or 0)
     c_played = Decimal(wagrec.played or 0)
-    rest = min(c_balance, amount, limit - c_played)
+    rest = min(c_balance, amount)
     wagrec.balance = c_balance - rest
     wagrec.played += rest
 
@@ -326,13 +327,17 @@ def bet_wr(
     
     total_betted = amount
     total_to_return = Decimal('0.00')
+    bypass_return = Decimal('0.00')
 
     wr_ids = {}
     for wagrec in wagrecs:
         reminder, to_return, betted = __single_wr_bet(wagrec, amount)
         amount = reminder
         if to_return > 0:
-            total_to_return += to_return
+            if wagrec.amount == wagrec.limit:
+                bypass_return += to_return
+            else:
+                total_to_return += to_return
         if betted > 0:
             wr_ids[wagrec.id] = (Decimal(math.floor((betted / total_betted) * 100) / 100), betted)
         if reminder <= 0:
@@ -342,6 +347,7 @@ def bet_wr(
     wr_ids["from_wallet"] = (amount, amount)
 
     user.balance -= amount
+    user.balance += bypass_return
     user.balance_wagering += total_to_return
     user.save()
     return serialize_wr_data(wr_ids), total_to_return - amount
@@ -591,7 +597,11 @@ def platform_cancel_pay(
     return total_shortfall
 
 
-def get_user_wagering_snapshot(user: Users, calculate_reactor: bool = False) -> Dict[str, Any]:
+def get_user_wagering_snapshot(
+    user: Users,
+    calculate_ratio: bool = True,
+    calculate_reactor: bool = False,
+) -> Dict[str, Any]:
     base_qs = WageringRequirement.objects.filter(
         user_id=user.id,
         claimed=False,
@@ -642,7 +652,9 @@ def get_user_wagering_snapshot(user: Users, calculate_reactor: bool = False) -> 
         .first()
     )
 
+    play_ratio = Decimal(0)
     if next_betable and (limit := next_betable.limit or Decimal("0.00")) > 0:
+        play_ratio = next_betable.limit / next_betable.amount
         played = next_betable.played or Decimal("0.00")
         percentage_active: Decimal = played / limit
         next_win = next_betable.balance or Decimal("0.00")
@@ -651,6 +663,7 @@ def get_user_wagering_snapshot(user: Users, calculate_reactor: bool = False) -> 
         next_win = Decimal("0.00")
 
     percentage_reactor: Decimal = Decimal(1)
+
     if calculate_reactor:
         next_reactor = (
             base_qs.filter(betable=False, balance__gt=0)
@@ -676,6 +689,7 @@ def get_user_wagering_snapshot(user: Users, calculate_reactor: bool = False) -> 
         "pool_amount": totals["reactor_total"] or Decimal("0.00"),
         "percentage_active": percentage_active,
         "next_win": next_win,
+        **({"play_ratio": play_ratio} if calculate_ratio else {}),
         **({"percentage_reactor": percentage_reactor} if calculate_reactor else {}),
     }
 

@@ -47,7 +47,7 @@ def deposit(
     
     username = str(user.username or "")
 
-    balance = wagering_service.get_wagering_balance(user=user, bonus=False)
+    balance = wagering_service.platform_playable_balance(user=user, bonus=False)
     if balance < amount:
         return False, "Not enought playable/redeemable balance."
 
