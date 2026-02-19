@@ -597,7 +597,11 @@ def platform_cancel_pay(
     return total_shortfall
 
 
-def get_user_wagering_snapshot(user: Users, calculate_reactor: bool = False) -> Dict[str, Any]:
+def get_user_wagering_snapshot(
+    user: Users,
+    calculate_ratio: bool = True,
+    calculate_reactor: bool = False,
+) -> Dict[str, Any]:
     base_qs = WageringRequirement.objects.filter(
         user_id=user.id,
         claimed=False,
@@ -648,7 +652,9 @@ def get_user_wagering_snapshot(user: Users, calculate_reactor: bool = False) -> 
         .first()
     )
 
+    play_ratio = Decimal(0)
     if next_betable and (limit := next_betable.limit or Decimal("0.00")) > 0:
+        play_ratio = next_betable.limit / next_betable.amount
         played = next_betable.played or Decimal("0.00")
         percentage_active: Decimal = played / limit
         next_win = next_betable.balance or Decimal("0.00")
@@ -657,6 +663,7 @@ def get_user_wagering_snapshot(user: Users, calculate_reactor: bool = False) -> 
         next_win = Decimal("0.00")
 
     percentage_reactor: Decimal = Decimal(1)
+
     if calculate_reactor:
         next_reactor = (
             base_qs.filter(betable=False, balance__gt=0)
@@ -682,6 +689,7 @@ def get_user_wagering_snapshot(user: Users, calculate_reactor: bool = False) -> 
         "pool_amount": totals["reactor_total"] or Decimal("0.00"),
         "percentage_active": percentage_active,
         "next_win": next_win,
+        **({"play_ratio": play_ratio} if calculate_ratio else {}),
         **({"percentage_reactor": percentage_reactor} if calculate_reactor else {}),
     }
 

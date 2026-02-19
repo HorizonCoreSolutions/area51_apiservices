@@ -291,7 +291,7 @@ def send_user_balance_snapshot_async(user: Users) -> None:
     def _send_snapshot() -> None:
         try:
             refreshed_user = Users.objects.get(id=user.id)
-            payload = get_user_wagering_snapshot(refreshed_user)
+            payload = get_user_wagering_snapshot(refreshed_user, calculate_ratio=True)
             channel_layer = get_channel_layer()
             room_group_name = f"balance_{refreshed_user.id}"
             async_to_sync(channel_layer.group_send)(

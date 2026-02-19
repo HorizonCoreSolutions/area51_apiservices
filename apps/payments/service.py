@@ -112,18 +112,6 @@ def apply_bonus(
     user.bonus_balance += bgc
     user.save(update_fields=["bonus_balance"])
 
-    # MC = SC x20
-    mnc = bonus.miner
-    if mnc > 0:
-        platform_deposit(
-            user=user,
-            amount=mnc,
-            is_bonus=True,
-            bonus_type="MC",
-            accreditable=accreditable,
-            description=description,
-        )
-    
     # SC x multiplier
     if bonus.playable > 0:
         platform_deposit(
@@ -133,5 +121,17 @@ def apply_bonus(
             bonus_type="SC",
             accreditable=accreditable,
             custom_multiplier=Decimal(bonus.multiplier),
+            description=description,
+        )
+
+    # MC = SC x20
+    mnc = bonus.miner
+    if mnc > 0:
+        platform_deposit(
+            user=user,
+            amount=mnc,
+            is_bonus=True,
+            bonus_type="MC",
+            accreditable=accreditable,
             description=description,
         )
