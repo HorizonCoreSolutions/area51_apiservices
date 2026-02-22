@@ -484,7 +484,7 @@ def platform_pay(
     for wagrec in objects:
         ratio = Decimal(data[str(wagrec.id)][0])
         amount = Decimal(math.floor(ratio * won * 10) / 10)
-        wr_data[str(wagrec.id)] = (ratio, amount)
+        wr_data[str(wagrec.id)] = (str(ratio), str(amount))
         paid += amount
         total_to_pay += __single_wr_pay(wagrec, amount)
 
