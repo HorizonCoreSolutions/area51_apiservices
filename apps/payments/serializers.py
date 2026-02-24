@@ -295,7 +295,7 @@ class BundleCreateSerializer(serializers.ModelSerializer):
         """
         Only allow predefined WR multiplier values.
         """
-        valid_multipliers = [10, 13, 17, 20, 25]
+        valid_multipliers = [10, 13, 17, 20, 25, 30, 40]
         if value not in valid_multipliers:
             raise serializers.ValidationError(
                 f"Invalid multiplier. Must be one of: {valid_multipliers}"
