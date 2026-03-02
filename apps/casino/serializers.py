@@ -288,9 +288,9 @@ class OffMarketGamesSerializer(serializers.ModelSerializer):
     @staticmethod
     def get_weekly_prize_currency(obj):
         return "SC"
-    
+
     def get_weekly_prize_amount(self, obj):
-        return self.context.get(obj.code, None)
+        return self.context.get("weekly_totals", {}).get(obj.code, None)
 
 
 class Casino25GameListSerializer(serializers.ModelSerializer):

@@ -823,37 +823,40 @@ class GetOffMarketGamesView(APIView):
     serializer_class = OffMarketGamesSerializer
 
     def get(self, request, **kwargs):
-        search = self.request.query_params.get('search')
 
-        self.queryset = OffMarketGames.objects.filter(game_status=True)
+        search = request.query_params.get("search")
+
+        queryset = OffMarketGames.objects.filter(game_status=True)
         if search:
-            self.queryset = OffMarketGames.objects.filter(title__icontains=search)
+            queryset = queryset.filter(title__icontains=search)
 
-        if len(self.queryset)<1:
-            self.queryset = []    
-        context = {}
-
-        today = timezone.now().date()
-        start_of_week = today - timedelta(days=today.weekday())
+        weekly_totals = {}
         if request.user.is_authenticated and request.user.role == "player":
-            context = (
+            today = timezone.now().date()
+            start_of_week = today - timedelta(days=today.weekday())
+            aggregated = (
                 OffMarketTransactions.objects.filter(
-                    user = request.user,
-                    status = 'Completed',
-                    transaction_type = "WITHDRAW",
-                    journal_entry = 'credit',
+                    user=request.user,
+                    status="Completed",
+                    transaction_type="WITHDRAW",
+                    journal_entry="credit",
                     created__date__gte=start_of_week,
                     created__date__lte=today,
                 )
                 .values("game_name")
                 .annotate(total_amount=Sum("amount"))
             )
-            context = {
-                item["game_name"]: item["total_amount"]
-                for item in context
+            weekly_totals = {
+                row["game_name"]: row["total_amount"]
+                for row in aggregated
             }
-        response =  OffMarketGamesSerializer(self.queryset, many=True, context=context)
-        return Response(response.data)
+
+        serializer = OffMarketGamesSerializer(
+            queryset,
+            many=True,
+            context={"weekly_totals": weekly_totals, "request": request},
+        )
+        return Response(serializer.data)
 
 class GetPlayerOffMarketGamesView(APIView):
     permission_classes = (IsPlayer,)
