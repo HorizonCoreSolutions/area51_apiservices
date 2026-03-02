@@ -1181,6 +1181,9 @@ class OffMarketGames(AbstractBaseModel):
     game_user = models.CharField(max_length=15, null=True, blank=True)
     game_pass = models.CharField(max_length=15, null=True, blank=True)
 
+    is_top_game = models.BooleanField(default=False)
+    description = HTMLField(blank=True, null=True, max_length=2000)
+
 
 class UserGames(AbstractBaseModel):
     user = models.ForeignKey(

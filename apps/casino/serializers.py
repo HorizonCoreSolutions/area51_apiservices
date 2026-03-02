@@ -1,6 +1,7 @@
 import re
 from datetime import datetime, timedelta
 from django.conf import settings
+from rest_framework.utils.representation import serializer_repr
 from apps.users.models import FortunePandasGameManagement, OffMarketGames
 from rest_framework import serializers
 
@@ -271,17 +272,26 @@ class CasinoManagementSerializer(serializers.ModelSerializer):
 class OffMarketGamesSerializer(serializers.ModelSerializer):
 
     url = serializers.SerializerMethodField()
-   
+    weekly_prize_amount = serializers.SerializerMethodField()
+    weekly_prize_currency = serializers.SerializerMethodField()
+
     class Meta:
         model = OffMarketGames
-        fields = ['title', 'url','code', 'bonus_percentage', 'game_status', 'coming_soon', 'download_url']
+        fields = ['title', 'url','code', 'bonus_percentage', 'game_status', 'coming_soon', 'download_url', 'is_top_game', 'description', 'weekly_prize_amount', 'weekly_prize_currency']
 
     @staticmethod
     def get_url(obj):
         file_path = obj.url.name
         url =  f'{settings.BE_DOMAIN}/media/{file_path}'
         return url
-    
+
+    @staticmethod
+    def get_weekly_prize_currency(obj):
+        return "SC"
+
+    def get_weekly_prize_amount(self, obj):
+        return self.context.get("weekly_totals", {}).get(obj.code, None)
+
 
 class Casino25GameListSerializer(serializers.ModelSerializer):
     is_favourite = serializers.SerializerMethodField()

@@ -13,10 +13,9 @@ from rest_framework.generics import ListAPIView
 from django.conf import settings
 from django.http.response import HttpResponse
 from django.http import JsonResponse
-from django.db.models import Count
+from django.db.models import Count, F, Window, Q, Sum
 from django.db import transaction
 from django.utils import timezone
-from django.db.models import F, Window, Q
 from django.db.models.functions import RowNumber
 
 from rest_framework import status
@@ -27,7 +26,7 @@ from apps.casino.models import (CasinoGameList, CasinoHeaderCategory, CasinoMana
     Tournament, TournamentTransaction, UserTournament, GSoftTransactions)
 from apps.core.pagination import PageNumberPagination
 from apps.core.permissions import *
-from apps.users.models import (FortunePandasGameList, FortunePandasGameManagement, OffMarketGames,
+from apps.users.models import (FortunePandasGameList, FortunePandasGameManagement, OffMarketGames, OffMarketTransactions,
     Player, UserGames, Users)
 from apps.casino.cpgames import CPgames
 from apps.casino.casino25 import Casino25
@@ -824,16 +823,40 @@ class GetOffMarketGamesView(APIView):
     serializer_class = OffMarketGamesSerializer
 
     def get(self, request, **kwargs):
-        search = self.request.query_params.get('search')
 
-        self.queryset = OffMarketGames.objects.filter(game_status=True)
+        search = request.query_params.get("search")
+
+        queryset = OffMarketGames.objects.filter(game_status=True)
         if search:
-            self.queryset = OffMarketGames.objects.filter(title__icontains=search)
+            queryset = queryset.filter(title__icontains=search)
 
-        if len(self.queryset)<1:
-            self.queryset = []
-        response =  OffMarketGamesSerializer(self.queryset,many=True)
-        return Response(response.data)
+        weekly_totals = {}
+        if request.user.is_authenticated and request.user.role == "player":
+            today = timezone.now().date()
+            start_of_week = today - timedelta(days=today.weekday())
+            aggregated = (
+                OffMarketTransactions.objects.filter(
+                    user=request.user,
+                    status="Completed",
+                    transaction_type="WITHDRAW",
+                    journal_entry="credit",
+                    created__date__gte=start_of_week,
+                    created__date__lte=today,
+                )
+                .values("game_name")
+                .annotate(total_amount=Sum("amount"))
+            )
+            weekly_totals = {
+                row["game_name"]: row["total_amount"]
+                for row in aggregated
+            }
+
+        serializer = OffMarketGamesSerializer(
+            queryset,
+            many=True,
+            context={"weekly_totals": weekly_totals, "request": request},
+        )
+        return Response(serializer.data)
 
 class GetPlayerOffMarketGamesView(APIView):
     permission_classes = (IsPlayer,)
