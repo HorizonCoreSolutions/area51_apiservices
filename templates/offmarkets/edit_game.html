@@ -340,8 +340,13 @@ function banner_click(){
   
    }
 
-
-
+    $(document).ready(function() {
+      $('#use_plain_description').on('change', function() {
+        var usePlain = $(this).is(':checked');
+        $('#description-rich-wrap').toggle(!usePlain);
+        $('#description-plain-wrap').toggle(usePlain);
+      });
+    });
 
 </script>
 <!-- The Modal -->
@@ -491,7 +496,17 @@ function banner_click(){
     <div class="col-md-12">
       <div class="form-group">
           <label for="{{ form.description.id_for_label }}">Description <span class="badge badge-warning" style="background-color: #ffc107; color: #212529; font-size: 0.75em; padding: 4px 8px; border-radius: 4px; margin-left: 8px;">Coming Soon</span></label>
-          {{ form.description }}
+          <div class="form-check form-switch mb-2">
+              <input type="checkbox" class="form-check-input" id="use_plain_description" name="use_plain_description" autocomplete="off" {% if description_is_plain %}checked{% endif %}>
+              <label class="form-check-label" for="use_plain_description">Use plain text (ALT)</label>
+          </div>
+          <div id="description-rich-wrap" {% if description_is_plain %}style="display: none;"{% endif %}>
+              {{ form.description }}
+          </div>
+          <div id="description-plain-wrap" {% if description_is_plain %}style="display: block;"{% else %}style="display: none;"{% endif %}>
+              <textarea name="description_plain" id="id_description_plain" class="form-control" rows="5" maxlength="2000" placeholder="Plain text description (stored as ALT)">{% if game.description %}{{ game.description }}{% endif %}</textarea>
+              <small class="text-muted">Plain text only; stored in the same field as an alternative to rich description.</small>
+          </div>
       </div>
     </div>
   </div>

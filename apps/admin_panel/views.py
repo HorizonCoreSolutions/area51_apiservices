@@ -9290,18 +9290,20 @@ class CreateOffMarketGameView(CheckRolesMixin, TemplateView, View):
                         sys.getsizeof(game_img_io),
                         None
                     )
+                    description = request.POST.get("description_plain") or request.POST.get("description")
                     game_obj = OffMarketGames(
                         url=game_img_io_inmemory,
                         title=form.cleaned_data['title'],
-                        coming_soon= form.cleaned_data['coming_soon'],
-                        game_status =  form.cleaned_data['game_status'],
-                        code = form.cleaned_data['code'],
-                        bonus_percentage = form.cleaned_data['bonus_percentage'],
-                        download_url = form.cleaned_data['download_url'],
-                        game_user = form.cleaned_data['game_user'],
-                        game_pass = form.cleaned_data['game_pass'],
-                        is_top_game = form.cleaned_data.get('is_top_game', False),
-                        description = form.cleaned_data.get('description', None)
+                        coming_soon=form.cleaned_data['coming_soon'],
+                        game_status=form.cleaned_data['game_status'],
+                        is_api_prefix=form.cleaned_data.get('is_api_prefix', False),
+                        code=form.cleaned_data['code'],
+                        bonus_percentage=form.cleaned_data['bonus_percentage'],
+                        download_url=form.cleaned_data['download_url'],
+                        game_user=form.cleaned_data['game_user'],
+                        game_pass=form.cleaned_data['game_pass'],
+                        is_top_game=form.cleaned_data.get('is_top_game', False),
+                        description=description,
                     )
                     game_obj.save()
                     messages.success(request, "Game successfully Added")
@@ -9335,14 +9337,17 @@ class EditOffMarketGameView(CheckRolesMixin, TemplateView, views.JSONResponseMix
         game_id = self.request.GET.get("game_id", "")
         game_obj = OffMarketGames.objects.filter(id=game_id).first()
         form = OffMarketGameForm(instance=game_obj)
-
+        description_is_plain = bool(
+            game_obj and game_obj.description and "</" not in game_obj.description
+        )
 
         return render(
             request,
             template_name=self.template_name,
             context={
                 "form": form,
-                "game" : game_obj
+                "game": game_obj,
+                "description_is_plain": description_is_plain,
             }
         )
 
@@ -9388,7 +9393,7 @@ class EditOffMarketGameView(CheckRolesMixin, TemplateView, views.JSONResponseMix
                 game_obj.url = game_img_io_inmemory
 
             is_top_game = True if request.POST.get('is_top_game', None) == 'on' else False
-            description = request.POST.get('description', None)
+            description = request.POST.get("description_plain") or request.POST.get("description", None)
 
             game_obj.title = title
             game_obj.code = code
