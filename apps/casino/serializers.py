@@ -277,7 +277,7 @@ class OffMarketGamesSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = OffMarketGames
-        fields = ['title', 'url','code', 'bonus_percentage', 'game_status', 'coming_soon', 'download_url', 'is_top_game', 'description']
+        fields = ['title', 'url','code', 'bonus_percentage', 'game_status', 'coming_soon', 'download_url', 'is_top_game', 'description', 'weekly_prize_amount', 'weekly_prize_currency']
 
     @staticmethod
     def get_url(obj):
