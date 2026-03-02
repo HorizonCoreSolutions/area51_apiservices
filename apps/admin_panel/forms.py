@@ -758,7 +758,7 @@ class StaffModelForm(ModelForm):
 class OffMarketGameForm(ModelForm):   
     class Meta:
         model = OffMarketGames
-        fields = ['title', 'url','code','bonus_percentage', 'is_api_prefix','game_status','coming_soon','download_url','game_user','game_pass']
+        fields = ['title', 'url','code','bonus_percentage', 'is_api_prefix','game_status','coming_soon','download_url','game_user','game_pass','is_top_game','description']
         widgets = {
             'url': forms.FileInput(
                 attrs={
@@ -791,6 +791,8 @@ class OffMarketGameForm(ModelForm):
                     'onchange':'validate_download_url()' }),
             'game_user' : forms.TextInput(attrs={'class': 'form-control','placeholder':'Enter Game Login ID','required':'true','id':'game_user','maxlength':'10','autofill':False,'autocomplete': 'new-password'}),
             'game_pass' : forms.TextInput(attrs={'class': 'form-control','placeholder':'Enter Game Password','required':'true','id':'game_pass','maxlength':'10','autofill':False,'autocomplete': 'new-password'}),
+            'is_top_game': forms.CheckboxInput(attrs={'class': 'form-check-input','id':'is_top_game'}),
+            'description': TinyMCE(attrs={'id':'description'}),
         }
         
 

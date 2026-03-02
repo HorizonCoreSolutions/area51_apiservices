@@ -9299,7 +9299,9 @@ class CreateOffMarketGameView(CheckRolesMixin, TemplateView, View):
                         bonus_percentage = form.cleaned_data['bonus_percentage'],
                         download_url = form.cleaned_data['download_url'],
                         game_user = form.cleaned_data['game_user'],
-                        game_pass = form.cleaned_data['game_pass']
+                        game_pass = form.cleaned_data['game_pass'],
+                        is_top_game = form.cleaned_data.get('is_top_game', False),
+                        description = form.cleaned_data.get('description', None)
                     )
                     game_obj.save()
                     messages.success(request, "Game successfully Added")
@@ -9385,6 +9387,9 @@ class EditOffMarketGameView(CheckRolesMixin, TemplateView, views.JSONResponseMix
 
                 game_obj.url = game_img_io_inmemory
 
+            is_top_game = True if request.POST.get('is_top_game', None) == 'on' else False
+            description = request.POST.get('description', None)
+
             game_obj.title = title
             game_obj.code = code
             game_obj.bonus_percentage = bonus_percentage
@@ -9394,6 +9399,8 @@ class EditOffMarketGameView(CheckRolesMixin, TemplateView, views.JSONResponseMix
             game_obj.is_api_prefix = is_api_prefix
             game_obj.game_user = game_user
             game_obj.game_pass = game_pass
+            game_obj.is_top_game = is_top_game
+            game_obj.description = description
             game_obj.save()
             messages.success(request, "Game Details updated successfully")
             return redirect('admin-panel:offmarket-games')

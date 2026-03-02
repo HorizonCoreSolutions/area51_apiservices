@@ -6,6 +6,11 @@
 Off Market Games
 {% endblock title %}
 
+{% block javascript %}
+<script type="text/javascript" src="/static/tinymce/tinymce.min.js"></script>
+<script type="text/javascript" src="/static/django_tinymce/init_tinymce.js"></script>
+{% endblock javascript %}
+
 {% block content %}
 
 <style>
@@ -236,8 +241,6 @@ function validate_download_url() {
     $(document).ready(function() {
     $('#id_game').attr('required', false);
   $('#game_pass').attr('type', "password");
-
-
   });
 
   
@@ -397,6 +400,14 @@ function banner_click(){
             </div>
         </div>
     </div>
+    <div class="row mb-3 pb-2">
+        <div class="col-md-4">
+            <div class="form-check form-switch">
+                <input type="checkbox" class="form-check-input" id="{{ form.is_top_game.id_for_label }}" name="{{ form.is_top_game.name }}" {% if form.is_top_game.value %}checked{% endif %}>
+                <label class="form-check-label" for="{{ form.is_top_game.id_for_label }}">Top Game</label>
+            </div>
+        </div>
+    </div>
             
     <div class="row mb-3"> <!-- Added mb-3 for spacing -->
       <div class="col-md-6">
@@ -474,6 +485,15 @@ function banner_click(){
           {{ form.bonus_percentage }}
       </div>
   </div>
+  </div>
+
+  <div class="row mb-3">
+    <div class="col-md-12">
+      <div class="form-group">
+          <label for="{{ form.description.id_for_label }}">Description <span class="badge badge-warning" style="background-color: #ffc107; color: #212529; font-size: 0.75em; padding: 4px 8px; border-radius: 4px; margin-left: 8px;">Coming Soon</span></label>
+          {{ form.description }}
+      </div>
+    </div>
   </div>
                           <button type="submit" class="btn btn-primary" style="margin-top: 0px; margin-bottom: 20px;">Update</button>&nbsp;
                           <a type='button' href="/admin/offmarket-games" class="btn btn-primary" style="margin-top: 0px; margin-bottom: 20px;" id="button-search">Cancel</a>

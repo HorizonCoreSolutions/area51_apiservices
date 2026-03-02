@@ -13,10 +13,9 @@ from rest_framework.generics import ListAPIView
 from django.conf import settings
 from django.http.response import HttpResponse
 from django.http import JsonResponse
-from django.db.models import Count
+from django.db.models import Count, F, Window, Q, Sum
 from django.db import transaction
 from django.utils import timezone
-from django.db.models import F, Window, Q
 from django.db.models.functions import RowNumber
 
 from rest_framework import status
@@ -27,7 +26,7 @@ from apps.casino.models import (CasinoGameList, CasinoHeaderCategory, CasinoMana
     Tournament, TournamentTransaction, UserTournament, GSoftTransactions)
 from apps.core.pagination import PageNumberPagination
 from apps.core.permissions import *
-from apps.users.models import (FortunePandasGameList, FortunePandasGameManagement, OffMarketGames,
+from apps.users.models import (FortunePandasGameList, FortunePandasGameManagement, OffMarketGames, OffMarketTransactions,
     Player, UserGames, Users)
 from apps.casino.cpgames import CPgames
 from apps.casino.casino25 import Casino25
@@ -831,8 +830,29 @@ class GetOffMarketGamesView(APIView):
             self.queryset = OffMarketGames.objects.filter(title__icontains=search)
 
         if len(self.queryset)<1:
-            self.queryset = []
-        response =  OffMarketGamesSerializer(self.queryset,many=True)
+            self.queryset = []    
+        context = {}
+
+        today = timezone.now().date()
+        start_of_week = today - timedelta(days=today.weekday())
+        if request.user.is_authenticated and request.user.role == "player":
+            context = (
+                OffMarketTransactions.objects.filter(
+                    user = request.user,
+                    status = 'Completed',
+                    transaction_type = "WITHDRAW",
+                    journal_entry = 'credit',
+                    created__date__gte=start_of_week,
+                    created__date__lte=today,
+                )
+                .values("game_name")
+                .annotate(total_amount=Sum("amount"))
+            )
+            context = {
+                item["game_name"]: item["total_amount"]
+                for item in context
+            }
+        response =  OffMarketGamesSerializer(self.queryset, many=True, context=context)
         return Response(response.data)
 
 class GetPlayerOffMarketGamesView(APIView):
