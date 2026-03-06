@@ -1981,7 +1981,7 @@ class TipView(APIView):
         staff.save()
         user.save()
 
-        ChatHistory.objects.create(
+        ChatMessage.objects.create(
             room=chatroom,
             message_text=tip_html,
             send_time=timezone.now(),
@@ -1992,6 +1992,12 @@ class TipView(APIView):
             is_tip=True,
             tip_user=staff,
             is_comment=False
+        )
+
+        ChatHistory.objects.create(
+            player=user,
+            staff=staff,
+            tip_amount=tip_amount
         )
 
         send_player_balance_update_notification(user)
