@@ -1983,13 +1983,13 @@ class TipView(APIView):
 
         ChatMessage.objects.create(
             room=chatroom,
-            message_text=tip_html,
-            send_time=timezone.now(),
             sender=user,
+            message_text=tip_html,
+            sent_time=timezone.now(),
             is_file=False,
             file=None,
-            type='message',
             is_tip=True,
+            type='message',
             tip_user=staff,
             is_comment=False
         )
