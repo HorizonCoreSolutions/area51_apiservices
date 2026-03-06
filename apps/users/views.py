@@ -1926,71 +1926,106 @@ class SignUpOTP(APIView):
 class TipView(APIView):
     permission_classes = (IsPlayer,)
     http_method_names = ["post"]
+
+    @transaction.atomic
     def post(self, request):
         from apps.bets.models import Transactions
+
+        data = request.data
+        if not data.get("is_tip"):
+            return Response({"message": "Deprecated functions."}, status.HTTP_400_BAD_REQUEST)
+
         try:
-            data = request.data
-            user =  Users.objects.filter(id=request.user.id).first()
-            if user is None:
-                return Response({"message": "Something Went Wrong"}, status.HTTP_500_INTERNAL_SERVER_ERROR)
+            tip_amount = Decimal(data.get('tip', 0.00))
+        except Exception:
+            return Response({"message": "Invalid tip amount."}, status.HTTP_400_BAD_REQUEST)
 
-            chathistory_obj = ChatHistory()
-            is_comment = data.get('is_comment',None)
-            is_tip = data.get('is_tip',None)
-            comment = data.get('comment',None)
-            tip_amount = data.get('tip',0.00)
-            room_name = data.get('room_name',None)
-            staff = Users.objects.filter(id = data.get('staff')).first()
-
-            chathistory_obj.player = user
-            chathistory_obj.staff = staff
-
-            if is_tip:
-                if Decimal(data.get('tip')) > user.balance:
-                    return Response({"message": "low balance"}, status.HTTP_400_BAD_REQUEST)
-            # try:
-            #     chat_messages = ChatMessage.objects.filter(room__name=room_name).order_by('created')
-            #     message_list = [{'sender': message.sender.username,
-            #                     'message': message.message_text if  message.is_file == False else message.file.name,
-            #                     'is_file': str(message.is_file),
-            #                     'sent_time': message.sent_time.strftime("%Y-%m-%d %H:%M:%S.%f%z")
-            #                     } for message in chat_messages]
-            #     message_json = json.dumps(message_list)
-            #     message_json =  json.loads(message_json)
-            #     print(ChatRoom.objects.filter(name=room_name).first(),"ChatRoom Tip")
-            # except Exception as e:
-            #     print("Exception Occured")
-            #     print(e)
-            #     return Response({"message": "Something Went Wrong"}, status.HTTP_500_INTERNAL_SERVER_ERROR)
-            # chathistory_obj.chats = message_json
-            # if is_comment:
-            #     chathistory_obj.comment = data.get('comment',None)
-            if is_tip:
-                Transactions.objects.update_or_create(
-                    user=user,
-                    journal_entry='credit',
-                    amount=data.get('tip',None),
-                    status="charged",
-                    merchant=request.user,
-                    previous_balance=user.balance ,
-                    new_balance=user.balance - Decimal(tip_amount),
-                    description=f"Tip of {tip_amount} to {staff.username}",
-                    reference=generate_reference(user),
-                    bonus_type= None,
-                    bonus_amount=0
-                )
-                # chathistory_obj.tip_amount = tip_amount 
-                staff.balance = staff.balance + Decimal(tip_amount)
-                user.balance = user.balance - Decimal(tip_amount)
-                staff.save()
-                user.save()    
-            chathistory_obj.save()
-            send_player_balance_update_notification(user)    
-            return Response({"message":"Success"}, status.HTTP_200_OK)
-
-        except Exception as e:
-            print(e)
+        user =  Users.objects.select_for_update().filter(id=request.user.id).first()
+        staff = Users.objects.filter(id = data.get('staff')).first()
+        if user is None or staff is None:
             return Response({"message": "Something Went Wrong"}, status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        if user.balance < tip_amount:
+            return Response({"message": "Not enough balance."}, status.HTTP_400_BAD_REQUEST)
+
+        chatroom = ChatRoom.objects.filter(name=f"P{user.id}Chat", player_id=user.id).first()
+        if chatroom is None:
+            return Response({"message": "Something Went Wrong"}, status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        icon_url = "https://admin.area51.global/static/images/checked-green.svg"
+        tip_html = (
+            f'<div class="tip-text">'
+            f"Paid <strong class='tip-amount'>${tip_amount}</strong> "
+            f"tip to <strong class=\"tip-username\">{staff.username}</strong> "
+            f"<img src='{icon_url}' /> "
+            f"</div></span>"
+        )
+
+        Transactions.objects.update_or_create(
+            user=user,
+            journal_entry='credit',
+            amount=data.get('tip',None),
+            status="charged",
+            merchant=request.user,
+            previous_balance=user.balance ,
+            new_balance=user.balance - Decimal(tip_amount),
+            description=f"Tip of {tip_amount} to {staff.username}",
+            reference=generate_reference(user),
+            bonus_type= None,
+            bonus_amount=0
+        )
+
+        # chathistory_obj.tip_amount = tip_amount
+        staff.balance = staff.balance + Decimal(tip_amount)
+        user.balance = user.balance - Decimal(tip_amount)
+        staff.save()
+        user.save()
+
+        ChatMessage.objects.create(
+            room=chatroom,
+            sender=user,
+            message_text=tip_html,
+            sent_time=timezone.now(),
+            is_file=False,
+            file=None,
+            is_tip=True,
+            type='message',
+            tip_user=staff,
+            is_comment=False
+        )
+
+        ChatHistory.objects.create(
+            player=user,
+            staff=staff,
+            tip_amount=tip_amount
+        )
+
+        send_player_balance_update_notification(user)
+
+        local_channel = get_channel_layer()
+
+        async_to_sync(local_channel.group_send)(
+            f"P{user.id}Chat",
+            {
+                "type": "send_notification",
+                "message": json.dumps({
+                    "type": "message",
+                    "message": tip_html,
+                    "sender_id": user.id,
+                    "sent_time": timezone.now().strftime("%Y-%m-%d %H:%M:%S.%f%z"),
+                    "is_file": False,
+                    "file_extension": None,
+                    "player_id": user.id,
+                    "is_player_sender": True,
+                    "is_tip": True,
+                    "tip_user": staff.id,
+                    "is_comment": False,
+                    "user_balance": str(user.balance),
+                }),
+            }
+        )
+
+        return Response({"message":"Success"}, status.HTTP_200_OK)
 
 
 class CsrQueryView(APIView):
@@ -2733,7 +2768,7 @@ class ModifyGCBonus(APIView):
             return Response({"message": "User does not exist"}, status=404)
 
         if user.bonus_balance + balance < 0:
-            return Response({"message", "User has not enought balance"}, status=400)
+            return Response({"message", "User has not enough balance"}, status=400)
         
         user.bonus_balance += balance
         user.save(update_fields=["bonus_balance"])
