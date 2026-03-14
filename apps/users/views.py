@@ -19,7 +19,6 @@ from apps.core.file_logger import SimpleLogger
 from apps.users import promo_handler
 from apps.users.services.spin_wheel import get_price, process_spin_transaction, get_spin_status
 from apps.core.concurrency import limiter
-from pyhanko_certvalidator import ValidationError
 
 from apps.casino.clients import RefujiClient
 from apps.acuitytec.acuitytec import AcuityTecAPI
@@ -32,6 +31,7 @@ import pytz
 from collections import defaultdict
 from itertools import chain
 from operator import attrgetter
+from rest_framework.serializers import ValidationError
 
 import  base64
 from django.utils.translation import activate, gettext_lazy as _
@@ -447,7 +447,7 @@ class SignUpView(APIViewContext):
         data["country"] = country.code_cca2
 
         if Users.objects.filter(
-            username__iexact=request.data.get("username")
+            username__iexact=data.get("username")
         ).exists():
             return Response(
                 {"message": _("User already exists.")},
@@ -456,6 +456,11 @@ class SignUpView(APIViewContext):
 
         try:
             serializer = self.get_serializer(data=data)
+        except ValidationError as e:
+            return Response(
+                {"message": str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
         except:
             serializer = SignUpSerializer(
                 data=data,
@@ -482,10 +487,10 @@ class SignUpView(APIViewContext):
             args=(player.username, player.email)
         ).start()
 
-        redeam_user_event.apply_async(
+        redeam_user_event.apply_async( # type: ignore
             args=(EVENT_REGISTRATION, player.id),
             countdown=10
-        )  # type: ignore
+        )
 
         if player.applied_promo_code:
             promo_handler.redeem_code(

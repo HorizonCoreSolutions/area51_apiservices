@@ -437,7 +437,7 @@ class SignUpSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Player
-        fields = ["username", "password", "confirm_password", "agent_id","first_name","last_name","email","state", 'city',"dob","phone_number","complete_address","zip_code","profile_pic","user_id_proof","affiliated_by","affiliate_code","affliate_expire_date",'otp',"country_code", 'country', 'country_obj', "applied_promo_code"]
+        fields = ["username", "password", "confirm_password", "agent_id", "first_name", "last_name", "email", "state", "city", "dob", "phone_number", "complete_address", "zip_code", "profile_pic", "user_id_proof", "affiliated_by", "affiliate_code", "affliate_expire_date", "otp", "country_code", "country", "country_obj", "applied_promo_code"]
         extra_kwargs = {
             "password": {"write_only": True},
             "confirm_password": {"write_only": True},
@@ -499,27 +499,28 @@ class SignUpSerializer(serializers.ModelSerializer):
     
     def create(self, validated_data: Dict[str, Any]):
         from django.utils import timezone
+
         if validated_data.get("agent_id"):
             agent_obj = Users.objects.filter(role="agent", pk=validated_data.get("agent_id")).first() 
             dealer_obj = Users.objects.filter(role="dealer", pk=agent_obj.dealer.id).first()
         else:
             agent_obj = Users.objects.filter(role="agent").first()
             dealer_obj = Users.objects.filter(role="dealer").first()
+
         affiliated_by=None
         affiliate_code = validated_data.pop('affiliate_code', None)
-        if affiliate_code:
-            key = str(settings.SECRET_KEY)[0:32]
-            fernet_key = base64.urlsafe_b64encode(key.encode())
-            fernet_obj = Fernet(fernet_key)
-            # Fix incorrect padding if stripped by URL or frontend
-            if len(affiliate_code) % 4:
-                affiliate_code += "=" * (-len(affiliate_code) % 4)
 
+        _key = str(settings.SECRET_KEY)[0:32]
+        _fernet = Fernet(base64.urlsafe_b64encode(_key.encode()))
+
+        if affiliate_code:
+            affiliate_code += "=" * (-len(affiliate_code) % 4)
             try:
-                user_id = fernet_obj.decrypt(affiliate_code.encode()).decode()
+                user_id = _fernet.decrypt(affiliate_code.encode()).decode()
                 affiliated_by = Users.objects.filter(pk=user_id).first()
-            except (InvalidToken, ValueError, TypeError) as e:
-                affiliated_by = None
+            except (InvalidToken, ValueError, TypeError):
+                pass
+
         default_val = DefaultAffiliateValues.objects.first()
         admin = Admin.objects.filter().first()
 
@@ -527,23 +528,33 @@ class SignUpSerializer(serializers.ModelSerializer):
         validated_data.pop("otp", None)
 
         player = super().create(validated_data)
-        player.username = validated_data.get("username").lower()
+
+        player.username = validated_data.get("username")
         player.set_password(validated_data["password"])
+
         player.country_code = validated_data.pop("country_code", "")
         player.phone_number = validated_data.pop("phone_number", "")
+
         player.country = validated_data.pop("country", "")
         player.country_obj = validated_data.pop("country_obj", None)
+
+        player.admin = admin
         player.agent = agent_obj
         player.dealer = dealer_obj
-        player.admin = admin
+
         player.role = "player"
-        player.affiliated_by = affiliated_by
         player.is_staff = False
         player.is_superuser = False
         player.is_active = True
+
+        player.affiliated_by = affiliated_by
+
         player.last_activity_time = timezone.now()
         player.casino_account_id = create_casino_account_id()
-        player.mnet_password = make_password(f"{validated_data.get('username')}{random.randint(1000, 9999)}")[:30]
+        player.mnet_password = make_password(
+            f"{validated_data.get('username')}{random.randint(1000, 9999)}"
+        )[:30]
+
         if default_val:
             player.affliate_expire_date = datetime.datetime.now() + datetime.timedelta(default_val.default_no_of_days)
             player.no_of_deposit_counts = default_val.default_no_of_deposit_counts
@@ -551,24 +562,24 @@ class SignUpSerializer(serializers.ModelSerializer):
             player.no_of_deposit_counts = 1
             player.is_lifetime_affiliate = True
 
-        # player.zip_code = int(validated_data.get("zip_code"))
-
-        player.save()
-        #########################  Affiliate Changes Start  ########################
-        player = Users.objects.filter(id=player.id).first()
-        project_domain = settings.PROJECT_DOMAIN
-        key = str(settings.SECRET_KEY)[0:32]
-        fernet_key = base64.urlsafe_b64encode(key.encode())
-        fernet_obj = Fernet(fernet_key)
-        encry_msg = fernet_obj.encrypt((str(player.id)).encode())
+        #######################  Affiliate Changes Starts  #######################
+        encry_msg = _fernet.encrypt((str(player.id)).encode())
         encry_user = encry_msg.decode()
-        player.affiliate_link = project_domain + "/affiliate-invite?affiliate_code=" + encry_user
+
+        player.affiliate_link = (
+            f"{settings.PROJECT_DOMAIN}"
+            f"/affiliate-invite?affiliate_code={encry_user}"
+        )
         player.affiliation_percentage = DEFAULT_AFFILIATE_COMMISION_PERCENTAGE
         player.is_redeemable_amount = True
-        # player.affliate_expire_date = datetime.datetime.now() + datetime.timedelta(days=DEFAULT_AFFILIATE_DURATION_IN_DAYS)
+        #########################  Affiliate Changes End  ########################
+
+        # player.affliate_expire_date = (
+        #     datetime.datetime.now()
+        #     + datetime.timedelta(days=DEFAULT_AFFILIATE_DURATION_IN_DAYS)
+        # )
         # player.is_lifetime_affiliate = True
         player.save()
-        #########################  Affiliate Changes End  ########################
 
         return player
 
