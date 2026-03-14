@@ -12,6 +12,7 @@ from compat import render_to_string
 
 from datetime import datetime,timedelta
 from django.utils import timezone
+from rest_framework.request import Request
 
 from apps.bets.repository import get_react_bonus_amount
 from apps.core.file_logger import SimpleLogger
@@ -119,7 +120,7 @@ TWILIO_AUTH_TOKEN = settings.TWILIO_AUTH_TOKEN
 TWILIO_VERIFY_SERVICE_SID = settings.TWILIO_VERIFY_SERVICE_SID
 from django.contrib.postgres.fields import JSONField
 from django.db.models import OuterRef, Subquery
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple, TYPE_CHECKING, cast
 
 logger = SimpleLogger(name='UserViews', log_file='logs/user_views.log').get_logger()
 
@@ -399,73 +400,105 @@ class SignUpView(APIViewContext):
         "post",
     ]
 
-    def post(self, request):
-        # Skip phone number if one of them does not exist
-        cca2 = "US"
+    def post(self, request: Request) -> Response:
         data = request.data.copy()
-        if str(request.data.get('tyc')) != "1":
-            return Response({"message": "You must accept the TYC."}, status=status.HTTP_400_BAD_REQUEST)
-        if str(request.data.get('confirm_age')) != "1":
-            return Response({"message": "You must confirm you are 18+."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # check age
-        # dob = request.data.get('dob')
-        # if dob is None:
-        #     return Response({"message": "You must submit your dob"}, status.HTTP_400_BAD_REQUEST)
-        # try:
-        #     dob_date = dt.strptime(dob, "%Y-%m-%d").date()
-        # except ValueError:
-        #     return Response({"message": "DOB must be formatted YYYY-MM-DD"}, status.HTTP_400_BAD_REQUEST)
-        # today = timezone.now().date()
-        # age = today.year - dob_date.year - ((today.month, today.day) < (dob_date.month, dob_date.day))
-
-        # if age < 18:
-            # return Response({"message": "You must be 18+ to have an account on this platform"}, status.HTTP_400_BAD_REQUEST)
-
-        # remove un used
-
-        if request.data.get('country_code', '') == '' or request.data.get('phone_number', '') == "":
-            data.pop('countray_code', None)
-            data.pop('phone_number', None)
-        if cca2:
-            data.pop("country", None)
-            data.pop('code_cca2', None)
-            country = Country.objects.filter(code_cca2=cca2.upper()).first()
-            if not country:
-                return Response({"message" : "code_ccs2 is not valid"},status=status.HTTP_400_BAD_REQUEST)
-
-            data["country_obj"] = country.id
-            data["country"] = country.code_cca2
-        else:
-            return Response({"message" : "code_ccs2 has not been provided"},status=status.HTTP_400_BAD_REQUEST)
-
-        serializer = self.get_serializer(data=data)
-        if Users.objects.filter(username__iexact=request.data.get("username")).exists():
+        if str(request.data.get('tyc') or '') != "1":
             return Response(
-                {"message": _("User already exists.")}, status.HTTP_400_BAD_REQUEST)
-        if serializer.is_valid():
-            player = serializer.save()
-            Thread(target=newuser_email,
-                   args=(player.username, player.email)).start()
+                {"message": "You must accept the TYC."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
-            redeam_user_event.apply_async(
-                    args=(EVENT_REGISTRATION, player.id),
-                    countdown=10
-                    )  # type: ignore
+        if str(request.data.get('confirm_age') or '') != "1":
+            return Response(
+                {"message": "You must confirm you are 18+."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
-            if player.applied_promo_code:
-                promo_handler.redeem_code(
-                    user=player,
-                    amount_dep=None,
-                    bonus_type='welcome',
-                    promo_code=player.applied_promo_code)
+        country_code = request.data.get('country_code', '')
+        phone_number = request.data.get('phone_number', '') 
 
-            return Response({"message": _("User Created Successfully")}, status.HTTP_201_CREATED)
+        if country_code == '' or phone_number == "":
+            data.pop('country_code', None)
+            data.pop('phone_number', None)
 
-        if serializer.errors.get('non_field_errors', None):
-            return Response({"message": serializer.errors.get('non_field_errors', None)[0]}, status.HTTP_400_BAD_REQUEST)
+        cca2 = "US"
 
-        return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
+        if not cca2:
+            return Response(
+                {"message" : "code_ccs2 has not been provided"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        data.pop("country", None)
+        data.pop('code_cca2', None)
+
+        country = Country.objects.filter(
+            code_cca2=cca2.upper()
+        ).first()
+
+        if not country:
+            return Response(
+                {"message" : "code_cca2 is not valid"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        data["country_obj"] = country.id
+        data["country"] = country.code_cca2
+
+        if Users.objects.filter(
+            username__iexact=request.data.get("username")
+        ).exists():
+            return Response(
+                {"message": _("User already exists.")},
+                status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            serializer = self.get_serializer(data=data)
+        except:
+            serializer = SignUpSerializer(
+                data=data,
+                context=self.get_serializer_context(),
+            )
+
+        if not serializer.is_valid():
+            non_field_errors = serializer.errors.get('non_field_errors', None) #type: ignore
+            if non_field_errors:
+                return Response(
+                    {"message": non_field_errors[0]},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            return Response(
+                {"message": "Invalid account."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        player: Users = cast(Users, serializer.save())
+
+        Thread(
+            target=newuser_email,
+            args=(player.username, player.email)
+        ).start()
+
+        redeam_user_event.apply_async(
+            args=(EVENT_REGISTRATION, player.id),
+            countdown=10
+        )  # type: ignore
+
+        if player.applied_promo_code:
+            promo_handler.redeem_code(
+                user=player,
+                amount_dep=None,
+                bonus_type='welcome',
+                promo_code=str(player.applied_promo_code)
+            )
+
+        return Response(
+            {"message": _("User Created Successfully")},
+            status=status.HTTP_201_CREATED
+        )
 
 
 '''User Update Api'''
