@@ -6,6 +6,7 @@ import random
 import re
 import string
 
+from typing import Any, Dict
 import uuid
 from django.forms import CharField
 import pytz
@@ -442,56 +443,61 @@ class SignUpSerializer(serializers.ModelSerializer):
             "confirm_password": {"write_only": True},
         }
 
-    def validate(self, data):
-        if not data.get("password") or not data.get("confirm_password"):
-            raise serializers.ValidationError("Please enter a password and " "confirm it.")
-        if data.get("password") != data.get("confirm_password"):
+    def validate(self, attrs: Dict[str, Any]):
+        if not attrs.get("password") or not attrs.get("confirm_password"):
+            raise serializers.ValidationError("Please enter a password and confirm it.")
+        if attrs.get("password") != attrs.get("confirm_password"):
             raise serializers.ValidationError("Those passwords don't match.")
 
-        if not data.get("username"):
+        username = attrs.get("username")
+        if not username:
             raise serializers.ValidationError("Username must not be null.")
         
         pattern = re.compile("[A-Za-z0-9]*$")
-        if not pattern.fullmatch(data.get("username")):
+        if not pattern.fullmatch(username):
             raise serializers.ValidationError("username must be alphanumeric")
         
-        if Users.objects.filter(email=data.get("email")).exists(): 
+        if Users.objects.filter(email=attrs.get("email")).exists(): 
             raise serializers.ValidationError("email already exists")
         
-        if Users.objects.filter(username__iexact=data.get("username").lower()).exists():
+        username = username.lower()
+        if Users.objects.filter(username__iexact=username).exists():
             raise serializers.ValidationError("User already exists.")
+
+        attrs["username"] = username
         
-        # if Users.objects.filter(phone_number=data.get("phone_number")).exists():
+        # if Users.objects.filter(phone_number=attrs.get("phone_number")).exists():
         #     raise serializers.ValidationError("Phone number already exists.")
         
-        if data.get("applied_promo_code"):
+        promo_code = attrs.get("applied_promo_code")
+        if promo_code:
             is_valid, _ = promo_handler.verify_code(
-                promo_code=data.get("applied_promo_code"),
+                promo_code=promo_code,
                 bypass_limit_check=True
             )
             if not is_valid:
-                pcode = data.pop("applied_promo_code")
+                pcode = attrs.pop("applied_promo_code")
                 logger.debug(f"User tried to use Invalid Promo Code {pcode}")
                 # raise serializers.ValidationError(msg)
         
-        if data.get('otp'):
-            checkotp = check_otp(data.get('otp'))
-            if not checkotp:
-                raise serializers.ValidationError("Please enter valid OTP.")
-        else:
+        otp = attrs.get('otp')
+        if not otp:
             raise serializers.ValidationError("Please provide valid OTP.")
+
+        if not check_otp(otp):
+            raise serializers.ValidationError("Please enter valid OTP.")
    
-        # if not data.get("zip_code"):
+        # if not attrs.get("zip_code"):
         #     raise serializers.ValidationError("Please enter Zip code.")
         
-        # if len(str(data.get("zip_code"))) !=5:
+        # if len(str(attrs.get("zip_code"))) !=5:
         #     raise serializers.ValidationError("Please enter valid Zip code.")
         
-        return data
+        return attrs
         
         
     
-    def create(self, validated_data):
+    def create(self, validated_data: Dict[str, Any]):
         from django.utils import timezone
         if validated_data.get("agent_id"):
             agent_obj = Users.objects.filter(role="agent", pk=validated_data.get("agent_id")).first() 
